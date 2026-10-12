@@ -9063,24 +9063,20 @@
     window.scrollTo(0, window._mqFxScrollY || 0);
   };
 
+  // Leaving the full-screen view (✕ Exit, Esc, the side panel's "Exit quote",
+  // or "← Exit" on step 1) ends the quote: everything is wiped and the
+  // customer lands back on the chooser, so coming back never drops them in
+  // the middle of an old quote at, say, step 9. It's the same full rebuild
+  // as "Start new estimate" (mqStartNewEstimate), so every answer, result
+  // panel and step position is reset together. "Edit my answers" and
+  // "Quote another project type" on the results screen do NOT come through
+  // here — they keep the quote.
   window.mqFxToChooser = function() {
     const container = document.getElementById('midasquote-widget');
     if (!container) return;
     window.mqFxExitFull();
-    container.classList.add('mq-fx-chooser-on');
-    const active = window._mqActiveTabPrefix;
-    container.querySelectorAll('.mq-fx-card').forEach(c => {
-      const p = mqFxPrefixOfTabId(c.dataset.tab);
-      const isCur = p === active;
-      c.classList.toggle('mq-fx-card-current', isCur);
-      const subEl = c.querySelector('.mq-fx-card-sub');
-      if (!subEl) return;
-      if (subEl.dataset.orig === undefined) subEl.dataset.orig = subEl.textContent;
-      const tab = mqFxTabEl(p);
-      const hasProgress = isCur && ((window._mqStepIndex[p] || 0) > 0 || (tab && tab.classList.contains('mq-fx-results')));
-      subEl.textContent = hasProgress ? 'Pick up where you left off' : subEl.dataset.orig;
-    });
-    window.mqScrollWithOffset && window.mqScrollWithOffset(container, 20);
+    if (window.mqStartNewEstimate) window.mqStartNewEstimate();
+    else container.classList.add('mq-fx-chooser-on');
   };
 
   window.mqFxStart = function(id) {
@@ -9293,8 +9289,8 @@
       @media (min-width:900px){
         #midasquote-widget.mq-fx-full.mq-fx-live-on #mq-fx-top .mq-fx-live{display:none}
         #midasquote-widget.mq-fx-full.mq-fx-live-on #mq-fx-side .mq-fx-live{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:12px 16px;border-radius:12px;background:rgba(34,197,94,.14);border:1px solid rgba(34,197,94,.35);margin-bottom:20px}
-        #mq-fx-side .mq-fx-live-lbl{color:#86efac}
-        #mq-fx-side .mq-fx-live-val{color:#fff;font-size:20px}
+        #mq-fx-side .mq-fx-live-lbl{color:var(--fxs-green,#86efac)}
+        #mq-fx-side .mq-fx-live-val{color:var(--fxs-ink,#fff);font-size:20px}
       }
 
       /* Chooser cards: white, with a brand-colour gradient border */
@@ -9321,7 +9317,7 @@
       #midasquote-widget.mq-fx-full .mq-step-footer{margin:18px calc(var(--mq-fx-pad,16px) * -1) calc(var(--mq-fx-pad,16px) * -1);padding:12px var(--mq-fx-pad,16px);border-radius:0 0 16px 16px}
       @media (min-width:900px){
         #midasquote-widget.mq-fx.mq-fx-full{padding-left:300px;background:#f1f3f6}
-        #midasquote-widget.mq-fx-full #mq-fx-side{display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:var(--mq-sticky-h,0px);width:300px;padding:30px 24px 22px;background:linear-gradient(180deg,#14161b 0%,#1d2027 100%);color:#fff;z-index:30;overflow-y:auto}
+        #midasquote-widget.mq-fx-full #mq-fx-side{display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:var(--mq-sticky-h,0px);width:300px;padding:30px 24px 22px;background:var(--fxs-bg,#1d2027);color:var(--fxs-ink,#fff);border-right:1px solid var(--fxs-line,transparent);z-index:30;overflow-y:auto}
         #midasquote-widget.mq-fx-full #mq-fx-top{background:transparent;border-bottom:0;justify-content:flex-end;padding:18px 28px 0;pointer-events:none}
         #midasquote-widget.mq-fx-full #mq-fx-top .mq-fx-top-brand{display:none}
         #midasquote-widget.mq-fx-full #mq-fx-top .mq-fx-exit{pointer-events:auto;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.08)}
@@ -9333,9 +9329,9 @@
         #midasquote-widget.mq-fx-full .mq-fx-bar{display:none}
         #midasquote-widget.mq-fx-full .mq-fx-head{margin-bottom:24px}
       }
-      #mq-fx-side{scrollbar-width:thin;scrollbar-color:#3a3f4b transparent;overflow-x:hidden}
+      #mq-fx-side{scrollbar-width:thin;scrollbar-color:var(--fxs-line,#3a3f4b) transparent;overflow-x:hidden}
       #mq-fx-side::-webkit-scrollbar{width:6px}
-      #mq-fx-side::-webkit-scrollbar-thumb{background:#3a3f4b;border-radius:99px}
+      #mq-fx-side::-webkit-scrollbar-thumb{background:var(--fxs-line,#3a3f4b);border-radius:99px}
       @media (min-width:900px) and (max-height:800px){
         #midasquote-widget.mq-fx-full #mq-fx-side{padding:20px 20px 16px}
         #mq-fx-side .mq-fx-side-brand{margin-bottom:14px}
@@ -9347,30 +9343,35 @@
         .mq-fx-side-foot{margin-top:10px;padding-top:12px;gap:8px}
       }
       #mq-fx-side .mq-fx-side-brand{display:flex;align-items:center;gap:12px;padding:0;border:0;margin-bottom:26px}
-      #mq-fx-side .mq-fx-side-brand .mq-shop-name{color:#fff;font-size:16px;font-weight:800}
-      #mq-fx-side .mq-fx-side-brand .mq-shop-sub{color:#9ca3af;font-size:12.5px}
+      #mq-fx-side .mq-fx-side-brand .mq-shop-name{color:var(--fxs-ink,#fff);font-size:16px;font-weight:800}
+      #mq-fx-side .mq-fx-side-brand .mq-shop-sub{color:var(--fxs-mute,#9ca3af);font-size:12.5px}
       #mq-fx-side .mq-fx-side-brand>*{flex-shrink:0}
       #mq-fx-side .mq-fx-side-brand>div[style*="flex:1"]{flex:1;min-width:0}
-      #mq-fx-side-type{display:flex;flex-direction:column;gap:2px;padding:14px 16px;border-radius:12px;background:rgba(255,255,255,.07);margin-bottom:22px}
-      .mq-fx-side-type-kicker{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#9ca3af}
-      .mq-fx-side-type-name{font-size:16px;font-weight:800;color:#fff}
-      .mq-fx-side-type-room{font-size:13px;color:#cbd5e1}
+      #mq-fx-side-type{display:flex;flex-direction:column;gap:2px;padding:14px 16px;border-radius:12px;background:var(--fxs-card,rgba(255,255,255,.07));margin-bottom:22px}
+      .mq-fx-side-type-kicker{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--fxs-mute,#9ca3af)}
+      .mq-fx-side-type-name{font-size:16px;font-weight:800;color:var(--fxs-ink,#fff)}
+      .mq-fx-side-type-room{font-size:13px;color:var(--fxs-soft,#cbd5e1)}
       #mq-fx-steps{list-style:none;margin:0;padding:0;flex:1}
-      .mq-fx-stp{display:flex;align-items:center;gap:12px;padding:8px 0;position:relative;color:#8b93a1;font-size:14.5px;font-weight:600}
-      .mq-fx-stp:not(:last-child)::after{content:'';position:absolute;left:13px;top:36px;bottom:-8px;width:2px;background:rgba(255,255,255,.12)}
-      .mq-fx-stp-dot{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:800;border:2px solid rgba(255,255,255,.18);flex-shrink:0;background:#1d2027;position:relative;z-index:1}
-      .mq-fx-stp-cur{color:#fff}
-      .mq-fx-stp-cur .mq-fx-stp-dot{background:${fc};border-color:${fc};color:#fff;box-shadow:0 0 0 4px ${fc}40}
-      .mq-fx-stp-done{color:#d1d5db;cursor:pointer}
-      .mq-fx-stp-done:hover{color:#fff}
+      .mq-fx-stp{display:flex;align-items:center;gap:12px;padding:8px 0;position:relative;color:var(--fxs-mute,#8b93a1);font-size:14.5px;font-weight:600}
+      .mq-fx-stp:not(:last-child)::after{content:'';position:absolute;left:13px;top:36px;bottom:-8px;width:2px;background:var(--fxs-line,rgba(255,255,255,.12))}
+      .mq-fx-stp-dot{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:800;border:2px solid var(--fxs-dot,rgba(255,255,255,.18));flex-shrink:0;background:var(--fxs-bg,#1d2027);position:relative;z-index:1}
+      .mq-fx-stp-cur{color:var(--fxs-ink,#fff)}
+      .mq-fx-stp-cur .mq-fx-stp-dot{background:${fc};border-color:${fc};color:var(--fxs-focal-ink,#fff);box-shadow:0 0 0 4px ${fc}40}
+      .mq-fx-stp-done{color:var(--fxs-soft,#d1d5db);cursor:pointer}
+      .mq-fx-stp-done:hover{color:var(--fxs-ink,#fff)}
       .mq-fx-stp-done .mq-fx-stp-dot{background:#16a34a;border-color:#16a34a;color:#fff}
-      .mq-fx-side-foot{display:flex;flex-direction:column;gap:10px;margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,.12)}
-      .mq-fx-side-link{color:#cbd5e1;font-size:13px;font-weight:600;text-decoration:none}
-      .mq-fx-side-link:hover{color:#fff}
-      .mq-fx-side-pw{font-size:11.5px;color:#7b8494;font-weight:600}
-      .mq-fx-side-pw a{color:#aab2c0;text-decoration:none}
-      .mq-fx-side-exit{background:transparent;border:1px solid rgba(255,255,255,.22);color:#e5e7eb;border-radius:10px;padding:9px 12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;text-align:center}
-      .mq-fx-side-exit:hover{background:rgba(255,255,255,.08)}
+      .mq-fx-side-foot{display:flex;flex-direction:column;gap:10px;margin-top:18px;padding-top:16px;border-top:1px solid var(--fxs-line,rgba(255,255,255,.12))}
+      .mq-fx-side-link{color:var(--fxs-soft,#cbd5e1);font-size:13px;font-weight:600;text-decoration:none}
+      .mq-fx-side-link:hover{color:var(--fxs-ink,#fff)}
+      .mq-fx-side-pw{font-size:11.5px;color:var(--fxs-mute,#7b8494);font-weight:600}
+      .mq-fx-side-pw a{color:var(--fxs-soft,#aab2c0);text-decoration:none}
+      .mq-fx-side-exit{background:transparent;border:1px solid var(--fxs-line2,rgba(255,255,255,.22));color:var(--fxs-ink,#e5e7eb);border-radius:10px;padding:9px 12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;text-align:center}
+      .mq-fx-side-exit:hover{background:var(--fxs-card,rgba(255,255,255,.08))}
+      /* The logo always sits on its own clean white tile: a logo with a solid white
+         background looks intentional instead of like a white box, and a dark
+         transparent logo stays readable whatever colours the shop picked. */
+      #mq-fx-side .mq-logo-real{height:auto;width:auto;max-width:112px;padding:7px 9px;background:#fff;border-radius:12px;box-shadow:0 0 0 1px rgba(0,0,0,.08),0 2px 6px rgba(0,0,0,.1);display:flex;align-items:center;justify-content:center}
+      #mq-fx-side .mq-logo-real img{display:block;max-width:92px;max-height:56px;width:auto;height:auto;object-fit:contain}
     `;
     document.head.appendChild(s);
   }
@@ -9460,6 +9461,35 @@
       const showroom = hdr && hdr.querySelector('a[href]');
       const side = document.createElement('aside');
       side.id = 'mq-fx-side';
+      // Sidebar colours come from the shop's own "box" colours (Shop Info →
+      // box background + box text), the same pair the quote boxes use, so it
+      // always matches. If that pair is too low-contrast to read, fall back to
+      // a safe light/dark text colour chosen from the background. The active
+      // step uses the shop's focal colour.
+      (function() {
+        const norm = h => { h = String(h || '').trim(); if (/^#[0-9a-f]{3}$/i.test(h)) h = '#' + h.slice(1).split('').map(c => c + c).join(''); return /^#[0-9a-f]{6}$/i.test(h) ? h.toLowerCase() : null; };
+        const rgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+        const lin = c => { c /= 255; return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
+        const lum = h => { const [r, g, b] = rgb(h); return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b); };
+        const ratio = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+        const rgba = (h, a) => { const [r, g, b] = rgb(h); return `rgba(${r},${g},${b},${a})`; };
+        const bg = norm(window._mqBoxBg) || '#eff6ff';
+        let ink = norm(window._mqBoxText) || '#1e40af';
+        if (ratio(bg, ink) < 4.5) ink = lum(bg) > 0.4 ? '#111827' : '#ffffff';
+        const focal = norm(window._mqFocalColor) || '#2563eb';
+        const light = lum(bg) > 0.4;
+        const st = side.style;
+        st.setProperty('--fxs-bg', bg);
+        st.setProperty('--fxs-ink', ink);
+        st.setProperty('--fxs-soft', rgba(ink, 0.85));
+        st.setProperty('--fxs-mute', rgba(ink, 0.68));
+        st.setProperty('--fxs-line', rgba(ink, 0.16));
+        st.setProperty('--fxs-line2', rgba(ink, 0.32));
+        st.setProperty('--fxs-dot', rgba(ink, 0.3));
+        st.setProperty('--fxs-card', rgba(ink, 0.07));
+        st.setProperty('--fxs-green', light ? '#166534' : '#86efac');
+        st.setProperty('--fxs-focal-ink', ratio(focal, '#ffffff') >= 3 ? '#ffffff' : '#111827');
+      })();
       side.appendChild(brand);
       side.insertAdjacentHTML('beforeend', `<div id="mq-fx-side-type"></div><div class="mq-fx-live"><span class="mq-fx-live-lbl">Your estimate</span><span class="mq-fx-live-val">—</span></div><ol id="mq-fx-steps"></ol><div class="mq-fx-side-foot">${showroom ? `<a class="mq-fx-side-link" href="${showroom.getAttribute('href')}" target="_blank" rel="noopener">🖼️ See our showroom</a>` : ''}<div class="mq-fx-side-pw">⚡ Powered by <a href="https://www.midasquote.com" target="_blank" rel="noopener">MidasQuote</a></div><button type="button" class="mq-fx-side-exit" onclick="mqFxToChooser()">✕ Exit quote</button></div>`);
       container.insertBefore(side, container.firstChild);
