@@ -5613,6 +5613,17 @@
       const allNoRange = allEntries.length > 0 && allEntries.every(e => !e.showRange);
       const totalText = allNoRange ? (CUR() + Math.round(totalExact).toLocaleString()) : fmtRange(totalLow, totalHigh);
 
+      // Focused layout: hand the per-project rows + combined total to its
+      // side panel / phone price strip (no-op in Classic).
+      if (window.mqFxRenderBreakdown) {
+        window.mqFxRenderBreakdown(allEntries.map(e => ({
+          id: e.id || '',
+          label: e.label,
+          price: e.showRange ? fmtRange(e.low, e.high) : (CUR() + Math.round(e.total).toLocaleString()),
+          empty: !((e.high || 0) > 0 || (e.total || 0) > 0),
+        })), totalText);
+      }
+
       // The sticky bar is created lazily (only once a Calculate has ever
       // run), so these elements may not exist yet the first time this runs
       // — that's fine, mqShowStickyBar re-triggers this once they do.
@@ -5692,6 +5703,17 @@
       document.getElementById('mq-ct-result')?.classList.remove('show');
       const sticky = document.getElementById('mq-sticky-bar');
       if (sticky) sticky.classList.remove('show');
+    };
+    // Focused layout's "clear this project" (side panel): wipes just the
+    // project currently being configured on `prefix` — its form, live
+    // preview and results panel — and sends it back to step 1. Committed
+    // cart entries (other project types already added) are untouched.
+    window.mqResetCurrentProject = function(prefix) {
+      if (prefix === 'ct') { mqResetCountertopStandalone(prefix); } else { mqResetCabinetForm(prefix); }
+      window._mqLivePreview = null;
+      _mqStepIndex[prefix] = 0;
+      document.getElementById(`mq-${prefix}-result`)?.classList.remove('show');
+      mqRenderQuoteCart();
     };
     // ===================== end quote cart =====================
 
@@ -8933,14 +8955,69 @@
   }
   function mqFxCopyPrice() {
     const priceEl = document.getElementById('mq-sticky-price');
-    if (!priceEl) return;
-    const txt = priceEl.textContent.trim();
+    // The combined total from the quote cart (kept in step with removing a
+    // project) wins over the sticky bar's number, which only refreshes on a
+    // recalculation.
+    const txt = window._mqFxTotalText || (priceEl ? priceEl.textContent.trim() : '');
+    if (!txt) return;
     document.querySelectorAll('.mq-fx-live-val').forEach(el => {
       if (el.textContent === txt) return;
       el.textContent = txt;
       el.classList.remove('mq-fx-pulse'); void el.offsetWidth; el.classList.add('mq-fx-pulse');
     });
   }
+  // Per-project totals for the side panel (desktop, always shown) and the
+  // phone price strip (tap ▾ to open) — the same project-by-project list the
+  // Classic sticky bar's breakdown shows. Called by mqRenderQuoteCart.
+  const mqFxEsc = t => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  window.mqFxRenderBreakdown = function(rows, totalText) {
+    if (!window._mqFxOn) return;
+    // A project with nothing entered yet (just switched to, or just cleared)
+    // would only show as "$0" — leave it out until it has a price. If that
+    // leaves nothing at all, the card shows a dash instead of a $0 total.
+    rows = (rows || []).filter(r => r.id || !r.empty);
+    window._mqFxRows = rows;
+    window._mqFxTotalText = rows.length ? totalText : '—';
+    // A list only helps once there's more than one project, or a project
+    // already added that could be removed.
+    const multi = !!rows && (rows.some(r => r.id) || rows.length > 1);
+    const c = document.getElementById('midasquote-widget');
+    if (c) c.classList.toggle('mq-fx-live-multi', multi);
+    const html = multi ? rows.map(r =>
+      `<div class="mq-fx-live-row${r.id ? '' : ' mq-fx-live-curr'}"><span class="mq-fx-live-name">${mqFxEsc(r.label)}${r.id ? '' : ' <em>(current)</em>'}</span><strong>${mqFxEsc(r.price)}</strong><button type="button" class="mq-fx-live-x" title="${r.id ? 'Remove this project' : 'Clear this project and start it over'}" aria-label="${r.id ? 'Remove this project' : 'Clear this project'}" onclick="${r.id ? `mqRemoveFromQuoteCart('${mqFxEsc(r.id)}')` : 'mqFxClearCurrent()'}">✕</button></div>`).join('') : '';
+    document.querySelectorAll('.mq-fx-live-list').forEach(el => { el.innerHTML = html; });
+    document.querySelectorAll('.mq-fx-live-lbl').forEach(el => { el.textContent = multi ? 'Total estimate' : 'Your estimate'; });
+    if (!multi) document.querySelectorAll('.mq-fx-live').forEach(el => el.classList.remove('mq-fx-live-open'));
+    mqFxCopyPrice();
+  };
+  window.mqFxToggleLive = function(btn) {
+    const box = btn && btn.closest('.mq-fx-live');
+    if (!box) return;
+    const open = box.classList.toggle('mq-fx-live-open');
+    btn.textContent = open ? '▴' : '▾';
+  };
+  // ✕ on the project being worked on right now: wipe just that project and
+  // go back to its step 1 (other projects already added stay).
+  window.mqFxClearCurrent = function() {
+    const prefix = window._mqActiveTabPrefix || 'b';
+    if (!confirm('Clear this project and start it over?')) return;
+    const tab = mqFxTabEl(prefix);
+    if (tab) tab.classList.remove('mq-fx-results');
+    if (window.mqResetCurrentProject) window.mqResetCurrentProject(prefix);
+    if (!(window._mqQuoteCart || []).length) {
+      // Nothing left to total — drop the price so a stale number isn't shown.
+      window._mqStickyPrefix = null;
+      window._mqStickyLast = null;
+      window._mqFxTotalText = null;
+      const sb = document.getElementById('mq-sticky-bar');
+      if (sb) sb.classList.remove('show');
+    }
+    window._mqFxDir = 'back';
+    window.mqUpdateStepFocus(prefix);
+    window.mqFxScrollToStep();
+    mqFxSyncSticky();
+  };
+
   window.mqFxApply = function(prefix) {
     if (!window._mqFxOn) return;
     const tab = mqFxTabEl(prefix);
@@ -9075,8 +9152,24 @@
     const container = document.getElementById('midasquote-widget');
     if (!container) return;
     window.mqFxExitFull();
+    // The rebuild below only recreates the widget's own DOM. The running
+    // multi-project quote (cart + live preview), the remembered previous
+    // project type, the typed-in email used for "email me a copy" and the
+    // side panel's totals all live outside it, so they are cleared here too.
+    window._mqQuoteCart = [];
+    window._mqLivePreview = null;
+    window._mqPrevRoomId = {};
+    window._mqLeadEmail = '';
+    window._mqFxRows = [];
+    window._mqFxTotalText = null;
+    window._mqStickyPrefix = null;
+    window._mqStickyLast = null;
+    const stickyPr = document.getElementById('mq-sticky-price');
+    if (stickyPr) stickyPr.textContent = '';
+    container.classList.remove('mq-fx-live-multi', 'mq-fx-live-on');
     if (window.mqStartNewEstimate) window.mqStartNewEstimate();
     else container.classList.add('mq-fx-chooser-on');
+    if (window.mqRenderQuoteCart) window.mqRenderQuoteCart();
   };
 
   window.mqFxStart = function(id) {
@@ -9278,7 +9371,18 @@
 
 
       /* Live price chip (full-screen, while editing after a first estimate) */
-      .mq-fx-live{display:none;align-items:center;justify-content:space-between;gap:10px}
+      .mq-fx-live{display:none;flex-direction:column;align-items:stretch;gap:0}
+      .mq-fx-live-main{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%}
+      .mq-fx-live-tog{display:none;margin-left:auto;background:none;border:0;color:#166534;font-size:15px;line-height:1;padding:4px 6px;cursor:pointer;font-family:inherit}
+      .mq-fx-live-list{display:none}
+      .mq-fx-live-row{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:13px;color:#14532d}
+      .mq-fx-live-name{flex:1;min-width:0;overflow-wrap:anywhere;line-height:1.25}
+      .mq-fx-live-name em{font-style:italic;font-weight:500;opacity:.75}
+      .mq-fx-live-row strong{font-weight:800;flex-shrink:0}
+      .mq-fx-live-x{background:none;border:0;color:inherit;opacity:.6;cursor:pointer;font-size:12px;line-height:1;padding:4px 5px;font-family:inherit;flex-shrink:0}
+      .mq-fx-live-x:hover{opacity:1}
+      #midasquote-widget.mq-fx-live-multi #mq-fx-top .mq-fx-live-tog{display:inline-flex}
+      #midasquote-widget.mq-fx-live-multi #mq-fx-top .mq-fx-live.mq-fx-live-open .mq-fx-live-list{display:block;max-height:38vh;overflow-y:auto;margin-top:4px;padding-top:4px;border-top:1px solid #bbf7d0}
       .mq-fx-live-lbl{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#6b7280}
       .mq-fx-live-val{font-size:17px;font-weight:800;color:#111827}
       .mq-fx-live-val.mq-fx-pulse{animation:mqFxPulse .6s ease}
@@ -9291,6 +9395,10 @@
         #midasquote-widget.mq-fx-full.mq-fx-live-on #mq-fx-side .mq-fx-live{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:12px 16px;border-radius:12px;background:rgba(34,197,94,.14);border:1px solid rgba(34,197,94,.35);margin-bottom:20px}
         #mq-fx-side .mq-fx-live-lbl{color:var(--fxs-green,#86efac)}
         #mq-fx-side .mq-fx-live-val{color:var(--fxs-ink,#fff);font-size:20px}
+        #mq-fx-side .mq-fx-live-main{flex-direction:column;align-items:flex-start;gap:2px}
+        #midasquote-widget.mq-fx-live-multi #mq-fx-side .mq-fx-live-list{display:block;width:100%;margin-top:8px;padding-top:6px;border-top:1px solid var(--fxs-line,rgba(255,255,255,.2))}
+        #mq-fx-side .mq-fx-live-row{color:var(--fxs-soft,#e5e7eb)}
+        #mq-fx-side .mq-fx-live-curr .mq-fx-live-name{color:var(--fxs-ink,#fff)}
       }
 
       /* Chooser cards: white, with a brand-colour gradient border */
@@ -9449,7 +9557,7 @@
       const nameEl = hdr && hdr.querySelector('.mq-shop-name');
       const top = document.createElement('div');
       top.id = 'mq-fx-top';
-      top.innerHTML = `<div class="mq-fx-top-brand"><span class="mq-fx-top-name">${nameEl ? nameEl.textContent : ''}</span><span class="mq-fx-top-pw">⚡ Powered by <a href="https://www.midasquote.com" target="_blank" rel="noopener">MidasQuote</a></span></div><button type="button" class="mq-fx-exit" onclick="mqFxToChooser()" aria-label="Exit">✕ <span>Exit</span></button><div class="mq-fx-live"><span class="mq-fx-live-lbl">Your estimate</span><span class="mq-fx-live-val">—</span></div>`;
+      top.innerHTML = `<div class="mq-fx-top-brand"><span class="mq-fx-top-name">${nameEl ? nameEl.textContent : ''}</span><span class="mq-fx-top-pw">⚡ Powered by <a href="https://www.midasquote.com" target="_blank" rel="noopener">MidasQuote</a></span></div><button type="button" class="mq-fx-exit" onclick="mqFxToChooser()" aria-label="Exit">✕ <span>Exit</span></button><div class="mq-fx-live"><div class="mq-fx-live-main"><span class="mq-fx-live-lbl">Your estimate</span><span class="mq-fx-live-val">—</span><button type="button" class="mq-fx-live-tog" onclick="mqFxToggleLive(this)" aria-label="Show each project total">▾</button></div><div class="mq-fx-live-list"></div></div>`;
       container.insertBefore(top, container.firstChild);
     }
     if (!document.getElementById('mq-fx-side')) {
@@ -9491,7 +9599,7 @@
         st.setProperty('--fxs-focal-ink', ratio(focal, '#ffffff') >= 3 ? '#ffffff' : '#111827');
       })();
       side.appendChild(brand);
-      side.insertAdjacentHTML('beforeend', `<div id="mq-fx-side-type"></div><div class="mq-fx-live"><span class="mq-fx-live-lbl">Your estimate</span><span class="mq-fx-live-val">—</span></div><ol id="mq-fx-steps"></ol><div class="mq-fx-side-foot">${showroom ? `<a class="mq-fx-side-link" href="${showroom.getAttribute('href')}" target="_blank" rel="noopener">🖼️ See our showroom</a>` : ''}<div class="mq-fx-side-pw">⚡ Powered by <a href="https://www.midasquote.com" target="_blank" rel="noopener">MidasQuote</a></div><button type="button" class="mq-fx-side-exit" onclick="mqFxToChooser()">✕ Exit quote</button></div>`);
+      side.insertAdjacentHTML('beforeend', `<div id="mq-fx-side-type"></div><div class="mq-fx-live"><div class="mq-fx-live-main"><span class="mq-fx-live-lbl">Your estimate</span><span class="mq-fx-live-val">—</span><button type="button" class="mq-fx-live-tog" onclick="mqFxToggleLive(this)" aria-label="Show each project total">▾</button></div><div class="mq-fx-live-list"></div></div><ol id="mq-fx-steps"></ol><div class="mq-fx-side-foot">${showroom ? `<a class="mq-fx-side-link" href="${showroom.getAttribute('href')}" target="_blank" rel="noopener">🖼️ See our showroom</a>` : ''}<div class="mq-fx-side-pw">⚡ Powered by <a href="https://www.midasquote.com" target="_blank" rel="noopener">MidasQuote</a></div><button type="button" class="mq-fx-side-exit" onclick="mqFxToChooser()">✕ Exit quote</button></div>`);
       container.insertBefore(side, container.firstChild);
     }
     mqFxInstallSwipe(container);
