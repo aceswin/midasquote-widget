@@ -3927,14 +3927,17 @@ window.logoutMember = async function () {
         swatch.value = /^#[0-9a-fA-F]{6}$/.test(loadedColor) ? loadedColor : fallbackSwatch;
         if (!swatch.dataset.mqWired) {
           swatch.dataset.mqWired = '1';
-          swatch.addEventListener('input', () => { if (textField) textField.value = swatch.value; });
+          const stateId = fieldId.replace('mq-shop-', '');
+          swatch.addEventListener('input', () => { if (textField) textField.value = swatch.value; mqRenderColorState(stateId); });
           if (textField) {
             textField.addEventListener('input', () => {
               if (/^#[0-9a-fA-F]{6}$/.test(textField.value)) swatch.value = textField.value;
+              mqRenderColorState(stateId);
             });
           }
         }
       }
+      mqRenderColorState(fieldId.replace('mq-shop-', ''));
     });
     set('mq-shop-range-low',  f['Quote range low']  || '5');
     set('mq-shop-range-high', f['Quote range high'] || '20');
@@ -6614,14 +6617,42 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // Clears one of the 4 optional color fields back to blank — blank means
   // "use the original MidasQuote blue scheme," not a preset value tied to
   // anything else, so this just empties the field and saves.
+  // The 4 optional guided-flow colours (focal / box border / box background /
+  // box text) can be blank = "use MidasQuote's default". A blank field plus a
+  // colour square that's merely very pale (the default box background is
+  // #eff6ff, which looks white in a tiny swatch) made a successful reset look
+  // like it hadn't worked, so each field now states plainly whether it's on
+  // the default or a custom colour, with a bordered dot of the colour actually
+  // in use.
+  function mqOptionalColorDefaults() { return { focalcolor: '#2563eb', boxbordercolor: '#93c5fd', boxbgcolor: '#eff6ff', boxtextcolor: '#1e40af' }; }
+  function mqRenderColorState(shortId) {
+    const textField = el('mq-shop-' + shortId);
+    if (!textField) return;
+    const wrap = textField.closest('.mq-field');
+    if (!wrap) return;
+    let st = wrap.querySelector('.mq-color-state');
+    if (!st) {
+      st = document.createElement('div');
+      st.className = 'mq-color-state';
+      st.style.cssText = 'font-size:12px;font-weight:600;color:#374151;margin-top:6px;display:flex;align-items:center;gap:6px';
+      wrap.appendChild(st);
+    }
+    const def = mqOptionalColorDefaults()[shortId];
+    const v = (textField.value || '').trim();
+    const custom = /^#[0-9a-fA-F]{6}$/.test(v);
+    const hex = custom ? v : def;
+    st.innerHTML = '<span style="display:inline-block;width:16px;height:16px;border-radius:50%;background:' + hex + ';border:1.5px solid #6b7280;flex-shrink:0"></span><span>' +
+      (custom ? 'Custom colour in use (' + v + ')' : (v ? 'Not a valid colour code — the default (' + def + ') is used' : '✓ Using the MidasQuote default (' + def + ')')) + '</span>';
+  }
+
   window.mqClearShopColorField = function(shortId, label) {
     const textField = el('mq-shop-' + shortId);
     const swatch = el('mq-shop-' + shortId + '-swatch');
     if (textField) textField.value = '';
     if (swatch) {
-      const defaults = { focalcolor: '#2563eb', boxbordercolor: '#93c5fd', boxbgcolor: '#eff6ff', boxtextcolor: '#1e40af' };
-      swatch.value = defaults[shortId] || '#1a1a1a';
+      swatch.value = mqOptionalColorDefaults()[shortId] || '#1a1a1a';
     }
+    mqRenderColorState(shortId);
     window.mqSaveShop();
     showMsg('mq-shop-msg', `✓ ${label} reset to the MidasQuote default.`);
   };
