@@ -8296,8 +8296,9 @@
       if (_mqOrigBodyPaddingBottom === null) {
         _mqOrigBodyPaddingBottom = document.body.style.paddingBottom || '';
       }
-      document.documentElement.style.setProperty('--mq-sticky-h', (bar && bar.classList.contains('show') ? bar.offsetHeight : 0) + 'px');
-      if (bar && bar.classList.contains('show')) {
+      const inSide = !!(bar && bar.classList.contains('mq-fx-sbar-side'));
+      document.documentElement.style.setProperty('--mq-sticky-h', (bar && !inSide && bar.classList.contains('show') ? bar.offsetHeight : 0) + 'px');
+      if (bar && !inSide && bar.classList.contains('show')) {
         document.body.style.paddingBottom = (bar.offsetHeight + 24) + 'px';
       } else {
         document.body.style.paddingBottom = _mqOrigBodyPaddingBottom;
@@ -8413,6 +8414,7 @@
   window.mqShowStickyBar = function(prefix, low, high, total) {
     window._mqStickyPrefix = prefix;
     mqSetupStickyBar();
+    if (window.mqFxPlaceBar) window.mqFxPlaceBar();
     mqUpdateLivePreview(prefix);
     mqSetStickyPrice(prefix, low, high, total, false);
     if (!window._mqStickyDismissed) {
@@ -8547,14 +8549,17 @@
             ? `${CUR()}${payHigh.toLocaleString()}/mo`
             : `${CUR()}${payLow.toLocaleString()}/mo – ${CUR()}${payHigh.toLocaleString()}/mo`;
           financingPayEl.textContent = ` · as low as ${payText}*`;
+          financingPayEl.setAttribute('data-mq-amt', `as low as ${payText}*`);
           financingPayEl.title = 'Estimated payment only — subject to approval and final terms.';
           if (financingDisclaimerEl) financingDisclaimerEl.style.display = 'block';
         } else {
           financingPayEl.textContent = '';
+          financingPayEl.removeAttribute('data-mq-amt');
           if (financingDisclaimerEl) financingDisclaimerEl.style.display = 'none';
         }
       } else {
         financingPayEl.textContent = '';
+        financingPayEl.removeAttribute('data-mq-amt');
         if (financingDisclaimerEl) financingDisclaimerEl.style.display = 'none';
       }
     }
@@ -8935,17 +8940,52 @@
   // is stepping through questions in full-screen mode it would pin the
   // Back/Continue footer far above the bottom of the screen, so it's hidden
   // then and only shown on the results screen.
+  // Focused layout: the "sticky bar" (financing badge, Book / Ask buttons,
+  // Email me a copy, I'd like to be contacted) is the SAME element Classic
+  // uses, so every id and handler keeps working. It is only moved and
+  // restyled: on desktop it is re-parented into the side panel (so it no
+  // longer eats a strip along the bottom of the screen); on phones it stays
+  // at the bottom but takes the shop's box colours instead of dark grey.
+  const MQ_FX_VARS = ['--fxs-bg', '--fxs-ink', '--fxs-soft', '--fxs-mute', '--fxs-line', '--fxs-line2', '--fxs-card', '--fxs-green', '--fxs-focal', '--fxs-focal-ink'];
+  function mqFxPlaceBar() {
+    if (!window._mqFxOn) return;
+    const bar = document.getElementById('mq-sticky-bar');
+    const side = document.getElementById('mq-fx-side');
+    if (!bar || !side) { window._mqFxBarSide = false; return; }
+    MQ_FX_VARS.forEach(v => bar.style.setProperty(v, side.style.getPropertyValue(v)));
+    bar.classList.add('mq-fx-sbar');
+    const wantSide = !!(window._mqFxFull && window.matchMedia && window.matchMedia('(min-width:900px)').matches);
+    let slot = document.getElementById('mq-fx-side-act');
+    if (!slot) {
+      slot = document.createElement('div');
+      slot.id = 'mq-fx-side-act';
+      const live = side.querySelector('.mq-fx-live');
+      if (live) live.after(slot); else side.appendChild(slot);
+    }
+    if (wantSide) { if (bar.parentNode !== slot) slot.appendChild(bar); }
+    else if (bar.parentNode !== document.body) document.body.appendChild(bar);
+    bar.classList.toggle('mq-fx-sbar-side', wantSide);
+    window._mqFxBarSide = wantSide;
+  }
+  window.mqFxPlaceBar = mqFxPlaceBar;
   function mqFxSyncSticky() {
     const tab = mqFxTabEl(window._mqActiveTabPrefix || 'b');
     const hide = !!(window._mqFxFull && tab && !tab.classList.contains('mq-fx-results'));
     document.documentElement.classList.toggle('mq-fx-nosticky', hide);
+    // On desktop the bottom bar moves into the side panel (see mqFxPlaceBar).
+    mqFxPlaceBar();
     mqAdjustWidgetBottomPadding();
     // Live price while editing: the tall sticky bar is hidden, so a compact
     // chip (phone: strip under the top bar; desktop: card in the side panel)
     // mirrors its number. Only after a first Calculate — before that the
-    // lead form still gates the price, so nothing is shown early.
+    // lead form still gates the price, so nothing is shown early. On desktop
+    // the side card also stays on the results screen, because the bar that
+    // used to carry the price there now lives in the side panel.
     const c = document.getElementById('midasquote-widget');
-    if (c) c.classList.toggle('mq-fx-live-on', hide && !!window._mqStickyPrefix);
+    if (c) {
+      c.classList.toggle('mq-fx-live-on', !!window._mqStickyPrefix && (hide || !!window._mqFxBarSide));
+      c.classList.toggle('mq-fx-onres', !!(window._mqFxFull && tab && tab.classList.contains('mq-fx-results')));
+    }
     const priceEl = document.getElementById('mq-sticky-price');
     if (priceEl && !priceEl._mqFxObs) {
       priceEl._mqFxObs = true;
@@ -8983,11 +9023,24 @@
     const multi = !!rows && (rows.some(r => r.id) || rows.length > 1);
     const c = document.getElementById('midasquote-widget');
     if (c) c.classList.toggle('mq-fx-live-multi', multi);
+    // Phone strip: the list opens by itself when a second project is added,
+    // so the separate totals are visible right away; the customer can still
+    // collapse it (their choice sticks until the list goes away again).
+    if (multi && !window._mqFxWasMulti) {
+      document.querySelectorAll('.mq-fx-live').forEach(el => {
+        el.classList.add('mq-fx-live-open');
+        const t = el.querySelector('.mq-fx-live-tog'); if (t) t.textContent = '▴';
+      });
+    }
+    window._mqFxWasMulti = multi;
     const html = multi ? rows.map(r =>
       `<div class="mq-fx-live-row${r.id ? '' : ' mq-fx-live-curr'}"><span class="mq-fx-live-name">${mqFxEsc(r.label)}${r.id ? '' : ' <em>(current)</em>'}</span><strong>${mqFxEsc(r.price)}</strong><button type="button" class="mq-fx-live-x" title="${r.id ? 'Remove this project' : 'Clear this project and start it over'}" aria-label="${r.id ? 'Remove this project' : 'Clear this project'}" onclick="${r.id ? `mqRemoveFromQuoteCart('${mqFxEsc(r.id)}')` : 'mqFxClearCurrent()'}">✕</button></div>`).join('') : '';
     document.querySelectorAll('.mq-fx-live-list').forEach(el => { el.innerHTML = html; });
     document.querySelectorAll('.mq-fx-live-lbl').forEach(el => { el.textContent = multi ? 'Total estimate' : 'Your estimate'; });
-    if (!multi) document.querySelectorAll('.mq-fx-live').forEach(el => el.classList.remove('mq-fx-live-open'));
+    if (!multi) document.querySelectorAll('.mq-fx-live').forEach(el => {
+      el.classList.remove('mq-fx-live-open');
+      const t = el.querySelector('.mq-fx-live-tog'); if (t) t.textContent = '▾';
+    });
     mqFxCopyPrice();
   };
   window.mqFxToggleLive = function(btn) {
@@ -9161,6 +9214,7 @@
     window._mqPrevRoomId = {};
     window._mqLeadEmail = '';
     window._mqFxRows = [];
+    window._mqFxWasMulti = false;
     window._mqFxTotalText = null;
     window._mqStickyPrefix = null;
     window._mqStickyLast = null;
@@ -9401,6 +9455,50 @@
         #mq-fx-side .mq-fx-live-curr .mq-fx-live-name{color:var(--fxs-ink,#fff)}
       }
 
+
+      /* Bottom bar, Focused layout only (.mq-fx-sbar is set from JS, so Classic
+         keeps its dark bar exactly as it was). Phone: shop's box colours.
+         Desktop: lives in the side panel (.mq-fx-sbar-side). */
+      #mq-sticky-bar.mq-fx-sbar{background:var(--fxs-bg,#1d2027);box-shadow:0 -8px 24px rgba(0,0,0,.14)}
+      #mq-sticky-bar.mq-fx-sbar #mq-sticky-label{color:var(--fxs-soft)}
+      #mq-sticky-bar.mq-fx-sbar #mq-sticky-price{color:var(--fxs-ink);text-shadow:none}
+      #mq-sticky-bar.mq-fx-sbar #mq-sticky-breakdown,
+      #mq-sticky-bar.mq-fx-sbar #mq-sticky-breakdown span,
+      #mq-sticky-bar.mq-fx-sbar #mq-sticky-breakdown strong,
+      #mq-sticky-bar.mq-fx-sbar #mq-sticky-breakdown button,
+      #mq-sticky-bar.mq-fx-sbar #mq-sticky-breakdown div{color:var(--fxs-ink)!important;border-color:var(--fxs-line2)!important}
+      #mq-sticky-bar.mq-fx-sbar #mq-sticky-breakdown-toggle{background:var(--fxs-card)!important;border-color:var(--fxs-line2)!important;color:var(--fxs-ink)!important}
+      #mq-sticky-bar.mq-fx-sbar #mq-sticky-links-row button{color:var(--fxs-soft)!important}
+      #mq-sticky-bar.mq-fx-sbar #mq-sticky-ctas button{background:var(--fxs-card);border-color:var(--fxs-line2);color:var(--fxs-ink);box-shadow:none}
+      #mq-sticky-bar.mq-fx-sbar #mq-sticky-ctas button.mq-pri{border-color:transparent;background:var(--fxs-focal)!important;color:var(--fxs-focal-ink)!important}
+      #mq-sticky-bar.mq-fx-sbar #mq-sticky-financing{border-top-color:var(--fxs-line)}
+      #mq-sticky-bar.mq-fx-sbar #mq-sticky-financing-main{color:var(--fxs-green)}
+      #mq-sticky-bar.mq-fx-sbar #mq-sticky-financing-disclaimer{color:var(--fxs-mute)}
+      #mq-fx-side-act{display:none}
+      @media (min-width:900px){
+        #midasquote-widget.mq-fx-full #mq-fx-side-act{display:block}
+        #mq-sticky-bar.mq-fx-sbar-side{position:static;z-index:auto;background:none;border:0!important;box-shadow:none;padding:0;margin:0 0 18px;animation:none}
+        #mq-sticky-bar.mq-fx-sbar-side #mq-sticky-label-row,
+        #mq-sticky-bar.mq-fx-sbar-side #mq-sticky-price-wrap,
+        #mq-sticky-bar.mq-fx-sbar-side #mq-sticky-breakdown,
+        #mq-sticky-bar.mq-fx-sbar-side #mq-sticky-close{display:none!important}
+        #mq-sticky-bar.mq-fx-sbar-side #mq-sticky-inner{display:flex;flex-direction:column;max-width:none;gap:10px}
+        #mq-sticky-bar.mq-fx-sbar-side #mq-sticky-main{display:contents}
+        #mq-sticky-bar.mq-fx-sbar-side #mq-sticky-financing{order:1;margin:0;padding:10px 12px;border:1px solid var(--fxs-line);border-radius:12px;background:var(--fxs-card);text-align:left}
+        #mq-sticky-bar.mq-fx-sbar-side #mq-sticky-financing-main{justify-content:flex-start;flex-wrap:wrap;font-size:13px;line-height:1.35}
+        #mq-sticky-bar.mq-fx-sbar-side #mq-sticky-financing-payment{display:block;width:100%;font-size:0;line-height:0}
+        #mq-sticky-bar.mq-fx-sbar-side #mq-sticky-financing-payment::after{content:attr(data-mq-amt);font-size:15px;line-height:1.3;font-weight:800}
+        #mq-sticky-bar.mq-fx-sbar-side #mq-sticky-ctas{order:2;flex-direction:column-reverse;gap:8px}
+        #mq-sticky-bar.mq-fx-sbar-side #mq-sticky-ctas button{width:100%;padding:12px 10px;font-size:13.5px;white-space:normal;border-radius:10px}
+        #mq-sticky-bar.mq-fx-sbar-side #mq-sticky-content{order:3;flex:none}
+        #mq-sticky-bar.mq-fx-sbar-side #mq-sticky-links-row{display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:0!important}
+        #mq-sticky-bar.mq-fx-sbar-side #mq-sticky-links-row button{margin:0!important;font-size:12.5px!important}
+        /* On the results screen every step is done, so the step list gives its
+           room to the quote actions. */
+        #midasquote-widget.mq-fx-onres #mq-fx-steps{display:none}
+        #midasquote-widget.mq-fx-onres #mq-fx-side .mq-fx-side-foot{margin-top:auto}
+      }
+
       /* Chooser cards: white, with a brand-colour gradient border */
       #mq-fx-chooser .mq-fx-card{background:linear-gradient(#fff,#fff) padding-box,linear-gradient(135deg,var(--mq-card-a,#1a1a1a),var(--mq-card-b,#888)) border-box;border:2px solid transparent;box-shadow:0 4px 14px rgba(0,0,0,.07)}
       #mq-fx-chooser .mq-fx-card:hover,#mq-fx-chooser .mq-fx-card:focus-visible{border-color:transparent;transform:translateY(-3px);box-shadow:0 14px 30px rgba(0,0,0,.16),0 0 0 4px var(--mq-card-tint,#e5e7eb);outline:none}
@@ -9596,6 +9694,7 @@
         st.setProperty('--fxs-dot', rgba(ink, 0.3));
         st.setProperty('--fxs-card', rgba(ink, 0.07));
         st.setProperty('--fxs-green', light ? '#166534' : '#86efac');
+        st.setProperty('--fxs-focal', focal);
         st.setProperty('--fxs-focal-ink', ratio(focal, '#ffffff') >= 3 ? '#ffffff' : '#111827');
       })();
       side.appendChild(brand);
@@ -9603,6 +9702,11 @@
       container.insertBefore(side, container.firstChild);
     }
     mqFxInstallSwipe(container);
+    if (!window._mqFxResizeBound) {
+      window._mqFxResizeBound = true;
+      let rt;
+      window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { if (window._mqFxOn) mqFxSyncSticky(); }, 120); });
+    }
     if (!window._mqFxEscBound) {
       window._mqFxEscBound = true;
       document.addEventListener('keydown', e => {
