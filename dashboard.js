@@ -1729,8 +1729,8 @@ window.logoutMember = async function () {
                   </div>
                   <div class="mq-field"><label class="mq-label">Box background colour</label>
                     <div style="display:flex;align-items:center;gap:8px">
-                      <input type="text" id="mq-shop-boxbgcolor" placeholder="#eff6ff (default)" style="flex:1"/>
-                      <input type="color" id="mq-shop-boxbgcolor-swatch" value="#eff6ff" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer;flex-shrink:0"/>
+                      <input type="text" id="mq-shop-boxbgcolor" placeholder="#d6e7fb (default)" style="flex:1"/>
+                      <input type="color" id="mq-shop-boxbgcolor-swatch" value="#d6e7fb" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer;flex-shrink:0"/>
                       <button type="button" class="mq-btn mq-btn-sm" onclick="mqClearShopColorField('boxbgcolor','Box background colour')" title="Reset to MidasQuote default">↺</button>
                     </div>
                     <span class="mq-hint">Background of those same highlight boxes</span>
@@ -1895,11 +1895,13 @@ window.logoutMember = async function () {
               <div id="mq-widgetpw-wrap" style="display:none;margin-top:1rem;padding:12px 14px;background:#fef2f2;border:1px solid #fecaca;border-radius:10px">
                 <label class="mq-label">Passwords <span style="font-weight:400;color:#9ca3af">(any one of these unlocks the widget)</span></label>
                 <div id="mq-widgetpw-list" style="display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px"></div>
-                <div style="display:flex;gap:8px">
-                  <input type="text" id="mq-widgetpw-new" placeholder="Add a password" style="flex:1;font-size:13px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit" onkeydown="if(event.key==='Enter'){event.preventDefault();mqAddWidgetPassword();}"/>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                  <input type="text" id="mq-widgetpw-new" placeholder="Add a password" style="flex:1;min-width:150px;font-size:13px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit" onkeydown="if(event.key==='Enter'){event.preventDefault();mqAddWidgetPassword();}"/>
+                  <input type="number" id="mq-widgetpw-new-disc" min="0" max="100" step="0.5" placeholder="Discount %" title="Optional — percent off the final quote for anyone using this password" style="width:105px;font-size:13px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit" onkeydown="if(event.key==='Enter'){event.preventDefault();mqAddWidgetPassword();}"/>
                   <button type="button" class="mq-btn mq-btn-sm" onclick="mqAddWidgetPassword()">+ Add</button>
                 </div>
                 <span class="mq-hint" style="display:block;margin-top:8px">Once a customer enters a correct password, their browser remembers it — they will not be asked again unless you remove that specific password from this list.</span>
+                <span class="mq-hint" style="display:block;margin-top:6px"><strong>Discounts:</strong> a password with a discount takes that % off the final quote (after your project type adjustments) for anyone who unlocks the widget with it — ranges and single prices alike. Discounts only apply while the password requirement above is on. Leave the discount at 0 for a plain access password.</span>
               </div>
               </div>
             </div>
@@ -3916,7 +3918,7 @@ window.logoutMember = async function () {
     [
       ['mq-shop-focalcolor', 'Focal colour', '#2563eb'],
       ['mq-shop-boxbordercolor', 'Box border colour', '#93c5fd'],
-      ['mq-shop-boxbgcolor', 'Box background colour', '#eff6ff'],
+      ['mq-shop-boxbgcolor', 'Box background colour', '#d6e7fb'],
       ['mq-shop-boxtextcolor', 'Box text colour', '#1e40af'],
     ].forEach(([fieldId, airtableName, fallbackSwatch]) => {
       set(fieldId, f[airtableName]);
@@ -6624,7 +6626,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // like it hadn't worked, so each field now states plainly whether it's on
   // the default or a custom colour, with a bordered dot of the colour actually
   // in use.
-  function mqOptionalColorDefaults() { return { focalcolor: '#2563eb', boxbordercolor: '#93c5fd', boxbgcolor: '#eff6ff', boxtextcolor: '#1e40af' }; }
+  function mqOptionalColorDefaults() { return { focalcolor: '#2563eb', boxbordercolor: '#93c5fd', boxbgcolor: '#d6e7fb', boxtextcolor: '#1e40af' }; }
   function mqRenderColorState(shortId) {
     const textField = el('mq-shop-' + shortId);
     if (!textField) return;
@@ -9461,17 +9463,64 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // time lets widget.js ask a browser again if a password is deleted and then
   // added back — see mqWidgetPwEntries in widget.js.
   function mqPwText(x) { return (x && typeof x === 'object') ? String(x.p == null ? '' : x.p) : String(x == null ? '' : x); }
+  function mqPwObj(x) {
+    if (x && typeof x === 'object') return x;
+    return { p: String(x == null ? '' : x), t: 0 };
+  }
   function mqRenderWidgetPasswordList() {
     const shopRec = window._mqShopRecord;
     const list = el('mq-widgetpw-list');
     if (!list || !shopRec) return;
     const pwds = mqGetWidgetPasswords(shopRec);
-    list.innerHTML = pwds.length ? pwds.map((pwEntry, idx) => { const pw = mqPwText(pwEntry); return `
-      <span style="display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid #fecaca;border-radius:999px;padding:5px 10px;font-size:12px;color:#374151">
-        <span style="font-family:monospace">${(pw||'').replace(/</g,'&lt;')}</span>
-        <button type="button" onclick="mqRemoveWidgetPassword(${idx})" title="Remove this password" style="background:none;border:none;cursor:pointer;color:#991b1b;font-weight:700;padding:0;line-height:1;font-size:13px">✕</button>
-      </span>`; }).join('') : '<span style="font-size:12px;color:#9ca3af">No passwords added yet — while the toggle above is on, no one can get into the widget until you add at least one.</span>';
+    const esc = t => String(t == null ? '' : t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+    list.style.cssText = 'display:flex;flex-direction:column;gap:8px;margin:6px 0 10px';
+    list.innerHTML = pwds.length ? pwds.map((pwEntry, idx) => {
+      const o = mqPwObj(pwEntry);
+      const pw = mqPwText(pwEntry);
+      const d = Math.min(100, Math.max(0, parseFloat(o.d) || 0));
+      const show = o.s !== false;
+      return `
+      <div style="background:#fff;border:1px solid #fecaca;border-radius:10px;padding:8px 12px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+          <span style="font-family:monospace;font-size:13px;color:#374151;word-break:break-all">${esc(pw)}</span>
+          <button type="button" onclick="mqRemoveWidgetPassword(${idx})" title="Remove this password" style="background:none;border:none;cursor:pointer;color:#991b1b;font-weight:700;padding:0;line-height:1;font-size:14px">✕</button>
+        </div>
+        <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px 14px;margin-top:8px;font-size:12px;color:#4b5563">
+          <label style="display:inline-flex;align-items:center;gap:6px">Discount
+            <input type="number" min="0" max="100" step="0.5" value="${d || ''}" placeholder="0" onchange="mqSetPasswordDiscount(${idx}, this.value)" style="width:72px;font-size:12.5px;padding:4px 7px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit"/> %
+          </label>
+          ${d > 0 ? `
+          <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" ${show ? 'checked' : ''} onchange="mqSetPasswordShow(${idx}, this.checked)"/> Show the discount to the customer</label>
+          ${show ? `<input type="text" value="${esc(o.l || '')}" maxlength="40" placeholder="Label, e.g. Contractor discount" onchange="mqSetPasswordLabel(${idx}, this.value)" style="flex:1;min-width:170px;font-size:12.5px;padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit"/>` : `<span style="color:#9ca3af">Customers just see the lower price.</span>`}` : ''}
+        </div>
+      </div>`; }).join('') : '<span style="font-size:12px;color:#9ca3af">No passwords added yet — while the toggle above is on, no one can get into the widget until you add at least one.</span>';
   }
+  // Saves one change to a single password entry. Entries that were plain
+  // strings (older ones) become {p, t:0} objects — t:0 keeps them working in
+  // browsers that already unlocked with them.
+  async function mqPatchWidgetPassword(idx, patch, okMsg) {
+    const shopRec = window._mqShopRecord;
+    if (!shopRec) return;
+    const pwds = mqGetWidgetPasswords(shopRec);
+    if (!pwds[idx]) return;
+    pwds[idx] = Object.assign({}, mqPwObj(pwds[idx]), patch);
+    try {
+      await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Widget passwords': JSON.stringify(pwds) });
+      shopRec.fields['Widget passwords'] = JSON.stringify(pwds);
+      mqRenderWidgetPasswordList();
+      showMsg('mq-shop-msg', okMsg);
+    } catch(e) { showMsg('mq-shop-msg', 'Error saving — please try again.', 'error'); mqRenderWidgetPasswordList(); }
+  }
+  window.mqSetPasswordDiscount = function(idx, val) {
+    const n = Math.min(100, Math.max(0, parseFloat(val) || 0));
+    return mqPatchWidgetPassword(idx, { d: n }, n > 0 ? `✓ Discount set to ${n}%.` : '✓ Discount removed.');
+  };
+  window.mqSetPasswordShow = function(idx, on) {
+    return mqPatchWidgetPassword(idx, { s: !!on }, on ? '✓ Customers will see the discount.' : '✓ Customers will only see the lower price.');
+  };
+  window.mqSetPasswordLabel = function(idx, val) {
+    return mqPatchWidgetPassword(idx, { l: String(val || '').trim().slice(0, 40) }, '✓ Label saved.');
+  };
   window.mqAddWidgetPassword = async function() {
     const shopRec = window._mqShopRecord;
     if (!shopRec) return;
@@ -9480,11 +9529,16 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     if (!val) return;
     const pwds = mqGetWidgetPasswords(shopRec);
     if (pwds.some(x => mqPwText(x) === val)) { showMsg('mq-shop-msg', 'That password is already on the list.', 'error'); return; }
-    pwds.push({ p: val, t: Date.now() });
+    const discInput = el('mq-widgetpw-new-disc');
+    const disc = Math.min(100, Math.max(0, parseFloat(discInput && discInput.value) || 0));
+    const entry = { p: val, t: Date.now() };
+    if (disc > 0) { entry.d = disc; entry.s = true; entry.l = ''; }
+    pwds.push(entry);
     try {
       await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Widget passwords': JSON.stringify(pwds) });
       shopRec.fields['Widget passwords'] = JSON.stringify(pwds);
       if (input) input.value = '';
+      if (discInput) discInput.value = '';
       mqRenderWidgetPasswordList();
       showMsg('mq-shop-msg', '✓ Password added.');
     } catch(e) { showMsg('mq-shop-msg', 'Error saving — please try again.', 'error'); }

@@ -535,7 +535,7 @@
       .filter(l=>l&&l.label&&(l.header||l.cost!==undefined))
       .map(l=>l.header
         ? `<tr><td colspan="2" style="padding:12px 8px 4px;font-weight:700;color:#111;font-size:14px;text-transform:uppercase;letter-spacing:0.04em">${l.label}</td></tr>`
-        : `<tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">${l.label}</td><td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:right;${l.bold?'font-weight:700;color:#111':''}">${CUR()}${Math.round(l.cost).toLocaleString()}</td></tr>`
+        : `<tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">${l.label}</td><td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:right;${l.bold?'font-weight:700;color:#111':''}">${l.cost<0?'−':''}${CUR()}${Math.abs(Math.round(l.cost)).toLocaleString()}</td></tr>`
       ).join('');
     // Same gating as the widget's own financing box/badge (rate+term set,
     // and — if the shop set a floor — the high end clears it), so an email
@@ -547,6 +547,7 @@
       `<div style="font-family:sans-serif;max-width:560px;margin:0 auto">
         <h2 style="color:#1a1a1a">${contactRequested ? 'A customer would like to be contacted' : `New ${quoteType} quote lead`}</h2>
         ${contactRequested ? `<div style="background:#fef3c7;border:1px solid #fde68a;border-radius:8px;padding:10px 14px;margin-bottom:16px;font-weight:600;color:#92400e">🙋 This customer clicked "I'd like to be contacted" on their quote — they're expecting to hear from you.</div>` : ''}
+        ${window._mqDiscount ? `<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 14px;margin-bottom:16px;color:#1e3a8a;font-size:14px">🏷️ <strong>Discount applied: ${mqEsc(mqDiscountName(window._mqDiscount))} — ${mqDiscountPctText(window._mqDiscount)}% off</strong><br/><span style="font-size:12px;color:#475569">Password used: ${mqEsc(window._mqDiscount.pw)}. The range below is already discounted.</span></div>` : ''}
         <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
           <tr><td style="padding:8px;background:#f9fafb;font-weight:600" colspan="2">Customer details</td></tr>
           <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Name</td><td style="padding:6px 8px;border-bottom:1px solid #eee">${lead.name || 'Not provided'}</td></tr>
@@ -574,6 +575,7 @@
           <div style="background:#f0fdf4;border-radius:8px;padding:16px;text-align:center;margin-bottom:16px">
             <div style="font-size:14px;color:#666;margin-bottom:4px">${mqShouldShowRange(prefix) ? 'Your estimated range' : 'Your estimate'}</div>
             <div style="font-size:28px;font-weight:700;color:#16a34a">${mqFmtPrice(prefix, low, high, total)}</div>
+            ${(window._mqDiscount && window._mqDiscount.show) ? `<div style="font-size:13px;color:#166534;margin-top:6px;font-weight:600">🏷️ Includes ${mqEsc(mqDiscountName(window._mqDiscount))}: ${mqDiscountPctText(window._mqDiscount)}% off</div>` : ''}
             ${financingLine ? `<div style="font-size:13px;color:#166534;margin-top:6px;font-weight:600">💳 As low as ${financingLine}*</div><div style="font-size:10.5px;color:#6b7280;margin-top:2px">*Estimated payment only — subject to approval and final terms.</div>` : ''}
           </div>
           <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
@@ -661,7 +663,7 @@
     const boxBgIsCustom = !!boxBg;
     focalColor = focalColor || '#2563eb';
     boxBorder = boxBorder || '#93c5fd';
-    boxBg = boxBg || '#eff6ff';
+    boxBg = boxBg || '#d6e7fb';
     boxText = boxText || '#1e40af';
     window._mqFocalColor = focalColor;
     window._mqBoxBorder = boxBorder;
@@ -670,7 +672,7 @@
     // Only run the auto-gradient math when they've actually set a custom
     // background — the original default already has its own two hand-picked
     // gradient stops (#eff6ff → #f0f9ff), no need to recompute those.
-    const boxBgStop2 = boxBgIsCustom ? mqLightenHex(boxBg, 0.3) : '#f0f9ff';
+    const boxBgStop2 = mqLightenHex(boxBg, 0.3);
     const s = document.createElement('style');
     s.textContent = `
       #midasquote-widget *{box-sizing:border-box;margin:0;padding:0}
@@ -950,6 +952,11 @@
       #midasquote-widget .mq-res-sub{font-size:14px;color:#4b5563}
       #midasquote-widget .mq-res-range{font-size:22px;font-weight:700;color:${bc};text-align:right}
       #midasquote-widget .mq-res-range-lbl{font-size:13px;color:#4b5563;text-align:right}
+      #midasquote-widget .mq-discount-box{display:none;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:10px 14px;margin:0 0 1rem;font-size:14px;color:#166534}
+      #midasquote-widget .mq-discount-box .mq-disc-row{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:3px 0}
+      #midasquote-widget .mq-discount-box .mq-disc-was{color:#6b7280;text-decoration:line-through}
+      #midasquote-widget .mq-discount-box .mq-disc-sav{font-weight:700}
+      #midasquote-widget .mq-res-hdr + .mq-discount-box{margin-top:-0.25rem}
       #midasquote-widget .mq-line-items{list-style:none;padding:0;margin:0 0 1rem}
       #midasquote-widget .mq-line-items li{display:flex;justify-content:space-between;font-size:14px;padding:6px 0;border-bottom:1px solid #f3f4f6}
       #midasquote-widget .mq-line-items li:last-child{border-bottom:none}
@@ -1835,7 +1842,7 @@
       window._mqGroupFilter[selectId] = groupNames[0];
     }
     const boxBorderColor = window._mqBoxBorder || '#93c5fd';
-    const boxBgColor = window._mqBoxBg || '#eff6ff';
+    const boxBgColor = window._mqBoxBg || '#d6e7fb';
     const boxTextColor = window._mqBoxText || '#1e40af';
     const chips = items.map((it,i)=>{
       const safePhoto = (it.photoUrl||'').replace(/'/g,"\\'");
@@ -6724,7 +6731,7 @@
 
       const low=Math.round(total*(window._mqRangeLow||0.95)/10)*10, high=Math.round(total*(window._mqRangeHigh||1.20)/10)*10;
       const roomLabel = roomObj ? roomObj.name : 'Cabinet';
-      return {lines,sub:Math.round(total),total:Math.round(total),low,high,roomLabel,si,uFt,bFt,hasRoomAdjustment,roomAdjPct,roomName:roomLabel};
+      return mqApplyDiscount({lines,sub:Math.round(total),total:Math.round(total),low,high,roomLabel,si,uFt,bFt,hasRoomAdjustment,roomAdjPct,roomName:roomLabel});
     }
 
     function calcCountertop(prefix) {
@@ -6939,7 +6946,7 @@
       const totalMult = (100 + totalAdjPct) / 100;
       const total = sub * totalMult;
       lines.push({label:'Subtotal (before tax)',cost:Math.round(total),bold:true});
-      return {lines,sub:Math.round(total),total:Math.round(total),low:Math.round(total*(window._mqRangeLow||0.95)/10)*10,high:Math.round(total*(window._mqRangeHigh||1.20)/10)*10};
+      return mqApplyDiscount({lines,sub:Math.round(total),total:Math.round(total),low:Math.round(total*(window._mqRangeLow||0.95)/10)*10,high:Math.round(total*(window._mqRangeHigh||1.20)/10)*10});
     }
 
     function renderResult(rangeEl,listEl,result,prefix){
@@ -6952,6 +6959,7 @@
         li.innerHTML=`<span class="mq-li-lbl">✓ ${l.label}</span>`;
         ul.appendChild(li);
       });
+      mqRenderDiscountBox(prefix, result.discount, result.low, result.high, result.total);
     }
     // Refreshes the full results breakdown for whichever tab is currently
     // showing one — reuses the exact same calc + render logic Calculate
@@ -7000,6 +7008,7 @@
           if (!ctRows.children.length) { const d=document.createElement('div'); d.className='mq-combined-row'; d.innerHTML=`<span class="mq-clbl">None selected</span>`; ctRows.appendChild(d); }
         }
         const tl = cab.low+ct.low, th = cab.high+ct.high, totalB = cab.total+ct.total;
+        mqRenderDiscountBox('b', mqCombineDiscount(cab, ct), tl, th, totalB);
         const grandEl = document.getElementById('mq-b-grand');
         if (grandEl) { mqRefreshBallparkWording('b'); grandEl.textContent = mqFmtPrice('b', tl, th, totalB); }
         mqUpdateFinancingBox('b', tl, th, totalB);
@@ -7080,6 +7089,7 @@
           [...ct.lines].filter(l=>!l.bold).sort((a,b)=>b.cost-a.cost).forEach(l=>{const d=document.createElement('div');d.className='mq-combined-row';d.innerHTML=`<span class="mq-clbl">✓ ${l.label}</span>`;ctRows.appendChild(d);});
           if(!ctRows.children.length){const d=document.createElement('div');d.className='mq-combined-row';d.innerHTML=`<span class="mq-clbl">None selected</span>`;ctRows.appendChild(d);}
           const tl=cab.low+ct.low,th=cab.high+ct.high,totalB=cab.total+ct.total;
+          mqRenderDiscountBox('b', mqCombineDiscount(cab, ct), tl, th, totalB);
           mqRefreshBallparkWording('b');
           document.getElementById('mq-b-grand').textContent=mqFmtPrice('b', tl, th, totalB);
           mqUpdateFinancingBox('b', tl, th, totalB);
@@ -8677,7 +8687,87 @@
     let raw = [];
     try { raw = shop['Widget passwords'] ? JSON.parse(shop['Widget passwords']) : []; } catch(e) { raw = []; }
     if (!Array.isArray(raw)) raw = [];
-    return raw.map(x => (x && typeof x === 'object') ? { p: String(x.p == null ? '' : x.p), t: Number(x.t) || 0 } : { p: String(x), t: 0 });
+    return raw.map(x => (x && typeof x === 'object')
+      ? { p: String(x.p == null ? '' : x.p), t: Number(x.t) || 0, d: Math.min(100, Math.max(0, parseFloat(x.d) || 0)), s: x.s !== false, l: String(x.l == null ? '' : x.l).trim() }
+      : { p: String(x), t: 0, d: 0, s: true, l: '' });
+  }
+
+  // ── Password discounts ──
+  // A password can carry a discount (d = percent off, s = show the discount
+  // to the customer, l = label such as "Contractor discount"). Whichever
+  // password this browser unlocked with decides the discount. It comes off
+  // the FINAL quote — after the project type's own % adjustments — so
+  // calcCabinet/calcCountertop apply it as their very last step and every
+  // screen, the live price bar, financing and both emails then agree.
+  function mqResolveDiscount(shop) {
+    if (!shop || shop['Widget password protected'] !== 'Yes') return null;
+    let stored = null;
+    try { stored = localStorage.getItem(mqWidgetPwStorageKey()); } catch(e) { stored = null; }
+    if (!stored) return null;
+    let rec = null;
+    try { rec = JSON.parse(stored); } catch(e) { rec = null; }
+    const entries = mqWidgetPwEntries(shop);
+    let en = null;
+    if (rec && typeof rec === 'object' && 'p' in rec) en = entries.find(x => x.p === String(rec.p) && x.t === (Number(rec.t) || 0));
+    else en = entries.find(x => x.t === 0 && x.p === stored);
+    if (!en || !(en.d > 0)) return null;
+    return { pct: en.d, show: en.s, label: en.l, pw: en.p };
+  }
+  function mqDiscountPctText(d) { return String(Math.round(d.pct * 100) / 100); }
+  function mqEsc(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c])); }
+  function mqDiscountName(d) { return (d && d.label) ? d.label : 'Discount'; }
+  // Mutates and returns a calc result. low/high/total become the discounted
+  // figures; the originals are kept on result.discount for the "regular
+  // price / you save" box. Two bold lines (never shown to customers; they
+  // appear in the shop's notification email) record the math.
+  function mqApplyDiscount(r) {
+    const d = window._mqDiscount;
+    if (!d || !(d.pct > 0) || !r || !((r.total || 0) > 0 || (r.high || 0) > 0)) return r;
+    const k = 1 - d.pct / 100;
+    const preLow = r.low, preHigh = r.high, preTotal = r.total;
+    r.low = Math.round(preLow * k / 10) * 10;
+    r.high = Math.round(preHigh * k / 10) * 10;
+    r.total = Math.round(preTotal * k);
+    r.sub = r.total;
+    r.discount = { pct: d.pct, label: d.label, show: d.show, preLow, preHigh, preTotal };
+    r.lines = [...(r.lines || []),
+      { label: `${mqDiscountName(d)} (${mqDiscountPctText(d)}% off)`, cost: -(preTotal - r.total), bold: true, discount: true },
+      { label: 'Subtotal after discount (before tax)', cost: r.total, bold: true }];
+    return r;
+  }
+  function mqCombineDiscount(a, b) {
+    const x = a && a.discount, y = b && b.discount;
+    if (!x && !y) return null;
+    const base = x || y;
+    const pre = (r, k, fb) => (r && r.discount) ? r.discount[k] : (r ? r[fb] : 0) || 0;
+    return { pct: base.pct, label: base.label, show: base.show,
+      preLow: pre(a, 'preLow', 'low') + pre(b, 'preLow', 'low'),
+      preHigh: pre(a, 'preHigh', 'high') + pre(b, 'preHigh', 'high'),
+      preTotal: pre(a, 'preTotal', 'total') + pre(b, 'preTotal', 'total') };
+  }
+  // "Regular price / discount / you save" box, only when the password's
+  // "show discount" switch is on. Created on demand so a widget with no
+  // discounts has exactly the same markup as before.
+  function mqRenderDiscountBox(prefix, disc, low, high, total) {
+    const panel = document.getElementById(`mq-${prefix}-result`);
+    if (!panel) return;
+    let box = document.getElementById(`mq-${prefix}-discount`);
+    if (!disc || !disc.show) { if (box) { box.style.display = 'none'; box.innerHTML = ''; } return; }
+    if (!box) {
+      box = document.createElement('div');
+      box.id = `mq-${prefix}-discount`;
+      box.className = 'mq-discount-box';
+      const anchor = prefix === 'b' ? panel.querySelector('.mq-grand-total') : panel.querySelector('.mq-res-hdr');
+      if (!anchor) return;
+      if (prefix === 'b') anchor.parentNode.insertBefore(box, anchor);
+      else anchor.after(box);
+    }
+    const esc = t => String(t).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+    const regular = mqFmtPrice(prefix, disc.preLow, disc.preHigh, disc.preTotal);
+    const saves = mqFmtPrice(prefix, disc.preLow - low, disc.preHigh - high, disc.preTotal - total);
+    box.innerHTML = `<div class="mq-disc-row"><span>Regular price</span><span class="mq-disc-was">${regular}</span></div>
+      <div class="mq-disc-row mq-disc-sav"><span>🏷️ ${esc(mqDiscountName(disc))} · ${mqDiscountPctText(disc)}% off</span><span>You save ${saves}</span></div>`;
+    box.style.display = 'block';
   }
   function mqCheckWidgetPassword(shop) {
     const entries = mqWidgetPwEntries(shop);
@@ -8787,6 +8877,7 @@
     }
 
     window._mqShopData=shop;
+    window._mqDiscount = mqResolveDiscount(shop);
     window._mqFullData=data; // cached so mqStartNewEstimate can rebuild without refetching
     // window._mqIsDemoPlan was already set in loadShopData (needed earlier
     // there, before shopPhotos got parsed) — not re-set here since `shop` is
@@ -9679,7 +9770,7 @@
         const lum = h => { const [r, g, b] = rgb(h); return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b); };
         const ratio = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
         const rgba = (h, a) => { const [r, g, b] = rgb(h); return `rgba(${r},${g},${b},${a})`; };
-        const bg = norm(window._mqBoxBg) || '#eff6ff';
+        const bg = norm(window._mqBoxBg) || '#d6e7fb';
         let ink = norm(window._mqBoxText) || '#1e40af';
         if (ratio(bg, ink) < 4.5) ink = lum(bg) > 0.4 ? '#111827' : '#ffffff';
         const focal = norm(window._mqFocalColor) || '#2563eb';
