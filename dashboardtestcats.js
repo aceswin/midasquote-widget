@@ -269,101 +269,8 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   // just be dropped in above or below the text later without needing to
   // restructure anything.
   const MQ_HELP_CONTENT = {
-    gettingstarted: {
-      title: 'Getting started',
-      body: `
-        <p>Work through the MidasQuote setup tabs in order the first time you set up your shop — each step builds on the one before it, and by the end your widget is ready for real customers.</p>
-        <div class="mq-step">
-          <div class="mq-step-head"><span class="mq-step-num">Step 1</span><span class="mq-step-title">Shop info</span></div>
-          <div class="mq-step-body">
-            <p>Your logo, shop name, city, phone number, brand colour, and quote range. This is the foundation everything else is built on top of.</p>
-            <p>Look further in Shop info for on/off toggles to customize your widget even more, such as "display showroom link", "financing available badge", "password protected widget", and more.</p>
-            <p>You can even limit what you offer. Countertops only? No problem. Simply toggle off "cabinets only" and "both" to only offer countertops.</p>
-          </div>
-        </div>
-        <div class="mq-step">
-          <div class="mq-step-head"><span class="mq-step-num">Step 2</span><span class="mq-step-title">Project types</span></div>
-          <div class="mq-step-body">
-            <p>Set up the project types your widget offers (Kitchen, Bathroom, or your own custom types), each with its own description, cover photo, and measuring guide. Use our premade ones, edit ours, or create your own from scratch.</p>
-            <p>Project types can also be used to increase or decrease ballpark percentages for specific parts of the quote — like uppers, bases, installation, and the total ballpark. For example, kick coverings aren't included in the pricing wizard, but to make up for that you could add something like 2% to your base cabinet quotes for any project type that includes bases. Learn more in this guide's "Project types" tab.</p>
-          </div>
-        </div>
-        <div class="mq-step">
-          <div class="mq-step-head"><span class="mq-step-num">Step 3</span><span class="mq-step-title">Pricing</span></div>
-          <div class="mq-step-body">
-            <p>Run the pricing wizard to reverse-engineer your rates from real quotes you'll do based on your products. This is the core of your quoting math and can be edited at any time.</p>
-            <p>Start with the pricing wizard, adding your basic box materials, doors, hinges, drawers, and installation rates. After that, you can add bulk items of the same price, or add any more items you wish. You can also now configure your crown/valance pricing, and your countertop and tall cabinet pricing.</p>
-            <p>The widget takes the measurements input by the customer and uses these prices to generate your ballparks. It knows to attach crown to upper cabinet measurements and tall cabinets. It also takes your base cabinet measurements and automatically attaches countertop measurements to them if counters are selected. The widget also incorporates formulas that have been proven to accurately generate quotes for customers wanting only "some drawers" or "mostly drawers." All you need to do is do your drawer quotes in the pricing wizard, and the rest is taken care of for you.</p>
-          </div>
-        </div>
-        <div class="mq-step">
-          <div class="mq-step-head"><span class="mq-step-num">Step 4</span><span class="mq-step-title">Specialty items <span style="font-weight:400;color:#9ca3af;font-size:13px">(optional)</span></span></div>
-          <div class="mq-step-body">
-            <p>This is where you can be as creative as you like. You can offer any item you wish to list. It could be multiple variants of one door type, all pre-sized and charged per square foot automatically — perfect for refacing jobs that don't fit in well with the pricing wizard. It could be garbage pullouts, lazy susans, floating shelves, sinks, wainscoting, and on and on. Anything you can price at a flat rate, per square foot rate, or per linear foot rate can go here.</p>
-            <p>You can and should also divide items into categories for easiest viewing for your customers. You can also decide what specialty items show on what project types, and which items are meant for your eyes only (MidasQuote Pro) or for customers to see too.</p>
-            <p>Once you really understand the flexibility of MidasQuote, you can create almost anything using the Specialty items section.</p>
-          </div>
-        </div>
-        <div class="mq-step">
-          <div class="mq-step-head"><span class="mq-step-num">Step 5</span><span class="mq-step-title">My Products</span></div>
-          <div class="mq-step-body">
-            <p>Add real photos (even gifs) for what you've set up, so customers see your actual materials and doors instead of generic icons. My Products section is what brings the widget to life. You also use the My Products section to control what products show for what project types.</p>
-            <p>Want to remove cabinets, doors, and drawers completely from a project type, but keep crown, valance, counters, and some custom specialty items? Simply check/uncheck the project types you want certain items or entire categories showing up in.</p>
-            <p>If you don't have all the photos you need to get started, you can choose from our prefilled libraries for each different category. We also suggest using ChatGPT to generate images if you are in dire need. For example, taking a somewhat rough image and asking ChatGPT to clean it up can be very useful. Or even if you have a 3D image of a product from Mosaik or Cabinet Vision, just click and hold "Shift + Windows key + S" to take an instant snapshot of your screen to paste into GPT. Many of our images were made by combining real images with ChatGPT to make higher quality ones. It can really save a lot of time.</p>
-          </div>
-        </div>
-        <div class="mq-step">
-          <div class="mq-step-head"><span class="mq-step-num">Step 6</span><span class="mq-step-title">Showroom <span style="font-weight:400;color:#9ca3af;font-size:13px">(optional)</span></span></div>
-          <div class="mq-step-body">
-            <p>A shareable gallery built from the photos you've already added in My Products, or a completely custom showroom displaying your real work images. Pick "Default showroom" to show off your priced categories, or "Build my own" to show only custom categories you create here instead. Rename or hide anything without touching your actual pricing or the widget itself.</p>
-            <p>Your showroom has its own standalone link that works completely on its own, and can also be embedded right on your website as a self-sizing iframe if you'd rather it live on your own page. Not all shops have a decent showroom on their website, so MidasQuote solves that problem for shops at no extra cost to you.</p>
-          </div>
-        </div>
-        <div class="mq-step">
-          <div class="mq-step-head"><span class="mq-step-num">Step 7</span><span class="mq-step-title">Embed code</span></div>
-          <div class="mq-step-body">
-            <p>Grab your widget's embed code or direct link and add it to your website. Customize the code to suit your site. Access your MidasQuote Pro link as well and follow instructions on how to add MidasQuote or MidasQuote Pro as an app to your phone or computer for fast accessibility.</p>
-          </div>
-        </div>
-        <div class="mq-step">
-          <div class="mq-step-head"><span class="mq-step-num">Step 8</span><span class="mq-step-title">Test it</span></div>
-          <div class="mq-step-body">
-            <p>Run a few test quotes for jobs you've actually quoted before, and compare the ballpark to what you really charged. Make sure that the prices you are generating are always in a healthy range. If not, then you can recheck your pricing, adjust your range to be wider or higher, or adjust individual sections of your range (Base cabinet, uppers, installation) in the Project types tab.</p>
-            <p>Generally your quotes are going to come in pretty close to your real pricing, except for things like finished ends and a few crown returns that will be missed. We have tested MidasQuote on multiple jobs varying from a couple thousand dollars to $50,000 and higher, and it always comes in very close.</p>
-          </div>
-        </div>
-        <div class="mq-step">
-          <div class="mq-step-head"><span class="mq-step-num">Step 9</span><span class="mq-step-title">Go live</span></div>
-          <div class="mq-step-body">
-            <p>Share your link or publish the embed, and you're ready for your first real customer. If you have any problems along the way or any confusion, DO NOT hesitate to reach out. Your success is our success. You came here because you saw the value MidasQuote could provide for you, so let us make sure it's providing that value for you fully.</p>
-          </div>
-        </div>
-        <div class="mq-step">
-          <div class="mq-step-head"><span class="mq-step-num">Step 10</span><span class="mq-step-title">MidasQuote Pro <span style="font-weight:400;color:#9ca3af;font-size:13px">(optional)</span></span></div>
-          <div class="mq-step-body">
-            <p>Once your widget is all set up for customers, you can fine-tune your quoting in MidasQuote Pro. Anything the customer-facing widget doesn't account for can be handled here instead — and more.</p>
-            <p>You'll find your MidasQuote Pro link on the Embed code tab (Step 7 above) — add it to your phone or laptop like an app so it's one tap away when you need it.</p>
-          </div>
-        </div>
-        <p style="margin-top:1.4rem">To dive deeper into each tab, check out the help tabs at the top of this page.</p>
-        <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;padding:1rem 1.25rem;margin-top:1.4rem;font-size:13px;color:#991b1b;line-height:1.6">
-          <div style="font-weight:700;font-size:14px;margin-bottom:6px">⚠️ What MidasQuote doesn't account for</div>
-          <p style="margin:0 0 10px">The goal of MidasQuote is to give fast (5 minutes or less) ballpark estimates, without overloading the customer with inputs. To do this, we have to sacrifice some options — things like finished ends, crown/valance returns to walls, side splashes, and island finished ends and back panels. These items need to be absorbed into the ballpark range.</p>
-          <p style="margin:0 0 10px">This is why it's best to keep your range fairly tight on the low end (no more than -5%) and with decent padding on the high end (+20% at least).</p>
-          <p style="margin:0">We're currently working on a simple remedy for islands that won't overwhelm the customer or require much additional quoting — if any — for the shop owner, but it's not quite finished yet.</p>
-        </div>
-      `
-    },
     overview: {
       title: 'Dashboard',
-      // guideBody is a shorter version shown only in the folder-tab Help
-      // guide (the "where to start" line there is redundant now that
-      // Getting started covers it as its own full walkthrough). The
-      // per-page "Need help?" popup on the actual Dashboard tab keeps the
-      // full body below, including that line.
-      guideBody: `
-        <p>This is your at-a-glance summary — how many quotes have come in, and how recently. It's read-only; there's nothing to configure here.</p>
-      `,
       body: `
         <p>This is your at-a-glance summary — how many quotes have come in, and how recently. It's read-only; there's nothing to configure here.</p>
         <p>If you're just getting started, head to <strong>Shop info</strong> first, then <strong>Project types</strong>, then <strong>Pricing</strong> — that's the order that makes the rest of the dashboard make sense.</p>
@@ -373,297 +280,95 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       title: 'Leads',
       body: `
         <p>Every quote a customer runs through your widget shows up here automatically — their contact info (if they gave it), the project type, and the estimate they saw.</p>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Statuses</div>
-          <p style="margin:0">New / Contacted / Booked / Lost are just for your own tracking — customers never see these. Use the dropdown at the top to filter the list down to one status at a time.</p>
-        </div>
-        <p style="margin-top:1.1rem">A customer can run the widget multiple times without giving their name — you'll still see those as separate quote attempts, just grouped together and numbered ("Estimate 1 of 2", etc.) so you can tell they're the same visitor.</p>
+        <p><strong>Statuses</strong> (New / Contacted / Booked / Lost) are just for your own tracking — customers never see these. Use the dropdown at the top to filter the list down to one status at a time.</p>
+        <p>A customer can run the widget multiple times without giving their name — you'll still see those as separate quote attempts, just grouped together and numbered ("Estimate 1 of 2", etc.) so you can tell they're the same visitor.</p>
       `
     },
     shop: {
       title: 'Shop info',
       body: `
         <p>The basics that show up at the top of your widget — your logo, shop name, city, and phone number.</p>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Brand colour</div>
-          <p style="margin:0">Used for your widget's tab bar, buttons, and logo placeholder.</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">MidasQuote default color scheme</div>
-          <p style="margin:0">A collapsed section further down with four optional colors controlling the "Start here" and "Supply/install" highlight boxes customers see, plus the ring around whichever step they're currently on. Left alone, it's the same polished blue scheme every shop starts with — click to expand it only if you want to customize any piece, like a dark background with light text.</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Disclaimer text</div>
-          <p style="margin:0">The fine print shown under every quote result (e.g. "Ballpark estimate only, contact us for a full quote"). Customize it however fits your business.</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Project type section title/hint</div>
-          <p style="margin:0">The heading and short line customers see above the project type dropdown. Change "Choose your project type" to whatever fits your business (e.g. "Choose your job type"), and adjust the hint below it, which by default lets customers know they can build one combined quote across multiple project types by calculating one, then switching to another.</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Quote range — low/high</div>
-          <p style="margin:0">Controls how wide the "Estimated range" shown to customers is around the actual calculated price. The default is -5%/+20%, and that's intentionally lopsided: the low side just needs a little breathing room, but the high side is padding for customer measuring error and items they forget to mention — so the range should always lean higher, not sit evenly on both sides of the estimate.</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Consultation link/email</div>
-          <p style="margin:0">At least one of these needs to be filled in, since that's how customers actually reach you after seeing their estimate.</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Financing toggle</div>
-          <p style="margin:0">Turns on a small "Financing available" note on the results screen. Adding a financing link is optional — you can turn this on just to let customers know financing is available, without linking anywhere specific. If you also enter an interest rate and term, the widget shows an estimated monthly payment next to the badge (e.g. "as low as $123/mo – $155/mo") — leave either blank to just show the plain badge. You can also set a minimum project amount to block the financing's monthly payment from showing up for a project that is only a couple hundred dollars. Just meant to keep things looking polished and professional.</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Showroom toggle</div>
-          <p style="margin:0">Controls whether the "See our showroom" button shows up in your widget's header at all.</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">🔒 Widget access</div>
-          <p style="margin:0">Require a password before customers can use your widget at all, for when you don't want it fully public. Add as many passwords as you like; removing one instantly locks out anyone whose browser had it saved.</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">🎛️ Widget layout</div>
-          <p style="margin:0">Pick <strong>Classic</strong> (one scrolling page, the original look) or <strong>Focused</strong> (one question at a time, full screen). It changes your embedded widget and your standalone link everywhere at once — no new embed code to paste. Use the Preview links to try either one before choosing. MidasQuote Pro always stays the same.</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">🗂️ Estimator tabs</div>
-          <p style="margin:0">A card further down lets you turn off any of your widget's top-level tabs (Full project quote, Cabinets only, Countertops only) per shop — whatever's left automatically fills the space. At least one has to stay on, and there's a checkbox to apply the same choice to MidasQuote Pro.</p>
-        </div>
-        <p style="margin-top:1.1rem">Everything on this tab autosaves a second or two after you stop typing — you'll see a small toast confirm each save.</p>
+        <p><strong>Brand colour</strong> — used for your widget's tab bar, buttons, and logo placeholder.</p>
+        <p><strong>MidasQuote default color scheme</strong> — a collapsed section further down with four optional colors controlling the "Start here" and "Supply/install" highlight boxes customers see, plus the ring around whichever step they're currently on. Left alone, it's the same polished blue scheme every shop starts with — click to expand it only if you want to customize any piece, like a dark background with light text.</p>
+        <p><strong>Disclaimer text</strong> is the fine print shown under every quote result (e.g. "Ballpark estimate only, contact us for a full quote"). Customize it however fits your business.</p>
+        <p><strong>Project type section title/hint</strong> — the heading and short line customers see above the project type dropdown. Change "Choose your project type" to whatever fits your business (e.g. "Choose your job type"), and adjust the hint below it, which by default lets customers know they can build one combined quote across multiple project types by calculating one, then switching to another.</p>
+        <p><strong>Quote range — low/high</strong> — controls how wide the "Estimated range" shown to customers is around the actual calculated price. The default is -5%/+20%, and that's intentionally lopsided: the low side just needs a little breathing room, but the high side is padding for customer measuring error and items they forget to mention — so the range should always lean higher, not sit evenly on both sides of the estimate.</p>
+        <p><strong>Consultation link/email</strong> — at least one of these needs to be filled in, since that's how customers actually reach you after seeing their estimate.</p>
+        <p><strong>Financing toggle</strong> — turns on a small "Financing available" note on the results screen. Adding a financing link is optional — you can turn this on just to let customers know financing is available, without linking anywhere specific. If you also enter an interest rate and term, the widget shows an estimated monthly payment next to the badge (e.g. "as low as $123/mo – $155/mo") — leave either blank to just show the plain badge. You can also set a minimum project amount — below that, the monthly-payment line stays hidden, so it never shows up looking oddly small on a low-cost quote.</p>
+        <p><strong>Showroom toggle</strong> — controls whether the "See our showroom" button shows up in your widget's header at all.</p>
+        <p><strong>🗂️ Estimator tabs</strong> — a card further down lets you turn off any of your widget's top-level tabs (Full project quote, Cabinets only, Countertops only) per shop — whatever's left automatically fills the space. At least one has to stay on, and there's a checkbox to apply the same choice to MidasQuote Pro.</p>
+        <p>Everything on this tab autosaves a second or two after you stop typing — you'll see a small toast confirm each save.</p>
       `
     },
     rooms: {
       title: 'Project types',
       body: `
         <p>Each project type (Kitchen, Bathroom, Refacing, or anything custom you add) is its own self-contained setup: its own description, cover photo, "how to measure" guide, and pricing behavior.</p>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Price adjustments</div>
-          <p style="margin:0">Four independent knobs per project type: Base cabinets, Upper cabinets, Installation, and Total ballpark. Each only affects what it says — e.g. the installation adjustment never touches material cost. Leave any of them at 0% to skip it entirely.</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Using price adjustments to cover what the pricing wizard doesn't</div>
-          <p style="margin:0">The pricing wizard doesn't have a dedicated spot for every real cost — kick cover material is a good example. It varies too much shop to shop (and often door style to door style) to build into the wizard itself, so instead of leaving it out of your ballpark entirely, add it here as a percentage. Say you spend on average an extra 2% on materials and labour per job covering your toe kicks — add 2% to Base cabinets on every project type that actually has base cabinets (skip it on a countertop-only or specialty-only project type, since there's nothing to apply it to). It won't be as precise as an item-level rate would be, but it closes the gap so your ballpark doesn't consistently come in low. The same trick works for any other small, hard-to-isolate cost the wizard doesn't ask about — just fold your best estimate in as a percentage on whichever of the four knobs (Base cabinets, Upper cabinets, Installation, Total ballpark) fits it best.</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Live on widget / Draft</div>
-          <p style="margin:0">Uncheck this while you're still setting a project type up, so customers don't see it half-finished.</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Visibility</div>
-          <p style="margin:0">Choose where a project type appears: in both the customer widget and MidasQuote Pro, only in MidasQuote Pro (good for anything you only ever quote yourself), or everywhere except MidasQuote Pro (for something you only want offered publicly, not used for your own internal quoting).</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Hide "How to measure" section</div>
-          <p style="margin:0">For a project type that's entirely flat-rate items with nothing to actually measure (like a general "Odd jobs" type), this removes that whole section from the widget for that type only.</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Show price as a range</div>
-          <p style="margin:0">On by default, shows the usual ballpark spread (e.g. "${CUR()}2,375 – ${CUR()}3,000"). Uncheck it for a project type where a single clean number makes more sense instead (e.g. "${CUR()}2,600") — useful for flat-rate or fixed-price project types where a range wouldn't really apply. This also updates the wording around it automatically — "Estimated range" becomes "Your quote," and the ballpark disclaimer text adjusts to match, in every place the price shows up including the confirmation email.</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Cover image and Measuring guide image</div>
-          <p style="margin:0">Upload your own, or click "↺ Use default image" to fall back to MidasQuote's own default photo for that project type. Leaving it on the default means it automatically stays current if that default photo is ever updated — nothing to re-upload later.</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">More than one measuring guide image?</div>
-          <p style="margin:0">Click "+ Add another image" as many times as needed — once there's more than one, the widget automatically turns it into a swipeable carousel instead of a single static photo, and gives it a brief one-time "nudge" animation so customers notice there's more than one image to see.</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Want a video instead of (or alongside) photos?</div>
-          <p style="margin:0">Paste a YouTube, Vimeo, or Loom link — or a direct link to a video file — into any of the measuring guide image fields instead of a photo URL. It plays right there in the carousel with your other images, in whatever order you place it. There's no upload for video, only a link, since videos need to live somewhere that can actually stream them (YouTube, Vimeo, your own site) rather than something MidasQuote hosts for you.</p>
-        </div>
-        <p style="margin-top:1.1rem">Accidentally deleted a standard type like Bathroom or Refacing? A "↩ Restore a default type…" dropdown appears automatically next to "+ Add room" whenever one's missing — it brings back the original description, image, and measuring guide.</p>
+        <p><strong>Price adjustments</strong> — four independent knobs per project type: Base cabinets, Upper cabinets, Installation, and Total ballpark. Each only affects what it says — e.g. the installation adjustment never touches material cost. Leave any of them at 0% to skip it entirely.</p>
+        <p><strong>Live on widget / Draft</strong> — uncheck this while you're still setting a project type up, so customers don't see it half-finished.</p>
+        <p><strong>Visibility</strong> — choose where a project type appears: in both the customer widget and MidasQuote Pro, only in MidasQuote Pro (good for anything you only ever quote yourself), or everywhere except MidasQuote Pro (for something you only want offered publicly, not used for your own internal quoting).</p>
+        <p><strong>Hide "How to measure" section</strong> — for a project type that's entirely flat-rate items with nothing to actually measure (like a general "Odd jobs" type), this removes that whole section from the widget for that type only.</p>
+        <p><strong>Show price as a range</strong> — on by default, shows the usual ballpark spread (e.g. "${CUR()}2,375 – ${CUR()}3,000"). Uncheck it for a project type where a single clean number makes more sense instead (e.g. "${CUR()}2,600") — useful for flat-rate or fixed-price project types where a range wouldn't really apply. This also updates the wording around it automatically — "Estimated range" becomes "Your quote," and the ballpark disclaimer text adjusts to match, in every place the price shows up including the confirmation email.</p>
+        <p><strong>Cover image</strong> and <strong>Measuring guide image</strong> — upload your own, or click "↺ Use default image" to fall back to MidasQuote's own default photo for that project type. Leaving it on the default means it automatically stays current if that default photo is ever updated — nothing to re-upload later.</p>
+        <p><strong>More than one measuring guide image?</strong> Click "+ Add another image" as many times as needed — once there's more than one, the widget automatically turns it into a swipeable carousel instead of a single static photo, and gives it a brief one-time "nudge" animation so customers notice there's more than one image to see.</p>
+        <p><strong>Want a video instead of (or alongside) photos?</strong> Paste a YouTube, Vimeo, or Loom link — or a direct link to a video file — into any of the measuring guide image fields instead of a photo URL. It plays right there in the carousel with your other images, in whatever order you place it. There's no upload for video, only a link, since videos need to live somewhere that can actually stream them (YouTube, Vimeo, your own site) rather than something MidasQuote hosts for you.</p>
+        <p>Accidentally deleted a standard type like Bathroom or Refacing? A "↩ Restore a default type…" dropdown appears automatically next to "+ Add room" whenever one's missing — it brings back the original description, image, and measuring guide.</p>
       `
     },
     pricing: {
       title: 'Pricing',
       body: `
         <p>This is where your actual cabinet, countertop, and trim pricing lives — box materials, door styles, hinges, drawer configurations, countertop materials, crown/valance, and tall cabinets.</p>
-        <p>Start by running the pricing wizard with a few of your most commonly sold items. No need to add everything here. Just keep it to a max of 5 items for each category (box materials, drawer styles, door styles, hinges). No need to list items with matching prices either. You can easily add multiple items of the same or different price using the "Mini pricing wizards" afterwards.</p>
-        <p>Prices you set here are what the widget's calculator actually uses — this is the core of your quoting math, so it's worth double-checking your quotes.</p>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Don't add handles or knobs here</div>
-          <p style="margin:0">If you supply hardware, add it as a Specialty Item instead with its own per-unit price, so customers can choose how many they need. It's your choice to add handles/knobs. If you install handles but don't supply them, then you still need to make sure you include handle installation in your door installation pricing (you'll be reminded in the pricing wizard). If you do supply handles, then it's still best to add in the installation costs when reminded in the pricing wizard — that way, if a customer doesn't include handles in their ballpark, your estimate will still have the installation of them covered.</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">🧪 Test your pricing once it's set up</div>
-          <p style="margin:0 0 0.7rem">Run a handful of test quotes through the widget for jobs you've actually quoted before, and compare the ballpark to what you really charged. If something's consistently off, there are three different places to adjust it depending on how widespread the issue is:</p>
-          <ul style="margin:0;padding-left:1.25rem;line-height:1.8">
-            <li>An individual item's own rate — here in Pricing, or in Specialty Items — the actual per-linear-foot, per-square-foot, or flat rate for that one box material, door style, install rate, etc.</li>
-            <li>A specific project type's price adjustments (Project Types tab) — nudges Base cabinets, Upper cabinets, Installation, or Total ballpark up or down just for that one project type, like the built-in -5% on Bathroom base cabinets.</li>
-            <li>The widget's overall estimate range (Shop Info → Quote range — low/high) — widens or narrows how far the shown range sits from the calculated price, across every project type at once.</li>
-          </ul>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Adding a new box material, door style, drawer config, or hinge with the same price as one listed?</div>
-          <p style="margin:0">Look for "Match another item's pricing instead of quoting a new job" right above the price field. Check it, pick an existing item from the dropdown, and the new one gets that exact same rate — no need to re-quote a whole spec job just because two items happen to cost the same.</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">⭐ Baseline</div>
-          <p style="margin:0">Box Materials, Door Styles, and Hinges each have one item pinned as the baseline (marked with a ⭐ Baseline badge) that every other item in the category is priced against. It automatically re-pins to whichever item is genuinely cheapest the moment one is saved. Delete the current baseline and you'll be asked to pick what becomes the new one.</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Sort any item list</div>
-          <p style="margin:0">Click its Name or Price column header — the active sort highlights in blue.</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">✏️ Edit install/removal rates</div>
-          <p style="margin:0">Requote your whole Installation &amp; Removal set at once, pre-filled with your current rates. Deleting any one rate deletes the whole set, since the widget needs all of them to price every job type correctly.</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">See (and edit) the original quote behind a rate</div>
-          <p style="margin:0">Opening Edit on a Box Material, Door Style, Drawer Config, or Hinge now shows the real job price that rate came from, so you can update it by typing a new job total instead of doing the math yourself.</p>
-        </div>
-        <h4 style="font-size:12px;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:0.03em;margin:1.4rem 0 0.2rem">How some of the trickier pricing actually works</h4>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Extended (36"–40") upper cabinets</div>
-          <p style="margin:0">Adds a flat 30% on top of the material/door cost and the install cost for upper cabinets only — base cabinets are never affected, since it's only the uppers that get taller to reach the ceiling.</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Tall cabinets</div>
-          <p style="margin:0">Priced per unit: your wizard's baseline unit price (24" wide, baseline material &amp; door, supply only) plus whatever door/material/hinge upcharge the customer actually picked, scaled to the cabinet's real width. Because a tall cabinet is much taller than a regular base cabinet, its door and hinge costs are scaled up rather than charged at the same flat per-foot rate as a normal base cabinet — this keeps a tall pantry-style cabinet from being underpriced.</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Countertop pricing</div>
-          <p style="margin:0">Covers more than just your per-square-foot material rate. Set a backsplash rate and separate cutout charges for sinks and cooktops, so those don't get missed on a job that needs them. Edges and addons — a specific edge profile, or any extra beyond the standard edge — each get their own price and photo, and you choose which materials each one applies to. A minimum price is available too, so a small countertop doesn't accidentally price too low off the square-foot rate alone.</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Crown Moulding and Valance</div>
-          <p style="margin:0">Price the same way as your other cabinet categories, and can be linked to specific door styles — handy if certain profiles are only meant to pair with certain doors.</p>
-        </div>
+        <p><strong>Don't add handles or knobs here</strong> — if you supply hardware, add it as a Specialty Item instead with its own per-unit price, so customers can choose how many they need.</p>
+        <p>Prices you set here are what the widget's calculator actually uses — this is the core of your quoting math, so it's worth double-checking a real project type end-to-end after making changes.</p>
+        <p><strong>Adding a new box material, door style, drawer config, or hinge?</strong> Look for "Match another item's pricing instead of quoting a new job" right above the price field. Check it, pick an existing item from the dropdown, and the new one gets that exact same rate — no need to re-quote a whole spec job just because two items happen to cost the same.</p>
+        <p><strong>⭐ Baseline</strong> — Box Materials, Door Styles, and Hinges each have one item pinned as the baseline (marked with a ⭐ Baseline badge) that every other item in the category is priced against. It automatically re-pins to whichever item is genuinely cheapest the moment one is saved. Delete the current baseline and you'll be asked to pick what becomes the new one, with ties shown so you can choose.</p>
+        <p><strong>Sort any item list</strong> by clicking its Name or Price column header — the active sort highlights in blue. Lists past 10 items scroll in place instead of pushing the page down.</p>
+        <p><strong>✏️ Edit install/removal rates</strong> — requote your whole Installation & Removal set at once, pre-filled with your current rates. Deleting any one rate deletes the whole set, since the widget needs all of them to price every job type correctly.</p>
+        <p><strong>See (and edit) the original quote behind a rate</strong> — opening Edit on a Box Material, Door Style, Drawer Config, or Hinge now shows the real job price that rate came from, so you can update it by typing a new job total instead of doing the math yourself.</p>
+        <p style="margin-top:1.25rem"><strong>How some of the trickier pricing actually works:</strong></p>
+        <p><strong>Extended (36"–40") upper cabinets</strong> add a flat 30% on top of the material/door cost and the install cost for upper cabinets only — base cabinets are never affected, since it's only the uppers that get taller to reach the ceiling.</p>
+        <p><strong>Tall cabinets</strong> are priced per unit: your wizard's baseline unit price (24" wide, baseline material & door, supply only) plus whatever door/material/hinge upcharge the customer actually picked, scaled to the cabinet's real width. Because a tall cabinet is much taller than a regular base cabinet, its door and hinge costs are scaled up rather than charged at the same flat per-foot rate as a normal base cabinet — this keeps a tall pantry-style cabinet from being underpriced.</p>
       `
     },
     specialty: {
       title: 'Specialty items',
       body: `
-        <p>Specialty Items isn't just for leftover extras — it's a fully flexible pricing tool. Anything you can price flat-rate, per linear foot, or per square foot can live here: pullouts, magic corners, floating shelves, custom range hoods, hardware, or even crown molding for when you are offering refacing, restaining, or repainting services. We have even pre-added some of these items for you to give you a better idea. You can keep or delete them.</p>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Great for project types the wizard doesn't fit well</div>
-          <p style="margin:0">The Pricing wizard (box materials, door styles, hinges, drawers, crown/valance) reverse-engineers everything into linear feet — built for a full cabinet box. Refacing usually isn't priced that way; doors are normally priced per square foot instead. For a project type like Refacing, skip the wizard's door pricing and add "Doors" (and anything else it needs) here as a specialty item priced per square foot instead. You can also use our newly added "sized" option to add multiple sizes of an item with square footage generated for you. Read more in the "Sized variants" section below.</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Category</div>
-          <p style="margin:0">Group items together (e.g. "Pullouts," "Corner Cabinets") so they show up organized on the widget instead of one long list. Leave it blank and the item just appears uncategorized — nothing changes if you never use this. Click <strong>Edit categories</strong> above the table any time to rename a category everywhere at once, or delete it (its items just become uncategorized — they're never deleted).</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Offer supply/install choice?</div>
-          <p style="margin:0">Check this if you want the customer to choose between "Supply only" and "Supplied & Installed" for this specific item. The install price you enter is labor only — the widget adds it on top of the supply price above. If you don't offer a choice for an item, just leave "Offer supply/install choice?" unchecked and then pick which label is true from the dropdown instead.</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Install priced differently than supply?</div>
-          <p style="margin:0">E.g. supply is per square foot but install is a flat rate per door. Check the "per lin ft" / "per sq ft" boxes under the install price to match how install is actually priced (leave both unchecked for per-item). If install's method ends up different from supply's, the widget automatically asks the customer for a separate install quantity — you can customize that question's wording, or leave it blank to use the default.</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Project types column</div>
-          <p style="margin:0">Click it to choose exactly which project types this item shows up for. Leave every box checked (the default) and it shows up everywhere.</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Works for internal-only project types too</div>
-          <p style="margin:0">A project type marked "Only show in MidasQuote Pro" (on the Project Types tab) never appears on your public widget, but you can still price it here — e.g. an "Odd jobs" project type with a flat-rate "Door repair" item, so your team can quote it right from MidasQuote Pro even though it's never offered on the website.</p>
-        </div>
-        <p style="margin:1.1rem 0">Use <strong>Filter by category</strong>, <strong>Filter by project type</strong>, and <strong>Search by name</strong> together to quickly find one item out of a long list.</p>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">🌍 Thinking in metric?</div>
-          <p style="margin:0">Once an item is priced per lin ft or per sq ft, a "Use metric?" calculator appears right beside the price (and the install price, if it's priced separately). Type your rate per linear metre or per square metre and it converts and fills in the ${CUR()}/lin ft or ${CUR()}/sq ft field for you — everything's still stored the exact same way, this is just a faster way to type the number if that's how you think about pricing.</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Variants</div>
-          <p style="margin:0">Give one item multiple options (like Lemans pullout/Lazy susan/Magic corner under one "Corner cabinet solutions" item), each with its own price, minimum, and photo. Customers can now set a separate quantity for each variant they want, so 2 of one option and 1 of another show up as two separate lines on the same quote — works whether the item is flat-rate, per linear foot, or per square foot.</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Sized variants</div>
-          <p style="margin:0">A newly added feature is the ability to create multiple sized variants of a product, such as "Maple shaker door" with 20 different size increments like 30"x10", 30"x11", 30"x12", 30"x13", and so on. And the really helpful part of it is that you can apply one rate to all of them and it will autocalculate their costs based on their individual sizing, saving you a lot of calculator time.</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Pro only</div>
-          <p style="margin:0">Hides an item from the customer-facing widget entirely while keeping it available in MidasQuote Pro.</p>
-        </div>
-        <p style="margin-top:1.1rem">Everything on this tab autosaves the moment you change it — there's no "Save" button to remember here.</p>
+        <p>Specialty Items isn't just for leftover extras — it's a fully flexible pricing tool. Anything you can price flat-rate, per linear foot, or per square foot can live here: pullouts, magic corners, floating shelves, custom range hoods, hardware, or even crown molding if you'd rather price it with a straight rate than use the Pricing wizard.</p>
+        <p><strong>Great for project types the wizard doesn't fit well.</strong> The Pricing wizard (box materials, door styles, hinges, drawers, crown/valance) reverse-engineers everything into linear feet — built for a full cabinet box. Refacing usually isn't priced that way; doors are normally priced per square foot instead. For a project type like Refacing, skip the wizard's door pricing and add "Doors" (and anything else it needs) here as a specialty item priced per square foot instead.</p>
+        <p><strong>Category</strong> — group items together (e.g. "Pullouts," "Corner Cabinets") so they show up organized on the widget instead of one long list. Leave it blank and the item just appears uncategorized — nothing changes if you never use this. Click <strong>Edit categories</strong> above the table any time to rename a category everywhere at once, or delete it (its items just become uncategorized — they're never deleted).</p>
+        <p><strong>Offer supply/install choice?</strong> — check this if you want the customer to choose between "Supply only" and "Supplied & Installed" for this specific item. The install price you enter is <strong>labor only</strong> — the widget adds it on top of the supply price above, it's never a combined/replacement total. For example, ${CUR()}54.95/sqft to supply a door + ${CUR()}16.80/door to install it: enter 16.80 as the install price, not ${CUR()}71.75. Leave "Offer supply/install choice?" unchecked and just pick which label is true from the dropdown instead — that's just a label, it doesn't change the price.</p>
+        <p><strong>Install priced differently than supply?</strong> — e.g. supply is per square foot but install is a flat rate per door. Check the "per lin ft" / "per sq ft" boxes under the install price to match how install is actually priced (leave both unchecked for per-item). If install's method ends up different from supply's, the widget automatically asks the customer for a separate install quantity — you can customize that question's wording, or leave it blank to use the default.</p>
+        <p><strong>Project types</strong> column — click it to choose exactly which project types this item shows up for. Leave every box checked (the default) and it shows up everywhere.</p>
+        <p><strong>Works for internal-only project types too.</strong> A project type marked "Only show in MidasQuote Pro" (on the Project Types tab) never appears on your public widget, but you can still price it here — e.g. an "Odd jobs" project type with a flat-rate "Door repair" item, so your team can quote it right from MidasQuote Pro even though it's never offered on the website.</p>
+        <p>Use <strong>Filter by category</strong>, <strong>Filter by project type</strong>, and <strong>Search by name</strong> together to quickly find one item out of a long list.</p>
+        <p><strong>🌍 Thinking in metric?</strong> Once an item is priced per lin ft or per sq ft, a "Use metric?" calculator appears right beside the price (and the install price, if it's priced separately). Type your rate per linear metre or per square metre and it converts and fills in the ${CUR()}/lin ft or ${CUR()}/sq ft field for you — everything's still stored the exact same way, this is just a faster way to type the number if that's how you think about pricing.</p>
+        <p><strong>Variants</strong> — give one item multiple options (like Maple/Oak/MDF under one "Crown Molding" item), each with its own price, minimum, and photo. Customers can now set a separate quantity for each variant they want, so 2 of one option and 1 of another show up as two separate lines on the same quote — works whether the item is flat-rate, per linear foot, or per square foot.</p>
+        <p><strong>Pro only</strong> — hides an item from the customer-facing widget entirely while keeping it available in MidasQuote Pro.</p>
+        <p>Everything on this tab autosaves the moment you change it — there's no "Save" button to remember here.</p>
       `
     },
     proposals: {
       title: 'Proposals',
       body: `
-        <p>Once you get MidasQuote honed in, you can generate fast, printable PDF proposals — designed to your specifications — right from <strong>MidasQuote Pro</strong>.</p>
+        <p>Build proposal templates here — your team then picks one from <strong>MidasQuote Pro</strong>, right under a completed real-number estimate, to turn it into a clean, printable proposal for the customer to review and sign.</p>
         <p>You start with three ready-made templates — <strong>Simple</strong>, <strong>Standard</strong>, and <strong>Large Project</strong> — but you can rewrite any of them completely, or add as many of your own as you'd like.</p>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">The Body box is the whole proposal</div>
-          <p style="margin:0">Write it exactly like you'd write your own — your own wording, your own layout, your own order. Nothing is fixed except the branded header at the very top (your logo, shop name, accent colour, and the date) — everything below that is entirely yours to write.</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Tokens</div>
-          <p style="margin:0 0 0.7rem">Use tokens to drop pre-organized lists and items into your proposal. Type <code>{deposit}</code> anywhere you want the deposit amount to actually appear — top, bottom, next to the total, wherever reads right to you.</p>
-          <p style="margin:0">Same idea for <code>{items}</code> (a styled list) or <code>{items_plain}</code> (the same list with no box or colour, if you'd rather it match your own paper proposal's look), <code>{totals_box}</code> or <code>{totals_plain}</code>, <code>{hr}</code> (a plain horizontal divider), <code>{subtotal}</code>, <code>{tax}</code>, <code>{total}</code>, <code>{customer_name}</code>, <code>{customer_address}</code>, <code>{customer_phone}</code>, <code>{job_name}</code>, <code>{description}</code>, <code>{date}</code>, and <code>{signature_line}</code> (a blank pen-and-paper signature + date line).</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Show individual item prices</div>
-          <p style="margin:0">On by default, controls what <code>{items}</code> actually shows. Turn it off if this template should keep pricing vague on paper — every item still lists, just without a price next to it, only the total shows. This is only the template's default: whoever creates a proposal in MidasQuote Pro can still flip it on or off for that one customer.</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Deposit and Tax</div>
-          <p style="margin:0">Settings below the header row feed the <code>{deposit}</code> and <code>{tax}</code> tokens — set the percentage or flat amount here, then place the token wherever you want it to show up in the body text.</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">👁 Preview</div>
-          <p style="margin:0">Shows exactly what this template will actually produce, filled with sample data (a fake customer, sample line items), so you can see how it looks without leaving the dashboard or running a real quote first.</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Proposals themselves</div>
-          <p style="margin:0">The customer name, description, and actual line items — are created and saved entirely in MidasQuote Pro, not here. This tab is just where the templates get built.</p>
-        </div>
+        <p><strong>The Body box is the whole proposal.</strong> Write it exactly like you'd write your own — your own wording, your own layout, your own order. Nothing is fixed except the branded header at the very top (your logo, shop name, accent colour, and the date) — everything below that is entirely yours to write.</p>
+        <p><strong>Tokens</strong> are how real data drops into your text. Type <code>{deposit}</code> anywhere you want the deposit amount to actually appear — top, bottom, next to the total, wherever reads right to you. Same idea for <code>{items}</code> (a styled list) or <code>{items_plain}</code> (the same list with no box or colour, if you'd rather it match your own paper proposal's look), <code>{totals_box}</code> or <code>{totals_plain}</code>, <code>{hr}</code> (a plain horizontal divider), <code>{subtotal}</code>, <code>{tax}</code>, <code>{total}</code>, <code>{customer_name}</code>, <code>{customer_address}</code>, <code>{customer_phone}</code>, <code>{job_name}</code>, <code>{description}</code>, <code>{date}</code>, and <code>{signature_line}</code> (a blank pen-and-paper signature + date line — this app doesn't do e-signatures, this is for printing and signing in person).</p>
+        <p><strong>Show individual item prices</strong> — on by default, controls what <code>{items}</code> actually shows. Turn it off if this template should keep pricing vague on paper — every item still lists, just without a price next to it, only the total shows. This is only the template's default: whoever creates a proposal in MidasQuote Pro can still flip it on or off for that one customer.</p>
+        <p><strong>Deposit</strong> and <strong>Tax</strong> settings below the header row feed the <code>{deposit}</code> and <code>{tax}</code> tokens — set the percentage or flat amount here, then place the token wherever you want it to show up in the body text.</p>
+        <p><strong>👁 Preview</strong> — shows exactly what this template will actually produce, filled with sample data (a fake customer, sample line items), so you can see how it looks without leaving the dashboard or running a real quote first.</p>
+        <p>Proposals themselves — the customer name, description, and actual line items — are created and saved entirely in MidasQuote Pro, not here. This tab is just where the templates get built.</p>
       `
     },
     embed: {
       title: 'Embed code',
       body: `
         <p>Three ways to actually get the widget in front of people, each in its own collapsible section:</p>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Code for websites</div>
-          <p style="margin:0">The embed code to paste into your own website (Wix, Squarespace, WordPress, Webflow, etc.).</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Direct link</div>
-          <p style="margin:0">A plain link that opens your quote tool directly, no website needed.</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">MidasQuote Pro</div>
-          <p style="margin:0">A separate link just for you (or someone you trust, like a regular contractor). It shows the real exact numbers behind every quote alongside the same ballpark customers see. Not for sharing with customers.</p>
-        </div>
-        <p style="margin-top:1.1rem">Both links have "Add to Home Screen" instructions so they open like a real app on your phone — Android and Desktop Chrome even get a genuine one-tap "Install" button once you've used the page a bit.</p>
-      `
-    },
-    midasquotepro: {
-      title: 'MidasQuote Pro',
-      body: `
-        <p>Once your widget is all set up for customers, you can fine-tune your quoting in MidasQuote Pro. Anything the customer-facing widget doesn't account for can be handled here instead — and more.</p>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Add it to your phone or computer like an app</div>
-          <p style="margin:0">Your MidasQuote Pro link lives on the Embed code tab, right alongside your regular widget links. Open it there and use "Add to Home Screen" (or the one-tap Install button on Android and Desktop Chrome) so Pro opens like its own app instead of a browser tab — handy for quoting walk-in customers right from your phone.</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Already built in</div>
-          <p style="margin:0">Crown and valance wall returns, and side splashes, are already accounted for in MidasQuote Pro.</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Add the extras that would overcomplicate the customer widget</div>
-          <p style="margin:0">Things like finished ends can overcomplicate the ballpark for customers, so add them as Specialty Items and set them to be hidden from the customer-facing widget instead — you still have that detail covered, without adding extra steps for the customer.</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">See the real numbers behind every quote</div>
-          <p style="margin:0">MidasQuote Pro shows you the actual number generated by the estimator, so you can put together an accurate quote right from Pro.</p>
-        </div>
-        <p style="margin:1.1rem 0">You may or may not want to use MidasQuote Pro for all of your accurate quoting — drawings will still need to happen for qualified customers either way. Where it's especially useful is fast ballparks or precision quotes on things you offer that aren't listed on the customer-facing widget at all.</p>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Great for walk-in and one-off jobs</div>
-          <p style="margin:0">Say your shop offers cabinet door repairs, stain matching, or other odd jobs to walk-in customers — list them in MidasQuote Pro, and you can generate a fast, accurate quote and a printable proposal right from your phone.</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Great for refacing</div>
-          <p style="margin:0">Refacing prices very accurately using the Specialty Items tab, since the quoting there is straightforward — quotes come together quickly and reliably.</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Add anything on the spot</div>
-          <p style="margin:0">Proposals in MidasQuote Pro let you add a blank line item right on the spot. If a customer asks about something extra — say, touching up a desk in another room — just add it in for whatever you'd charge, and it's added straight to the proposal.</p>
-        </div>
+        <p><strong>Code for websites</strong> — the embed code to paste into your own website (Wix, Squarespace, WordPress, Webflow, etc.).</p>
+        <p><strong>Direct link</strong> — a plain link that opens your quote tool directly, no website needed.</p>
+        <p><strong>MidasQuote Pro</strong> — a separate link just for you (or someone you trust, like a regular contractor). It shows the real exact numbers behind every quote alongside the same ballpark customers see. Not for sharing with customers.</p>
+        <p>Both links have "Add to Home Screen" instructions so they open like a real app on your phone — Android and Desktop Chrome even get a genuine one-tap "Install" button once you've used the page a bit.</p>
       `
     },
     products: {
@@ -672,81 +377,32 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         <h4 style="font-size:12px;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:0.03em;margin:0 0 8px">📸 Photos</h4>
         <p>Add real photos for the materials, doors, hinges, drawers, countertops, trim, and specialty items you've configured elsewhere — these are what customers actually see on the widget instead of a generic icon.</p>
         <p>Don't have your own photo for something? Many common items already have one of our own curated photos ready to use — just pick "Choose from library" instead of uploading your own.</p>
-        <p>Every category starts collapsed — click any category's header to open just that one.</p>
+        <p>Every category starts collapsed — click any category's header to open just that one. When a customer taps a photo to zoom in on the widget, they can swipe left/right through the rest of that same group automatically — no setup needed here.</p>
 
         <h4 style="font-size:12px;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:0.03em;margin:18px 0 8px">🙈 Which project types see each item</h4>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">One item at a time</div>
-          <p style="margin:0">Every item has its own project-type checkboxes right here — the same setting as on the Specialty Items tab. Uncheck a type on that item and it's hidden just for that type.</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">A whole category at once</div>
-          <p style="margin:0">At the top of each category, right below "Add a photo URL...", there's a small control. By default it reads <strong>"Visible for all project types"</strong> — nothing is hidden yet. Click it open and uncheck a project type, and it switches to <strong>"Hidden for: ..."</strong>, listing whatever you've unchecked — every item in that category (and the category itself) is now hidden for those types in one click, no need to touch them individually.</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <p style="margin:0">For example, uncheck <strong>Refacing</strong> under Box Materials, since a refacing job reuses the customer's existing box and doesn't need new box materials priced at all. Box Materials, Door Styles, and Drawer Configurations are always kept in sync with each other here, so unchecking Refacing on any one of the three does the same for all three automatically.</p>
-        </div>
+        <p><strong>One item at a time:</strong> every item has its own project-type checkboxes right here — the same setting as on the Specialty Items tab. Uncheck a type on that item and it's hidden just for that type.</p>
+        <p><strong>A whole category at once:</strong> at the top of each category, right below "Add a photo URL...", there's a small control. By default it reads <strong>"Visible for all project types"</strong> — nothing is hidden yet. Click it open and uncheck a project type, and it switches to <strong>"Hidden for: ..."</strong>, listing whatever you've unchecked — every item in that category is now hidden for those types in one click, no need to touch them individually. For example, uncheck <strong>Refacing</strong> under Box Materials, since a refacing job reuses the customer's existing box and doesn't need new box materials priced at all. Box Materials, Door Styles, and Drawer Configurations are always kept in sync with each other here, so unchecking Refacing on any one of the three does the same for all three automatically. You can still give one item its own exception afterward by unchecking or rechecking just that item's own project types.</p>
 
         <h4 style="font-size:12px;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:0.03em;margin:18px 0 8px">🗂️ Groups</h4>
         <p>In Box Materials, Door Styles, Drawer Configurations, Countertops, Crown, and Valance, use "+ New group" to bundle items together — a few styles or finishes that belong together, or just several items priced the same. Customers still pick the exact item, same as always — grouping just clusters related options together on the widget, adds an optional description, and lets you control which group shows first. If every item in a group happens to be the same price, the widget automatically lets customers know any one of them works.</p>
 
         <h4 style="font-size:12px;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:0.03em;margin:18px 0 8px">🏆 Best sellers</h4>
-        <p><strong>🏆 Best seller badge</strong> — mark any item's photo to show a small badge on the widget; the badge's label (default "Best seller") is customizable from the top of the "My Products" page.</p>
+        <p><strong>🏆 Best seller badge</strong> — mark any item's photo to show a small badge on the widget; the badge's label (default "Best seller") is customizable from Marketing Kit.</p>
       `
     },
     showroom: {
       title: 'Showroom',
       body: `
-        <p>This tab only shows the categories relevant to whichever showroom style is currently active, so it always matches what's actually live on your showroom page.</p>
-
-        <h4 style="font-size:12px;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:0.03em;margin:16px 0 8px">🎭 Showroom style</h4>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Default showroom</div>
-          <p style="margin:0">Shows your priced categories (Box Materials, Door Styles, etc.) plus Specialty Items (the classic setup).</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Build my own</div>
-          <p style="margin:0">Allows you to create custom categories like "Kitchens," "Commercial work," etc., plus Specialty Items on the page (optional).</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <p style="margin:0">Switching between Default and Build My Own is instant and reversible — flip back any time and nothing you've built in either mode is lost.</p>
-        </div>
-
-        <h4 style="font-size:12px;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:0.03em;margin:18px 0 8px">🗂️ Managing categories</h4>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Showroom subheading</div>
-          <p style="margin:0">The line under your shop name on the showroom page ("Browse the materials, door styles..." by default) is fixed for Default showroom, since it's describing your actual priced categories. While Build My Own is active, a <strong>Showroom subheading</strong> box appears right below the style picker so you can write your own — leave it blank to use the built-in "Browse some of our past projects and features..." line instead.</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">✏️ Rename &amp; 🚫 Hide category</div>
-          <p style="margin:0">Use these buttons to rename or hide entire categories.</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">"+ New category"</div>
-          <p style="margin:0">Adds a fully independent category with its own items — no pricing, no project types, nothing to configure. Add, rename, and delete those as much as you want; "Delete category" there is permanent since there's no pricing record backing it. Drag the ⠿ handle on any item in a custom category to reorder its photos.</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Reordering</div>
-          <p style="margin:0">Use the ▲▼ arrows on any category to change the order it appears in on your showroom page. Priced and custom categories can be mixed together in any order (this ordering applies within whichever style is currently active).</p>
-        </div>
-
-        <h4 style="font-size:12px;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:0.03em;margin:18px 0 8px">🔗 Preview &amp; sharing</h4>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Live preview</div>
-          <p style="margin:0">Below is your actual showroom page, not a mockup. It's exactly what a customer (or anyone you send the link to) sees, and it refreshes automatically after every change.</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Standalone link</div>
-          <p style="margin:0">Your showroom has its own link that works completely on its own. Paste it into your own website's navigation if you'd like — it doesn't need the widget at all.</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">🧩 Embed on a page</div>
-          <p style="margin:0">Beyond the standalone link, your showroom can be embedded right on your own website as a self-sizing iframe — grab the code from the "Embed on a page" card. You can independently show or hide the shop info block, top navigation, hero banner, and project-type filter bar just for the embedded version, so it blends into your site instead of duplicating your own header/nav.</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">🖱️ "See our showroom" button</div>
-          <p style="margin:0">Choose whether the widget's own showroom button opens the popup page (default) or sends customers straight to your embedded page instead.</p>
-        </div>
+        <p>This tab only shows the categories relevant to whichever showroom style is currently active, so it always matches what's actually live on your showroom page — nothing extra to scroll past.</p>
+        <p><strong>🎭 Showroom style</strong> at the top switches your whole showroom between two looks: "Default showroom" shows your priced categories (Box Materials, Door Styles, etc.) plus Specialty Items (the classic setup) — and this tab shows those same categories to manage. "Build my own" shows only your custom categories plus Specialty Items on the page — and this tab switches to showing just those, tucking your priced categories out of sight (nothing about them is deleted, they're exactly as you left them) — it also hides the project-type filter bar at the top of your showroom, since there'd be nothing left for it to filter. Specialty Items always show, in the tab and on the page, no matter which style is picked. Switching is instant and reversible — flip back any time and nothing you've built in either mode is lost.</p>
+        <p>The line under your shop name on the showroom page ("Browse the materials, door styles..." by default) is fixed for Default showroom, since it's describing your actual priced categories. While Build My Own is active, a <strong>Showroom subheading</strong> box appears right below the style picker so you can write your own — leave it blank to use the built-in "Browse some of our past projects and features..." line instead.</p>
+        <p>For a priced category, "✏️ Rename" and "🚫 Hide category" only change what shows on your <em>showroom</em> — your actual pricing, categories, and the widget are never touched. Each item underneath has its own "Remove from showroom" button, same idea — the item itself is untouched, it just stops appearing here. An item needs a photo (added on My Products) before it shows up in this list at all.</p>
+        <p>"+ New category" adds a fully independent category with its own items — no pricing, no project types, nothing to configure. Add, rename, and delete those as much as you want; "Delete category" there is permanent since there's no pricing record backing it. Drag the ⠿ handle on any item in a custom category to reorder its photos.</p>
+        <p>Use the ▲▼ arrows on any category to change the order it appears in on your showroom page — priced and custom categories can be mixed together in any order (this ordering applies within whichever style is currently active).</p>
+        <p>The live preview below is your actual showroom page, not a mockup — it's exactly what a customer (or anyone you send the link to) sees, and it refreshes automatically after every change.</p>
+        <p>Your showroom has its own link that works completely on its own — paste it into your own website's navigation if you'd like, it doesn't need the widget at all.</p>
+        <p><strong>🧩 Embed on a page</strong> — beyond the standalone link, your showroom can be embedded right on your own website as a self-sizing iframe — grab the code from the "Embed on a page" card. You can independently show or hide the shop info block, top navigation, hero banner, and project-type filter bar just for the embedded version, so it blends into your site instead of duplicating your own header/nav.</p>
+        <p><strong>🖱️ "See our showroom" button</strong> — choose whether the widget's own showroom button opens the popup page (default) or sends customers straight to your embedded page instead.</p>
       `
     },
     templates: {
@@ -754,14 +410,8 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       body: `
         <p>This tab only shows up for the admin account — it controls the <em>defaults</em> every brand new shop starts with, not any one specific shop's live data.</p>
         <p>Editing a project type's description, image, or measuring guide here only affects <strong>shops created from now on</strong> — it never retroactively changes a shop that already exists.</p>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">"↺ Use built-in default"</div>
-          <p style="margin:0">Next to Refacing/Repainting/Restaining's cover image and measuring guide image, this fills in MidasQuote's current default photo for that field — review it, then Save like any other edit here. Unlike the same-looking button on the Project Types tab, this field <em>is</em> the default itself (what new shops start from), so there's nothing to "fall back to" — this just fills in the known-correct URL for you instead of needing it typed or pasted by hand.</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Push to all shops</div>
-          <p style="margin:0">Pushes specialty item changes out to shops that already exist. Use this deliberately; it's the one action here that does touch live shops.</p>
-        </div>
+        <p><strong>"↺ Use built-in default"</strong> next to Refacing/Repainting/Restaining's cover image and measuring guide image fills in MidasQuote's current default photo for that field — review it, then Save like any other edit here. Unlike the same-looking button on the Project Types tab, this field <em>is</em> the default itself (what new shops start from), so there's nothing to "fall back to" — this just fills in the known-correct URL for you instead of needing it typed or pasted by hand.</p>
+        <p><strong>Push to all shops</strong> — pushes specialty item changes out to shops that already exist. Use this deliberately; it's the one action here that does touch live shops.</p>
       `
     },
     billing: {
@@ -804,127 +454,6 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     if (modal) modal.style.display = 'none';
   };
 
-  // ============================================================
-  // HELP GUIDE (Help tab) — a folder-tab interface over every
-  // MQ_HELP_CONTENT topic, "Getting started" first, then one tab per
-  // dashboard page in the same order they appear in the left nav. Reads
-  // the exact same MQ_HELP_CONTENT object every per-page "Need help?"
-  // popup uses, so there's one source of truth — editing a topic's text
-  // updates both the popup and this guide at once, nothing to keep in
-  // sync by hand. "Templates (Admin)" is deliberately left out of this
-  // list — it's an internal, admin-only page Jordan doesn't need a help
-  // tab for. Its own "Need help?" popup on that page still works fine,
-  // since MQ_HELP_CONTENT.templates itself is untouched — it's only
-  // excluded from this guide's tab order.
-  // ============================================================
-  const MQ_HELP_GUIDE_ORDER = ['gettingstarted','overview','leads','shop','rooms','pricing','specialty','products','showroom','embed','midasquotepro','marketing','proposals','billing'];
-  const MQ_HELP_GUIDE_ICONS = {
-    gettingstarted:'🚀', overview:'📊', leads:'👥', shop:'🏪', rooms:'🚪', pricing:'💰',
-    specialty:'⭐', products:'📦', showroom:'🖼️', embed:'🔗', midasquotepro:'📱', marketing:'📣',
-    proposals:'📄', billing:'💳',
-  };
-  let mqHelpActiveTopic = null;
-
-  function mqHelpGuideTopics() {
-    return MQ_HELP_GUIDE_ORDER
-      .filter(id => MQ_HELP_CONTENT[id]);
-  }
-
-  // Plain-text title+body for one topic, HTML tags stripped, lowercased —
-  // so a search for "install" matches text that happens to sit inside a
-  // <strong> tag the same as plain text.
-  function mqHelpPlainText(id) {
-    const c = MQ_HELP_CONTENT[id];
-    if (!c) return '';
-    return (c.title + ' ' + c.body).replace(/<[^>]*>/g, ' ').toLowerCase();
-  }
-
-  function mqBuildHelpGuide() {
-    const tabbar = document.getElementById('mq-help-tabbar');
-    const panel = document.getElementById('mq-help-panel');
-    if (!tabbar || !panel) return;
-    const topics = mqHelpGuideTopics();
-
-    tabbar.innerHTML = topics.map(id => `
-      <button type="button" class="mq-help-tab" id="mq-help-tab-${id}" onclick="mqSelectHelpTopic('${id}')">
-        <span class="mq-help-tab-icon">${MQ_HELP_GUIDE_ICONS[id] || '📄'}</span> ${MQ_HELP_CONTENT[id].title}
-      </button>`).join('');
-
-    mqSelectHelpTopic(topics[0]);
-  }
-
-  window.mqSelectHelpTopic = function(id) {
-    const content = MQ_HELP_CONTENT[id];
-    const panel = document.getElementById('mq-help-panel');
-    if (!content || !panel) return;
-    mqHelpActiveTopic = id;
-
-    document.querySelectorAll('#mq-help-tabbar .mq-help-tab').forEach(btn => btn.classList.remove('active'));
-    document.getElementById('mq-help-tab-' + id)?.classList.add('active');
-
-    panel.innerHTML = `
-      <div class="mq-help-panel-title"><span>${MQ_HELP_GUIDE_ICONS[id] || '📄'}</span> ${content.title}</div>
-      <div class="mq-help-panel-body">${content.guideBody || content.body}</div>`;
-    panel.scrollTop = 0;
-
-    mqAlignHelpTabRow();
-  };
-
-  // Whichever tab row holds the active tab should be the row sitting right
-  // on top of the white content panel — that's what sells the "this is the
-  // open folder tab" illusion, since the panel's white background is what
-  // the active tab visually merges into. If the active tab landed in the
-  // top row (under normal wrapping), flip the tab bar to wrap-reverse so
-  // that row renders at the bottom instead, and the other row moves up top.
-  // Re-measures from a clean 'wrap' baseline every time so the two physical
-  // rows always mean the same thing regardless of which state we were
-  // previously in.
-  function mqAlignHelpTabRow() {
-    const tabbar = document.getElementById('mq-help-tabbar');
-    if (!tabbar) return;
-    const tabs = Array.from(tabbar.querySelectorAll('.mq-help-tab'));
-    const activeTab = tabbar.querySelector('.mq-help-tab.active');
-    if (!tabs.length || !activeTab) return;
-
-    tabbar.style.flexWrap = 'wrap';
-    const offsets = tabs.map(t => t.offsetTop);
-    const bottomOffset = Math.max.apply(null, offsets);
-    const topOffset = Math.min.apply(null, offsets);
-    if (bottomOffset === topOffset) {
-      // Either everything genuinely fits on one line, or (far more often)
-      // this ran while the Help guide page was still hidden (display:none)
-      // during initial dashboard load, so every tab measured offsetTop 0.
-      // Either way we have no real row data to act on — clear the inline
-      // override instead of leaving it stuck on 'wrap', so the CSS default
-      // (wrap-reverse, which puts Getting started's row at the bottom)
-      // takes over once the page is actually visible.
-      tabbar.style.flexWrap = '';
-      return;
-    }
-
-    tabbar.style.flexWrap = (activeTab.offsetTop === bottomOffset) ? 'wrap' : 'wrap-reverse';
-  }
-
-  (function mqWatchHelpTabRowResize() {
-    let t = null;
-    window.addEventListener('resize', function() {
-      if (!document.getElementById('mq-help-tabbar')) return;
-      clearTimeout(t);
-      t = setTimeout(mqAlignHelpTabRow, 150);
-    });
-  })();
-
-  // The search box doesn't filter the tabs (a folder tab bar is a fixed
-  // set, not a list to prune) — it just jumps straight to the first topic,
-  // in tab order, whose text contains the query. Clearing the box leaves
-  // you on whichever tab you're already reading.
-  window.mqHelpSearchJump = function(query) {
-    const q = (query || '').trim().toLowerCase();
-    if (!q) return;
-    const match = mqHelpGuideTopics().find(id => mqHelpPlainText(id).includes(q));
-    if (match && match !== mqHelpActiveTopic) mqSelectHelpTopic(match);
-  };
-
   // Shown exactly once per shop, ever — the moment a brand new shop owner
   // first loads their dashboard. Tracked on the shop record itself in
   // Airtable (not localStorage), so it correctly stays dismissed even if
@@ -940,13 +469,11 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     modal.innerHTML = `
       <div style="background:#fff;border-radius:16px;max-width:480px;width:100%;max-height:80vh;overflow-y:auto;padding:2rem;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,0.25)">
         <div style="font-size:40px;margin-bottom:12px">👋</div>
-        <div style="font-size:21px;font-weight:800;color:#111;margin-bottom:10px">Welcome to MidasQuote!</div>
-        <div style="font-size:15px;color:#4b5563;line-height:1.7;margin-bottom:1.5rem;text-align:left">
+        <div style="font-size:20px;font-weight:800;color:#111;margin-bottom:10px">Welcome to MidasQuote!</div>
+        <div style="font-size:14px;color:#4b5563;line-height:1.7;margin-bottom:1.5rem;text-align:left">
           This dashboard is best viewed on a desktop or laptop — some tabs and tools aren't set up for a phone or small tablet screen yet, so managing your shop from a computer will be a smoother experience.
           <br><br>
           Every tab has a <strong style="color:#2563eb">❓ Need help?</strong> button in the top-right corner — click it any time you're not sure what something does. It walks through everything on that specific page, so you're never stuck guessing.
-          <br><br>
-          Want the bigger picture instead? <strong style="color:#2563eb">📖 Help guide</strong> in the sidebar covers every part of the dashboard in one place, organized by topic — good for a first read-through before you dive in.
           <br><br>
           Only offer some of what MidasQuote can quote? In Shop Info → <strong>🗂️ Estimator tabs</strong>, you can turn off whichever tabs don't apply to you — a countertops-only shop, for example, can turn off <strong style="color:#2563eb">Full project quote</strong> and <strong style="color:#2563eb">Cabinets only</strong>, so customers only ever see the Countertops tab.
           <br><br>
@@ -955,7 +482,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
           <strong>Support &amp; suggestions</strong><br>
           MidasQuote is constantly improving with your help. Please don't be shy to share ideas that would make MidasQuote better for your shop — every single suggestion is taken seriously and implemented if possible.
         </div>
-        <button onclick="mqCloseWelcomeModal()" style="width:100%;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;font-family:inherit">Got it, let's go!</button>
+        <button onclick="mqCloseWelcomeModal()" style="width:100%;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">Got it, let's go!</button>
       </div>`;
     modal.style.display = 'flex';
   };
@@ -975,15 +502,14 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   // never see it again, tracked by storing that version string on the shop
   // record. Brand new shops never see past announcements — they get the
   // current app as-is, so nothing worth announcing to them retroactively.
-  const MQ_LATEST_ANNOUNCEMENT = 'oct2026-island-pricing-videos';
+  const MQ_LATEST_ANNOUNCEMENT = 'sep2026-countertop-shapes';
   const MQ_ANNOUNCEMENT_CONTENT = {
     title: '🎉 Recently added',
     body: `
-      <p style="margin-bottom:14px"><strong>Island pricing</strong> — customers can now add an island to a cabinet quote, single-row or double-row (back-to-back), with an option for a built-in dishwasher. Turn it on for any project type in <strong>Project Types</strong>. Then, in the Pricing tab, the new <strong>Island panel pricing</strong> section lets you price finished flat and decorative panels once per door style — tag your doors to a style (or a whole door group at once) and the price scales with whichever door the customer picks. Panel installation prices are entered once and apply to every style.</p>
-      <p style="margin-bottom:14px"><strong>Training videos</strong> — short walkthrough videos now sit at the top of Project Types, the Pricing tab, and the new Island panel pricing section. Hide any of them once you've watched it, and bring it back whenever you like.</p>
-      <p style="margin-bottom:14px"><strong>Help guide overhaul</strong> — a new folder-tab layout, a step-by-step Getting started walkthrough, and a brand new MidasQuote Pro topic.</p>
+      <p style="margin-bottom:14px"><strong>Countertop shapes</strong> — customers quoting a countertop can now choose Straight, L-Shape, or U-Shape and measure each section on its own, instead of trying to boil an irregular counter down into one combined number. It's a quicker, more accurate way for them to get you measurements you can actually trust.</p>
+      <p style="margin-bottom:14px;padding:12px 14px;background:#f9fafb;border-radius:8px;font-size:13px;color:#4b5563;line-height:1.6">📬 <strong>Quick reminder:</strong> replies to your support form submissions occasionally land in junk or spam mail instead of your inbox. If you've submitted a request and haven't heard back, it's worth a quick check there before following up again.</p>
       <p style="margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid #e5e7eb;font-size:12px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em">Coming soon</p>
-      <p style="font-size:13px;color:#4b5563;line-height:1.6">More training videos covering other parts of the dashboard.</p>
+      <p style="font-size:13px;color:#4b5563;line-height:1.6">More countertop updates — photos and videos walking customers through exactly how to measure their space, plus new options for refacing-style projects using specialty item variants.</p>
     `,
   };
   window.mqShowAnnouncementModal = function() {
@@ -1023,27 +549,13 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   // click-triggered (which is what people instinctively try anyway),
   // dismissed by clicking anywhere else.
   window.mqShowSpecHelpPopover = function(triggerEl, text, event) {
-    // preventDefault, not just stopPropagation, matters here: several of
-    // these "?" icons (e.g. next to "📏 Sized" in mqVariantsPanelHTML) sit
-    // inside a <label> that wraps a checkbox. A browser forwards a click on
-    // ANY element inside such a label to the checkbox as a built-in
-    // activation behavior — that's separate from normal event bubbling, so
-    // stopPropagation alone (which only stops the event reaching other
-    // listeners) never stopped it; Jordan found clicking "?" was silently
-    // checking/unchecking Sized. preventDefault on the click is what
-    // actually suppresses that forwarding.
-    if (event) { event.preventDefault(); event.stopPropagation(); }
+    if (event) event.stopPropagation();
     let pop = document.getElementById('mq-spec-help-popover');
     const alreadyOpenForThis = pop && pop.style.display === 'block' && pop._trigger === triggerEl;
     if (!pop) {
       pop = document.createElement('div');
       pop.id = 'mq-spec-help-popover';
-      // Jordan found the popover too wide to read comfortably — narrower
-      // and wrapping to 3 lines is easier on the eye than one long wide
-      // block, even though it makes the popover taller. This is the one
-      // shared popover element every "?" in this panel uses, so narrowing
-      // it here narrows all of them, not just the Sized one she flagged.
-      pop.style.cssText = 'position:absolute;z-index:100002;display:none;background:#1f2937;color:#f3f4f6;font-size:12px;line-height:1.5;padding:10px 12px;border-radius:8px;max-width:160px;box-shadow:0 8px 20px rgba(0,0,0,0.25)';
+      pop.style.cssText = 'position:absolute;z-index:100002;display:none;background:#1f2937;color:#f3f4f6;font-size:12px;line-height:1.5;padding:10px 12px;border-radius:8px;max-width:230px;box-shadow:0 8px 20px rgba(0,0,0,0.25)';
       document.body.appendChild(pop);
     }
     if (alreadyOpenForThis) { pop.style.display = 'none'; return; } // clicking the same icon again closes it
@@ -1061,23 +573,6 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     if (ratePop) ratePop.style.display = 'none';
   });
 
-  // Hovering the greyed-out "📏 Sized" label (see sizedLabelHTML in
-  // mqVariantsPanelHTML) tells a shop owner to go change "How is this
-  // priced?" — but that dropdown sits up in the item's main row, away from
-  // the variants panel they're actually looking at, and Jordan asked for
-  // some way to make it obvious which control that is at a glance. This
-  // glows that dropdown's border while the label is hovered, and clears it
-  // on mouseleave — the dropdown is always present in the DOM (see the
-  // "correction" note above mqSpecPricedCellHTML: it stays live even with
-  // variants), it just might be off-screen if the page is scrolled, which
-  // this doesn't try to fix by auto-scrolling.
-  window.mqHighlightPricingMode = function(id, on) {
-    const el = document.getElementById(`mq-spec-pricingmode-${id}`);
-    if (!el) return;
-    el.style.transition = 'box-shadow 0.15s ease';
-    el.style.boxShadow = on ? '0 0 0 3px rgba(37,99,235,0.45)' : '';
-  };
-
   window.mqShowSpecialtyTipsModal = function() {
     let modal = document.getElementById('mq-specialty-tips-modal');
     if (!modal) {
@@ -1089,8 +584,8 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     modal.innerHTML = `
       <div style="background:#fff;border-radius:16px;max-width:480px;width:100%;max-height:80vh;overflow-y:auto;padding:2rem;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,0.25)">
         <div style="font-size:40px;margin-bottom:12px">⭐</div>
-        <div style="font-size:21px;font-weight:800;color:#111;margin-bottom:10px">First time here?</div>
-        <div style="font-size:15px;color:#4b5563;line-height:1.7;margin-bottom:1.5rem;text-align:left">
+        <div style="font-size:20px;font-weight:800;color:#111;margin-bottom:10px">First time here?</div>
+        <div style="font-size:14px;color:#4b5563;line-height:1.7;margin-bottom:1.5rem;text-align:left">
           You'll notice we've pre-added some items for you. These are here to serve as an example of how specialty items can be used, and to pre-populate items for shops that offer refacing, restaining, or repainting services.
           <br><br>
           A quick heads-up: specialty item lists get messy fast once you start adding a lot of them. It's worth organizing items into <strong>categories</strong> (using the Category column) right from the start — categorized items group together neatly instead of turning into one long, hard-to-scan list.
@@ -1101,7 +596,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
           <br><br>
           If you ever get stuck, the <strong style="color:#2563eb">❓ Need help?</strong> link above always has more info.
         </div>
-        <button onclick="mqCloseSpecialtyTipsModal()" style="width:100%;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;font-family:inherit">Got it, thanks!</button>
+        <button onclick="mqCloseSpecialtyTipsModal()" style="width:100%;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">Got it, thanks!</button>
       </div>`;
     modal.style.display = 'flex';
   };
@@ -1133,8 +628,8 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     modal.innerHTML = `
       <div style="background:#fff;border-radius:16px;max-width:480px;width:100%;max-height:80vh;overflow-y:auto;padding:2rem;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,0.25)">
         <div style="font-size:40px;margin-bottom:12px">📦</div>
-        <div style="font-size:21px;font-weight:800;color:#111;margin-bottom:10px">First time here?</div>
-        <div style="font-size:15px;color:#4b5563;line-height:1.7;margin-bottom:1.5rem;text-align:left">
+        <div style="font-size:20px;font-weight:800;color:#111;margin-bottom:10px">First time here?</div>
+        <div style="font-size:14px;color:#4b5563;line-height:1.7;margin-bottom:1.5rem;text-align:left">
           <strong>This is where you add photos</strong> for the materials, doors, hinges, drawers, countertops, trim, and specialty items you've configured elsewhere — these are what customers actually see on the widget instead of a generic icon. Click <em>"📤 Upload a photo"</em> on any item to use your own, or click <em>"📷 Choose from library"</em> to pick one of our curated photos instead — no need to find or shoot a photo yourself for every item.
           <br><br>
           You can also remove any item from any project type here — just uncheck it under that item's project types.
@@ -1145,7 +640,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
           <br><br>
           Be sure to check out the <strong style="color:#2563eb">❓ Need help?</strong> link above for more info on this tab.
         </div>
-        <button onclick="mqCloseProductsTipsModal()" style="width:100%;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;font-family:inherit">Got it, thanks!</button>
+        <button onclick="mqCloseProductsTipsModal()" style="width:100%;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">Got it, thanks!</button>
       </div>`;
     modal.style.display = 'flex';
   };
@@ -1159,61 +654,15 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     }
   };
 
-  // Shown exactly once per shop, the first time they land on the Pricing
-  // tab — this is the single most important setup step (it's what actually
-  // drives the widget's quote math), so this leads with why it matters,
-  // then the recommended order of operations: run the wizard first with a
-  // small starter set (baseline box material included), then fill in the
-  // rest — crown/valance, tall cabinets, countertops — afterward using the
-  // "+ Add" buttons. Same dismiss-once-on-the-shop-record pattern as the
-  // other first-visit popups (requires a 'Pricing tips popup seen' field on
-  // the Shops table, same as 'Specialty tips popup seen' / 'Products tips
-  // popup seen').
-  window.mqShowPricingTipsModal = function() {
-    let modal = document.getElementById('mq-pricing-tips-modal');
-    if (!modal) {
-      modal = document.createElement('div');
-      modal.id = 'mq-pricing-tips-modal';
-      modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:100001;display:flex;align-items:center;justify-content:center;padding:1.5rem';
-      document.body.appendChild(modal);
-    }
-    modal.innerHTML = `
-      <div style="background:#fff;border-radius:16px;max-width:480px;width:100%;max-height:80vh;overflow-y:auto;padding:2rem;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,0.25)">
-        <div style="font-size:40px;margin-bottom:12px">💰</div>
-        <div style="font-size:21px;font-weight:800;color:#111;margin-bottom:10px">First time here?</div>
-        <div style="font-size:15px;color:#4b5563;line-height:1.7;margin-bottom:1.5rem;text-align:left">
-          <strong>The Pricing tab is the heart of the widget</strong> — without it, the only items shown on the widget are your specialty items.
-          <br><br>
-          Run the pricing wizard first, using only a few of the basic items you sell — no more than 3–5 for each category (<strong>Box Materials, Door Styles, Drawer Configurations</strong>). Be sure to include your cheapest box material (e.g. White Melamine) — it'll automatically become the baseline material the rest of your quotes are priced against.
-          <br><br>
-          You can always add more items later using the <strong>"+ Add"</strong> buttons for each category. Once you've also set up <strong>Crown Moulding</strong>, <strong>Valance</strong> (if you offer them), <strong>Tall Cabinets</strong>, and <strong>countertops</strong>, your widget will really start to take shape.
-          <br><br>
-          If you get stuck, the <strong style="color:#2563eb">❓ Need help?</strong> link above always has more info — or email us any time at <a href="mailto:support@midasquote.com" style="color:#2563eb">support@midasquote.com</a>, we're happy to help.
-        </div>
-        <button onclick="mqClosePricingTipsModal()" style="width:100%;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;font-family:inherit">Got it, thanks!</button>
-      </div>`;
-    modal.style.display = 'flex';
-  };
-  window.mqClosePricingTipsModal = function() {
-    const modal = document.getElementById('mq-pricing-tips-modal');
-    if (modal) modal.style.display = 'none';
-    const shopRecord = window._mqShopRecord;
-    if (shopRecord && !shopRecord.fields['Pricing tips popup seen']) {
-      shopRecord.fields['Pricing tips popup seen'] = true;
-      atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Pricing tips popup seen': true }).catch(()=>{});
-    }
-  };
-
   function injectStyles() {
     const s = document.createElement('style');
     s.textContent = `
       #midasquote-dashboard *{box-sizing:border-box;margin:0;padding:0}
-      #midasquote-dashboard{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#c8dad7b0;min-height:100vh;width:100vw;position:relative;left:50%;right:50%;margin-left:-50vw;margin-right:-50vw}
-      #midasquote-dashboard .mq-topbar{background:#1a1a1a;border-bottom:1px solid #2d2d2d;padding:10px 2rem;display:flex;align-items:center;justify-content:space-between;gap:20px;min-height:60px;position:fixed;top:0;left:0;right:0;z-index:100}
-      #midasquote-dashboard .mq-topbar-info{display:flex;flex-direction:column;min-width:0;flex:1 1 auto;overflow:hidden}
-      #midasquote-dashboard .mq-topbar-brand{font-size:16px;font-weight:700;color:#d4af37;display:flex;align-items:center;gap:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-      #midasquote-dashboard .mq-topbar-shop{font-size:13px;color:#9ca3af;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-      #midasquote-dashboard .mq-topbar-actions{display:flex;flex-shrink:0;align-items:center;gap:8px 12px;white-space:nowrap}
+      #midasquote-dashboard{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f9fafb;min-height:100vh;width:100vw;position:relative;left:50%;right:50%;margin-left:-50vw;margin-right:-50vw}
+      #midasquote-dashboard .mq-topbar{background:#fff;border-bottom:1px solid #e5e7eb;padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:60px;position:sticky;top:0;z-index:100}
+      #midasquote-dashboard .mq-topbar-brand{font-size:16px;font-weight:700;color:#111;display:flex;align-items:center;gap:8px}
+      #midasquote-dashboard .mq-topbar-shop{font-size:13px;color:#6b7280}
+      #midasquote-dashboard .mq-topbar-actions{display:flex;align-items:center;gap:12px}
       #midasquote-dashboard .mq-btn{padding:8px 16px;font-size:13px;font-weight:500;border-radius:8px;cursor:pointer;border:1px solid #e5e7eb;background:#fff;color:#111;font-family:inherit;transition:all 0.15s}
       #midasquote-dashboard .mq-btn:hover{background:#f9fafb}
       #midasquote-dashboard .mq-btn-primary{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
@@ -1224,35 +673,11 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       #midasquote-dashboard .mq-layout{display:flex;min-height:calc(100vh - 60px);width:100%}
       #midasquote-dashboard .mq-sidebar{width:220px;background:#fff;border-right:1px solid #e5e7eb;padding:1.5rem 0;flex-shrink:0;position:sticky;top:60px;align-self:flex-start;max-height:calc(100vh - 60px);overflow-y:auto}
       #midasquote-dashboard .mq-nav-item{display:flex;align-items:center;gap:10px;padding:11px 1.5rem;font-size:13px;font-weight:500;color:#6b7280;cursor:pointer;transition:all 0.15s;border-left:3px solid transparent}
-      #midasquote-dashboard .mq-nav-item:hover{color:#111;background:#c8dad7b0}
-      #midasquote-dashboard .mq-nav-item.active{color:#111;background:#c8dad7b0;border-left-color:#1a1a1a}
+      #midasquote-dashboard .mq-nav-item:hover{color:#111;background:#f9fafb}
+      #midasquote-dashboard .mq-nav-item.active{color:#111;background:#f9fafb;border-left-color:#1a1a1a}
       #midasquote-dashboard .mq-nav-icon{font-size:16px;width:20px;text-align:center}
       #midasquote-dashboard .mq-nav-section{font-size:10px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.06em;padding:1.25rem 1.5rem 0.5rem}
       #midasquote-dashboard .mq-content{flex:1;min-width:0;padding:2.5rem;overflow-y:visible}
-      /* "Start here" nudge: pulsing highlight on the Help guide nav item plus
-         a callout bubble with an arrow, shown until a first-time shop clicks
-         it once (see mqInitHelpGuideNudge() and the window.mqNav wrapper's
-         dismiss logic further down). The bubble is positioned in JS with
-         position:fixed rather than nested/absolute inside .mq-sidebar,
-         because the sidebar needs overflow-y:auto (desktop) or
-         overflow-x:auto (mobile) for its own scrolling — and per the CSS
-         overflow spec, giving either axis a non-"visible" value makes the
-         OTHER axis compute to "auto" too, which was silently clipping an
-         absolutely-positioned bubble that tried to overflow the sidebar's
-         bounds in the other direction. Appended as a child of
-         #midasquote-dashboard (which has no transform of its own) so
-         position:fixed still anchors to the real viewport. */
-      @keyframes mqNudgePulse{0%{box-shadow:0 0 0 0 rgba(201,164,92,0.55)}70%{box-shadow:0 0 0 8px rgba(201,164,92,0)}100%{box-shadow:0 0 0 0 rgba(201,164,92,0)}}
-      @keyframes mqNudgeArrowBounceX{0%,100%{transform:translateX(0)}50%{transform:translateX(-4px)}}
-      @keyframes mqNudgeArrowBounceY{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
-      #midasquote-dashboard .mq-nav-item-nudge{border-radius:6px;animation:mqNudgePulse 1.8s infinite}
-      #midasquote-dashboard .mq-helpguide-nudge{position:fixed;display:flex;align-items:center;gap:6px;background:#1a1a1a;color:#fff;font-size:12px;font-weight:600;padding:7px 12px;border-radius:20px;white-space:nowrap;z-index:200;pointer-events:none}
-      #midasquote-dashboard .mq-helpguide-nudge-arrow{display:inline-block;animation:mqNudgeArrowBounceX 1.2s infinite}
-      #midasquote-dashboard .mq-helpguide-nudge-arrow::before{content:'\\2190'}
-      /* Modifier applied by JS when the bubble sits below the item (mobile
-         horizontal nav bar) instead of to its right (desktop vertical nav). */
-      #midasquote-dashboard .mq-helpguide-nudge.mq-helpguide-nudge-below .mq-helpguide-nudge-arrow{animation-name:mqNudgeArrowBounceY}
-      #midasquote-dashboard .mq-helpguide-nudge.mq-helpguide-nudge-below .mq-helpguide-nudge-arrow::before{content:'\\2191'}
       /* Any table wider than the available content area (Specialty items,
          with its 11+ columns, is the usual culprit) needs to scroll within
          its own box instead of stretching .mq-content — and therefore the
@@ -1276,13 +701,11 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       #midasquote-dashboard .mq-page{display:none;position:relative}
       #midasquote-dashboard .mq-help-btn{position:absolute;top:-32px;right:0;background:#eff6ff;color:#2563eb;border:1.5px solid #93c5fd;border-radius:999px;padding:6px 14px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;transition:background 0.15s;z-index:5}
       #midasquote-dashboard .mq-help-btn:hover{background:#dbeafe}
-      /* Trial/Demo banner: 80% wide on desktop so the floating "Need help?" button (which pokes up into the banner's space) never sits on top of it. Full width on phones, where that button sits clear above it. */
-      #midasquote-dashboard #mq-plan-banner > div{max-width:80%}
       #midasquote-dashboard .mq-help-badge{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:#2563eb;color:#fff;font-size:11px;font-weight:800;flex-shrink:0}
       #midasquote-dashboard .mq-page.active{display:block}
       #midasquote-dashboard .mq-page-title{font-size:22px;font-weight:700;color:#111;margin-bottom:6px}
       #midasquote-dashboard .mq-page-sub{font-size:13px;color:#6b7280;margin-bottom:2rem}
-      #midasquote-dashboard .mq-card{background:#fff;border:1px solid #000;border-radius:12px;padding:1.75rem;margin-bottom:1.5rem}
+      #midasquote-dashboard .mq-card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:1.75rem;margin-bottom:1.5rem}
       #midasquote-dashboard .mq-card-title{font-size:13px;font-weight:600;color:#111;margin-bottom:1rem;display:flex;align-items:center;gap:8px}
       #midasquote-dashboard .mq-grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem}
       #midasquote-dashboard .mq-grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem}
@@ -1293,7 +716,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       #midasquote-dashboard input:focus,#midasquote-dashboard select:focus,#midasquote-dashboard textarea:focus{outline:none;border-color:#1a1a1a}
       #midasquote-dashboard textarea{resize:vertical;min-height:40px}
       #midasquote-dashboard .mq-stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1.25rem;margin-bottom:2rem}
-      #midasquote-dashboard .mq-stat{background:#fff;border:1px solid #000;border-radius:12px;padding:1.5rem}
+      #midasquote-dashboard .mq-stat{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:1.5rem}
       #midasquote-dashboard .mq-stat-val{font-size:26px;font-weight:700;color:#111;margin-bottom:6px}
       #midasquote-dashboard .mq-stat-lbl{font-size:12px;color:#6b7280;font-weight:500}
       #midasquote-dashboard .mq-stat-green .mq-stat-val{color:#16a34a}
@@ -1327,11 +750,11 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       #midasquote-dashboard #mq-spec-table td{padding:12px 9px}
       #midasquote-dashboard #mq-spec-table td{vertical-align:top;padding-top:14px}
       #midasquote-dashboard #mq-spec-table{border-collapse:separate;border-spacing:0 10px}
-      #midasquote-dashboard #mq-spec-table td{background:#d7e3e24f;box-shadow:0 1px 4px rgba(0,0,0,0.07);border-top:1px solid #e5e7eb;border-bottom:1px solid #e5e7eb}
+      #midasquote-dashboard #mq-spec-table td{background:#fff;box-shadow:0 1px 4px rgba(0,0,0,0.07);border-top:1px solid #e5e7eb;border-bottom:1px solid #e5e7eb}
       #midasquote-dashboard #mq-spec-table td:first-child{border-left:1px solid #e5e7eb;border-radius:8px 0 0 8px}
       #midasquote-dashboard #mq-spec-table td:last-child{border-right:1px solid #e5e7eb;border-radius:0 8px 8px 0}
       #midasquote-dashboard #mq-spec-table thead th{border-bottom:2px solid var(--border)}
-      #midasquote-dashboard #mq-spec-table-wrap{padding:14px}
+      #midasquote-dashboard #mq-spec-table-wrap{padding-left:14px}
       #midasquote-dashboard .mq-table tr:last-child td{border-bottom:none}
       #midasquote-dashboard .mq-table tr:hover td{background:#f9fafb}
       #midasquote-dashboard .mq-badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500}
@@ -1361,58 +784,22 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       #midasquote-dashboard .mq-empty{text-align:center;padding:3rem;color:#9ca3af;font-size:14px}
       #midasquote-dashboard .mq-section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
 
-      /* ── Help guide — folder-tab layout ── */
-      #midasquote-dashboard .mq-help-header-row{display:flex;align-items:flex-start;justify-content:space-between;gap:1.5rem;margin-bottom:1.5rem;flex-wrap:wrap}
-      #midasquote-dashboard #mq-help-search{font-family:inherit;font-size:13px;padding:9px 16px;border:1.5px solid #d1d5db;border-radius:999px;width:220px;flex-shrink:0;background:#fff}
-      #midasquote-dashboard #mq-help-search:focus{outline:none;border-color:#1a1a1a}
-      #midasquote-dashboard .mq-help-folder{border-radius:14px;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,0.10);max-width:1080px}
-      #midasquote-dashboard .mq-help-tabbar{background:#1a1a1a;display:flex;flex-wrap:wrap-reverse;align-items:flex-end;gap:4px;padding:16px 14px 0}
-      #midasquote-dashboard .mq-help-tab{position:relative;top:4px;background:#333;color:rgba(255,255,255,0.62);border:none;border-radius:9px 9px 0 0;padding:10px 18px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;transition:background 0.15s,color 0.15s,top 0.15s,padding 0.15s;white-space:nowrap}
-      #midasquote-dashboard .mq-help-tab:hover{background:#4a4a4a;color:#fff}
-      #midasquote-dashboard .mq-help-tab.active{top:0;background:#fff;color:#111;padding-top:13px;padding-bottom:13px;box-shadow:0 -6px 14px rgba(0,0,0,0.16);z-index:2}
-      #midasquote-dashboard .mq-help-tab-icon{margin-right:2px}
-      #midasquote-dashboard .mq-help-panel{background:#fff;padding:2.5rem;min-height:320px;position:relative;z-index:1}
-      #midasquote-dashboard .mq-help-panel-title{font-size:23px;font-weight:800;color:#111;margin-bottom:1.5rem;padding-bottom:1.1rem;border-bottom:1px solid #f3f4f6;display:flex;align-items:center;gap:10px}
-      #midasquote-dashboard .mq-help-panel-body{font-size:14.5px;color:#374151;line-height:1.9}
-      #midasquote-dashboard .mq-help-panel-body p{margin:0 0 1.15rem}
-      #midasquote-dashboard .mq-help-panel-body p:last-child{margin-bottom:0}
-      #midasquote-dashboard .mq-help-panel-body h4{margin-top:1.5rem}
-      #midasquote-dashboard .mq-help-panel-body ol,
-      #midasquote-dashboard .mq-help-panel-body ul{margin:0 0 1.15rem}
-      #midasquote-dashboard .mq-help-panel-body li{margin-bottom:6px}
-      #midasquote-dashboard .mq-step{padding:1.6rem 0;border-bottom:1px solid #eef0f2}
-      #midasquote-dashboard .mq-step:first-child{padding-top:0}
-      #midasquote-dashboard .mq-step:last-child{border-bottom:none;padding-bottom:0}
-      #midasquote-dashboard .mq-step-head{display:flex;align-items:center;gap:11px;margin-bottom:0.9rem}
-      #midasquote-dashboard .mq-step-num{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;padding:0 11px;height:26px;background:#333;color:#fff;font-size:11.5px;font-weight:700;letter-spacing:0.03em;border-radius:8px}
-      #midasquote-dashboard .mq-step-title{font-size:16.5px;font-weight:800;color:#111}
-      #midasquote-dashboard .mq-step-body{font-size:14.5px;color:#374151;line-height:1.85}
-      #midasquote-dashboard .mq-step-body p{margin:0 0 0.9rem}
-      #midasquote-dashboard .mq-step-body p:last-child{margin-bottom:0}
-
       @media (max-width: 768px) {
         #midasquote-dashboard .mq-layout{flex-direction:column}
-        #midasquote-dashboard .mq-sidebar{width:100%;padding:0;display:flex;overflow-x:auto;overflow-y:visible;border-right:none;border-bottom:1px solid #e5e7eb;-webkit-overflow-scrolling:touch;position:sticky;top:60px;max-height:none;z-index:90}
+        #midasquote-dashboard .mq-sidebar{width:100%;padding:0.5rem 0;display:flex;overflow-x:auto;overflow-y:visible;border-right:none;border-bottom:1px solid #e5e7eb;-webkit-overflow-scrolling:touch;position:sticky;top:60px;max-height:none;z-index:90}
         #midasquote-dashboard .mq-nav-section{display:none}
-        #midasquote-dashboard .mq-nav-item{flex-shrink:0;border-left:none;border-bottom:1px solid transparent;padding:10px 14px;white-space:nowrap}
-        #midasquote-dashboard .mq-nav-item.active{border-left-color:transparent;border-bottom-color:transparent}
+        #midasquote-dashboard .mq-nav-item{flex-shrink:0;border-left:none;border-bottom:3px solid transparent;padding:10px 14px;white-space:nowrap}
+        #midasquote-dashboard .mq-nav-item.active{border-left-color:transparent;border-bottom-color:#1a1a1a}
         #midasquote-dashboard .mq-content{padding:1.25rem}
         #midasquote-dashboard .mq-help-btn{top:-13px}
-        #midasquote-dashboard #mq-plan-banner > div{max-width:100%}
-        #midasquote-dashboard .mq-spec-scroll-arrow{display:none!important}
         #midasquote-dashboard #mq-pd-sticky-preview{top:auto!important;bottom:14px!important;right:14px!important;max-width:300px!important;width:auto!important;padding:10px!important;height:auto!important}
         #midasquote-dashboard #mq-pd-sticky-preview canvas{width:260px!important;height:auto!important;margin-bottom:8px!important}
         #midasquote-dashboard #mq-pd-sticky-preview button{font-size:13px!important;padding:8px!important;width:100%!important}
-        #midasquote-dashboard .mq-topbar{padding:8px 1rem}
+        #midasquote-dashboard .mq-topbar{padding:0 1rem;flex-wrap:wrap;height:auto;min-height:60px}
         #midasquote-dashboard .mq-topbar-brand{font-size:14px}
         #midasquote-dashboard .mq-card{padding:1.25rem}
         #midasquote-dashboard .mq-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
         #midasquote-dashboard .mq-table{min-width:560px}
-        #midasquote-dashboard .mq-help-header-row{flex-direction:column;align-items:stretch}
-        #midasquote-dashboard #mq-help-search{width:100%}
-        #midasquote-dashboard .mq-help-tabbar{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch}
-        #midasquote-dashboard .mq-help-panel{padding:1.5rem}
-        #midasquote-dashboard .mq-help-panel-title{font-size:19px}
       }
     `;
     document.head.appendChild(s);
@@ -1430,141 +817,19 @@ window.logoutMember = async function () {
   }
 };
 
-  // ===================== Training videos =====================
-  // Short walkthrough videos Jordan records himself, shown right after a
-  // page's intro paragraph with a "Watch the video →" prompt (Jordan's
-  // first one is for Project Types). One entry per page here; add a new
-  // key + call mqTrainingVideoBlockHTML(key) from that page's markup to
-  // add another video later without touching anything else.
-  //
-  // Hosted on YouTube (Jordan's first attempt was GitHub — "I could host
-  // it in github for now" — but the file was too big for a plain git push,
-  // which blocks any single file over 100MB, so he switched to YouTube:
-  // https://youtu.be/nbTFS0b1C2g). Embedded via youtube-nocookie.com
-  // (YouTube's own privacy-enhanced embed domain — same video, doesn't set
-  // tracking cookies until the visitor actually plays it) inside a
-  // responsive 16:9 wrapper, since an <iframe> has no natural aspect ratio
-  // of its own the way a <video> tag does.
-  // Player size: max-width 640px (was 320px). YouTube picks its starting
-  // quality from the player's on-screen size, and a 320px box always got
-  // 360p no matter how sharp the upload was. The box still shrinks to fit
-  // phones/narrow screens (width:100%).
-  const MQ_TRAINING_VIDEOS = {
-    rooms: { youtubeId: 'nbTFS0b1C2g' },
-    pricing: { youtubeId: 'tQyYyFALg7c' },
-    islandPanel: { youtubeId: 'LHsz0MRmeM0' },
-    specialty: { youtubeId: 'pZ4UNfpPVSs' },
-    products: { youtubeId: 'xbYtl12XChc' },
-    shop: { youtubeId: '_vcQFocImJk' },
-  };
-  function mqTrainingVideoBlockHTML(key) {
-    const video = MQ_TRAINING_VIDEOS[key];
-    if (!video) return '';
-    const hidden = !!(window._mqTrainingVideosHidden || {})[key];
-    // Jordan, after seeing the first version: drop the white card
-    // background entirely (no more background/border wrapper — this now
-    // just flows as plain page content), and move "Hide video" out of the
-    // flex row next to the player and down onto its own line, in the exact
-    // same spot "↻ Reshow training video" occupies once hidden — hiding
-    // and reshowing now swap in and out of that one slot instead of the
-    // button jumping to a different position on the page.
-    //
-    // Second pass (Jordan, per his screenshot of the live page): "Watch
-    // the video →" no longer sits beside the player in a flex row that
-    // only stacks when it runs out of horizontal room — it's now always
-    // its own line directly above the video, left-aligned with it. This
-    // is the explicit permanent layout, not a wrap-width accident.
-    return `
-      <div id="mq-training-video-${key}" style="display:${hidden ? 'none' : 'block'};margin-bottom:1rem">
-        <div style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px;color:#1a1a1a;margin-bottom:8px">Watch the video <span style="font-size:17px">→</span></div>
-        <div style="position:relative;width:100%;max-width:640px;aspect-ratio:16/9;border-radius:8px;overflow:hidden;background:#000">
-          <iframe src="https://www.youtube-nocookie.com/embed/${video.youtubeId}" title="Training video" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;border:0"></iframe>
-        </div>
-        <div style="max-width:640px;margin-top:6px;font-size:12px;color:#6b7280;line-height:1.5">Video looks blurry? Click the ⚙ gear on the video → Quality → 1080p, or <a href="https://www.youtube.com/watch?v=${video.youtubeId}" target="_blank" rel="noopener" style="color:#2563eb;text-decoration:underline">open it on YouTube ↗</a></div>
-        <button type="button" class="mq-btn mq-btn-sm" style="margin-top:10px" onclick="mqHideTrainingVideo('${key}')">Hide video</button>
-      </div>
-      <div id="mq-training-video-reshow-${key}" style="display:${hidden ? 'block' : 'none'};margin-bottom:1rem">
-        <button type="button" class="mq-btn mq-btn-sm" onclick="mqReshowTrainingVideo('${key}')">↻ Reshow training video</button>
-      </div>`;
-  }
-  // Exposed on window (unlike most of this file's helpers) because the
-  // Pricing tab's own content isn't rendered from this file's buildHTML —
-  // it's built by pricing-helper-v2.js, a separate script this file lazily
-  // injects only once the Pricing tab is first opened (see the
-  // 'pricing-helper-v2.js is a separate file/module' comment further down).
-  // That script runs in its own closure, so it can't see this file's
-  // module-private mqTrainingVideoBlockHTML unless it's put on window —
-  // same reason mqHideTrainingVideo/mqReshowTrainingVideo above already are.
-  window.mqTrainingVideoBlockHTML = mqTrainingVideoBlockHTML;
-  // Hidden/reshown state has to survive a logout (Jordan: "if they click
-  // hide, then keep it hidden even if they logout") — a page-scoped JS
-  // variable alone would reset on the next load, so this saves to the
-  // shop record the same way every other one-time-per-shop dismissal in
-  // this file does (see 'Help guide nudge seen' etc.), just as ONE JSON
-  // field keyed by video id instead of a separate checkbox field per
-  // video, since Jordan said more videos are coming.
-  //
-  // Requires a Long text field named exactly 'Training videos hidden' on
-  // the Shops table (not added by this session — same as every other
-  // Airtable schema change flagged in the checklist). Until that field
-  // exists, hide/reshow still works for the rest of that browser session,
-  // it just won't survive a logout/reload yet — the atUpdate below simply
-  // fails silently (logged to console) rather than breaking the toggle.
-  window.mqHideTrainingVideo = async function(key) {
-    const block = document.getElementById('mq-training-video-' + key);
-    if (block) block.style.display = 'none';
-    const reshow = document.getElementById('mq-training-video-reshow-' + key);
-    if (reshow) reshow.style.display = 'block';
-    const hidden = window._mqTrainingVideosHidden || {};
-    hidden[key] = true;
-    window._mqTrainingVideosHidden = hidden;
-    try {
-      await atUpdate(CONFIG.SHOPS_TABLE, window._mqShopRecord.id, { 'Training videos hidden': JSON.stringify(hidden) });
-      window._mqShopRecord.fields['Training videos hidden'] = JSON.stringify(hidden);
-    } catch(e) { console.error('Failed to save hidden training video state — needs a "Training videos hidden" field on Shops', e); }
-  };
-  window.mqReshowTrainingVideo = async function(key) {
-    const block = document.getElementById('mq-training-video-' + key);
-    if (block) block.style.display = 'block';
-    const reshow = document.getElementById('mq-training-video-reshow-' + key);
-    if (reshow) reshow.style.display = 'none';
-    const hidden = window._mqTrainingVideosHidden || {};
-    delete hidden[key];
-    window._mqTrainingVideosHidden = hidden;
-    try {
-      await atUpdate(CONFIG.SHOPS_TABLE, window._mqShopRecord.id, { 'Training videos hidden': JSON.stringify(hidden) });
-      window._mqShopRecord.fields['Training videos hidden'] = JSON.stringify(hidden);
-    } catch(e) { console.error('Failed to save reshown training video state — needs a "Training videos hidden" field on Shops', e); }
-  };
-  // =================== end training videos ===================
-
   function buildHTML(shop) {
     const token = shop['Shop token'] || '';
     const embedCode = '&lt;div id="midasquote-widget"&gt;&lt;/div&gt;\n&lt;script src="https://widget.midasquote.com/widget.js?shop=' + token + '"&gt;&lt;/script&gt;';
     window._mqRawEmbedCode = '<div id="midasquote-widget"></div>\n<scr' + 'ipt src="https://widget.midasquote.com/widget.js?shop=' + token + '"></scr' + 'ipt>';
-    // "Start here" nudge pointing at Help guide, shown until a shop clicks
-    // it once — requires a 'Help guide nudge seen' checkbox field on the
-    // Shops table (same one-time-per-shop pattern as 'Welcome popup seen'
-    // etc. above). Dismissed in the mqNav wrapper further down, not here,
-    // since this function only runs once at initial render.
-    const showHelpGuideNudge = !shop['Help guide nudge seen'];
-
-    // Which training videos this shop has hidden — see mqTrainingVideoBlockHTML
-    // above. Parsed here (buildHTML only runs once at initial render, same
-    // as showHelpGuideNudge above) so the very first render already reflects
-    // a shop's earlier hide/reshow choice instead of always starting shown.
-    let trainingVideosHidden = {};
-    try { trainingVideosHidden = shop['Training videos hidden'] ? JSON.parse(shop['Training videos hidden']) : {}; } catch(e) { trainingVideosHidden = {}; }
-    window._mqTrainingVideosHidden = trainingVideosHidden;
 
     return `
       <div class="mq-topbar">
-        <div class="mq-topbar-info">
+        <div>
           <div class="mq-topbar-brand">⚡ MidasQuote</div>
           <div class="mq-topbar-shop">${shop['Shop name'] || 'My Shop'}</div>
         </div>
         <div class="mq-topbar-actions">
-          <a href="https://www.midasquote.com/help" target="_blank" rel="noopener" style="font-size:13px;color:#9ca3af;text-decoration:none;font-weight:500;margin-right:4px" onmouseover="this.style.color='#d4af37'" onmouseout="this.style.color='#9ca3af'">Help</a>
+          <a href="https://www.midasquote.com/help" target="_blank" rel="noopener" style="font-size:13px;color:#6b7280;text-decoration:none;font-weight:500;margin-right:4px" onmouseover="this.style.color='#111'" onmouseout="this.style.color='#6b7280'">Help</a>
           <button class="mq-btn mq-btn-sm" onclick="window.open('https://widget.midasquote.com/?shop=${token}','_blank')">Preview widget ↗</button>
           <button 
   type="button"
@@ -1581,26 +846,21 @@ window.logoutMember = async function () {
           <div class="mq-nav-item active" onclick="mqNav('overview',this)"><span class="mq-nav-icon">📊</span> Dashboard</div>
           <div class="mq-nav-item" onclick="mqNav('leads',this)"><span class="mq-nav-icon">👥</span> Leads</div>
           <div class="mq-nav-section">Setup</div>
-          <div class="mq-nav-item${showHelpGuideNudge ? ' mq-nav-item-nudge' : ''}" id="mq-nav-helpguide" onclick="mqNav('helpguide',this)"><span class="mq-nav-icon">📖</span> Help guide</div>
           <div class="mq-nav-item" onclick="mqNav('shop',this)"><span class="mq-nav-icon">🏪</span> Shop info</div>
-          <div class="mq-nav-item" onclick="mqNav('rooms',this)"><span class="mq-nav-icon">🚪</span> Project types</div>
           <div class="mq-nav-item" onclick="mqNav('pricing',this)"><span class="mq-nav-icon">💰</span> Pricing</div>
+          <div class="mq-nav-item" onclick="mqNav('rooms',this)"><span class="mq-nav-icon">🚪</span> Project types</div>
           <div class="mq-nav-item" onclick="mqNav('specialty',this)"><span class="mq-nav-icon">⭐</span> Specialty items</div>
+          <div class="mq-nav-item" onclick="mqNav('embed',this)"><span class="mq-nav-icon">🔗</span> Embed code</div>
           <div class="mq-nav-item" id="mq-nav-products" onclick="mqNav('products',this)"><span class="mq-nav-icon">📦</span> My Products</div>
           <div class="mq-nav-item" onclick="mqNav('showroom',this)"><span class="mq-nav-icon">🖼️</span> Showroom</div>
-          <div class="mq-nav-section">Launch &amp; Grow</div>
-          <div class="mq-nav-item" onclick="mqNav('embed',this)"><span class="mq-nav-icon">🔗</span> Embed code</div>
           <div class="mq-nav-item" onclick="mqNav('marketing',this)"><span class="mq-nav-icon">📣</span> Marketing Kit</div>
           <div class="mq-nav-item" onclick="mqNav('proposals',this)"><span class="mq-nav-icon">📄</span> Proposals</div>
-          <div class="mq-nav-section">Account</div>
+          <div class="mq-nav-item" id="mq-nav-templates" onclick="mqNav('templates',this)" style="display:none"><span class="mq-nav-icon">🔧</span> Templates (Admin)</div>
           <div class="mq-nav-item" onclick="mqNav('billing',this)"><span class="mq-nav-icon">💳</span> Account</div>
           <div class="mq-nav-item" onclick="mqNav('support',this)"><span class="mq-nav-icon">💬</span> Support</div>
-          <div class="mq-nav-item" id="mq-nav-templates" onclick="mqNav('templates',this)" style="display:none"><span class="mq-nav-icon">🔧</span> Templates (Admin)</div>
         </div>
 
         <div class="mq-content">
-
-          <div id="mq-plan-banner">${mqPlanBannerInnerHTML()}</div>
 
           <!-- OVERVIEW -->
           <div class="mq-page active" id="mq-page-overview">
@@ -1620,7 +880,7 @@ window.logoutMember = async function () {
             </div>
             <div class="mq-card">
               <div class="mq-card-title">🔗 Your widget embed code</div>
-              <p style="font-size:13px;color:#6b7280;margin-bottom:8px">Copy and paste this into your website where you want the widget to appear. Whether it shows the Classic or Focused layout is set in Shop Info → 🎛️ Widget layout — changing it there updates this widget instantly, no new code needed.</p>
+              <p style="font-size:13px;color:#6b7280;margin-bottom:8px">Copy and paste this into your website where you want the widget to appear.</p>
               <div class="mq-embed-box" id="mq-embed-preview"><span>${embedCode}</span><button class="mq-copy-btn" id="mq-copy-embed-1">Copy</button></div>
             </div>
           </div>
@@ -1656,7 +916,6 @@ window.logoutMember = async function () {
             <button class="mq-help-btn" onclick="mqShowHelp('shop')"><span class="mq-help-badge">?</span> Need help?</button>
             <div class="mq-page-title">Shop info</div>
             <div class="mq-page-sub">This info appears on your widget and in emails to customers</div>
-            ${mqTrainingVideoBlockHTML('shop')}
             <div id="mq-shop-msg"></div>
 
             <div class="mq-card">
@@ -1880,56 +1139,6 @@ window.logoutMember = async function () {
             </div>
 
             <div class="mq-card">
-              <div class="mq-card-title" onclick="mqToggleShopSection('access')" style="cursor:pointer;user-select:none">
-                <span id="mq-shopsec-access-chevron" style="font-size:11px;color:#6b7280;display:inline-block;transition:transform 0.15s">▶</span>
-                🔒 Widget access
-              </div>
-              <div id="mq-shopsec-access-body" style="display:none">
-              <div class="mq-toggle-row" style="margin-bottom:0">
-                <div>
-                  <div style="font-size:13px;font-weight:500;color:#111">Require a password to use the widget</div>
-                  <div style="font-size:12px;color:#6b7280;margin-top:2px">When on, a customer must enter one of the passwords below before they can get a quote. Use this when you don't want the widget fully public — only people you give a password to can get in.</div>
-                </div>
-                <div class="mq-toggle" id="mq-widgetpw-toggle" onclick="mqToggleWidgetPasswordProtection()"></div>
-              </div>
-              <div id="mq-widgetpw-wrap" style="display:none;margin-top:1rem;padding:12px 14px;background:#fef2f2;border:1px solid #fecaca;border-radius:10px">
-                <label class="mq-label">Passwords <span style="font-weight:400;color:#9ca3af">(any one of these unlocks the widget)</span></label>
-                <div id="mq-widgetpw-list" style="display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px"></div>
-                <div style="display:flex;gap:8px;flex-wrap:wrap">
-                  <input type="text" id="mq-widgetpw-new" placeholder="Add a password" style="flex:1;min-width:150px;font-size:13px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit" onkeydown="if(event.key==='Enter'){event.preventDefault();mqAddWidgetPassword();}"/>
-                  <input type="number" id="mq-widgetpw-new-disc" min="0" max="100" step="0.5" placeholder="Discount %" title="Optional — percent off the final quote for anyone using this password" style="width:105px;font-size:13px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit" onkeydown="if(event.key==='Enter'){event.preventDefault();mqAddWidgetPassword();}"/>
-                  <button type="button" class="mq-btn mq-btn-sm" onclick="mqAddWidgetPassword()">+ Add</button>
-                </div>
-                <span class="mq-hint" style="display:block;margin-top:8px">Once a customer enters a correct password, their browser remembers it — they will not be asked again unless you remove that specific password from this list.</span>
-                <span class="mq-hint" style="display:block;margin-top:6px"><strong>Discounts:</strong> a password with a discount takes that % off the final quote (after your project type adjustments) for anyone who unlocks the widget with it — ranges and single prices alike. Discounts only apply while the password requirement above is on. Leave the discount at 0 for a plain access password.</span>
-              </div>
-              </div>
-            </div>
-
-            <div class="mq-card">
-              <div class="mq-card-title" onclick="mqToggleShopSection('layout')" style="cursor:pointer;user-select:none">
-                <span id="mq-shopsec-layout-chevron" style="font-size:11px;color:#6b7280;display:inline-block;transition:transform 0.15s">▶</span>
-                🎛️ Widget layout
-              </div>
-              <div id="mq-shopsec-layout-body" style="display:none">
-              <div class="mq-hint" style="display:block;margin-bottom:1rem">Choose how your widget feels to customers. This applies to your embedded widget and your standalone widget link everywhere at once — there's nothing to re-paste. MidasQuote Pro isn't affected — it always keeps its standard layout.</div>
-              <div style="display:flex;gap:12px;flex-wrap:wrap">
-                <div id="mq-layout-classic" onclick="mqSetWidgetLayout('Classic')" style="flex:1;min-width:230px;border:2px solid #e5e7eb;border-radius:10px;padding:1rem;cursor:pointer">
-                  <div style="font-size:14px;font-weight:700;margin-bottom:4px">📜 Classic</div>
-                  <div style="font-size:12px;color:#6b7280;line-height:1.5">One scrolling page. Customers see every step and can jump around freely. This is how your widget has always worked.</div>
-                  <a href="https://widget.midasquote.com/?shop=${token}&layout=classic" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:inline-block;margin-top:10px;font-size:12px;font-weight:600;color:#1d4ed8;text-decoration:none">Preview Classic ↗</a>
-                </div>
-                <div id="mq-layout-focused" onclick="mqSetWidgetLayout('Focused')" style="flex:1;min-width:230px;border:2px solid #e5e7eb;border-radius:10px;padding:1rem;cursor:pointer">
-                  <div style="font-size:14px;font-weight:700;margin-bottom:4px">🎯 Focused</div>
-                  <div style="font-size:12px;color:#6b7280;line-height:1.5">One question at a time, in a clean full-screen view with photo cards to start, a progress stepper, and a live price. Great on phones.</div>
-                  <a href="https://widget.midasquote.com/?shop=${token}&layout=focused" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:inline-block;margin-top:10px;font-size:12px;font-weight:600;color:#1d4ed8;text-decoration:none">Preview Focused ↗</a>
-                </div>
-              </div>
-              <div id="mq-layout-note" style="font-size:12px;color:#6b7280;margin-top:10px"></div>
-              </div>
-            </div>
-
-            <div class="mq-card">
               <div class="mq-card-title" onclick="mqToggleShopSection('tabs')" style="cursor:pointer;user-select:none">
                 <span id="mq-shopsec-tabs-chevron" style="font-size:11px;color:#6b7280;display:inline-block;transition:transform 0.15s">▶</span>
                 🗂️ Estimator tabs
@@ -1968,12 +1177,11 @@ window.logoutMember = async function () {
           <div class="mq-page" id="mq-page-rooms">
             <button class="mq-help-btn" onclick="mqShowHelp('rooms')"><span class="mq-help-badge">?</span> Need help?</button>
             <div class="mq-page-title">Project types</div>
-            <div class="mq-page-sub">Set up the project types you want to offer — as simple as Residential & Commercial, or as detailed as Standard, Premium, and Luxury tiers. Keep our premade project types and "How to measure" images, or replace either with your own to match your shop.</div>
-            ${mqTrainingVideoBlockHTML('rooms')}
+            <div class="mq-page-sub">Set up the project types your widget offers — rooms, service tiers, or anything else — and adjust pricing up or down for each one. Great for things like "Kitchen Reno — Premium" vs. "Luxury," or a bathroom vanity running smaller than a kitchen cabinet at the same length.</div>
             <div class="mq-card" id="mq-rooms-cabinet-card">
               <div id="mq-rooms-msg"></div>
               <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 12px;margin-bottom:1rem;font-size:12px;color:#1e40af;line-height:1.6">
-                💡 You can adjust the ballpark outputs for bases, uppers, installation, or the total ballpark price. We've automatically taken off 5% for bathroom cabinets because they're smaller. You could also use this for a project type with a generally more difficult installation than normal — or if you typically charge 10% more for renos than new builds, add 10% to the overall ballpark range of your reno project type.
+                💡 Base cabinets and Upper cabinets adjustments apply to box material cost only — never door, drawer, or hinge pricing. Installation applies to labor cost only. Total ballpark adjusts everything at once. Check any combination that applies, or leave everything at 0% for no adjustment.
               </div>
               <div id="mq-rooms-list"></div>
               <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px;margin-bottom:1.25rem">
@@ -2014,50 +1222,23 @@ window.logoutMember = async function () {
           <!-- SPECIALTY ITEMS -->
           <div class="mq-page" id="mq-page-specialty">
             <button class="mq-help-btn" onclick="mqShowHelp('specialty')"><span class="mq-help-badge">?</span> Need help?</button>
-            <!-- Table scroll nudges — fixed to the viewport (not the table),
-                 so they stay visible and clickable no matter how far down
-                 the list you've scrolled, instead of only being reachable
-                 via a scrollbar sitting at the very bottom of a tall table.
-                 Shown/hidden by mqUpdateSpecScrollArrows based on whether
-                 #mq-spec-table-wrap actually has more to scroll in that
-                 direction; see that function for details. -->
-            <button id="mq-spec-scroll-left" class="mq-spec-scroll-arrow" onclick="mqScrollSpecTable(-1)" title="Scroll table left" style="display:none;position:fixed;left:236px;top:50%;transform:translateY(-50%);z-index:50;width:52px;height:52px;border-radius:50%;background:#1a1a1a;color:#fff;border:none;box-shadow:0 4px 14px rgba(0,0,0,0.3);cursor:pointer;font-size:22px;align-items:center;justify-content:center">◀</button>
-            <button id="mq-spec-scroll-right" class="mq-spec-scroll-arrow" onclick="mqScrollSpecTable(1)" title="Scroll table right — more columns to see" style="display:none;position:fixed;right:24px;top:50%;transform:translateY(-50%);z-index:50;width:52px;height:52px;border-radius:50%;background:#1a1a1a;color:#fff;border:none;box-shadow:0 4px 14px rgba(0,0,0,0.3);cursor:pointer;font-size:22px;align-items:center;justify-content:center">▶</button>
             <div class="mq-section-header">
               <div>
                 <div class="mq-page-title">Specialty items</div>
                 <div class="mq-page-sub">Anything you want to price and attach to a project type — not just add-ons. Price flat-rate, per linear foot, or per square foot; include the full cost — materials, hardware, and installation. What you enter is what gets added to the quote.</div>
               </div>
             </div>
-            ${mqTrainingVideoBlockHTML('specialty')}
             <div id="mq-spec-msg"></div>
-            <div id="mq-spec-tips-card" class="mq-card" style="padding:0;overflow:hidden;margin-bottom:1rem;border-color:#86efac;background:#f0fdf4;max-width:480px">
-              <div onclick="mqToggleSpecTips()" style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;cursor:pointer">
-                <div style="font-size:13px;font-weight:700;color:#166534">❓ Tips for this page</div>
-                <span id="mq-spec-tips-arrow" style="font-size:13px;color:#166534;transition:transform 0.2s;transform:rotate(-90deg)">▼</span>
-              </div>
-              <!-- Jordan: the inner tips box had its own border sitting right
-                   inside the card's own border, "looks silly" as a box
-                   within a box. There's no border rule in this file's own
-                   CSS targeting this div directly — border:none here is a
-                   deliberate override in case it's inheriting one from the
-                   "mqph-hl" class or some ambient page style outside this
-                   file, so it wins regardless of where it was coming from. -->
-              <div id="mq-spec-tips-body" class="mqph-hl" style="display:none;padding:0 16px 14px;font-size:13px;color:#166534;line-height:1.7;border:none">
-                💡 <strong>Pricing tip:</strong> If your specialty item is priced by the linear foot or square foot, check the <strong>Per lin ft</strong> or <strong>Per sq ft</strong> box and enter your per-unit rate. For flat-rate items, leave both unchecked and enter the flat price.
-                <br><br>
-                🔧 <strong>Handles & knobs:</strong> If you supply hardware, add each type as a specialty item (e.g. "Standard handle", "Standard knob") with your per-unit price. Customers can then add how many they need. If you don't supply hardware, leave it out — the widget will automatically let customers know it's not included.
-                <br><br>
-                🎨 <strong>Variants:</strong> Add multiple variants under a single item — e.g. a "Pullouts" item with several different pullout options, each priced individually.
-                <br><br>
-                📐 <strong>Sizes:</strong> Under Variants, you can add Sized options and the math is done for you — great for refacing doors. E.g. a "Maple shaker doors" item with variants for 9"×30", 10"×30", 11"×30", and so on — the sq ft price for each is generated automatically based on the rate you enter.
-                <br><br>
-                🏷️ <strong>Supply vs. install pricing:</strong> Leave "Offer supply/install choice?" unchecked if this item only ever comes one way — just pick whichever label is true in the dropdown next to it (doesn't change the price, just what the customer sees). Check the box if you want the <em>customer</em> to choose between the two for this specific item — then enter a separate install price. That install price is <strong>labor only</strong> and gets added on top of the supply price.
-                <br><br>
-                🌍 <strong>Thinking in metric?</strong> If you prefer to input your prices using metric, the calculator will automatically convert to feet for you.
-                <br><br>
-                📏 <strong>Minimum price:</strong> Sometimes small items may price too low using square foot, so you can set a minimum price to trigger if the sq ft price is less than the minimum.
-              </div>
+            <div class="mqph-hl" style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px 16px;margin-bottom:1rem;font-size:13px;color:#166534;line-height:1.7">
+              💡 <strong>Pricing tip:</strong> If your specialty item is priced by the linear foot or square foot, check the <strong>Per lin ft</strong> or <strong>Per sq ft</strong> box and enter your per-unit rate. For flat-rate items, leave both unchecked and enter the flat price.
+              <br><br>
+              🔧 <strong>Handles & knobs:</strong> If you supply hardware, add each type as a specialty item (e.g. "Standard handle", "Standard knob") with your per-unit price. Customers can then add how many they need. If you don't supply hardware, leave it out — the widget will automatically let customers know it's not included.
+              <br><br>
+              🏷️ <strong>Supply vs. install pricing:</strong> Leave "Offer supply/install choice?" unchecked if this item only ever comes one way — just pick whichever label is true in the dropdown next to it (doesn't change the price, just what the customer sees). Check the box if you want the <em>customer</em> to choose between the two for this specific item — then enter a separate install price. That install price is <strong>labor only</strong> and gets added on top of the supply price, never a combined total (e.g. ${CUR()}54.95/sqft supply + ${CUR()}16.80/door install — enter 16.80, not ${CUR()}71.75). Install can even be priced a completely different way than supply (per sqft vs. per door, for example) — the widget will ask the customer for whatever quantity install needs.
+              <br><br>
+              🌍 <strong>Thinking in metric?</strong> Once an item is priced per lin ft or per sq ft, click "Use metric?" beside the price to type your rate per linear metre or per square metre instead — it converts and fills in the ${CUR()}/lin ft or ${CUR()}/sq ft field for you automatically.
+              <br><br>
+              📏 <strong>Minimum price:</strong> Once an item is priced per lin ft or per sq ft, a "Min ${CUR()}" field appears right beside it. Set a floor so a tiny order never charges less than that — e.g. a 12"×12" door might work out to ${CUR()}50 on the math, but a small door takes just as much time as a regular one, so set a ${CUR()}200 minimum and anything under that gets bumped up to it. Supply and install each have their own minimum, so a job can have a minimum build cost and a separate minimum install cost.
             </div>
             <div style="margin-bottom:1rem">
               <button class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqAddSpecItem()">+ New item</button>
@@ -2250,7 +1431,6 @@ window.logoutMember = async function () {
             <button class="mq-help-btn" onclick="mqShowHelp('products')"><span class="mq-help-badge">?</span> Need help?</button>
             <div class="mq-page-title">My Products</div>
             <div class="mq-page-sub">Manage everything about how each item shows up on your widget: photos and thumbnails customers see while quoting, which project types each item is available for, and which items to hide entirely. Category-level shortcuts let you show or hide a whole group at once — individual items can still override that.</div>
-            ${mqTrainingVideoBlockHTML('products')}
             <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:1rem 1.25rem;margin-bottom:1.5rem;font-size:13px;color:#92400e;line-height:1.7">
               <strong>💡 How to add a photo:</strong><br>
               <strong>Option 1 —</strong> Click <em>"📤 Upload a photo"</em> on any item below and choose a photo straight from your device — easiest option, hosted permanently for you.<br>
@@ -2483,22 +1663,6 @@ window.logoutMember = async function () {
               <p style="font-size:13px;color:#6b7280;margin-bottom:6px;line-height:1.6">We're sorry to see you go. You can cancel at any time — your widget stays active until the end of your current billing period.</p>
               <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem;line-height:1.6">Your leads and pricing data will be available for 30 days after cancellation.</p>
               <button class="mq-btn mq-btn-danger" onclick="mqOpenBillingPortal()">Cancel subscription</button>
-            </div>
-          </div>
-
-          <!-- HELP GUIDE -->
-          <div class="mq-page" id="mq-page-helpguide">
-            <div class="mq-help-header-row">
-              <div>
-                <div class="mq-page-title" style="margin-bottom:2px">Help guide</div>
-                <div class="mq-page-sub" style="margin-bottom:0">Step-by-step instructions for every part of your dashboard. Can't find what you need? Head to the <strong>Support</strong> tab to send us a message.</div>
-              </div>
-              <input type="text" id="mq-help-search" placeholder="🔍 Jump to a topic…" oninput="mqHelpSearchJump(this.value)"/>
-            </div>
-
-            <div class="mq-help-folder">
-              <div class="mq-help-tabbar" id="mq-help-tabbar"></div>
-              <div class="mq-help-panel" id="mq-help-panel"></div>
             </div>
           </div>
 
@@ -3149,42 +2313,11 @@ window.logoutMember = async function () {
           html
         })
       });
-      // Auto-confirmation back to the submitter (Jordan's idea, 2026-09-29):
-      // fire off a "we got it" email to the shop owner right away. Two
-      // reasons this helps with the "am I getting sent to junk" worry —
-      // (1) it gives them something to look for immediately instead of
-      // wondering whether the form even worked, and (2) if THIS one lands
-      // in spam and they mark it "not spam" from their inbox, that teaches
-      // their mail provider that mail from us is wanted, which helps our
-      // actual support reply land in the inbox too. Best-effort only: if
-      // it fails, the real support ticket above already went through, so
-      // the failure is swallowed rather than shown to the shop owner.
-      try {
-        const confirmHtml = `
-          <p>Hi,</p>
-          <p>We got your message and will get back to you soon. Here's a copy for your records:</p>
-          <p><strong>Topic:</strong> ${topic}</p>
-          <p><strong>Message:</strong></p>
-          <p>${message.replace(/</g,'&lt;').replace(/\n/g, '<br>')}</p>
-          <p>Don't see our reply in a day or two? Check your spam/junk folder — if this confirmation ended up there, mark it "Not spam" / "Not junk" so our next email lands in your inbox instead.</p>
-          <p>— The MidasQuote Team</p>
-        `;
-        await fetch(CONFIG.EMAIL_WORKER, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            to: email,
-            replyTo: 'support@midasquote.com',
-            subject: 'We got your message — MidasQuote Support',
-            html: confirmHtml
-          })
-        });
-      } catch(e) { console.error('Support confirmation email to submitter failed (the support ticket itself still sent fine)', e); }
       if (statusEl) {
         statusEl.style.color = '';
         statusEl.innerHTML = '<div style="color:#166534;font-weight:700;font-size:14px;margin-bottom:6px">✓ Sent!</div>'
           + '<div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:6px;padding:10px 12px;font-size:14px;line-height:1.5;color:#78350f;font-weight:600">'
-          + '📩 We just sent a confirmation to <u>' + email.replace(/</g,'&lt;') + '</u>. If you don\'t see it in a few minutes, check your <u>spam/junk folder</u> — and if it\'s there, mark it "Not spam" so our reply lands in your inbox too.'
+          + '📩 If you don\'t receive an email in 24 hours, please check your <u>spam/junk folder</u>.'
           + '</div>';
       }
       if (messageEl) messageEl.value = '';
@@ -3843,23 +2976,10 @@ window.logoutMember = async function () {
           'Active': true,
           'Visible rooms': master.fields['Visible rooms'] || '[]',
           'Template source ID': master.id,
-          // Copied verbatim, same as the single-shop "Push to just this
-          // shop" path (pushTemplateItemToOneShop) — a master item's
-          // variants/Sized variants need to reach a brand-new shop too,
-          // not just an existing one someone manually pushes to.
-          'Variants': master.fields['Variants'] || '[]',
         });
         if (created?.id) {
           const photoUrl = masterPhotos['spec_' + master.id];
           if (photoUrl) { shopPhotos['spec_' + created.id] = photoUrl; photosChanged = true; }
-          // Same re-keying as pushTemplateItemToOneShop: a variant's photo
-          // lives on the MASTER shop as 'spec_<masterId>_v<variantId>' —
-          // carry it to this new shop's own item id, variant id unchanged.
-          mqParseVariants(master).forEach(v => {
-            const masterKey = 'spec_' + master.id + '_v' + v.id;
-            const photoUrl2 = masterPhotos[masterKey];
-            if (photoUrl2) { shopPhotos['spec_' + created.id + '_v' + v.id] = photoUrl2; photosChanged = true; }
-          });
           shopHidden['spec_' + created.id] = true;
           hiddenChanged = true;
         }
@@ -3929,17 +3049,14 @@ window.logoutMember = async function () {
         swatch.value = /^#[0-9a-fA-F]{6}$/.test(loadedColor) ? loadedColor : fallbackSwatch;
         if (!swatch.dataset.mqWired) {
           swatch.dataset.mqWired = '1';
-          const stateId = fieldId.replace('mq-shop-', '');
-          swatch.addEventListener('input', () => { if (textField) textField.value = swatch.value; mqRenderColorState(stateId); });
+          swatch.addEventListener('input', () => { if (textField) textField.value = swatch.value; });
           if (textField) {
             textField.addEventListener('input', () => {
               if (/^#[0-9a-fA-F]{6}$/.test(textField.value)) swatch.value = textField.value;
-              mqRenderColorState(stateId);
             });
           }
         }
       }
-      mqRenderColorState(fieldId.replace('mq-shop-', ''));
     });
     set('mq-shop-range-low',  f['Quote range low']  || '5');
     set('mq-shop-range-high', f['Quote range high'] || '20');
@@ -4018,19 +3135,10 @@ window.logoutMember = async function () {
       const applyProChk = el('mq-tabs-applypro-toggle');
       if (applyProChk) applyProChk.checked = tabsCfg.applyToPro;
     })();
-    mqRenderWidgetLayoutUI(f['Widget layout']);
     const notifyEveryToggle = el('mq-notify-every-toggle');
     if (notifyEveryToggle) {
       notifyEveryToggle.classList.toggle('on', f['Notify on every estimate'] === 'Yes');
     }
-    const widgetPwToggle = el('mq-widgetpw-toggle');
-    if (widgetPwToggle) {
-      const isOn = f['Widget password protected'] === 'Yes';
-      widgetPwToggle.classList.toggle('on', isOn);
-      const wrap = el('mq-widgetpw-wrap');
-      if (wrap) wrap.style.display = isOn ? 'block' : 'none';
-    }
-    mqRenderWidgetPasswordList();
 
     // ── Autosave: fire mqSaveShop 1.5s after the user stops editing any field ──
     let _shopAutoSaveTimer = null;
@@ -4478,7 +3586,7 @@ window.logoutMember = async function () {
     // it only has one default image and wasn't part of this request.
     const _mqDefaultMeasureGallery = MQ_DEFAULT_MEASURE_IMAGE_SET.map(f => MQ_DEFAULT_MEASURE_IMAGE_BASE + f);
     return [
-      { id:'kitchen', name:'Kitchen',        materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'The kitchen is where life happens — let\'s build one you\'ll love spending time in. Pick your cabinets, doors, and finishes, and watch your dream kitchen take shape.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'kitchen.jpg', measureText:'', measureImage:_mqDefaultMeasureGallery[0], measureImages:_mqDefaultMeasureGallery.slice(1), showIslandButton:true },
+      { id:'kitchen', name:'Kitchen',        materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'The kitchen is where life happens — let\'s build one you\'ll love spending time in. Pick your cabinets, doors, and finishes, and watch your dream kitchen take shape.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'kitchen.jpg', measureText:'', measureImage:_mqDefaultMeasureGallery[0], measureImages:_mqDefaultMeasureGallery.slice(1) },
       { id:'bathroom',name:'Bathroom',       materialAdjPct:-5, installAdjPct:0, totalAdjPct:0, description:'Turn your bathroom into a personal retreat. Choose the vanity and finishes that make getting ready each morning feel a little more special.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'bathroom.jpg', measureText:'', measureImage:'' },
       { id:'laundry', name:'Laundry room',   materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'Even the laundry room deserves some love. Add smart, good-looking storage that makes everyday chores feel a lot less like chores.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'laundry.jpg', measureText:'', measureImage:_mqDefaultMeasureGallery[0], measureImages:_mqDefaultMeasureGallery.slice(1) },
       { id:'garage',  name:'Garage',         materialAdjPct:0, installAdjPct:0, totalAdjPct:0,  description:'From tools to hobbies to overflow storage — give your garage the organized, great-looking upgrade it\'s been waiting for.', active:true, coverImage:MQ_DEFAULT_COVER_IMAGE_BASE+'garage.jpg', measureText:'', measureImage:_mqDefaultMeasureGallery[0], measureImages:_mqDefaultMeasureGallery.slice(1) },
@@ -4656,21 +3764,16 @@ window.logoutMember = async function () {
   // unchecking zeroes it out (same convention as "0 = no adjustment"
   // everywhere else in this app, just given a clearer on/off affordance
   // here since a shop owner can now stack up to three of these at once).
-  // Grid layout (checkbox | label+hint | number | %) instead of the old
-  // flex row -- keeps the four rows in this box tightly aligned into
-  // consistent columns and trims the vertical gap between them, without
-  // touching the hint text itself (Jordan: "do the first one but leave the
-  // tips as is" -- compact the layout, not the wording/tooltip behavior).
   function mqRoomAdjRow(kind, idx, value, label, hint) {
     const inputId = `mq-room-adj-${kind}-${idx}`;
     const chkId = `mq-room-adj-${kind}-chk-${idx}`;
     const checked = parseFloat(value) !== 0;
     return `
-      <div style="display:grid;grid-template-columns:16px 1fr 60px 14px;gap:8px;align-items:start;margin-bottom:4px">
-        <input type="checkbox" id="${chkId}" ${checked?'checked':''} onchange="mqToggleRoomAdjInput(${idx},'${kind}')" style="width:16px;height:16px;margin-top:1px;accent-color:#1a1a1a"/>
-        <label for="${inputId}" style="font-size:12px;color:#374151;min-width:0;line-height:1.4">${label} <span style="color:#9ca3af">— ${hint}</span></label>
-        <input type="number" id="${inputId}" value="${value || 0}" step="0.5" onchange="mqSaveRooms()" style="width:60px;font-size:12px;padding:5px 6px;border:1px solid #d1d5db;border-radius:4px;font-family:inherit;text-align:center"/>
-        <span style="font-size:12px;color:#6b7280;margin-top:3px">%</span>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <input type="checkbox" id="${chkId}" ${checked?'checked':''} onchange="mqToggleRoomAdjInput(${idx},'${kind}')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
+        <label for="${inputId}" style="font-size:12px;color:#374151;flex:1;min-width:0">${label} <span style="color:#9ca3af">— ${hint}</span></label>
+        <input type="number" id="${inputId}" value="${value || 0}" step="0.5" onchange="mqSaveRooms()" style="width:60px;font-size:12px;padding:5px 6px;border:1px solid #d1d5db;border-radius:4px;font-family:inherit;text-align:center;flex-shrink:0"/>
+        <span style="font-size:12px;color:#6b7280;flex-shrink:0">%</span>
       </div>`;
   }
   window.mqToggleRoomAdjInput = function(idx, kind) {
@@ -4735,18 +3838,6 @@ window.logoutMember = async function () {
             <input type="checkbox" id="mq-room-showrange-${idx}" ${r.showRange === false ? '' : 'checked'} onchange="mqSaveRooms()" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
             💵 Show price as a range <span style="font-weight:400;color:#9ca3af">(uncheck for one clean number instead — e.g. "${CUR()}2,600" instead of "${CUR()}2,375 – ${CUR()}3,000")</span>
           </label>
-          ${!isCountertop ? `
-          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#6b7280;font-weight:600;margin-bottom:8px;cursor:pointer">
-            <input type="checkbox" id="mq-room-addisland-${idx}" ${r.showIslandButton?'checked':''} onchange="mqSaveRooms()" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
-            🏝️ Add "Add Island" button <span style="font-weight:400;color:#9ca3af">(lets customers measure island cabinets separately from base cabinets — only makes sense for kitchen-style project types)</span>
-          </label>
-          <div id="mq-room-island-settings-${idx}" style="display:${r.showIslandButton?'block':'none'};margin:0 0 10px 24px;padding:10px 12px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px">
-            <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#374151;cursor:pointer">
-              <input type="checkbox" id="mq-room-islanddouble-${idx}" ${r.islandAllowDoubleRow?'checked':''} onchange="mqSaveRooms()" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
-              Allow double-row (back-to-back) islands
-            </label>
-            <div style="font-size:11px;color:#9ca3af;line-height:1.5">Island panel pricing is set once, shop-wide, in the <strong>Pricing</strong> tab — not per project type. Look for "🏝️ Island panel pricing" there.</div>
-          </div>` : ''}
           ${isCountertop ? `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin-bottom:10px">
             <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:8px">💰 Price adjustments for this project type</label>
             ${mqRoomAdjRow('install', idx, r.installAdjPct || 0, 'Installation', 'use if this project type\'s install should run higher or lower than typical — only affects the installation cost')}
@@ -4755,7 +3846,6 @@ window.logoutMember = async function () {
             <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:8px">💰 Price adjustments for this project type</label>
             ${mqRoomAdjRow('mat', idx, r.materialAdjPct !== undefined ? r.materialAdjPct : (r.adjustment || 0), 'Base cabinets', 'e.g. bathroom vanities run smaller than kitchen cabinets, or commercial jobs may always be pilaster cabinets')}
             ${mqRoomAdjRow('upper-mat', idx, r.upperMaterialAdjPct || 0, 'Upper cabinets', 'e.g. commercial jobs may always use a specific upper cabinet style')}
-            ${r.showIslandButton ? mqRoomAdjRow('island-mat', idx, r.islandMaterialAdjPct || 0, 'Islands', 'independent from the Base/Upper cabinets % above') : ''}
             ${mqRoomAdjRow('install', idx, r.installAdjPct || 0, 'Installation', 'use if this project type\'s install should run higher or lower than typical — only affects the installation cost')}
             ${mqRoomAdjRow('total', idx, r.totalAdjPct || 0, 'Total ballpark', 'use if this project type\'s overall ballpark price should be inflated or deflated')}
           </div>`}
@@ -4923,9 +4013,6 @@ window.logoutMember = async function () {
             hideFromPro: document.getElementById(`mq-room-visibility-${oldIdx}`)?.value === 'hideFromPro',
             hideMeasureGuide: document.getElementById(`mq-room-hidemeasure-${oldIdx}`)?.checked === true,
             showRange: document.getElementById(`mq-room-showrange-${oldIdx}`)?.checked !== false,
-            showIslandButton: document.getElementById(`mq-room-addisland-${oldIdx}`)?.checked === true,
-            islandAllowDoubleRow: document.getElementById(`mq-room-islanddouble-${oldIdx}`)?.checked === true,
-            islandMaterialAdjPct: parseFloat(document.getElementById(`mq-room-adj-island-mat-${oldIdx}`)?.value) || 0,
             coverImage: document.getElementById(`mq-room-cover-${oldIdx}`)?.value || '',
             measureText: document.getElementById(`mq-room-measure-text-${oldIdx}`)?.value || '',
             measureImage: document.getElementById(`mq-room-measure-img-${oldIdx}`)?.value || '',
@@ -5009,7 +4096,7 @@ window.logoutMember = async function () {
   window.mqAddRoom = function(forCountertops) {
     if (!window._mqRooms) window._mqRooms = [];
     const newId = (forCountertops ? 'ctroom_' : 'room_') + Date.now();
-    const newRoom = { id: newId, name: '', materialAdjPct: 0, upperMaterialAdjPct: 0, islandMaterialAdjPct: 0, installAdjPct: 0, totalAdjPct: 0, description: '', active: true, proOnly: false, hideFromPro: false, coverImage: '', measureText: '', measureImage: '' };
+    const newRoom = { id: newId, name: '', materialAdjPct: 0, upperMaterialAdjPct: 0, installAdjPct: 0, totalAdjPct: 0, description: '', active: true, proOnly: false, hideFromPro: false, coverImage: '', measureText: '', measureImage: '' };
     if (forCountertops) newRoom.forCountertops = true;
     window._mqRooms.push(newRoom);
     _mqExpandedRoomIds.add(newId);
@@ -5059,9 +4146,6 @@ window.logoutMember = async function () {
         hideFromPro: el(`mq-room-visibility-${idx}`)?.value === 'hideFromPro',
         hideMeasureGuide: el(`mq-room-hidemeasure-${idx}`)?.checked === true,
         showRange: el(`mq-room-showrange-${idx}`)?.checked !== false,
-        showIslandButton: el(`mq-room-addisland-${idx}`)?.checked === true,
-        islandAllowDoubleRow: el(`mq-room-islanddouble-${idx}`)?.checked === true,
-        islandMaterialAdjPct: parseFloat(el(`mq-room-adj-island-mat-${idx}`)?.value) || 0,
         coverImage: (el(`mq-room-cover-${idx}`)?.value || '').trim(),
         measureText: (el(`mq-room-measure-text-${idx}`)?.value || '').trim(),
         measureImage: (el(`mq-room-measure-img-${idx}`)?.value || '').trim(),
@@ -5074,43 +4158,8 @@ window.logoutMember = async function () {
       window._mqRooms = rooms;
       await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Room types': JSON.stringify(rooms) });
       shopRec.fields['Room types'] = JSON.stringify(rooms);
-
-      // renderRoomsList() rebuilds the whole list's innerHTML (needed so the
-      // little "adjustment active" checkboxes and the Active-toggle's
-      // dim/label re-derive from the freshly saved values) — but every
-      // autosave calls this, including every single click of a percentage
-      // field's up/down spinner. Rebuilding destroys and recreates the very
-      // input the shop owner is mid-click on, which used to visibly "jump"
-      // the page out from under their cursor. Snapshotting focus/scroll
-      // first and restoring them after makes the rebuild invisible instead
-      // of ripping focus away — the fix Jordan asked for after this kept
-      // making him miss the spinner arrows while nudging Base cabinets/
-      // Uppers/Installation percentages up or down.
-      const activeEl = document.activeElement;
-      const activeId = activeEl && activeEl.id;
-      const activeSelStart = (activeEl && typeof activeEl.selectionStart === 'number') ? activeEl.selectionStart : null;
-      const scrollY = window.scrollY;
-
       renderRoomsList();
-
-      if (activeId) {
-        const restored = document.getElementById(activeId);
-        if (restored) {
-          restored.focus({ preventScroll: true });
-          if (activeSelStart !== null && typeof restored.setSelectionRange === 'function') {
-            try { restored.setSelectionRange(activeSelStart, activeSelStart); } catch(e) {}
-          }
-        }
-      }
-      window.scrollTo(0, scrollY);
-
-      // Toast only (not the inline mq-rooms-msg banner) for the routine
-      // success case — that banner sits at the very top of the page and
-      // pushes everything below it down while it's shown, which is the
-      // other half of the same "page jumps during autosave" complaint.
-      // Errors below still use the full inline+toast showMsg since those
-      // are rare and worth staying visible for.
-      mqShowToast('✓ Project types saved!');
+      showMsg('mq-rooms-msg', '✓ Project types saved!');
     } catch(e) { showMsg('mq-rooms-msg', 'Error saving — please try again.', 'error'); }
   };
 
@@ -5197,110 +4246,6 @@ window.logoutMember = async function () {
     const timePart = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
     return `${datePart} · ${timePart}`;
   }
-
-  // Free trial expiry date, shown on the Account tab and in the top banner so
-  // a trialing shop knows the day their trial ends (Jordan: "add a trial count
-  // down ... just the day their trial expires would be even better"). The real
-  // cutoff is ENFORCED server-side by the midasquote-signup-worker's daily
-  // Cron Trigger (checked 2026-10-12 against its code): it flips every shop
-  // with Plan = "Free Trial" whose `Free trial start date` is BEFORE
-  // (today UTC - 30 days) to Plan = "Demo". The same worker's webhook is what
-  // stamps `Free trial start date` = today when a shop first gets the free plan.
-  // So this display reads that SAME field + 30 days (falling back to the
-  // record's createdTime only if the field is empty): the trial covers the whole
-  // end date, and the flip happens on the daily run after it.
-  const MQ_FREE_TRIAL_DAYS = 30;
-  // 2026-10-12: now prefers the Shops table's own "Free trial start date"
-  // field (Jordan already has it — changing that date restarts a shop's
-  // trial countdown here), and only falls back to the record's createdTime
-  // when that field is empty. An Airtable date-only value ("2026-09-16") is
-  // read as a LOCAL calendar day — new Date("2026-09-16") would be UTC
-  // midnight and show as the previous evening in North American time zones.
-  function mqFreeTrialStartDate(shopRecord) {
-    if (!shopRecord) return null;
-    const raw = shopRecord.fields && shopRecord.fields['Free trial start date'];
-    if (raw) {
-      const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(raw).trim());
-      const d = m ? new Date(+m[1], +m[2] - 1, +m[3]) : new Date(raw);
-      if (!isNaN(d.getTime())) return d;
-    }
-    if (shopRecord.createdTime) {
-      const c = new Date(shopRecord.createdTime);
-      if (!isNaN(c.getTime())) return c;
-    }
-    return null;
-  }
-  // Calendar days from today to the trial's end date. 0 = today IS the last
-  // day (the shop still has full access today — the cron only flips a shop on
-  // the run after its end date); negative = the end date has passed but the
-  // daily cron hasn't run yet.
-  function mqFreeTrialDaysLeft(expiry) {
-    const DAY = 24 * 60 * 60 * 1000;
-    const t = new Date();
-    const today = new Date(t.getFullYear(), t.getMonth(), t.getDate());
-    const end = new Date(expiry.getFullYear(), expiry.getMonth(), expiry.getDate());
-    return Math.round((end.getTime() - today.getTime()) / DAY);
-  }
-  function mqFreeTrialLeftText(n) { return n <= 0 ? 'last day' : `${n} day${n === 1 ? '' : 's'} left`; }
-  function mqFreeTrialExpiryDate(shopRecord) {
-    const start = mqFreeTrialStartDate(shopRecord);
-    if (!start) return null;
-    // Calendar-day arithmetic (not +30*24h) so a daylight-saving change inside the
-    // 30 days can't shift the displayed end date by a day.
-    return new Date(start.getFullYear(), start.getMonth(), start.getDate() + MQ_FREE_TRIAL_DAYS);
-  }
-
-  // Trial / Demo banner at the top of the dashboard (every tab). Jordan
-  // 2026-10-12: while a shop is on the free trial, show the day it ends plus
-  // a link to the Account tab; once it has ended, tell them they're welcome
-  // to stay on the free Demo plan and link to the Account tab if they want
-  // full access again. Paying shops see nothing. Uses the same Plan field and
-  // expiry-date helper as the Account tab (mqFreeTrialExpiryDate above), so the
-  // two can never disagree. The Demo version can be closed for the current
-  // visit (not remembered — it comes back next load, on purpose, since it's
-  // the upgrade nudge); the trial version can't be closed.
-  function mqPlanBannerInnerHTML() {
-    const rec = window._mqShopRecord;
-    const plan = (rec && rec.fields && rec.fields['Plan']) || '';
-    const btn = (label) => `<button type="button" class="mq-btn mq-btn-sm" style="white-space:nowrap;background:#fff" onclick="mqGoToAccountTab()">${label}</button>`;
-    if (plan === 'Free Trial') {
-      const expiry = mqFreeTrialExpiryDate(rec);
-      let msg, urgent = false;
-      if (!expiry) {
-        msg = `🗓️ You're on the <strong>free trial</strong> — full access. Add a plan any time in the Account tab to keep it.`;
-      } else if (mqFreeTrialDaysLeft(expiry) < 0) {
-        urgent = true;
-        msg = `🗓️ Your <strong>free trial is ending</strong> — your account moves to the free Demo plan shortly. Pick a plan in the Account tab to keep full access.`;
-      } else {
-        const dateStr = expiry.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-        const daysLeft = mqFreeTrialDaysLeft(expiry);
-        urgent = daysLeft <= 5;
-        msg = `🗓️ Your <strong>free trial ends ${dateStr}</strong> (${mqFreeTrialLeftText(daysLeft)}). You have full access until then — add a plan in the Account tab to keep it.`;
-      }
-      const c = urgent ? { bg:'#fef2f2', bd:'#fca5a5', tx:'#991b1b' } : { bg:'#fffbeb', bd:'#fcd34d', tx:'#92400e' };
-      return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px 16px;flex-wrap:wrap;background:${c.bg};border:1px solid ${c.bd};color:${c.tx};border-radius:10px;padding:12px 16px;margin-bottom:1.25rem;font-size:13px;line-height:1.5">
-        <span style="flex:1 1 280px">${msg}</span>${btn('Go to Account tab →')}</div>`;
-    }
-    if (plan === 'Demo' && !window._mqDemoBannerDismissed) {
-      return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px 16px;flex-wrap:wrap;background:#eff6ff;border:1px solid #bfdbfe;color:#1e3a8a;border-radius:10px;padding:12px 16px;margin-bottom:1.25rem;font-size:13px;line-height:1.5">
-        <span style="flex:1 1 280px">Your <strong>free trial has ended</strong> — you're welcome to stay on the free Demo plan. Want full access again? Pick a plan in the Account tab.</span>
-        <span style="display:flex;align-items:center;gap:10px">${btn('Get full access →')}<button type="button" aria-label="Dismiss" title="Dismiss" onclick="mqDismissDemoBanner()" style="background:none;border:none;color:#1e3a8a;font-size:16px;line-height:1;cursor:pointer;padding:2px 4px">✕</button></span></div>`;
-    }
-    return '';
-  }
-  window.mqRefreshPlanBanner = function() {
-    const holder = document.getElementById('mq-plan-banner');
-    if (holder) holder.innerHTML = mqPlanBannerInnerHTML();
-  };
-  window.mqDismissDemoBanner = function() {
-    window._mqDemoBannerDismissed = true;
-    window.mqRefreshPlanBanner();
-  };
-  window.mqGoToAccountTab = function() {
-    const navEl = document.querySelector('#midasquote-dashboard .mq-nav-item[onclick^="mqNav(\'billing\'"]');
-    if (navEl) window.mqNav('billing', navEl);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
 
   function renderLeads(leads, limit, selectable) {
     if (!leads.length) return '<div class="mq-empty">No leads yet — share your widget to start capturing quotes!</div>';
@@ -6060,7 +5005,6 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     window._mqSpecRecords = specs;
     if (!specs.length) {
       container.innerHTML = '<div class="mq-empty" style="padding:2rem">No specialty items yet. Click "+ Add item" to add your first one.</div>';
-      mqUpdateSpecScrollArrows(); // no table at all now — make sure any previously-shown arrows get hidden
       return;
     }
     // Photos live on the shop record, keyed 'spec_<id>' — same map My
@@ -6106,8 +5050,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       <div id="mq-spec-itemorder-box">${mqItemOrderBoxHTML(savedFilters.room, savedFilters.category)}</div>
       <div id="mq-spec-tab-filter-empty" style="display:none;font-size:13px;color:#9ca3af;padding:1rem;text-align:center">No specialty items match that filter.</div>
       <div class="mq-table-wrap" id="mq-spec-table-wrap">
-      <table class="mq-table mq-table-compact" id="mq-spec-table">
-        <thead><tr><th style="width:28px"></th><th style="width:210px">Item name</th><th style="width:130px">Category</th><th style="width:150px">Price</th><th style="width:108px">How is this priced?</th><th style="width:100px">Install option? <span onclick="mqShowSpecHelpPopover(this,'Lets the customer choose supply-only vs. supplied &amp; installed pricing for this specific item.',event)" style="cursor:pointer;color:#9ca3af;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:13px;height:13px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;vertical-align:middle">?</span></th><th style="width:230px">Installed price / Mode</th><th style="width:170px">Project types</th><th style="width:70px">Pro only?</th><th style="width:60px">Active</th></tr></thead>
+      <table class="mq-table" id="mq-spec-table">
+        <thead><tr><th></th><th>Item name</th><th>Category</th><th>Price</th><th>Per lin ft?</th><th>Per sq ft?</th><th>Offer supply/install choice?</th><th>Installed price / Mode</th><th>Project types</th><th>Pro only?</th><th>Active</th></tr></thead>
         <tbody id="mq-spec-tbody">
           ${specs.map(r => {
             let visibleRooms = [];
@@ -6135,18 +5079,22 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
                   <textarea id="mq-spec-desc-${r.id}" placeholder="Optional short description" style="display:block;border:none;background:none;font-size:11px;color:#9ca3af;width:180px;height:30px;font-style:italic;resize:none;overflow-y:auto;font-family:inherit;padding:2px 0;line-height:1.3" onblur="mqSaveSpecField('${r.id}','Description',this.value)">${(r.fields['Description']||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
                   ${specThumbHtml}
                   <div onclick="mqNav('products', document.getElementById('mq-nav-products'));window.scrollTo({top:0,behavior:'smooth'})" style="font-size:10px;color:#9ca3af;margin-top:2px;cursor:pointer;width:fit-content" title="Go to My Products">Add/change images in My Products</div>
-                  <div style="display:flex;flex-direction:column;align-items:flex-start;gap:6px;margin-top:2px">
-                    <div style="display:flex;align-items:center;gap:8px">
-                      <button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqDeleteSpec('${r.id}')">Delete</button>
-                      <button class="mq-btn mq-btn-sm" title="Copy this item, all its settings, and every variant — handy for a similar item you don't want to rebuild from scratch" onclick="mqDuplicateSpec('${r.id}')">⧉ Duplicate</button>
-                    </div>
+                  <div style="display:flex;align-items:center;gap:8px;margin-top:2px">
+                    <button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqDeleteSpec('${r.id}')">Delete</button>
+                    <button class="mq-btn mq-btn-sm" title="Copy this item, all its settings, and every variant — handy for a similar item you don't want to rebuild from scratch" onclick="mqDuplicateSpec('${r.id}')">⧉ Duplicate</button>
                     <span class="mq-spec-variant-pill" id="mq-spec-variant-pill-${r.id}" onclick="mqToggleVariantsPanel('${r.id}')" style="display:inline-block;font-size:11px;font-weight:700;padding:4px 9px;border-radius:999px;background:${variantCount?'#eef2ff':'#f3f4f6'};color:${variantCount?'#4338ca':'#6b7280'};cursor:pointer;white-space:nowrap">${variantCount ? `${variantCount} variant${variantCount===1?'':'s'}` : 'No variants'} ▾</span>
                   </div>
                 </div>
               </td>
               <td>${mqCategoryPickerHTML(r, [...new Set(specs.map(x => (x.fields['Category']||'').trim()).filter(Boolean))])}</td>
-              <td id="mq-spec-pricecell-${r.id}">${mqSpecPriceCellHTML(r)}</td>
-              <td id="mq-spec-pricedcell-${r.id}">${mqSpecPricedCellHTML(r)}</td>
+              <td>
+                <div style="display:flex;flex-direction:column;gap:3px;width:94px">
+                  <input type="number" value="${r.fields['Price'] || ''}" id="mq-spec-price-${r.id}" placeholder="${variantCount ? 'New rate' : ''}" style="width:80px" ${variantCount ? `title="Mass-update: type a new $/sq ft or $/lin ft rate here, then click Apply below — it updates every 📏 Sized variant on this item that's priced per sq/lin ft, all at once. Flat-rate and non-sized variants are left alone."` : ''} onblur="mqSaveSpecField('${r.id}','Price',parseFloat(this.value))"/>
+                  ${variantCount ? `<button class="mq-btn mq-btn-sm" style="font-size:10px;padding:3px 6px;white-space:nowrap" title="Applies the rate above to every 📏 Sized variant on this item that's priced per sq/lin ft" onclick="mqMassUpdateVariantRates('${r.id}')">Apply to all sized</button><div style="font-size:9px;color:#9ca3af;line-height:1.3">Mass-updates 📏 Sized variants' rate</div>` : `${mqSpecRateCalcIconHTML(r.id, false, !!(r.fields['Per linear foot'] || r.fields['Per square foot']))}${mqSpecMinPriceHTML(r, false)}`}
+                </div>
+              </td>
+              <td><input type="checkbox" id="mq-spec-perft-${r.id}" ${r.fields['Per linear foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per linear foot',this.checked)" style="width:16px;height:16px;accent-color:#1a1a1a"/></td>
+              <td><input type="checkbox" id="mq-spec-persqft-${r.id}" ${r.fields['Per square foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per square foot',this.checked)" style="width:16px;height:16px;accent-color:#1a1a1a"/></td>
               <td><input type="checkbox" id="mq-spec-offerchoice-${r.id}" ${r.fields['Offers install choice']?'checked':''} onchange="mqToggleSpecInstallChoice('${r.id}')" title="Let the customer pick supply only vs. supplied &amp; installed for this specific item" style="width:16px;height:16px;accent-color:#1a1a1a"/></td>
               <td id="mq-spec-installcol-${r.id}">${mqSpecInstallColHTML(r)}</td>
               <td style="font-size:12px;color:#6b7280">${roomLinkDisclosure(r.id, r.fields['Visible rooms'])}</td>
@@ -6155,7 +5103,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
             </tr>
             <tr id="mq-spec-variants-row-${r.id}" style="display:none;background:#fafafa">
               <td></td>
-              <td colspan="9" style="padding:10px 14px 14px" id="mq-spec-variants-panel-${r.id}">${mqVariantsPanelHTML(r)}</td>
+              <td colspan="10" style="padding:10px 14px 14px" id="mq-spec-variants-panel-${r.id}">${mqVariantsPanelHTML(r)}</td>
             </tr>`;
           }).join('')}
         </tbody>
@@ -6246,69 +5194,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // mqVariantsPanelHTML above), so their drag handles can be wired up now
     // rather than waiting for the panel to first be opened.
     specs.forEach(r => mqWireVariantDrag(r.id));
-    mqUpdateSpecScrollArrows();
   }
-
-  // Fixed-to-viewport nudge arrows for #mq-spec-table-wrap, so there's
-  // always a visible, clickable way to reach columns hidden off the right
-  // edge on a smaller screen — not just the table's own horizontal
-  // scrollbar, which sits at the very bottom of the whole (often very
-  // tall) table and is easy to never notice. Shown only when there's
-  // actually more to scroll in that direction; both hidden once the wrap
-  // fits everything or is already scrolled all the way to an edge.
-  function mqUpdateSpecScrollArrows() {
-    const wrap = el('mq-spec-table-wrap');
-    const leftBtn = el('mq-spec-scroll-left');
-    const rightBtn = el('mq-spec-scroll-right');
-    if (!wrap || !leftBtn || !rightBtn) { if (leftBtn) leftBtn.style.display = 'none'; if (rightBtn) rightBtn.style.display = 'none'; return; }
-    const maxScroll = wrap.scrollWidth - wrap.clientWidth;
-    if (maxScroll <= 4) { // nothing to scroll at all — table already fits
-      leftBtn.style.display = 'none';
-      rightBtn.style.display = 'none';
-      return;
-    }
-    leftBtn.style.display = wrap.scrollLeft > 4 ? 'flex' : 'none';
-    rightBtn.style.display = wrap.scrollLeft < maxScroll - 4 ? 'flex' : 'none';
-  }
-  window.mqScrollSpecTable = function(dir) {
-    const wrap = el('mq-spec-table-wrap');
-    if (!wrap) return;
-    wrap.scrollBy({ left: dir * 320, behavior: 'smooth' });
-    // scrollBy's animation hasn't finished when this runs, so re-check
-    // shortly after rather than relying on the scroll listener alone.
-    setTimeout(mqUpdateSpecScrollArrows, 350);
-  };
-  // Table wrap is rebuilt from scratch (innerHTML) by renderSpecialty on
-  // every add/delete/reorder, so a listener bound directly to it would be
-  // silently lost each time. Binding scroll on document with capture:true
-  // instead survives that — 'scroll' doesn't bubble, but it does fire
-  // during the capture phase on ancestors, including document, no matter
-  // which element (old or freshly-recreated) actually scrolled.
-  document.addEventListener('scroll', function(e) {
-    if (e.target && e.target.id === 'mq-spec-table-wrap') mqUpdateSpecScrollArrows();
-  }, true);
-  window.addEventListener('resize', mqUpdateSpecScrollArrows);
-
-  // Tips box collapsed by default (Jordan's request, 2026-09-25 — the
-  // always-visible 5-paragraph tip box was pushing new users past a wall of
-  // text before they'd even seen the "+ New item" button). Same toggle
-  // pattern as mqToggleMkSection: a body div's display and an arrow's
-  // rotation, nothing fancier needed.
-  window.mqToggleSpecTips = function() {
-    const body = el('mq-spec-tips-body');
-    const arrow = el('mq-spec-tips-arrow');
-    const card = el('mq-spec-tips-card');
-    if (!body) return;
-    const opening = body.style.display === 'none';
-    body.style.display = opening ? 'block' : 'none';
-    if (arrow) arrow.style.transform = opening ? 'rotate(0deg)' : 'rotate(-90deg)';
-    // Jordan likes the collapsed card staying narrow (480px, so it doesn't
-    // dominate the page) but wants the tips to actually have room to
-    // breathe once she opens it, instead of wrapping tightly at that same
-    // narrow width. 'none' lets it size up to whatever the page's own
-    // layout allows; collapsing puts the 480px cap right back.
-    if (card) card.style.maxWidth = opening ? 'none' : '480px';
-  };
 
   // Which categories should be listed for reordering under a given project
   // type, and in what order — starts from that project type's saved order
@@ -6551,29 +5437,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       alert('Something went wrong renaming that category — please try again.');
       return;
     }
-    // If "Filter by category" was showing the category we just renamed,
-    // follow the rename instead of letting renderSpecialty's own
-    // filter-restore snap it back to "All categories" below. Nothing was
-    // ever actually HIDDEN by this (mqFilterSpecTable reads the dropdown's
-    // live value, and a value that no longer matches any option just reads
-    // back as "" — i.e. no filter, everything shows) — but leaving the
-    // dropdown looking reset to "All categories" right after a rename you
-    // were filtered into is a confusing loose end worth closing. Has to be
-    // done AFTER renderSpecialty rebuilds the dropdown, not before — the
-    // new category name isn't a valid <option> yet while the OLD dropdown
-    // is still in the DOM, so setting .value = newName before the rebuild
-    // silently fails (same no-matching-option behavior described above)
-    // and gets wiped out anyway.
-    const filterEl = document.getElementById('mq-spec-tab-filter-category');
-    const wasFilteredToRenamedCategory = !!filterEl && filterEl.value === oldName;
     renderSpecialty(window._mqSpecRecords, window._mqShopRecord);
-    if (wasFilteredToRenamedCategory) {
-      const newFilterEl = document.getElementById('mq-spec-tab-filter-category');
-      if (newFilterEl) {
-        newFilterEl.value = newName;
-        if (typeof window.mqFilterSpecTable === 'function') window.mqFilterSpecTable();
-      }
-    }
     window.mqShowManageCategoriesModal();
   };
   window.mqDeleteCategory = async function(name) {
@@ -6619,42 +5483,14 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // Clears one of the 4 optional color fields back to blank — blank means
   // "use the original MidasQuote blue scheme," not a preset value tied to
   // anything else, so this just empties the field and saves.
-  // The 4 optional guided-flow colours (focal / box border / box background /
-  // box text) can be blank = "use MidasQuote's default". A blank field plus a
-  // colour square that's merely very pale (the default box background is
-  // #eff6ff, which looks white in a tiny swatch) made a successful reset look
-  // like it hadn't worked, so each field now states plainly whether it's on
-  // the default or a custom colour, with a bordered dot of the colour actually
-  // in use.
-  function mqOptionalColorDefaults() { return { focalcolor: '#2563eb', boxbordercolor: '#93c5fd', boxbgcolor: '#eff6ff', boxtextcolor: '#1e40af' }; }
-  function mqRenderColorState(shortId) {
-    const textField = el('mq-shop-' + shortId);
-    if (!textField) return;
-    const wrap = textField.closest('.mq-field');
-    if (!wrap) return;
-    let st = wrap.querySelector('.mq-color-state');
-    if (!st) {
-      st = document.createElement('div');
-      st.className = 'mq-color-state';
-      st.style.cssText = 'font-size:12px;font-weight:600;color:#374151;margin-top:6px;display:flex;align-items:center;gap:6px';
-      wrap.appendChild(st);
-    }
-    const def = mqOptionalColorDefaults()[shortId];
-    const v = (textField.value || '').trim();
-    const custom = /^#[0-9a-fA-F]{6}$/.test(v);
-    const hex = custom ? v : def;
-    st.innerHTML = '<span style="display:inline-block;width:16px;height:16px;border-radius:50%;background:' + hex + ';border:1.5px solid #6b7280;flex-shrink:0"></span><span>' +
-      (custom ? 'Custom colour in use (' + v + ')' : (v ? 'Not a valid colour code — the default (' + def + ') is used' : '✓ Using the MidasQuote default (' + def + ')')) + '</span>';
-  }
-
   window.mqClearShopColorField = function(shortId, label) {
     const textField = el('mq-shop-' + shortId);
     const swatch = el('mq-shop-' + shortId + '-swatch');
     if (textField) textField.value = '';
     if (swatch) {
-      swatch.value = mqOptionalColorDefaults()[shortId] || '#1a1a1a';
+      const defaults = { focalcolor: '#2563eb', boxbordercolor: '#93c5fd', boxbgcolor: '#eff6ff', boxtextcolor: '#1e40af' };
+      swatch.value = defaults[shortId] || '#1a1a1a';
     }
-    mqRenderColorState(shortId);
     window.mqSaveShop();
     showMsg('mq-shop-msg', `✓ ${label} reset to the MidasQuote default.`);
   };
@@ -7148,12 +5984,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   window.mqHideAllSpecVariants = function(itemId, hide) {
     document.querySelectorAll(`[data-spec-group="${itemId}"] [id^="mq-hidden-"]`).forEach(cb => { cb.checked = hide; });
     mqMarkProductsDirty();
-    // A Templates (Admin) item's variant cards live on the master template
-    // shop, not the current shop -- save through the Templates save path
-    // instead of My Products' (the same variant-card markup is reused there).
-    if ((window._mqTemplateItems || []).some(x => x.id === itemId)) {
-      if (typeof window.mqSaveTemplatePhotos === 'function') window.mqSaveTemplatePhotos();
-    } else if (typeof window.mqSaveProducts === 'function') window.mqSaveProducts();
+    if (typeof window.mqSaveProducts === 'function') window.mqSaveProducts();
   };
 
   // Live preview for the group card's own dedicated "shared image" slot --
@@ -7224,22 +6055,6 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         previewWrap.innerHTML = `<img src="${url.replace(/"/g,'&quot;')}" style="width:100%;height:120px;object-fit:contain;background:#f0efeb;border-radius:8px;margin-bottom:10px" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/><div style="display:none;width:100%;height:120px;background:#f0efeb;border-radius:8px;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px">⭐</div>`;
       }
     });
-    // Templates (Admin) uses this same shared-photo control (Jordan: pushed a
-    // template with variants and "it pushed everything except the image...
-    // it didnt give me the option to use the image for all variants"). There
-    // the variant photo inputs live in the Templates tab and are saved to the
-    // master template shop, so: make sure the variant list is open so the
-    // result is visible, then autosave through mqSaveTemplatePhotos (which
-    // reports its own "Template photos saved" message) instead of waiting on
-    // a "Save changes" click.
-    if ((window._mqTemplateItems || []).some(x => x.id === itemId)) {
-      const body = document.getElementById('mq-tmpl-varphotos-body-' + itemId);
-      if (body && body.style.display === 'none') window.mqToggleTmplVarPhotos(itemId);
-      if (window.mqMarkProductsDirty) window.mqMarkProductsDirty();
-      if (typeof window.mqSaveTemplatePhotos === 'function') window.mqSaveTemplatePhotos();
-      window.mqUpdateTmplVarPhotoSummary(itemId);
-      return;
-    }
     const wrap = document.getElementById('mq-specgroup-wrap-' + itemId);
     const arrow = document.getElementById('mq-specgroup-arrow-' + itemId);
     const variantWraps = document.querySelectorAll(`[data-spec-group="${itemId}"]`);
@@ -7402,7 +6217,6 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         setTimeout(() => { btn.textContent = 'Save changes'; }, 2000);
       });
       showMsg('mq-templates-msg', '✓ Template photos saved!');
-      (window._mqTemplateItems || []).forEach(x => { if (window.mqUpdateTmplVarPhotoSummary) window.mqUpdateTmplVarPhotoSummary(x.id); });
     } catch(e) { showMsg('mq-templates-msg', 'Error saving — please try again.', 'error'); }
   };
 
@@ -7841,19 +6655,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // state already survives a grid-only rebuild.
     function mqRefreshCatSection(cat) {
       const wasOpen = document.getElementById(`mq-cat-body-${cat}`)?.style.display !== 'none';
-      // Jordan: "when i create a new group in my products i only see the new
-      // group after i refresh the page." Root cause: this lookup used to be
-      // an UNSCOPED document.querySelector('[data-mq-cat="door"]'), but the
-      // Pricing tab (pricing-helper-v2.js) tags its own category blocks
-      // (.mqph-cat-block) with the very same data-mq-cat attribute — and the
-      // Pricing page sits EARLIER in the DOM than My Products. Once the
-      // Pricing tab had been opened in a session, querySelector found ITS
-      // block first, so the freshly built My Products card was written over
-      // the Pricing tab's block (corrupting it) while the real My Products
-      // card on screen stayed stale until a full page refresh. Scoped to
-      // #mq-products-content .mq-card (same selector the estimator-tab
-      // scoping above already uses) so it can only ever hit this tab's card.
-      const catEl = document.querySelector(`#mq-products-content .mq-card[data-mq-cat="${cat}"]`);
+      const catEl = document.querySelector(`[data-mq-cat="${cat}"]`);
       if (!catEl) return;
       catEl.outerHTML = catSection(cat);
       if (wasOpen) {
@@ -8526,36 +7328,6 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       shopRec.fields['Show showroom'] = !isOn ? 'Show' : 'Hide';
       showMsg('mq-products-msg', !isOn ? '✓ Showroom link enabled on widget.' : '✓ Showroom link hidden from widget.');
     } catch(e) { toggle.classList.toggle('on', isOn); showMsg('mq-products-msg', 'Error saving.', 'error'); }
-  };
-
-  // Widget layout — 'Widget layout' on the Shops table (single line text):
-  // "Classic" (or blank = default) or "Focused". widget.js reads it at load,
-  // so the embed code and standalone link never need to change. widgetpro.js
-  // deliberately ignores it (Pro always stays Classic).
-  function mqRenderWidgetLayoutUI(value) {
-    const layout = String(value || '').trim().toLowerCase() === 'focused' ? 'Focused' : 'Classic';
-    const c = el('mq-layout-classic'), f = el('mq-layout-focused');
-    if (c) { c.style.borderColor = layout === 'Classic' ? '#1a1a1a' : '#e5e7eb'; c.style.background = layout === 'Classic' ? '#f9fafb' : '#fff'; }
-    if (f) { f.style.borderColor = layout === 'Focused' ? '#1a1a1a' : '#e5e7eb'; f.style.background = layout === 'Focused' ? '#f9fafb' : '#fff'; }
-    const note = el('mq-layout-note');
-    if (note) note.textContent = layout === 'Focused'
-      ? '🎯 Focused is live on your embedded widget and standalone link.'
-      : '📜 Classic is live on your embedded widget and standalone link.';
-  }
-  window.mqSetWidgetLayout = async function(layout) {
-    const shopRec = window._mqShopRecord;
-    if (!shopRec) return;
-    const prev = shopRec.fields['Widget layout'] || '';
-    if ((String(prev).trim().toLowerCase() === 'focused' ? 'Focused' : 'Classic') === layout) return;
-    mqRenderWidgetLayoutUI(layout);
-    try {
-      await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Widget layout': layout });
-      shopRec.fields['Widget layout'] = layout;
-      showMsg('mq-shop-msg', '✓ Widget layout set to ' + layout + '. It\'s live on your widget now.');
-    } catch(e) {
-      mqRenderWidgetLayoutUI(prev);
-      showMsg('mq-shop-msg', 'Error saving.', 'error');
-    }
   };
 
   // Estimator tabs (widget's Both/Cabinets/Countertops top-level tabs) —
@@ -9447,134 +8219,6 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     } catch(e) { toggle.classList.toggle('on', isOn); showMsg('mq-shop-msg', 'Error saving.', 'error'); }
   };
 
-  // Widget password protection — a shop-level toggle plus a list of plain
-  // access-code strings, both saved straight to Airtable the moment they
-  // change (same "toggle saves itself" pattern as mqToggleFinancing above),
-  // rather than waiting on the batched "Save changes" button. Read by
-  // widget.js's own password gate. Deliberately a client-side check (Jordan's
-  // call) — the widget receives this same password list in its normal
-  // shop-data payload, so this is meant to keep an unlisted/trade-only
-  // widget away from casual visitors, not to protect anything sensitive.
-  function mqGetWidgetPasswords(shopRec) {
-    try { const r = shopRec.fields['Widget passwords'] ? JSON.parse(shopRec.fields['Widget passwords']) : []; return Array.isArray(r) ? r : []; }
-    catch(e) { return []; }
-  }
-  // Entries are plain strings (older) or {p, t} (t = when it was added). The
-  // time lets widget.js ask a browser again if a password is deleted and then
-  // added back — see mqWidgetPwEntries in widget.js.
-  function mqPwText(x) { return (x && typeof x === 'object') ? String(x.p == null ? '' : x.p) : String(x == null ? '' : x); }
-  function mqPwObj(x) {
-    if (x && typeof x === 'object') return x;
-    return { p: String(x == null ? '' : x), t: 0 };
-  }
-  function mqRenderWidgetPasswordList() {
-    const shopRec = window._mqShopRecord;
-    const list = el('mq-widgetpw-list');
-    if (!list || !shopRec) return;
-    const pwds = mqGetWidgetPasswords(shopRec);
-    const esc = t => String(t == null ? '' : t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
-    list.style.cssText = 'display:flex;flex-direction:column;gap:8px;margin:6px 0 10px';
-    list.innerHTML = pwds.length ? pwds.map((pwEntry, idx) => {
-      const o = mqPwObj(pwEntry);
-      const pw = mqPwText(pwEntry);
-      const d = Math.min(100, Math.max(0, parseFloat(o.d) || 0));
-      const show = o.s !== false;
-      return `
-      <div style="background:#fff;border:1px solid #fecaca;border-radius:10px;padding:8px 12px">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-          <span style="font-family:monospace;font-size:13px;color:#374151;word-break:break-all">${esc(pw)}</span>
-          <button type="button" onclick="mqRemoveWidgetPassword(${idx})" title="Remove this password" style="background:none;border:none;cursor:pointer;color:#991b1b;font-weight:700;padding:0;line-height:1;font-size:14px">✕</button>
-        </div>
-        <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px 14px;margin-top:8px;font-size:12px;color:#4b5563">
-          <label style="display:inline-flex;align-items:center;gap:6px">Discount
-            <input type="number" min="0" max="100" step="0.5" value="${d || ''}" placeholder="0" onchange="mqSetPasswordDiscount(${idx}, this.value)" style="width:72px;font-size:12.5px;padding:4px 7px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit"/> %
-          </label>
-          ${d > 0 ? `
-          <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" ${show ? 'checked' : ''} onchange="mqSetPasswordShow(${idx}, this.checked)"/> Show the discount to the customer</label>
-          ${show ? `<input type="text" value="${esc(o.l || '')}" maxlength="40" placeholder="Label, e.g. Contractor discount" onchange="mqSetPasswordLabel(${idx}, this.value)" style="flex:1;min-width:170px;font-size:12.5px;padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit"/>` : `<span style="color:#9ca3af">Customers just see the lower price.</span>`}` : ''}
-        </div>
-      </div>`; }).join('') : '<span style="font-size:12px;color:#9ca3af">No passwords added yet — while the toggle above is on, no one can get into the widget until you add at least one.</span>';
-  }
-  // Saves one change to a single password entry. Entries that were plain
-  // strings (older ones) become {p, t:0} objects — t:0 keeps them working in
-  // browsers that already unlocked with them.
-  async function mqPatchWidgetPassword(idx, patch, okMsg) {
-    const shopRec = window._mqShopRecord;
-    if (!shopRec) return;
-    const pwds = mqGetWidgetPasswords(shopRec);
-    if (!pwds[idx]) return;
-    pwds[idx] = Object.assign({}, mqPwObj(pwds[idx]), patch);
-    try {
-      await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Widget passwords': JSON.stringify(pwds) });
-      shopRec.fields['Widget passwords'] = JSON.stringify(pwds);
-      mqRenderWidgetPasswordList();
-      showMsg('mq-shop-msg', okMsg);
-    } catch(e) { showMsg('mq-shop-msg', 'Error saving — please try again.', 'error'); mqRenderWidgetPasswordList(); }
-  }
-  window.mqSetPasswordDiscount = function(idx, val) {
-    const n = Math.min(100, Math.max(0, parseFloat(val) || 0));
-    return mqPatchWidgetPassword(idx, { d: n }, n > 0 ? `✓ Discount set to ${n}%.` : '✓ Discount removed.');
-  };
-  window.mqSetPasswordShow = function(idx, on) {
-    return mqPatchWidgetPassword(idx, { s: !!on }, on ? '✓ Customers will see the discount.' : '✓ Customers will only see the lower price.');
-  };
-  window.mqSetPasswordLabel = function(idx, val) {
-    return mqPatchWidgetPassword(idx, { l: String(val || '').trim().slice(0, 40) }, '✓ Label saved.');
-  };
-  window.mqAddWidgetPassword = async function() {
-    const shopRec = window._mqShopRecord;
-    if (!shopRec) return;
-    const input = el('mq-widgetpw-new');
-    const val = (input && input.value || '').trim();
-    if (!val) return;
-    const pwds = mqGetWidgetPasswords(shopRec);
-    if (pwds.some(x => mqPwText(x) === val)) { showMsg('mq-shop-msg', 'That password is already on the list.', 'error'); return; }
-    const discInput = el('mq-widgetpw-new-disc');
-    const disc = Math.min(100, Math.max(0, parseFloat(discInput && discInput.value) || 0));
-    const entry = { p: val, t: Date.now() };
-    if (disc > 0) { entry.d = disc; entry.s = true; entry.l = ''; }
-    pwds.push(entry);
-    try {
-      await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Widget passwords': JSON.stringify(pwds) });
-      shopRec.fields['Widget passwords'] = JSON.stringify(pwds);
-      if (input) input.value = '';
-      if (discInput) discInput.value = '';
-      mqRenderWidgetPasswordList();
-      showMsg('mq-shop-msg', '✓ Password added.');
-    } catch(e) { showMsg('mq-shop-msg', 'Error saving — please try again.', 'error'); }
-  };
-  window.mqRemoveWidgetPassword = async function(idx) {
-    const shopRec = window._mqShopRecord;
-    if (!shopRec) return;
-    const pwds = mqGetWidgetPasswords(shopRec);
-    pwds.splice(idx, 1);
-    try {
-      await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Widget passwords': JSON.stringify(pwds) });
-      shopRec.fields['Widget passwords'] = JSON.stringify(pwds);
-      mqRenderWidgetPasswordList();
-      showMsg('mq-shop-msg', '✓ Password removed.');
-    } catch(e) { showMsg('mq-shop-msg', 'Error saving — please try again.', 'error'); }
-  };
-  window.mqToggleWidgetPasswordProtection = async function() {
-    const shopRec = window._mqShopRecord;
-    if (!shopRec) return;
-    const toggle = el('mq-widgetpw-toggle');
-    if (!toggle) return;
-    const isOn = toggle.classList.contains('on');
-    toggle.classList.toggle('on', !isOn);
-    const wrap = el('mq-widgetpw-wrap');
-    if (wrap) wrap.style.display = !isOn ? 'block' : 'none';
-    try {
-      await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Widget password protected': !isOn ? 'Yes' : 'No' });
-      shopRec.fields['Widget password protected'] = !isOn ? 'Yes' : 'No';
-      showMsg('mq-shop-msg', !isOn ? '✓ Widget now requires a password.' : '✓ Password requirement turned off.');
-    } catch(e) {
-      toggle.classList.toggle('on', isOn);
-      if (wrap) wrap.style.display = isOn ? 'block' : 'none';
-      showMsg('mq-shop-msg', 'Error saving.', 'error');
-    }
-  };
-
   window.mqUpdateLeadStatus = async function(id, status) {
     try {
       await atUpdate(CONFIG.LEADS_TABLE, id, { 'Status': status });
@@ -9605,29 +8249,6 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       // stale label (like "New template item") forever after a rename.
       if (field === 'Item name') updates['Special Items'] = value;
       await atUpdate(CONFIG.SPECIALTY_TABLE, id, updates);
-      // Jordan: the "⭐ Pro only" filter only picked up an item AFTER a page
-      // refresh once he'd just ticked its Pro only box. Cause: the filter
-      // never reads the saved record -- it reads a data-proonly="1/0"
-      // attribute stamped onto each row/card when the tab first rendered, and
-      // nothing updated that stamp when the checkbox changed. So sync it right
-      // here (plus the in-memory record, so a later re-render of that tab
-      // doesn't stamp the stale value back). The filter is deliberately NOT
-      // re-run here: if "Pro only" is already ticked in the filter, unchecking
-      // an item shouldn't make its row vanish out from under the cursor
-      // mid-edit -- it just drops out the next time the filter is touched.
-      if (field === 'Pro only') {
-        const flag = value ? '1' : '0';
-        const rec = mqFindVariantOwnerRecord(id);
-        if (rec) rec.fields['Pro only'] = !!value;
-        document.querySelectorAll(`tr[data-id="${id}"]`).forEach(tr => tr.setAttribute('data-proonly', flag));
-        const stamp = (node) => { if (node) node.setAttribute('data-proonly', flag); };
-        // My Products cards: a plain item's single card, or a variant item's
-        // group card + each popped-out variant card.
-        const photoPreview = document.getElementById('mq-photo-preview-spec_' + id);
-        if (photoPreview) stamp(photoPreview.closest('.mq-spec-card-wrap'));
-        stamp(document.getElementById('mq-specgroup-wrap-' + id));
-        document.querySelectorAll(`[data-spec-group="${id}"]`).forEach(stamp);
-      }
     } catch(e) { console.error('Failed to save specialty field', e); }
   };
 
@@ -9639,42 +8260,6 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // one JSON field ('Variants') on the Specialty Items table, the same
   // pattern already used for 'Visible rooms' — no new Airtable table, no
   // separate relational linking, just an array on the record itself.
-  //
-  // The exact same 'Variants' field/table also holds MASTER TEMPLATE items
-  // (window._mqTemplateItems, the Templates (Admin) tab) — they're just
-  // Specialty Items rows tagged to the reserved MASTER_TEMPLATE shop
-  // instead of a real one. Jordan asked for Templates (Admin) to support
-  // variants and Sized variants "to match" the Specialty Items tab, rather
-  // than a second, separately-maintained copy of this whole panel that
-  // would inevitably drift from this one (see the widget.js/widgetpro.js
-  // mirroring rule elsewhere in this file for why that's worth avoiding).
-  // So every variant CRUD/refresh function below looks its record up
-  // through mqFindVariantOwnerRecord (checks both arrays) instead of
-  // hardcoding window._mqSpecRecords — the rendering (mqVariantsPanelHTML)
-  // and math (mqApplySizedVariantCalcs) needed zero changes, since they
-  // already only take a record, never reach into either global array
-  // themselves.
-  function mqFindVariantOwnerRecord(id) {
-    return (window._mqSpecRecords || []).find(x => x.id === id)
-      || (window._mqTemplateItems || []).find(x => x.id === id);
-  }
-  // Which shop's Photos map a given item's variant photos actually live
-  // on — a real shop's own record for a Specialty Items row, but the
-  // reserved master-template shop for a Templates (Admin) row (there is no
-  // "current shop" while looking at Templates). Used by mqDuplicateVariant,
-  // the only variant-photos write path this file has today.
-  async function mqVariantPhotoShopRecord(id) {
-    if ((window._mqSpecRecords || []).some(x => x.id === id)) return window._mqShopRecord;
-    if ((window._mqTemplateItems || []).some(x => x.id === id)) return await ensureMasterTemplateShop();
-    return null;
-  }
-  // Which page's toast/status line should report a variant save's result —
-  // the two tabs don't share one, so a save triggered from a Templates
-  // (Admin) card needs to land on mq-templates-msg, not the (hidden,
-  // off-page) mq-spec-msg.
-  function mqVariantsMsgId(id) {
-    return (window._mqTemplateItems || []).some(x => x.id === id) ? 'mq-templates-msg' : 'mq-spec-msg';
-  }
   function mqParseVariants(r) {
     try {
       const v = JSON.parse(r?.fields?.['Variants'] || '[]');
@@ -9751,45 +8336,17 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // Min price has to be set per-variant, not shared like everything else
     // below — a variant's own price is what its own minimum gets checked
     // against (e.g. "Maple" and "Painted MDF" doors can easily want
-    // different floors).
-    //
-    // CORRECTION (2026-09-25): this used to be gated on THAT SPECIFIC
-    // variant's own 📏 Sized + rate-mode state, on the theory that "Sized"
-    // was each variant's real, independent pricing-method switch. Checking
-    // the actual widget quote math (widget.js calcCabinet) showed that's
-    // not what decides whether a variant's Min $ floor is ever applied —
-    // the widget only ever checks it against the ITEM-level "How is this
-    // priced?" setting (`s.perFt`/`s.perSqFt`, from the main row's Per
-    // linear foot/Per square foot fields), same as it always did before any
-    // of this redesign. A variant doesn't need to be individually "Sized"
-    // for its Price to be read as a $/lin ft or $/sq ft rate — it just needs
-    // the item itself to be set to Per lin ft/Per sq ft (see the "How is
-    // this priced?" dropdown in the main row above, and mqSpecPricedCellHTML
-    // for why it stays live even with variants). So this gates on the same
-    // item-level fields the widget actually reads, not on this variant's
-    // own Sized checkbox.
-    const itemPerFt = !!r.fields['Per linear foot'];
-    const itemPerSqFt = !!r.fields['Per square foot'];
-    // 📏 Sized calculates ONE fixed dollar Price from typed dimensions × a
-    // rate — that only makes sense when the item itself charges a flat
-    // price per variant (the customer just picks a variant and gets that
-    // exact price). Once the item is Per lin ft/Per sq ft, the customer
-    // types their OWN footage and that same Price field gets read as a
-    // $/unit rate instead (see priceUnitLabel below) — Sized's calculated
-    // number would then get double-counted as a rate, not a price. So
-    // Sized is only offered while the item is Flat rate; see the
-    // sizedConflict() flag near sizedControlsHTML for what happens to a
-    // variant that already has Sized checked when the item switches away
-    // from Flat rate (mqSpecPricingModeChange warns before allowing that).
-    const itemIsFlatRate = !itemPerFt && !itemPerSqFt;
-    const minInputHTML = (v, vi) => {
-      const showMin = itemPerFt || itemPerSqFt;
-      if (!showMin) return '';
-      return `
+    // different floors). Same show/hide rule as the main row's Min $ field:
+    // only once this item is priced per lin ft or per sq ft (see
+    // mqSpecMinPriceHTML) — flat-rate items have nothing for a minimum to
+    // compare against.
+    const perFt = !!r.fields['Per linear foot'];
+    const perSqFt = !!r.fields['Per square foot'];
+    const showMin = perFt || perSqFt;
+    const minInputHTML = (v, vi) => !showMin ? '' : `
         <span style="font-size:10px;color:#9ca3af;white-space:nowrap">Min ${CUR()}</span>
         <input type="number" value="${v.min || ''}" placeholder="0.00" style="width:64px;font-size:12px;padding:5px 6px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveVariantField('${r.id}',${vi},'min',parseFloat(this.value)||0)"/>
-        <span onclick="mqShowSpecHelpPopover(this,'No matter how small the ${itemPerFt?'linear-foot':'square-foot'} total comes out to, never charge less than this for this variant — a small door takes just as much time to build and install as a regular one.',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>`;
-    };
+        <span onclick="mqShowSpecHelpPopover(this,'No matter how small the ${perFt?'linear-foot':'square-foot'} total comes out to, never charge less than this for this variant — a small door takes just as much time to build and install as a regular one.',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>`;
     // The dimension/rate row, only shown once "📏 Sized" is checked for
     // that variant. `width:100%` on this wrapper forces it onto its own
     // line inside the variant row's flex-wrap, without needing a separate
@@ -9805,51 +8362,12 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // row Jordan saw. Sized here to comfortably fit their own longest
     // option's text ("inches" / "$/lin ft") plus padding, and matched to
     // the same width as each other so the two sit neatly side by side.
-    // Sized only makes sense on a Flat rate item: it calculates ONE fixed
-    // dollar price for ONE fixed size, and that number is only meaningful
-    // as a face-value price. Once the item is Per lin ft/Per sq ft, the
-    // customer types their own footage and that same Price field gets read
-    // as a $/unit RATE instead — so a Sized variant's calculated price
-    // would get charged twice over (once inside the size calculation,
-    // again by the customer's own footage). Checked this against the real
-    // widget code, not just guessed: the widget renders exactly ONE
-    // quantity/footage box per ITEM (built once from the item's own Per lin
-    // ft/Per sq ft setting), not one per variant — picking a different
-    // variant chip only swaps price/photo/badge, it never rebuilds that
-    // box. So there is no way for an individual variant to have its own,
-    // different measuring method; Sized and "customer measures it
-    // themselves" are mutually exclusive at the item level, not just a UI
-    // preference. Tried letting Sized stay on with just a warning (see the
-    // git history around 2026-09-25) — Jordan's own test data showed why
-    // that was not a good idea (an 11"x22" Sized variant getting charged as
-    // a flat $7.00/lin ft rate), so this is back to blocking the combo, the
-    // same as the original guard-rail Jordan chose first. The one thing
-    // that changed from that original version: Sized can still end up
-    // checked on a variant whose item's mode was switched to per-unit AFTER
-    // it was marked Sized (mqSpecPricingModeChange warns before letting
-    // that happen going forward, but does not retroactively touch existing
-    // data) — this notice covers that leftover state, with a one-click way
-    // out. The dimension/rate controls are hidden while it is showing,
-    // since editing them would just be calculating a number that is about
-    // to be misread as a rate anyway.
-    const sizedConflictHTML = (v, vi) => `
-      <div style="width:100%;padding:6px 0 4px 24px">
-        <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:8px 10px;font-size:11px;color:#991b1b;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-          <span>⚠️ This item is priced ${itemPerFt?'Per linear foot':'Per square foot'}, so "Sized" doesn't apply — this variant's Price (${CUR()}${v.price||0}) is being charged to the customer as a ${itemPerFt?'$/lin ft':'$/sq ft'} rate, not the calculated size price it shows here.</span>
-          <button type="button" class="mq-btn mq-btn-sm" onclick="mqSaveSizedVariantField('${r.id}',${vi},'sized',false)">Turn off Sized</button>
-        </div>
-      </div>`;
-    const sizedControlsHTML = (v, vi) => {
-      if (!v.sized) return '';
-      if (!itemIsFlatRate) return sizedConflictHTML(v, vi);
-      return `
+    const sizedControlsHTML = (v, vi) => !v.sized ? '' : `
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:2px 0 6px 24px;width:100%">
         <div style="font-size:10px;color:#9ca3af;width:100%">Input your sizes below — the variant name above will fill in automatically from them.</div>
-        <span style="font-size:10px;color:#9ca3af;font-weight:700">L</span>
-        <input type="number" value="${v.dimA || ''}" placeholder="e.g. 30" title="Length" style="width:58px;font-size:12px;padding:5px 6px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveSizedVariantField('${r.id}',${vi},'dimA',parseFloat(this.value)||0)"/>
+        <input type="number" value="${v.dimA || ''}" placeholder="e.g. 30" title="First dimension" style="width:58px;font-size:12px;padding:5px 6px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveSizedVariantField('${r.id}',${vi},'dimA',parseFloat(this.value)||0)"/>
         <span style="font-size:11px;color:#9ca3af">×</span>
-        <span style="font-size:10px;color:#9ca3af;font-weight:700">W</span>
-        <input type="number" value="${v.dimB || ''}" placeholder="e.g. 9" title="Width" style="width:58px;font-size:12px;padding:5px 6px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveSizedVariantField('${r.id}',${vi},'dimB',parseFloat(this.value)||0)"/>
+        <input type="number" value="${v.dimB || ''}" placeholder="e.g. 9" title="Second dimension" style="width:58px;font-size:12px;padding:5px 6px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveSizedVariantField('${r.id}',${vi},'dimB',parseFloat(this.value)||0)"/>
         <button type="button" class="mq-btn mq-btn-sm" title="Switch which number prints first in the auto-filled size — e.g. height × width vs. width × height. Doesn't change the price either way." onclick="mqSaveSizedVariantField('${r.id}',${vi},'swap',${v.swap ? 'false' : 'true'})">⇄ Switch order</button>
         <select title="Unit" style="width:92px;font-size:11px;padding:5px 6px;border:1px solid #d1d5db;border-radius:5px" onchange="mqSaveSizedVariantField('${r.id}',${vi},'unit',this.value)">
           <option value="in" ${v.unit!=='mm'?'selected':''}>inches</option>
@@ -9862,7 +8380,6 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         </select>
         ${(v.rateMode==='sqft'||v.rateMode==='linft') ? `<input type="number" value="${v.rate||''}" placeholder="Rate" title="${v.rateMode==='sqft'?'Price per square foot — multiplied by this size\'s area to fill in Price above':'Price per linear foot — multiplied by this size\'s longer side to fill in Price above'}" style="width:64px;font-size:12px;padding:5px 6px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveSizedVariantField('${r.id}',${vi},'rate',parseFloat(this.value)||0)"/>` : ''}
       </div>`;
-    };
     // Each row carries its own stable variant id (not its array index, which
     // shifts around on every add/remove/reorder) in data-variant-id, plus a
     // ⠿ drag handle — same handle-activated draggable pattern as the
@@ -9880,75 +8397,16 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // corners and a gap below it, so a variant (label/price/sized controls
     // and all) reads as one distinct unit at a glance, especially useful
     // once a shop owner has 20-30 of them stacked in a row.
-    // When the item itself is set to Per lin ft/Per sq ft (the "How is this
-    // priced?" dropdown above), every variant's Price is read by the widget
-    // as a $/lin ft or $/sq ft RATE, not a flat dollar amount — the label
-    // next to the input makes that plain instead of just showing "Price"
-    // for every mode, which was a big part of Jordan's original confusion
-    // ("no way for me to know or even choose" the pricing method).
-    const priceUnitLabel = itemPerFt ? '/ lin ft' : (itemPerSqFt ? '/ sq ft' : '');
-    // Sized only offered while the item is Flat rate (see the comment above
-    // sizedConflictHTML for why that's a real math constraint, not just a
-    // preference) — greyed out and unclickable otherwise. A variant that's
-    // already Sized from before the item switched modes stays checked (so
-    // the conflict is visible) but still disabled; its own row below shows
-    // the conflict warning via sizedControlsHTML. Round 1 of this feature
-    // just disabled the checkbox with a hover-only title for the reason —
-    // Jordan found that confusing on its own ("i dont see why it cant be
-    // available"). The fix wasn't to allow the combo (tried that; her own
-    // test data showed why not — see sizedConflictHTML), it was to make the
-    // reason easy to find: the "?" here is a click-to-read explainer
-    // (mqShowSpecHelpPopover, same pattern as every other "?" in this
-    // panel) and stays clickable in both the enabled and disabled states.
-    // Two different popovers, not one shared one — Jordan's first pass at
-    // this text tried to cover both "what Sized is" and "why it is greyed
-    // out" in a single dense paragraph, and she found that too much to read
-    // in a popup ("aint no way im ready all that"). Split into whichever
-    // question actually applies to the state the shop owner is looking at.
-    const sizedHelpTextEnabled = 'Sized items are 2 dimension items, like an 11&quot; x 30&quot; door. The sq ft/lin ft cost gets calculated for you automatically, based on the rate you set.';
-    const sizedHelpTextDisabled = 'Sized items generate a flat price automatically based on the sizes you enter. Switch &quot;How is this priced?&quot; above to Flat rate to use Sized.';
-    const sizedHelpIconHTML = (text) => `<span onclick="mqShowSpecHelpPopover(this,'${text}',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>`;
-    // The "?" is click-to-read (see sizedHelpIconHTML), matching every other
-    // "?" in this panel — but Jordan's first move was to hover over "Sized"
-    // itself, same as the original pre-"?" version worked, and got nothing.
-    // So the label also carries a plain `title` with the same text, for an
-    // instant native tooltip on hover — the "?" stays for anyone who doesn't
-    // discover hover, or is on a touch device where hover doesn't exist.
-    const sizedLabelHTML = (v, vi) => itemIsFlatRate ? `
-      <label title="${sizedHelpTextEnabled}" style="display:flex;align-items:center;gap:4px;font-size:11px;color:#6b7280;cursor:pointer;white-space:nowrap">
-        <input type="checkbox" ${v.sized?'checked':''} style="width:14px;height:14px;accent-color:#1a1a1a" onchange="mqSaveSizedVariantField('${r.id}',${vi},'sized',this.checked)"/>
-        📏 Sized
-        ${sizedHelpIconHTML(sizedHelpTextEnabled)}
-      </label>` : `
-      <label title="${sizedHelpTextDisabled}" onmouseenter="mqHighlightPricingMode('${r.id}',true)" onmouseleave="mqHighlightPricingMode('${r.id}',false)" style="display:flex;align-items:center;gap:4px;font-size:11px;color:#c1c5cb;cursor:not-allowed;white-space:nowrap">
-        <input type="checkbox" ${v.sized?'checked':''} disabled style="width:14px;height:14px;accent-color:#9ca3af;cursor:not-allowed"/>
-        📏 Sized
-        ${sizedHelpIconHTML(sizedHelpTextDisabled)}
-      </label>`;
     const rows = variants.map((v, vi) => `
       <div class="mq-variant-row" data-variant-id="${v.id}" style="display:flex;align-items:center;gap:8px;padding:8px 10px;margin-bottom:6px;border:1px solid #e5e7eb;border-radius:8px;background:#fafafa;flex-wrap:wrap;cursor:grab">
         <span class="mq-variant-drag-handle" title="Drag to reorder" style="color:#9ca3af;font-size:16px;cursor:grab;flex-shrink:0">⠿</span>
-        <input type="text" value="${(v.label||'').replace(/"/g,'&quot;')}" placeholder="${v.sized ? 'Size autofills ↓' : 'e.g. Maple'}" style="width:110px;font-size:12px;padding:5px 7px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveVariantField('${r.id}',${vi},'label',this.value)"/>
-        ${
-          // Once a variant is Sized AND the item is Per lin ft/Per sq ft —
-          // now only reachable as the leftover-conflict state covered by
-          // sizedConflictHTML above, since Sized itself is disabled going
-          // forward for a per-unit item — hide the normal editable Price
-          // box here in favor of a plain read-only readout. Jordan: this
-          // box "hangs around and is confusing" in that state, sitting next
-          // to a conflict warning that's telling you the number is wrong.
-          // Flat rate items keep the normal editable box, since there Price
-          // is a genuinely meaningful, standalone flat dollar amount even
-          // without Sized involved.
-          (v.sized && !itemIsFlatRate) ? `
-        <div style="font-size:12px;color:#374151;white-space:nowrap" title="Calculated by Sized below, from the dimensions and rate you enter there">= ${CUR()}${(v.price||0).toFixed(2)}${priceUnitLabel ? ` <span style="color:#9ca3af">${priceUnitLabel}</span>` : ''}</div>` : `
-        <div style="display:flex;align-items:center;gap:3px">
-          <input type="number" value="${v.price != null ? v.price : ''}" placeholder="Price" title="${priceUnitLabel ? `This variant's ${priceUnitLabel.replace('/ ','')} rate — multiplied by whatever the customer enters on the widget` : 'This variant\'s flat price'}" style="width:80px;font-size:12px;padding:5px 7px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveVariantField('${r.id}',${vi},'price',parseFloat(this.value)||0)"/>
-          ${priceUnitLabel ? `<span style="font-size:10px;color:#9ca3af;white-space:nowrap">${priceUnitLabel}</span>` : ''}
-        </div>`
-        }
+        <input type="text" value="${(v.label||'').replace(/"/g,'&quot;')}" placeholder="e.g. Maple" style="width:110px;font-size:12px;padding:5px 7px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveVariantField('${r.id}',${vi},'label',this.value)"/>
+        <input type="number" value="${v.price != null ? v.price : ''}" placeholder="Price" style="width:80px;font-size:12px;padding:5px 7px;border:1px solid #d1d5db;border-radius:5px" onblur="mqSaveVariantField('${r.id}',${vi},'price',parseFloat(this.value)||0)"/>
         ${minInputHTML(v, vi)}
-        ${sizedLabelHTML(v, vi)}
+        <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:#6b7280;cursor:pointer;white-space:nowrap" title="Enter two dimensions and (optionally) a $/sq ft or $/lin ft rate, and the label + price above fill in automatically">
+          <input type="checkbox" ${v.sized?'checked':''} style="width:14px;height:14px;accent-color:#1a1a1a" onchange="mqSaveSizedVariantField('${r.id}',${vi},'sized',this.checked)"/>
+          📏 Sized
+        </label>
         <button class="mq-btn mq-btn-sm" title="Duplicate this variant — handy for adding the next size in the same run" onclick="mqDuplicateVariant('${r.id}',${vi})">⧉</button>
         <button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqRemoveVariant('${r.id}',${vi})">Remove</button>
         ${sizedControlsHTML(v, vi)}
@@ -9959,33 +8417,13 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // opens directly under whichever item's pill you click), so it needs to
     // be unmistakable which item's variants you're looking at rather than
     // just trusting position on the page.
-    // Shown only when there's at least one 📏 Sized, per sq/lin ft variant
-    // for it to actually apply to — matches mqMassUpdateVariantRates's own
-    // guard, so this tool never appears as a live-looking control that
-    // would just error out if used. Lives here, next to the sized-variant
-    // controls it affects, instead of in the main row's Price cell where it
-    // used to sit — see mqSpecPriceCellHTML for why that moved.
-    const hasSizedRateVariants = variants.some(v => v.sized && (v.rateMode === 'sqft' || v.rateMode === 'linft'));
-    const bulkRateHTML = !hasSizedRateVariants ? '' : `
-      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:10px;padding:8px 10px;background:#eef2ff;border:1px solid #c7d2fe;border-radius:8px">
-        <span style="font-size:11px;color:#4338ca;font-weight:600;white-space:nowrap">Reprice every 📏 Sized variant:</span>
-        <input type="number" id="mq-spec-bulkrate-${r.id}" placeholder="Rate" style="width:90px;font-size:12px;padding:5px 7px;border:1px solid #a5b4fc;border-radius:5px;background:#fff"/>
-        <button class="mq-btn mq-btn-sm" onclick="mqMassUpdateVariantRates('${r.id}')">Apply</button>
-        <span onclick="mqShowSpecHelpPopover(this,'Sets this one rate on every variant below that is marked Sized and priced per square foot or per linear foot. Flat-rate and non-sized variants are left alone — handy after duplicating a whole sized lineup to reprice it for a new wood or material.',event)" style="cursor:pointer;color:#4338ca;font-weight:700;border:1px solid #a5b4fc;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0">?</span>
-      </div>`;
     return `
       <div style="border-left:3px solid #c7d2fe;padding-left:10px">
         <div style="font-size:11px;font-weight:700;color:#4338ca;text-transform:uppercase;letter-spacing:0.03em;margin-bottom:8px">Variants for "${itemName}"</div>
-        ${bulkRateHTML}
         <div id="mq-spec-variants-list-${r.id}">${rows || '<div style="font-size:12px;color:#9ca3af;padding:4px 0 8px">No variants yet — add one below, e.g. "Maple" / "Oak" / "Painted MDF".</div>'}</div>
         <button class="mq-btn mq-btn-sm" style="margin-top:8px" onclick="mqAddVariant('${r.id}')">+ Add a variant to "${itemName}"</button>
         ${variants.length > 1 ? `<div style="font-size:11px;color:#9ca3af;margin-top:8px">Drag the ⠿ handle to reorder — the first one listed is what customers see selected by default.</div>` : ''}
-        ${variants.length ? `<div style="font-size:11px;color:#9ca3af;margin-top:8px;line-height:1.6">
-          <div><strong>"How is this priced?"</strong> above still applies to every variant below it.</div>
-          <div>Category, project types, Active, and Pro only are shared too — only Price, Min $, and 📏 Sized are per variant.</div>
-          <div>Photos go under Products → Specialty Items, not here.</div>
-          <div><strong>📏 Sized</strong> just fills in Price for you from two dimensions and a rate — it does not change how the customer is charged.</div>
-        </div>` : ''}
+        ${variants.length ? `<div style="font-size:11px;color:#9ca3af;margin-top:8px;line-height:1.5">The Price field in the main row above is ignored once at least one variant exists — each variant has its own price${showMin ? ' and its own Min $ floor' : ''} instead. Category, project types, Active, Pro only, and per-linear/sq-ft all stay shared from the row above for every variant. <strong>Photos for each option are added under Products → Specialty Items</strong>, not here. On the widget, customers see one card with these as options to pick from — the first one here is shown by default. <strong>📏 Sized</strong> variants (e.g. differently-sized doors) let you type two dimensions and a $/sq ft or $/lin ft rate instead of calculating each price by hand — ⧉ duplicate a sized variant to quickly add the next size in the same run.</div>` : ''}
       </div>`;
   }
 
@@ -10027,7 +8465,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   }
 
   function mqRefreshVariantsPanel(id) {
-    const r = mqFindVariantOwnerRecord(id);
+    const r = (window._mqSpecRecords||[]).find(x => x.id === id);
     const panel = document.getElementById(`mq-spec-variants-panel-${id}`);
     if (r && panel) {
       panel.innerHTML = mqVariantsPanelHTML(r);
@@ -10036,7 +8474,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   }
 
   function mqRefreshSpecVariantUI(id) {
-    const r = mqFindVariantOwnerRecord(id);
+    const r = (window._mqSpecRecords||[]).find(x => x.id === id);
     if (!r) return;
     const n = mqParseVariants(r).length;
     const pill = document.getElementById(`mq-spec-variant-pill-${id}`);
@@ -10046,19 +8484,18 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       pill.style.background = n ? '#eef2ff' : '#f3f4f6';
       pill.style.color = n ? '#4338ca' : '#6b7280';
     }
-    // The Price and "How is this priced?" cells swap between a real,
-    // editable control (no variants yet) and a plain "set per variant"
-    // note (1+ variants) — see mqSpecPriceCellHTML/mqSpecPricedCellHTML for
-    // why. Re-render both from scratch every time a variant is added or
-    // removed, since which of those two states applies can flip.
-    const priceCell = document.getElementById(`mq-spec-pricecell-${id}`);
-    if (priceCell) priceCell.innerHTML = mqSpecPriceCellHTML(r);
-    const pricedCell = document.getElementById(`mq-spec-pricedcell-${id}`);
-    if (pricedCell) pricedCell.innerHTML = mqSpecPricedCellHTML(r);
-    // Templates (Admin) cards also carry the photos section, which switches
-    // between "one photo card" (no variants) and "one-for-all + a card per
-    // variant" -- re-render it whenever variants are added/removed.
-    if (document.getElementById(`mq-tmpl-photos-${id}`)) window.mqRefreshTemplatePhotos(id);
+    // The flat Price field is meaningless once variants exist (each variant
+    // has its own price instead) -- but rather than just disabling it, it's
+    // repurposed as a bulk rate-entry box (see mqMassUpdateVariantRates):
+    // type a new $/sq or lin ft rate there and "Apply to all sized" updates
+    // every 📏 Sized, per sq/lin ft variant on this item at once. Keep this
+    // in sync with the table row's own initial render of this same field.
+    const priceInput = document.getElementById(`mq-spec-price-${id}`);
+    if (priceInput) {
+      priceInput.disabled = false;
+      priceInput.placeholder = n > 0 ? 'New rate' : '';
+      priceInput.title = n > 0 ? "Mass-update: type a new $/sq ft or $/lin ft rate here, then click Apply below — it updates every 📏 Sized variant on this item that's priced per sq/lin ft, all at once. Flat-rate and non-sized variants are left alone." : '';
+    }
   }
 
   window.mqToggleVariantsPanel = function(id) {
@@ -10066,18 +8503,12 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const pill = document.getElementById(`mq-spec-variant-pill-${id}`);
     if (!row) return;
     const opening = row.style.display === 'none' || !row.style.display;
-    // Specialty Items renders this as a <tr> (needs 'table-row' to show
-    // correctly inside the table); Templates (Admin) renders the same panel
-    // inside a plain <div> card (needs 'block' instead — 'table-row' on a
-    // div renders with no card width/padding context and looks broken).
-    // Same toggle function either way — just picks the display value the
-    // actual element needs.
-    row.style.display = opening ? (row.tagName === 'TR' ? 'table-row' : 'block') : 'none';
+    row.style.display = opening ? 'table-row' : 'none';
     if (pill) pill.textContent = pill.textContent.replace(/[▾▴]\s*$/, opening ? '▴' : '▾');
   };
 
   window.mqAddVariant = async function(id) {
-    const r = mqFindVariantOwnerRecord(id);
+    const r = (window._mqSpecRecords||[]).find(x => x.id === id);
     if (!r) return;
     const variants = mqParseVariants(r);
     // A stable id, not the variant's array position — its photo (added
@@ -10092,7 +8523,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   };
 
   window.mqRemoveVariant = async function(id, vi) {
-    const r = mqFindVariantOwnerRecord(id);
+    const r = (window._mqSpecRecords||[]).find(x => x.id === id);
     if (!r) return;
     const variants = mqParseVariants(r);
     variants.splice(vi, 1);
@@ -10103,7 +8534,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   };
 
   window.mqSaveVariantField = async function(id, vi, field, value) {
-    const r = mqFindVariantOwnerRecord(id);
+    const r = (window._mqSpecRecords||[]).find(x => x.id === id);
     if (!r) return;
     const variants = mqParseVariants(r);
     if (!variants[vi]) return;
@@ -10119,7 +8550,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // owner sees the auto-filled label/price update live as they type instead
   // of only after their next save or reload.
   window.mqSaveSizedVariantField = async function(id, vi, field, value) {
-    const r = mqFindVariantOwnerRecord(id);
+    const r = (window._mqSpecRecords||[]).find(x => x.id === id);
     if (!r) return;
     const variants = mqParseVariants(r);
     if (!variants[vi]) return;
@@ -10144,8 +8575,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // an identical door photo for every duplicated size would defeat the point
   // of duplicating in the first place.
   window.mqDuplicateVariant = async function(id, vi) {
-    const r = mqFindVariantOwnerRecord(id);
-    const shopRec = await mqVariantPhotoShopRecord(id);
+    const r = (window._mqSpecRecords||[]).find(x => x.id === id);
+    const shopRec = window._mqShopRecord;
     if (!r) return;
     const variants = mqParseVariants(r);
     const source = variants[vi];
@@ -10186,27 +8617,23 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // would be way easier to be able to reprice the whole lot by using the
   // original price spot..."
   //
-  // This bulk-rate box originally lived in the item's own (by-then-unused)
-  // Price field in the main row. Jordan later pointed out that sitting up
-  // there — right next to a "How is this priced?" dropdown that LOOKED
-  // like it controlled variant pricing but did not — made the whole area
-  // confusing to read. It now lives in a small toolbar inside the variants
-  // panel itself (id="mq-spec-bulkrate-<id>"), directly next to the
-  // "📏 Sized" controls it actually affects. Whatever number is typed there
-  // gets applied as the new `rate` on every "📏 Sized" variant on this item
-  // that's priced per sq ft or per lin ft (a flat-rate or non-sized variant
-  // has no rate to update, so those are left completely alone), then each
-  // updated variant's price is re-derived through the same
-  // mqApplySizedVariantCalcs already used everywhere else, exactly as if
-  // that rate had been typed into that one variant's own rate field by
+  // The item's own Price field (id="mq-spec-price-<id>") already goes
+  // unused the moment it has variants — each variant has its own price
+  // instead. Rather than leaving it disabled, it's now repurposed as a
+  // bulk rate-entry box for exactly this: whatever number is currently
+  // typed there gets applied as the new `rate` on every "📏 Sized" variant
+  // on this item that's priced per sq ft or per lin ft (a flat-rate or
+  // non-sized variant has no rate to update, so those are left completely
+  // alone), then each updated variant's price is re-derived through the
+  // same mqApplySizedVariantCalcs already used everywhere else, exactly as
+  // if that rate had been typed into that one variant's own rate field by
   // hand.
   window.mqMassUpdateVariantRates = async function(id) {
-    const r = mqFindVariantOwnerRecord(id);
+    const r = (window._mqSpecRecords||[]).find(x => x.id === id);
     if (!r) return;
-    const msgId = mqVariantsMsgId(id);
-    const input = document.getElementById(`mq-spec-bulkrate-${id}`);
+    const input = document.getElementById(`mq-spec-price-${id}`);
     const newRate = parseFloat(input?.value);
-    if (!input || isNaN(newRate)) { showMsg(msgId, 'Enter a rate first.', 'error'); return; }
+    if (!input || isNaN(newRate)) { showMsg('mq-spec-msg', 'Enter a rate first.', 'error'); return; }
     const variants = mqParseVariants(r);
     let updated = 0;
     variants.forEach(v => {
@@ -10216,12 +8643,12 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         updated++;
       }
     });
-    if (!updated) { showMsg(msgId, 'No 📏 Sized, per sq/lin ft variants to update on this item.', 'error'); return; }
+    if (!updated) { showMsg('mq-spec-msg', 'No 📏 Sized, per sq/lin ft variants to update on this item.', 'error'); return; }
     r.fields['Variants'] = JSON.stringify(variants);
     mqRefreshVariantsPanel(id);
     mqRefreshSpecVariantUI(id);
     await mqSaveSpecField(id, 'Variants', JSON.stringify(variants));
-    showMsg(msgId, `✓ Updated the rate on ${updated} variant${updated===1?'':'s'}.`);
+    showMsg('mq-spec-msg', `✓ Updated the rate on ${updated} variant${updated===1?'':'s'}.`);
   };
 
   // Called after a variant row drag ends. Unlike mqSaveVariantField (which
@@ -10230,7 +8657,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // attributes, re-sorts the real variants array to match by id, and saves
   // the whole array — the same save shape mqAddVariant/mqRemoveVariant use.
   window.mqReorderVariants = async function(id) {
-    const r = mqFindVariantOwnerRecord(id);
+    const r = (window._mqSpecRecords||[]).find(x => x.id === id);
     const list = document.getElementById(`mq-spec-variants-list-${id}`);
     if (!r || !list) return;
     const variants = mqParseVariants(r);
@@ -10254,19 +8681,6 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   window.mqSaveSpecUnit = async function(id, field, checked) {
     const otherField = field === 'Per linear foot' ? 'Per square foot' : 'Per linear foot';
     const otherId = field === 'Per linear foot' ? `mq-spec-persqft-${id}` : `mq-spec-perft-${id}`;
-    // Keep the in-memory record's fields in step with what's being saved —
-    // mqRefreshVariantsPanel below rebuilds the variants panel straight from
-    // r.fields (itemPerFt/itemPerSqFt in mqVariantsPanelHTML), and without
-    // this it would keep rebuilding from the OLD, stale value until the next
-    // full page load — so the panel's Min $ gating, price-unit labels, and
-    // the new Sized enable/disable state (see mqVariantsPanelHTML) would
-    // silently lag one step behind whatever the dropdown/checkbox actually
-    // says, right when this fix most needs them to be in sync.
-    const r = mqFindVariantOwnerRecord(id);
-    if (r) {
-      r.fields[field] = checked;
-      if (checked) r.fields[otherField] = false;
-    }
     try {
       const updates = { [field]: checked };
       if (checked) {
@@ -10303,66 +8717,6 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     mqRefreshVariantsPanel(id);
   };
 
-  // The main Specialty items table shows a single "How is this priced?"
-  // dropdown (Flat rate / Per linear ft / Per sq ft) instead of two separate
-  // checkboxes, to cut down on visual clutter. Under the hood the two
-  // checkboxes (mq-spec-perft-/mq-spec-persqft-) still exist in the DOM,
-  // just hidden — every other piece of code (mqSaveSpecUnit's own UI sync,
-  // the variants panel refresh, etc.) still reads/writes them by ID exactly
-  // as before, so this is purely a front-end swap with zero change to the
-  // actual save/pricing logic. This only drives the main table row's pair
-  // of hidden checkboxes — the separate lin ft/sq ft checkboxes inside the
-  // expanded variants panel are untouched.
-  window.mqSpecPricingModeChange = function(id, mode) {
-    // Switching a Flat-rate item to Per lin ft/Per sq ft while it has any
-    // 📏 Sized variant creates exactly the Price/rate double-up the Sized
-    // checkbox is now disabled to prevent going forward (see
-    // mqVariantsPanelHTML) — but that guard only stops a NEW Sized
-    // checkbox from being ticked; it doesn't stop the mode switch itself
-    // from creating the same conflict for a variant that was already
-    // Sized. Warn here, before saving anything, and let the shop owner back
-    // out — nothing is changed automatically either way; they still decide
-    // whether to fix it before or after switching.
-    const r = mqFindVariantOwnerRecord(id);
-    const prevMode = r ? (r.fields['Per linear foot'] ? 'linft' : (r.fields['Per square foot'] ? 'sqft' : 'flat')) : 'flat';
-    if (r && prevMode === 'flat' && (mode === 'linft' || mode === 'sqft')) {
-      const sizedVariants = mqParseVariants(r).filter(v => v.sized);
-      if (sizedVariants.length) {
-        const names = sizedVariants.map(v => v.label || '(unnamed)').join(', ');
-        const unitLabel = mode === 'linft' ? 'lin ft' : 'sq ft';
-        const ok = confirm(`${sizedVariants.length} variant${sizedVariants.length===1?'':'s'} below ${sizedVariants.length===1?'is':'are'} marked "📏 Sized" (${names}).\n\nSwitching this item to Per ${unitLabel} means those variants' calculated Price will now be charged to the customer as a $/${unitLabel} rate, not the size-based price shown now — almost never what you want.\n\nSwitch anyway? You can turn off Sized on each affected variant afterward.`);
-        if (!ok) {
-          const sel = document.getElementById(`mq-spec-pricingmode-${id}`);
-          if (sel) sel.value = prevMode;
-          return;
-        }
-      }
-    }
-    const ftBox = document.getElementById(`mq-spec-perft-${id}`);
-    const sqftBox = document.getElementById(`mq-spec-persqft-${id}`);
-    if (mode === 'linft') {
-      if (ftBox) ftBox.checked = true;
-      mqSaveSpecUnit(id, 'Per linear foot', true);
-    } else if (mode === 'sqft') {
-      if (sqftBox) sqftBox.checked = true;
-      mqSaveSpecUnit(id, 'Per square foot', true);
-    } else {
-      // Flat rate — clear whichever of the two was previously on. Only one
-      // can ever be true at once (mutual exclusion is enforced elsewhere),
-      // so at most one of these branches actually fires.
-      const wasFt = ftBox?.checked;
-      const wasSqft = sqftBox?.checked;
-      if (wasFt) {
-        ftBox.checked = false;
-        mqSaveSpecUnit(id, 'Per linear foot', false);
-      }
-      if (wasSqft) {
-        sqftBox.checked = false;
-        mqSaveSpecUnit(id, 'Per square foot', false);
-      }
-    }
-  };
-
   // Same mutual-exclusion pattern as mqSaveSpecUnit above, but for the
   // install side's own pricing method — kept as separate fields entirely
   // from the supply-side ones, since an item can easily be priced one way
@@ -10394,36 +8748,6 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const ftBox = document.getElementById(`mq-spec-installperft-${id}`);
       const sqftBox = document.getElementById(`mq-spec-installpersqft-${id}`);
       minWrap.style.display = (ftBox?.checked || sqftBox?.checked) ? 'flex' : 'none';
-    }
-  };
-
-  // Same dropdown-over-hidden-checkboxes pattern as mqSpecPricingModeChange
-  // above, applied to the install side's own per-lin-ft/per-sq-ft pair
-  // (mq-spec-installperft-/mq-spec-installpersqft-) so the "Installed price
-  // / Mode" cell doesn't need two separate checkboxes either. Delegates all
-  // real save/UI-sync work to the existing, trusted mqSaveSpecInstallUnit —
-  // this is purely a front-end swap, no change to what gets saved or how.
-  window.mqSpecInstallPricingModeChange = function(id, mode) {
-    const ftBox = document.getElementById(`mq-spec-installperft-${id}`);
-    const sqftBox = document.getElementById(`mq-spec-installpersqft-${id}`);
-    if (mode === 'linft') {
-      if (ftBox) ftBox.checked = true;
-      mqSaveSpecInstallUnit(id, 'Install per linear foot', true);
-    } else if (mode === 'sqft') {
-      if (sqftBox) sqftBox.checked = true;
-      mqSaveSpecInstallUnit(id, 'Install per square foot', true);
-    } else {
-      // Per item — clear whichever of the two was previously on.
-      const wasFt = ftBox?.checked;
-      const wasSqft = sqftBox?.checked;
-      if (wasFt) {
-        ftBox.checked = false;
-        mqSaveSpecInstallUnit(id, 'Install per linear foot', false);
-      }
-      if (wasSqft) {
-        sqftBox.checked = false;
-        mqSaveSpecInstallUnit(id, 'Install per square foot', false);
-      }
     }
   };
 
@@ -10471,63 +8795,6 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       <input type="number" value="${r.fields[field] || ''}" id="${fieldId}" placeholder="0.00" style="width:64px;font-size:11px;padding:3px 5px" onblur="mqSaveSpecField('${id}','${field}',parseFloat(this.value))"/>
       <span onclick="mqShowSpecHelpPopover(this,'No matter how small the ${perFt?'linear-foot':'square-foot'} total comes out to, never charge less than this — a small door takes just as much time to build and install as a regular one.',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>
     </div>`;
-  }
-
-  // CORRECTION (2026-09-25) — the redesign below this comment used to hide
-  // BOTH the Price cell and the "How is this priced?" cell once an item had
-  // 1+ variants, on the assumption that neither one still did anything once
-  // variants took over. Checking the actual widget quote math (widget.js
-  // calcCabinet, the specs.forEach supply-pricing loop) proved that
-  // assumption wrong for "How is this priced?": it is an ITEM-level setting
-  // (backed by the same "Per linear foot"/"Per square foot" fields, read as
-  // s.perFt/s.perSqFt) that still controls, for every variant, (a) what kind
-  // of quantity box the customer sees on the widget — a plain quantity, a
-  // linear-feet box, or a square-feet box — and (b) how that variant's own
-  // Price gets used: as a flat price, or as a $/lin ft or $/sq ft RATE
-  // multiplied by whatever the customer types in. Jordan confirmed this is
-  // exactly how it always worked ("they were totally able to be priced by
-  // square or linear or flat before... i have plenty of items that were set
-  // that way") and that hiding this dropdown behind "Set per variant ↓"
-  // broke her ability to see or change it for those items. So the dropdown
-  // stays real and live even with variants — it never actually moved to the
-  // variants panel; a variant's own "📏 Sized" feature is a separate,
-  // optional, dashboard-only shortcut for calculating what number to type
-  // into that variant's Price field, not a second, competing pricing-method
-  // switch. Price itself IS genuinely per-variant once variants exist (the
-  // widget only reads item-level Price when there are zero variants), so
-  // that cell still swaps to a "Priced per variant ↓" note — that part of
-  // the original diagnosis was correct.
-  //
-  // mqRefreshSpecVariantUI calls these same two functions (via
-  // mq-spec-pricecell-<id> / mq-spec-pricedcell-<id>) to swap/refresh the
-  // cells live the moment a variant is added or the last one removed,
-  // without needing a full row re-render.
-  function mqSpecPriceCellHTML(r) {
-    const variantCount = mqParseVariants(r).length;
-    if (variantCount) {
-      return `<div style="font-size:11px;color:#9ca3af;font-style:italic;line-height:1.3;width:94px">Priced per variant ↓</div>`;
-    }
-    return `<div style="display:flex;flex-direction:column;gap:3px;width:94px">
-      <input type="number" value="${r.fields['Price'] || ''}" id="mq-spec-price-${r.id}" style="width:94px" onblur="mqSaveSpecField('${r.id}','Price',parseFloat(this.value))"/>
-      ${mqSpecRateCalcIconHTML(r.id, false, !!(r.fields['Per linear foot'] || r.fields['Per square foot']))}${mqSpecMinPriceHTML(r, false)}
-    </div>`;
-  }
-
-  function mqSpecPricedCellHTML(r) {
-    const variantCount = mqParseVariants(r).length;
-    const pickerHTML = `<select id="mq-spec-pricingmode-${r.id}" onchange="mqSpecPricingModeChange('${r.id}', this.value)" style="font-size:12px;padding:5px 4px;border-radius:6px;border:1px solid #d1d5db;width:98px;background:#fff">
-        <option value="flat" ${(!r.fields['Per linear foot'] && !r.fields['Per square foot']) ? 'selected' : ''}>Flat rate</option>
-        <option value="linft" ${r.fields['Per linear foot'] ? 'selected' : ''}>Per lin ft</option>
-        <option value="sqft" ${r.fields['Per square foot'] ? 'selected' : ''}>Per sq ft</option>
-      </select>`;
-    // Still real and functional with variants — see the correction note
-    // above. This note just clarifies that it's one shared setting for
-    // every variant listed below, since that's the part that confused
-    // Jordan originally (a single dropdown "for all items' variants").
-    const variantNoteHTML = variantCount
-      ? `<div style="font-size:10px;color:#9ca3af;line-height:1.3;margin-top:3px;width:98px">Applies to every variant below ↓</div>`
-      : '';
-    return `${pickerHTML}${variantNoteHTML}<input type="checkbox" id="mq-spec-perft-${r.id}" ${r.fields['Per linear foot']?'checked':''} style="display:none"/><input type="checkbox" id="mq-spec-persqft-${r.id}" ${r.fields['Per square foot']?'checked':''} style="display:none"/>`;
   }
 
   window.mqShowSpecRateCalc = function(triggerEl, id, isInstall, event) {
@@ -10625,14 +8892,9 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         <input type="number" value="${r.fields['Install price'] || ''}" id="mq-spec-installprice-${r.id}" placeholder="${CUR()}0.00" style="width:100px" onblur="mqSaveSpecField('${r.id}','Install price',parseFloat(this.value))"/>${mqSpecRateCalcIconHTML(r.id, true, !!(r.fields['Install per linear foot'] || r.fields['Install per square foot']))}
         ${mqSpecMinPriceHTML(r, true)}
         <div style="margin-top:6px;display:flex;gap:6px;align-items:center">
-          <select id="mq-spec-installmode-select-${r.id}" onchange="mqSpecInstallPricingModeChange('${r.id}', this.value)" style="font-size:11px;padding:4px 4px;border-radius:6px;border:1px solid #d1d5db;width:96px;background:#fff">
-            <option value="perItem" ${(!installPerFt && !installPerSqFt) ? 'selected' : ''}>Per item</option>
-            <option value="linft" ${installPerFt ? 'selected' : ''}>Per lin ft</option>
-            <option value="sqft" ${installPerSqFt ? 'selected' : ''}>Per sq ft</option>
-          </select>
-          <input type="checkbox" id="mq-spec-installperft-${r.id}" ${installPerFt?'checked':''} style="display:none"/>
-          <input type="checkbox" id="mq-spec-installpersqft-${r.id}" ${installPerSqFt?'checked':''} style="display:none"/>
-          <span onclick="mqShowSpecHelpPopover(this,'Choose Per item if install is priced per item, not per linear or square foot. Can be a different method than supply — e.g. supply priced per sqft, install priced per door.',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>
+          <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-installperft-${r.id}" ${installPerFt?'checked':''} onchange="mqSaveSpecInstallUnit('${r.id}','Install per linear foot',this.checked)" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> per lin ft</label>
+          <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-installpersqft-${r.id}" ${installPerSqFt?'checked':''} onchange="mqSaveSpecInstallUnit('${r.id}','Install per square foot',this.checked)" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> per sq ft</label>
+          <span onclick="mqShowSpecHelpPopover(this,'Leave both unchecked if install is priced per item. Can be a different method than supply — e.g. supply priced per sqft, install priced per door.',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>
         </div>
         <div style="margin-top:6px;display:flex;align-items:center;gap:4px">
           <span style="font-size:11px;color:#6b7280">Question customers see:</span>
@@ -10705,47 +8967,17 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // scroll wrapper). Recomputed fresh every time it opens.
     panel.style.position = 'fixed';
     panel.style.left = Math.round(anchorRect.left) + 'px';
+    panel.style.top = Math.round(anchorRect.bottom + 6) + 'px';
     panel.style.bottom = 'auto';
     panel.style.margin = '0';
-    panel.style.maxHeight = 'none';
-    panel.style.overflowY = 'visible';
 
-    // Visible boundaries (Jordan 2026-10-04): the black top bar sits ABOVE
-    // this fixed-position panel, so a panel flipped upward from an item near
-    // the top of the screen used to have its first checkboxes hidden behind
-    // it ("the checkboxes disappear unless you have the item much farther
-    // down"). Never let the top of the list go above the bottom of the top
-    // bar (or the viewport top if the bar has scrolled away), and never let
-    // the bottom go past the viewport bottom.
-    const topbar = document.querySelector('#midasquote-dashboard .mq-topbar');
-    const minTop = Math.max(0, topbar ? Math.round(topbar.getBoundingClientRect().bottom) : 0) + 8;
-    const maxBottom = window.innerHeight - 8;
-    const gap = 6;
-    const panelH = panel.getBoundingClientRect().height;
-    const spaceBelow = maxBottom - (anchorRect.bottom + gap);
-    const spaceAbove = (anchorRect.top - gap) - minTop;
-
-    if (panelH <= spaceBelow) {
-      // Fits below the trigger — the normal case.
-      panel.style.top = Math.round(anchorRect.bottom + gap) + 'px';
-    } else if (panelH <= spaceAbove) {
-      // Doesn't fit below, but fits entirely above without touching the top bar.
-      panel.style.top = Math.round(anchorRect.top - gap - panelH) + 'px';
-    } else if (spaceBelow >= spaceAbove) {
-      // Fits neither way — use the roomier side, capped to it, and let the
-      // checkbox list scroll inside the panel so every item is still reachable.
-      panel.style.top = Math.round(anchorRect.bottom + gap) + 'px';
-      panel.style.maxHeight = Math.max(120, Math.floor(spaceBelow)) + 'px';
-      panel.style.overflowY = 'auto';
-    } else {
-      const h = Math.max(120, Math.floor(spaceAbove));
-      panel.style.maxHeight = h + 'px';
-      panel.style.overflowY = 'auto';
-      panel.style.top = Math.round(anchorRect.top - gap - Math.min(panelH, h)) + 'px';
-    }
     const panelRect = panel.getBoundingClientRect();
+    if (panelRect.bottom > window.innerHeight) {
+      panel.style.top = 'auto';
+      panel.style.bottom = Math.round(window.innerHeight - anchorRect.top + 6) + 'px';
+    }
     if (panelRect.right > window.innerWidth) {
-      panel.style.left = Math.max(8, Math.round(window.innerWidth - panelRect.width - 10)) + 'px';
+      panel.style.left = Math.round(window.innerWidth - panelRect.width - 10) + 'px';
     }
 
     // Close on any click outside this details element. Deferred by one tick
@@ -10967,177 +9199,24 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     </div>`;
   }
 
-  // ---- Templates (Admin): photos for items WITH VARIANTS -------------------
-  // Jordan pushed a new specialty item from the Templates tab and "it pushed
-  // everything except the image... it didnt give me the option to use the
-  // image for all variants." Root cause: a shop's widget never uses an item's
-  // single main photo once the item has variants -- it shows each VARIANT's own
-  // photo (spec_<itemId>_v<variantId>). pushTemplateItemToOneShop already
-  // copies those per-variant photos from the master template shop verbatim,
-  // but the Templates card only ever offered the one main-photo card, so there
-  // was nowhere to set them and a variant item always arrived with no image.
-  // This gives a template with variants the same two tools My Products has:
-  // one photo for all N variants (with the "Apply to all?" confirm) and a
-  // photo card per variant. Everything autosaves to the master template
-  // shop's Photos via mqSaveTemplatePhotos, which is where the push reads.
-  function mqTmplSharedVariantPhotoUrl(itemId, variants, photosMap) {
-    if (!variants || !variants.length) return '';
-    const urls = variants.map(v => photosMap['spec_' + itemId + '_v' + v.id] || '');
-    return urls.every(u => u && u === urls[0]) ? urls[0] : '';
-  }
-
-  function mqTemplatePhotosHTML(r, savedPhotos, savedHidden) {
-    const variants = mqParseVariants(r);
-    if (!variants.length) {
-      return photoCardShared('spec_' + r.id, '', '⭐', 'specialty', [r.id], r.fields['Visible rooms'], savedPhotos, savedHidden, null, null, false, 'mqSaveTemplatePhotos');
-    }
-    const n = variants.length;
-    const itemName = (r.fields['Item name'] || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    const withPhoto = variants.filter(v => savedPhotos['spec_' + r.id + '_v' + v.id]).length;
-    const sharedUrl = mqTmplSharedVariantPhotoUrl(r.id, variants, savedPhotos);
-    const allHidden = variants.every(v => savedHidden['spec_' + r.id + '_v' + v.id]);
-    const missing = withPhoto < n;
-    const placeholder = `<div style="width:100%;height:90px;background:#f0efeb;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:8px">⭐</div>`;
-    const sharedPreview = sharedUrl
-      ? `<img src="${sharedUrl.replace(/"/g, '&quot;')}" style="width:100%;height:90px;object-fit:contain;background:#f0efeb;border-radius:8px;margin-bottom:8px" onerror="this.outerHTML='<div style=\\'width:100%;height:90px;background:#f0efeb;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:8px\\'>⭐</div>'"/>`
-      : placeholder;
-    const variantCards = variants.map(v => `<div data-spec-group="${r.id}" style="background:#fffdf5;border:1px solid #fde68a;border-radius:10px;padding:5px">
-        ${photoCardShared('spec_' + r.id + '_v' + v.id, `${itemName} — ${((v.label || '').trim() || 'Variant').replace(/</g, '&lt;')}`, '⭐', 'specialty', null, null, savedPhotos, savedHidden, null, null, false, 'mqSaveTemplatePhotos')}
-      </div>`).join('');
-    return `<div style="background:#fffbeb;border:2px solid ${missing ? '#f59e0b' : '#fde68a'};border-radius:10px;padding:10px">
-      <div onclick="mqToggleTmplVarPhotos('${r.id}')" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:6px">
-        <div>
-          <div style="font-size:12px;font-weight:700;color:#92400e">🖼️ Photos for ${n} variant${n === 1 ? '' : 's'}</div>
-          <div id="mq-tmpl-varphotos-summary-${r.id}" style="font-size:11px;color:${missing ? '#b45309' : '#16a34a'};font-weight:600">${withPhoto} of ${n} have a photo${missing ? ' — add them so shops get images' : ' ✓'}</div>
-        </div>
-        <span id="mq-tmpl-varphotos-arrow-${r.id}" style="display:inline-block;transition:transform 0.2s;font-size:13px;color:#dc2626;flex-shrink:0">▼</span>
-      </div>
-      <div id="mq-tmpl-varphotos-body-${r.id}" style="display:none;margin-top:10px">
-        <div style="font-size:11px;color:#92400e;font-weight:600;margin-bottom:2px">Optional: one photo for all ${n} variants</div>
-        <div style="font-size:11px;color:#6b7280;line-height:1.4;margin-bottom:8px">Upload, paste, or choose a photo below and (after you confirm) it fills in all ${n} variants at once. Or leave it blank and set each variant's own photo further down. Whatever is set here is what gets pushed to shops.</div>
-        <div id="mq-specshared-preview-${r.id}">${sharedPreview}</div>
-        <label class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;margin-bottom:6px;text-align:center;cursor:pointer;display:block;box-sizing:border-box">
-          📤 Upload a photo
-          <input type="file" id="mq-specshared-upload-file-${r.id}" accept="image/*" style="display:none"/>
-        </label>
-        <div id="mq-specshared-upload-status-${r.id}" style="font-size:11px;text-align:center;margin-bottom:6px;min-height:14px"></div>
-        <div style="font-size:11px;color:#9ca3af;margin-bottom:4px">Or paste a photo URL <span style="color:#dc2626;font-weight:600">— don't use Facebook links, they expire and will break!</span></div>
-        <input type="text" id="mq-specshared-url-${r.id}" placeholder="https://your-site.com/photo.jpg"
-          style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:6px"
-          oninput="mqPreviewSpecSharedImage('${r.id}')" onblur="if(this.value.trim())mqApplySpecSharedImage('${r.id}')"/>
-        <button type="button" class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;color:#6b7280;margin-bottom:10px" onclick="mqOpenSpecSharedPhotoPicker('${r.id}')">📷 Choose from library</button>
-        <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:#92400e;font-weight:600;margin-bottom:8px;cursor:pointer">
-          <input type="checkbox" id="mq-hideall-spec-${r.id}" ${allHidden ? 'checked' : ''} onchange="mqHideAllSpecVariants('${r.id}', this.checked)" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
-          🙈 Hide all ${n} variants from showroom
-        </label>
-        <div style="font-size:11px;color:#92400e;font-weight:600;margin-bottom:6px">Each variant's own photo</div>
-        <div style="display:flex;flex-direction:column;gap:8px">${variantCards}</div>
-      </div>
-    </div>`;
-  }
-
-  window.mqToggleTmplVarPhotos = function(itemId) {
-    const body = document.getElementById('mq-tmpl-varphotos-body-' + itemId);
-    const arrow = document.getElementById('mq-tmpl-varphotos-arrow-' + itemId);
-    if (!body) return;
-    const opening = body.style.display === 'none';
-    body.style.display = opening ? 'block' : 'none';
-    if (arrow) arrow.style.transform = opening ? 'rotate(-90deg)' : 'rotate(0deg)';
-    window.mqUpdateTmplVarPhotoSummary(itemId);
-  };
-
-  // Recount from the live inputs (not the saved map) so the header stays
-  // honest after an upload / paste / apply-to-all without a re-render.
-  window.mqUpdateTmplVarPhotoSummary = function(itemId) {
-    const summary = document.getElementById('mq-tmpl-varphotos-summary-' + itemId);
-    if (!summary) return;
-    const inputs = [...document.querySelectorAll(`input[id^="mq-photo-spec_${itemId}_v"]`)];
-    const n = inputs.length;
-    if (!n) return;
-    const have = inputs.filter(i => i.value.trim()).length;
-    const missing = have < n;
-    summary.textContent = `${have} of ${n} have a photo${missing ? ' — add them so shops get images' : ' ✓'}`;
-    summary.style.color = missing ? '#b45309' : '#16a34a';
-  };
-
-  // Hooks up every upload button inside `scope` -- the normal per-card ones
-  // (mq-upload-file-<key>) AND the "one photo for all variants" ones
-  // (mq-specshared-upload-file-<itemId>, deliberately not "mq-photo-" prefixed
-  // so the save scan doesn't capture them -- see mqApplySpecSharedImage).
-  // Shared by renderTemplates and mqRefreshTemplatePhotos so a re-rendered
-  // photos section gets working uploads again.
-  function mqWireTemplatePhotoUploads(scope) {
-    if (!scope) return;
-    scope.querySelectorAll('input[type="file"][id^="mq-upload-file-"]').forEach(fileInput => {
-      const key = fileInput.id.replace('mq-upload-file-', '');
-      mqWireUploadButton(
-        null,
-        'mq-upload-file-' + key,
-        'mq-upload-status-' + key,
-        'mq-photo-' + key,
-        MASTER_TEMPLATE_SHOP_NAME,
-        'products',
-        // Save immediately once the upload finishes -- this tab's "Save all
-        // changes" button is easy to forget, and an uploaded-but-unsaved
-        // photo silently disappears the next time the tab reloads.
-        (url) => { mqPreviewPhoto(key); mqMarkProductsDirty(); if (typeof window.mqSaveTemplatePhotos === 'function') window.mqSaveTemplatePhotos(); }
-      );
-    });
-    scope.querySelectorAll('input[type="file"][id^="mq-specshared-upload-file-"]').forEach(fileInput => {
-      const itemId = fileInput.id.replace('mq-specshared-upload-file-', '');
-      mqWireUploadButton(
-        null,
-        'mq-specshared-upload-file-' + itemId,
-        'mq-specshared-upload-status-' + itemId,
-        'mq-specshared-url-' + itemId,
-        MASTER_TEMPLATE_SHOP_NAME,
-        'products',
-        (url) => { mqPreviewSpecSharedImage(itemId); mqApplySpecSharedImage(itemId); }
-      );
-    });
-  }
-
-  // Re-renders one template card's photos section (e.g. after a variant is
-  // added/removed, which flips it between the single-photo card and the
-  // variant-photos section). Keeps the section open if it already was.
-  window.mqRefreshTemplatePhotos = function(itemId) {
-    const box = document.getElementById('mq-tmpl-photos-' + itemId);
-    const r = (window._mqTemplateItems || []).find(x => x.id === itemId);
-    const masterShop = window._mqMasterTemplateShop;
-    if (!box || !r || !masterShop) return;
-    const prevBody = document.getElementById('mq-tmpl-varphotos-body-' + itemId);
-    const wasOpen = !!prevBody && prevBody.style.display !== 'none';
-    let photos = {}, hidden = {};
-    try { photos = masterShop.fields['Photos'] ? JSON.parse(masterShop.fields['Photos']) : {}; } catch(e) {}
-    try { hidden = masterShop.fields['Hidden'] ? JSON.parse(masterShop.fields['Hidden']) : {}; } catch(e) {}
-    box.innerHTML = mqTemplatePhotosHTML(r, photos, hidden);
-    mqWireTemplatePhotoUploads(box);
-    if (wasOpen) window.mqToggleTmplVarPhotos(itemId);
-  };
-
   // Template cards need editable name/price/unit fields too (regular My
   // Products items get that from the separate Specialty Items tab table —
   // templates don't have an equivalent, so it lives right on the card here).
   function templateItemCard(r, savedPhotos, savedHidden, allItems, allShops) {
     const itemName = r.fields['Item name'] || '';
-    const variantCount = mqParseVariants(r).length;
-    // Wrapped in its own container so it can be re-rendered when variants are
-    // added/removed -- see mqTemplatePhotosHTML / mqRefreshTemplatePhotos.
-    const photoHtml = `<div id="mq-tmpl-photos-${r.id}">${mqTemplatePhotosHTML(r, savedPhotos, savedHidden)}</div>`;
+    const photoHtml = photoCardShared('spec_' + r.id, '', '⭐', 'specialty', [r.id], r.fields['Visible rooms'], savedPhotos, savedHidden, null, null, false, 'mqSaveTemplatePhotos');
     const categoryList = [...new Set((allItems||[]).map(x => (x.fields['Category']||'').trim()).filter(Boolean))];
     const shopOptions = (allShops||[]).map(s => `<option value="${s.id}">${(s.fields['Shop name']||'').replace(/"/g,'&quot;')}</option>`).join('');
     return `<div style="display:flex;flex-direction:column;gap:6px">
       <input type="text" value="${itemName.replace(/"/g,'&quot;')}" id="mq-spec-name-${r.id}" placeholder="Item name" style="font-size:13px;font-weight:600;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px" onblur="mqSaveSpecField('${r.id}','Item name',this.value)"/>
       ${mqCategoryPickerHTML(r, categoryList, true)}
       <input type="text" value="${(r.fields['Description']||'').replace(/"/g,'&quot;')}" id="mq-spec-desc-${r.id}" placeholder="Optional short description" style="font-size:11px;padding:5px 8px;border:1px solid #e5e7eb;border-radius:6px;color:#6b7280" onblur="mqSaveSpecField('${r.id}','Description',this.value)"/>
-      <div style="display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap">
-        <span id="mq-spec-pricecell-${r.id}">${mqSpecPriceCellHTML(r)}</span>
-        <span id="mq-spec-pricedcell-${r.id}">${mqSpecPricedCellHTML(r)}</span>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+        <input type="number" value="${r.fields['Price']||''}" id="mq-spec-price-${r.id}" placeholder="Price" style="font-size:12px;padding:5px 6px;border:1px solid #d1d5db;border-radius:6px;width:70px" onblur="mqSaveSpecField('${r.id}','Price',parseFloat(this.value))"/>
+        <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-perft-${r.id}" ${r.fields['Per linear foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per linear foot',this.checked)" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> lin ft</label>
+        <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-persqft-${r.id}" ${r.fields['Per square foot']?'checked':''} onchange="mqSaveSpecUnit('${r.id}','Per square foot',this.checked)" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> sq ft</label>
       </div>
-      <span class="mq-spec-variant-pill" id="mq-spec-variant-pill-${r.id}" onclick="mqToggleVariantsPanel('${r.id}')" style="display:inline-block;width:fit-content;font-size:11px;font-weight:700;padding:4px 9px;border-radius:999px;background:${variantCount?'#eef2ff':'#f3f4f6'};color:${variantCount?'#4338ca':'#6b7280'};cursor:pointer;white-space:nowrap">${variantCount ? `${variantCount} variant${variantCount===1?'':'s'}` : 'No variants'} ▾</span>
-      <div id="mq-spec-variants-row-${r.id}" style="display:none;background:#fafafa;border-radius:8px;padding:10px 4px 4px">
-        <div id="mq-spec-variants-panel-${r.id}">${mqVariantsPanelHTML(r)}</div>
-      </div>
+      ${mqSpecMinPriceHTML(r, false)}
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
         <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="mq-spec-offerchoice-${r.id}" ${r.fields['Offers install choice']?'checked':''} onchange="mqToggleSpecInstallChoice('${r.id}')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> Offer supply/install choice</label>
         <label style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" ${r.fields['Pro only']?'checked':''} onchange="mqSaveSpecField('${r.id}','Pro only',this.checked)" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> ⚡ Pro only</label>
@@ -11237,16 +9316,23 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // Wire up upload buttons for every template card just rendered — this
     // step was missing entirely before, so the file picker existed visually
     // but selecting a file did nothing at all.
-    // (Also wires the new "one photo for all variants" upload buttons for
-    // template items that have variants.)
-    mqWireTemplatePhotoUploads(content);
-
-    // Every item's variants panel already exists in the DOM at this point
-    // (inside its own hidden mq-spec-variants-row-<id>, built by
-    // mqVariantsPanelHTML above), so their drag handles can be wired up now
-    // rather than waiting for the panel to first be opened — same pattern
-    // renderSpecialty uses for the Specialty Items tab.
-    items.forEach(r => mqWireVariantDrag(r.id));
+    content.querySelectorAll('input[type="file"][id^="mq-upload-file-"]').forEach(fileInput => {
+      const key = fileInput.id.replace('mq-upload-file-', '');
+      mqWireUploadButton(
+        null,
+        'mq-upload-file-' + key,
+        'mq-upload-status-' + key,
+        'mq-photo-' + key,
+        MASTER_TEMPLATE_SHOP_NAME,
+        'products',
+        // Save immediately once the upload finishes, instead of only
+        // marking dirty — same reasoning as the autosave wiring in
+        // photoCardShared above: this tab's "Save all changes" button is
+        // easy to forget, and an uploaded-but-unsaved photo silently
+        // disappears the next time this tab is reloaded.
+        (url) => { mqPreviewPhoto(key); mqMarkProductsDirty(); if (typeof window.mqSaveTemplatePhotos === 'function') window.mqSaveTemplatePhotos(); }
+      );
+    });
   }
 
   window.mqAddTemplateItem = async function() {
@@ -11282,7 +9368,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   };
 
   // The actual work of pushing one master item into one specific, explicitly
-  // chosen shop — creating the record, copying the photo(s), and adding any
+  // chosen shop — creating the record, copying the photo, and adding any
   // project types the item needs that the shop doesn't have yet. This is now
   // the ONLY way a template item can ever land on a shop that already
   // exists (there is deliberately no bulk "push to all shops" anymore — a
@@ -11290,11 +9376,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // ensureProjectTypeTemplates, when they sign up). Called only from "Push
   // to just this shop," where fully replacing an existing match is the
   // intended, deliberate behavior — you picked this one shop on purpose.
-  //
-  // Takes the master template shop's WHOLE Photos map (not just this one
-  // item's URL) so it can also carry over any per-variant photos — see the
-  // 'Variants' copy below.
-  async function pushTemplateItemToOneShop(master, masterPhotos, shop, adminRooms) {
+  async function pushTemplateItemToOneShop(master, masterPhotoUrl, shop, adminRooms) {
     const result = { created: false, replaced: false, roomsAdded: 0, error: false };
     try {
       const shopItems = await atGet(CONFIG.SPECIALTY_TABLE, `FIND("${shop.fields['Shop token']}", ARRAYJOIN({Shop token (lookup)}))`);
@@ -11353,34 +9435,16 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         'Active': true,
         'Visible rooms': master.fields['Visible rooms'] || '[]',
         'Template source ID': master.id,
-        // Jordan: Templates (Admin) couldn't create variants or Sized
-        // variants at all, so this field was never even reachable from
-        // there before — but leaving it out here would ALSO have silently
-        // dropped any variants a master item does have the moment it's
-        // pushed to a shop, even once the admin UI above supports adding
-        // them. Copied verbatim: variant ids don't need to change (a
-        // variant's photo key is 'spec_<itemId>_v<variantId>' — only the
-        // ITEM id differs per shop, handled below).
-        'Variants': master.fields['Variants'] || '[]',
       });
       if (!created?.id) {
         result.error = true;
         console.error('Failed to create pushed item:', master.fields['Item name'], 'for', shop.fields['Shop name'], created);
         return result;
       }
-      const masterPhotoUrl = (masterPhotos || {})['spec_' + master.id];
-      // Every variant that has its own photo on the master item needs that
-      // photo carried over too, re-keyed to the shop's new item id (the
-      // variant's own id inside the key stays the same, since the whole
-      // Variants array — ids included — was copied verbatim above).
-      const variantPhotoEntries = mqParseVariants(master)
-        .map(v => ['spec_' + created.id + '_v' + v.id, (masterPhotos || {})['spec_' + master.id + '_v' + v.id]])
-        .filter(([, url]) => !!url);
-      if (masterPhotoUrl || variantPhotoEntries.length) {
+      if (masterPhotoUrl) {
         let shopPhotos = {};
         try { shopPhotos = shop.fields['Photos'] ? JSON.parse(shop.fields['Photos']) : {}; } catch(e) {}
-        if (masterPhotoUrl) shopPhotos['spec_' + created.id] = masterPhotoUrl;
-        variantPhotoEntries.forEach(([key, url]) => { shopPhotos[key] = url; });
+        shopPhotos['spec_' + created.id] = masterPhotoUrl;
         await atUpdate(CONFIG.SHOPS_TABLE, shop.id, { 'Photos': JSON.stringify(shopPhotos) });
         shop.fields['Photos'] = JSON.stringify(shopPhotos);
       }
@@ -11411,13 +9475,14 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const masterShop = await ensureMasterTemplateShop();
       let masterPhotos = {};
       try { masterPhotos = masterShop.fields['Photos'] ? JSON.parse(masterShop.fields['Photos']) : {}; } catch(e) {}
+      const masterPhotoUrl = masterPhotos['spec_' + master.id];
 
       const shops = await atGet(CONFIG.SHOPS_TABLE, `RECORD_ID()="${shopId}"`);
       const shop = shops[0];
       if (!shop) { showMsg('mq-templates-msg', 'Could not find that shop — try refreshing the page.', 'error'); return; }
 
       const adminRooms = window._mqRooms || defaultRoomTypes();
-      const r = await pushTemplateItemToOneShop(master, masterPhotos, shop, adminRooms);
+      const r = await pushTemplateItemToOneShop(master, masterPhotoUrl, shop, adminRooms);
       const roomsNote = r.roomsAdded ? `, added ${r.roomsAdded} new draft project type${r.roomsAdded===1?'':'s'}` : '';
       await new Promise(res => setTimeout(res, 500));
       if (r.error) {
@@ -13998,46 +12063,46 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     update();
   }
 
-  // "Start here" nudge pointing at the Help guide nav item (first-time shops
-  // only — see the 'Help guide nudge seen' Airtable field and buildHTML()'s
-  // showHelpGuideNudge). The callout bubble is built and positioned here in
-  // JS, as position:fixed, rather than nested inside .mq-sidebar with
-  // position:absolute, because .mq-sidebar needs its own overflow-y:auto
-  // (desktop) / overflow-x:auto (mobile) for scrolling — and setting either
-  // overflow axis to non-"visible" makes the OTHER axis compute to "auto"
-  // too, which silently clipped an absolutely-positioned bubble trying to
-  // overflow the sidebar's bounds. Dismissed (and this cleaned up) from the
-  // window.mqNav wrapper further down, the first time a shop actually clicks
-  // into Help guide.
-  function mqInitHelpGuideNudge() {
-    const navItem = document.getElementById('mq-nav-helpguide');
+  // Same technique as mqInitStickyNav, applied to the topbar — CSS
+  // position:sticky was silently failing on both for the same reason.
+  function mqInitStickyTopbar() {
+    const topbar = document.querySelector('#midasquote-dashboard .mq-topbar');
     const root = document.getElementById('midasquote-dashboard');
-    if (!navItem || !root || !navItem.classList.contains('mq-nav-item-nudge')) return;
+    if (!topbar || !root) return;
 
-    const bubble = document.createElement('div');
-    bubble.className = 'mq-helpguide-nudge';
-    bubble.id = 'mq-helpguide-nudge';
-    bubble.innerHTML = '<span class="mq-helpguide-nudge-arrow"></span><span>Start here!</span>';
-    root.appendChild(bubble);
+    // Holds the topbar's normal-flow space open once it goes fixed, so
+    // everything below it doesn't jump up to fill the gap.
+    const placeholder = document.createElement('div');
+    placeholder.style.display = 'none';
+    root.insertBefore(placeholder, topbar);
 
-    function position() {
-      if (!document.body.contains(navItem)) return;
-      const itemRect = navItem.getBoundingClientRect();
-      const bubbleRect = bubble.getBoundingClientRect();
-      // Same breakpoint as .mq-sidebar's own switch to a horizontal tab bar —
-      // checked live via matchMedia instead of duplicated as a magic number,
-      // so the two can't drift out of sync.
-      const isMobileBar = window.matchMedia('(max-width: 768px)').matches;
-      if (isMobileBar) {
-        bubble.classList.add('mq-helpguide-nudge-below');
-        let left = itemRect.left + (itemRect.width / 2) - (bubbleRect.width / 2);
-        left = Math.max(6, Math.min(left, window.innerWidth - bubbleRect.width - 6));
-        bubble.style.left = left + 'px';
-        bubble.style.top = (itemRect.bottom + 6) + 'px';
-      } else {
-        bubble.classList.remove('mq-helpguide-nudge-below');
-        bubble.style.left = (itemRect.right + 6) + 'px';
-        bubble.style.top = (itemRect.top + itemRect.height / 2 - bubbleRect.height / 2) + 'px';
+    let stuck = false;
+
+    function update() {
+      const rootRect = root.getBoundingClientRect();
+      const rect = topbar.getBoundingClientRect();
+      const shouldStick = rootRect.top <= 0 && rootRect.bottom > rect.height;
+
+      if (shouldStick && !stuck) {
+        placeholder.style.width = rect.width + 'px';
+        placeholder.style.height = rect.height + 'px';
+        placeholder.style.display = 'block';
+        topbar.style.position = 'fixed';
+        topbar.style.top = '0px';
+        topbar.style.left = rootRect.left + 'px';
+        topbar.style.width = rect.width + 'px';
+        topbar.style.zIndex = '100';
+        stuck = true;
+      } else if (!shouldStick && stuck) {
+        topbar.style.position = '';
+        topbar.style.top = '';
+        topbar.style.left = '';
+        topbar.style.width = '';
+        topbar.style.zIndex = '';
+        placeholder.style.display = 'none';
+        stuck = false;
+      } else if (stuck) {
+        topbar.style.left = rootRect.left + 'px';
       }
     }
 
@@ -14045,75 +12110,11 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     function onScrollOrResize() {
       if (ticking) return;
       ticking = true;
-      requestAnimationFrame(() => { position(); ticking = false; });
+      requestAnimationFrame(() => { update(); ticking = false; });
     }
     window.addEventListener('scroll', onScrollOrResize, { passive: true });
     window.addEventListener('resize', onScrollOrResize);
-    position();
-
-    window._mqHelpGuideNudgeCleanup = function() {
-      window.removeEventListener('scroll', onScrollOrResize);
-      window.removeEventListener('resize', onScrollOrResize);
-      bubble.remove();
-      navItem.classList.remove('mq-nav-item-nudge');
-      window._mqHelpGuideNudgeCleanup = null;
-    };
-  }
-
-  // CORRECTION (2026-09-25, second pass): the previous version of this
-  // function reimplemented CSS position:sticky in JS — toggling the topbar
-  // between normal flow and position:fixed based on scroll position, and
-  // resyncing its pixel left/width from the #midasquote-dashboard root's
-  // own getBoundingClientRect() every scroll/resize. That measured-width
-  // approach went through two real bugs in a row (a stale width that never
-  // re-synced on resize, fixed earlier today; then Jordan reported the black
-  // bar still wasn't reaching the true right edge of the window even after
-  // that fix). Root cause of the second one: #midasquote-dashboard breaks
-  // out of Webflow's page container using the classic `width:100vw` +
-  // negative-margin full-bleed trick (see its own CSS rule above) — and
-  // `100vw` is measured INCLUDING the vertical scrollbar's width, which is
-  // narrower than the page's actual visible content area. So the root's own
-  // rendered width (and therefore anything computed FROM it, like the old
-  // `rootRect.width`) could end up a little short of the true browser
-  // viewport — exactly the gap on the right Jordan saw.
-  //
-  // Real fix: stop deriving the topbar's horizontal position/width from the
-  // root at all. The topbar is now simply always `position:fixed;
-  // left:0; right:0` in its own CSS (see the .mq-topbar rule above) — fixed
-  // positioning is anchored to the true browser viewport, completely
-  // independent of whatever width #midasquote-dashboard's own vw-based CSS
-  // trick ends up with, so this can't drift out of sync with the real
-  // window edge the way a JS-measured pixel value could. It also means the
-  // topbar never needs to recompute anything on scroll or resize — the
-  // browser keeps it correctly full-width natively, for free, the same way
-  // it would for any other `position:fixed` element.
-  //
-  // The only thing left for this function to do is reserve the topbar's
-  // normal-flow space (a `position:fixed` element is taken out of flow
-  // entirely, so the page content below needs a spacer the same height, or
-  // it would render underneath the bar) and keep that spacer's height
-  // correct if the topbar's own rendered height ever changes (e.g. the
-  // mobile breakpoint's smaller padding).
-  function mqInitStickyTopbar() {
-    const topbar = document.querySelector('#midasquote-dashboard .mq-topbar');
-    const root = document.getElementById('midasquote-dashboard');
-    if (!topbar || !root) return;
-
-    const placeholder = document.createElement('div');
-    root.insertBefore(placeholder, topbar);
-
-    function syncHeight() {
-      placeholder.style.height = topbar.getBoundingClientRect().height + 'px';
-    }
-    syncHeight();
-
-    let ticking = false;
-    function onResize() {
-      if (ticking) return;
-      ticking = true;
-      requestAnimationFrame(() => { syncHeight(); ticking = false; });
-    }
-    window.addEventListener('resize', onResize);
+    update();
   }
 
   // Sticky column-header row for the Specialty Items table — while
@@ -14296,7 +12297,6 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     mqInitStickyTopbar();
     mqInitStickyNav();
     mqInitStickySpecHeader();
-    mqInitHelpGuideNudge();
 
     // Tell Memberstack to re-scan the DOM so data-ms-modal attributes work on dynamically injected elements
     if (window.$memberstackDom?.reinitialize) window.$memberstackDom.reinitialize();
@@ -14321,9 +12321,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     if (shopRecord.fields['Shop name'] === 'Maple & Stone Cabinetry') {
       const navTemplates = el('mq-nav-templates');
       if (navTemplates) navTemplates.style.display = 'flex';
-      window._mqIsAdminShop = true;
     }
-    mqBuildHelpGuide();
 
     const leads = await loadLeads(shopRecord.fields['Shop token']);
     window._mqLeads = sortLeadsArray(leads);
@@ -14385,7 +12383,6 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   const origMqNav = window.mqNav;
   window.mqNav = async function(page, navEl) {
     origMqNav(page, navEl);
-    if (window.mqRefreshPlanBanner) window.mqRefreshPlanBanner(); // plan may have changed since the page loaded
     // Re-checks on every tab switch, not just the initial page load — so a
     // shop already using the dashboard when a new announcement goes out
     // sees it the moment they click anywhere, no refresh needed. Skips
@@ -14394,17 +12391,6 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // never used the app before.
     if (window._mqShopRecord && window._mqShopRecord.fields['Welcome popup seen'] && window._mqShopRecord.fields['Announcement seen'] !== MQ_LATEST_ANNOUNCEMENT) {
       window.mqShowAnnouncementModal();
-    }
-    // Dismiss the "Start here" Help guide nudge the first time a shop
-    // actually clicks into Help guide — one-time-per-shop, same pattern as
-    // 'Welcome popup seen' etc. mqInitHelpGuideNudge()'s cleanup function
-    // tears down the floating bubble plus its scroll/resize listeners, so it
-    // disappears the instant they click even though buildHTML() only runs
-    // once at initial load.
-    if (page === 'helpguide' && window._mqShopRecord && !window._mqShopRecord.fields['Help guide nudge seen']) {
-      window._mqShopRecord.fields['Help guide nudge seen'] = true;
-      atUpdate(CONFIG.SHOPS_TABLE, window._mqShopRecord.id, { 'Help guide nudge seen': true }).catch(()=>{});
-      if (window._mqHelpGuideNudgeCleanup) window._mqHelpGuideNudgeCleanup();
     }
     mqCheckForNewerDeploy();
     mqToggleFloatingSave(MQ_PAGE_SAVE_ACTIONS[page] || null);
@@ -14460,24 +12446,11 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           const demoNote = plan === 'Demo'
             ? 'your free trial has ended and you\'re on the limited free Demo tier (DEMO watermark, no MidasQuote Pro, no custom photos)'
             : 'you\'re on the free trial — full access, no card on file';
-          // Only shown while actually trialing — once Plan flips to 'Demo'
-          // the trial has already ended, so a countdown/expiry date no
-          // longer means anything (demoNote above already covers that case).
-          let trialExpiryHTML = '';
-          if (plan === 'Free Trial') {
-            const expiryDate = mqFreeTrialExpiryDate(window._mqShopRecord);
-            if (expiryDate) {
-              const dateStr = expiryDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-              const daysLeft = mqFreeTrialDaysLeft(expiryDate);
-              trialExpiryHTML = `<p style="font-size:13px;color:#92400e;background:#fffbeb;border-radius:6px;padding:8px 10px;margin-bottom:10px">🗓️ Your free trial ends <strong>${dateStr}</strong> (${mqFreeTrialLeftText(daysLeft)}).</p>`;
-            }
-          }
           planEl.innerHTML = `
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
               <span style="background:#e0e7ff;color:#3730a3;font-size:12px;font-weight:500;padding:3px 10px;border-radius:20px">${plan}</span>
               <span style="font-size:14px;font-weight:500;color:#111">Free plan</span>
             </div>
-            ${trialExpiryHTML}
             <p style="font-size:13px;color:#6b7280">You're not on a paid plan — ${demoNote}. Upgrade any time below, no interruption to your widget.</p>`;
           if (activeActions) activeActions.style.display = 'none';
           if (reactivateActions) reactivateActions.style.display = 'none';
@@ -14584,9 +12557,6 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       // still read pricing-helper-v2.js's own cached (and possibly stale)
       // shopRecord instead of whatever window._mqShopRecord currently is.
       mqApplyEstimatorTabScopeToPricing();
-      if (window._mqShopRecord && !window._mqShopRecord.fields['Pricing tips popup seen']) {
-        window.mqShowPricingTipsModal();
-      }
     }
     if (page === 'showroom') {
       const catsWrap = document.getElementById('mq-showroom-cats');
