@@ -2,6 +2,14 @@
  * MidasQuote Widget v3.3 — TEST BUILD (widgettest.js)
  * Adds visual thumbnails to specialty items so customers don't have to
  * guess what unfamiliar terms mean without leaving the widget.
+ *
+ * Two layouts, chosen per shop on the dashboard's Shop Info tab
+ * ("Widget layout", Airtable Shops field 'Widget layout'): "Classic" (the
+ * original scrolling guided-steps page, the default) or "Focused" (one
+ * question at a time, full-screen on its own). A `?layout=focused` or
+ * `?layout=classic` on the page's own URL overrides the saved setting —
+ * that's what the dashboard's "Preview" links use. MidasQuote Pro
+ * (widgetpro.js) is untouched and always Classic.
  */
 
 (function() {
@@ -132,6 +140,17 @@
     // Free Demo tier: set this here (not just later in renderWidget) because
     // it needs to exist before shopPhotos gets parsed below, not after.
     window._mqIsDemoPlan = (shop['Plan']||'') === 'Demo';
+
+    // Widget layout: Classic (default) or Focused. Must be settled before the
+    // first render, since the Focused layer hooks into the render. The page's
+    // own ?layout=focused|classic wins over the saved setting (used by the
+    // dashboard's Preview links so a shop can try either before choosing).
+    (function() {
+      let urlLayout = '';
+      try { urlLayout = (new URLSearchParams(window.location.search).get('layout') || '').toLowerCase(); } catch(e) {}
+      const saved = String(shop['Widget layout'] || '').trim().toLowerCase();
+      window._mqFxOn = urlLayout === 'focused' || (urlLayout !== 'classic' && saved === 'focused');
+    })();
 
     // Parse the shop's saved product photos (same JSON field the dashboard's
     // My Products tab and showroom page already read) so the widget can show
@@ -516,7 +535,7 @@
       .filter(l=>l&&l.label&&(l.header||l.cost!==undefined))
       .map(l=>l.header
         ? `<tr><td colspan="2" style="padding:12px 8px 4px;font-weight:700;color:#111;font-size:14px;text-transform:uppercase;letter-spacing:0.04em">${l.label}</td></tr>`
-        : `<tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">${l.label}</td><td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:right;${l.bold?'font-weight:700;color:#111':''}">${CUR()}${Math.round(l.cost).toLocaleString()}</td></tr>`
+        : `<tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">${l.label}</td><td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:right;${l.bold?'font-weight:700;color:#111':''}">${l.cost<0?'−':''}${CUR()}${Math.abs(Math.round(l.cost)).toLocaleString()}</td></tr>`
       ).join('');
     // Same gating as the widget's own financing box/badge (rate+term set,
     // and — if the shop set a floor — the high end clears it), so an email
@@ -528,6 +547,7 @@
       `<div style="font-family:sans-serif;max-width:560px;margin:0 auto">
         <h2 style="color:#1a1a1a">${contactRequested ? 'A customer would like to be contacted' : `New ${quoteType} quote lead`}</h2>
         ${contactRequested ? `<div style="background:#fef3c7;border:1px solid #fde68a;border-radius:8px;padding:10px 14px;margin-bottom:16px;font-weight:600;color:#92400e">🙋 This customer clicked "I'd like to be contacted" on their quote — they're expecting to hear from you.</div>` : ''}
+        ${window._mqDiscount ? `<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 14px;margin-bottom:16px;color:#1e3a8a;font-size:14px">🏷️ <strong>Discount applied: ${mqEsc(mqDiscountName(window._mqDiscount))} — ${mqDiscountPctText(window._mqDiscount)}% off</strong><br/><span style="font-size:12px;color:#475569">Password used: ${mqEsc(window._mqDiscount.pw)}. The range below is already discounted.</span></div>` : ''}
         <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
           <tr><td style="padding:8px;background:#f9fafb;font-weight:600" colspan="2">Customer details</td></tr>
           <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Name</td><td style="padding:6px 8px;border-bottom:1px solid #eee">${lead.name || 'Not provided'}</td></tr>
@@ -555,6 +575,7 @@
           <div style="background:#f0fdf4;border-radius:8px;padding:16px;text-align:center;margin-bottom:16px">
             <div style="font-size:14px;color:#666;margin-bottom:4px">${mqShouldShowRange(prefix) ? 'Your estimated range' : 'Your estimate'}</div>
             <div style="font-size:28px;font-weight:700;color:#16a34a">${mqFmtPrice(prefix, low, high, total)}</div>
+            ${(window._mqDiscount && window._mqDiscount.show) ? `<div style="font-size:13px;color:#166534;margin-top:6px;font-weight:600">🏷️ Includes ${mqEsc(mqDiscountName(window._mqDiscount))}: ${mqDiscountPctText(window._mqDiscount)}% off</div>` : ''}
             ${financingLine ? `<div style="font-size:13px;color:#166534;margin-top:6px;font-weight:600">💳 As low as ${financingLine}*</div><div style="font-size:10.5px;color:#6b7280;margin-top:2px">*Estimated payment only — subject to approval and final terms.</div>` : ''}
           </div>
           <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
@@ -931,6 +952,11 @@
       #midasquote-widget .mq-res-sub{font-size:14px;color:#4b5563}
       #midasquote-widget .mq-res-range{font-size:22px;font-weight:700;color:${bc};text-align:right}
       #midasquote-widget .mq-res-range-lbl{font-size:13px;color:#4b5563;text-align:right}
+      #midasquote-widget .mq-discount-box{display:none;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:10px 14px;margin:0 0 1rem;font-size:14px;color:#166534}
+      #midasquote-widget .mq-discount-box .mq-disc-row{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:3px 0}
+      #midasquote-widget .mq-discount-box .mq-disc-was{color:#6b7280;text-decoration:line-through}
+      #midasquote-widget .mq-discount-box .mq-disc-sav{font-weight:700}
+      #midasquote-widget .mq-res-hdr + .mq-discount-box{margin-top:-0.25rem}
       #midasquote-widget .mq-line-items{list-style:none;padding:0;margin:0 0 1rem}
       #midasquote-widget .mq-line-items li{display:flex;justify-content:space-between;font-size:14px;padding:6px 0;border-bottom:1px solid #f3f4f6}
       #midasquote-widget .mq-line-items li:last-child{border-bottom:none}
@@ -5594,6 +5620,17 @@
       const allNoRange = allEntries.length > 0 && allEntries.every(e => !e.showRange);
       const totalText = allNoRange ? (CUR() + Math.round(totalExact).toLocaleString()) : fmtRange(totalLow, totalHigh);
 
+      // Focused layout: hand the per-project rows + combined total to its
+      // side panel / phone price strip (no-op in Classic).
+      if (window.mqFxRenderBreakdown) {
+        window.mqFxRenderBreakdown(allEntries.map(e => ({
+          id: e.id || '',
+          label: e.label,
+          price: e.showRange ? fmtRange(e.low, e.high) : (CUR() + Math.round(e.total).toLocaleString()),
+          empty: !((e.high || 0) > 0 || (e.total || 0) > 0),
+        })), totalText);
+      }
+
       // The sticky bar is created lazily (only once a Calculate has ever
       // run), so these elements may not exist yet the first time this runs
       // — that's fine, mqShowStickyBar re-triggers this once they do.
@@ -5673,6 +5710,17 @@
       document.getElementById('mq-ct-result')?.classList.remove('show');
       const sticky = document.getElementById('mq-sticky-bar');
       if (sticky) sticky.classList.remove('show');
+    };
+    // Focused layout's "clear this project" (side panel): wipes just the
+    // project currently being configured on `prefix` — its form, live
+    // preview and results panel — and sends it back to step 1. Committed
+    // cart entries (other project types already added) are untouched.
+    window.mqResetCurrentProject = function(prefix) {
+      if (prefix === 'ct') { mqResetCountertopStandalone(prefix); } else { mqResetCabinetForm(prefix); }
+      window._mqLivePreview = null;
+      _mqStepIndex[prefix] = 0;
+      document.getElementById(`mq-${prefix}-result`)?.classList.remove('show');
+      mqRenderQuoteCart();
     };
     // ===================== end quote cart =====================
 
@@ -6683,7 +6731,7 @@
 
       const low=Math.round(total*(window._mqRangeLow||0.95)/10)*10, high=Math.round(total*(window._mqRangeHigh||1.20)/10)*10;
       const roomLabel = roomObj ? roomObj.name : 'Cabinet';
-      return {lines,sub:Math.round(total),total:Math.round(total),low,high,roomLabel,si,uFt,bFt,hasRoomAdjustment,roomAdjPct,roomName:roomLabel};
+      return mqApplyDiscount({lines,sub:Math.round(total),total:Math.round(total),low,high,roomLabel,si,uFt,bFt,hasRoomAdjustment,roomAdjPct,roomName:roomLabel});
     }
 
     function calcCountertop(prefix) {
@@ -6898,7 +6946,7 @@
       const totalMult = (100 + totalAdjPct) / 100;
       const total = sub * totalMult;
       lines.push({label:'Subtotal (before tax)',cost:Math.round(total),bold:true});
-      return {lines,sub:Math.round(total),total:Math.round(total),low:Math.round(total*(window._mqRangeLow||0.95)/10)*10,high:Math.round(total*(window._mqRangeHigh||1.20)/10)*10};
+      return mqApplyDiscount({lines,sub:Math.round(total),total:Math.round(total),low:Math.round(total*(window._mqRangeLow||0.95)/10)*10,high:Math.round(total*(window._mqRangeHigh||1.20)/10)*10});
     }
 
     function renderResult(rangeEl,listEl,result,prefix){
@@ -6911,6 +6959,7 @@
         li.innerHTML=`<span class="mq-li-lbl">✓ ${l.label}</span>`;
         ul.appendChild(li);
       });
+      mqRenderDiscountBox(prefix, result.discount, result.low, result.high, result.total);
     }
     // Refreshes the full results breakdown for whichever tab is currently
     // showing one — reuses the exact same calc + render logic Calculate
@@ -6959,6 +7008,7 @@
           if (!ctRows.children.length) { const d=document.createElement('div'); d.className='mq-combined-row'; d.innerHTML=`<span class="mq-clbl">None selected</span>`; ctRows.appendChild(d); }
         }
         const tl = cab.low+ct.low, th = cab.high+ct.high, totalB = cab.total+ct.total;
+        mqRenderDiscountBox('b', mqCombineDiscount(cab, ct), tl, th, totalB);
         const grandEl = document.getElementById('mq-b-grand');
         if (grandEl) { mqRefreshBallparkWording('b'); grandEl.textContent = mqFmtPrice('b', tl, th, totalB); }
         mqUpdateFinancingBox('b', tl, th, totalB);
@@ -7039,6 +7089,7 @@
           [...ct.lines].filter(l=>!l.bold).sort((a,b)=>b.cost-a.cost).forEach(l=>{const d=document.createElement('div');d.className='mq-combined-row';d.innerHTML=`<span class="mq-clbl">✓ ${l.label}</span>`;ctRows.appendChild(d);});
           if(!ctRows.children.length){const d=document.createElement('div');d.className='mq-combined-row';d.innerHTML=`<span class="mq-clbl">None selected</span>`;ctRows.appendChild(d);}
           const tl=cab.low+ct.low,th=cab.high+ct.high,totalB=cab.total+ct.total;
+          mqRenderDiscountBox('b', mqCombineDiscount(cab, ct), tl, th, totalB);
           mqRefreshBallparkWording('b');
           document.getElementById('mq-b-grand').textContent=mqFmtPrice('b', tl, th, totalB);
           mqUpdateFinancingBox('b', tl, th, totalB);
@@ -8255,8 +8306,9 @@
       if (_mqOrigBodyPaddingBottom === null) {
         _mqOrigBodyPaddingBottom = document.body.style.paddingBottom || '';
       }
-      document.documentElement.style.setProperty('--mq-sticky-h', (bar && bar.classList.contains('show') ? bar.offsetHeight : 0) + 'px');
-      if (bar && bar.classList.contains('show')) {
+      const inSide = !!(bar && bar.classList.contains('mq-fx-sbar-side'));
+      document.documentElement.style.setProperty('--mq-sticky-h', (bar && !inSide && bar.classList.contains('show') ? bar.offsetHeight : 0) + 'px');
+      if (bar && !inSide && bar.classList.contains('show')) {
         document.body.style.paddingBottom = (bar.offsetHeight + 24) + 'px';
       } else {
         document.body.style.paddingBottom = _mqOrigBodyPaddingBottom;
@@ -8372,6 +8424,7 @@
   window.mqShowStickyBar = function(prefix, low, high, total) {
     window._mqStickyPrefix = prefix;
     mqSetupStickyBar();
+    if (window.mqFxPlaceBar) window.mqFxPlaceBar();
     mqUpdateLivePreview(prefix);
     mqSetStickyPrice(prefix, low, high, total, false);
     if (!window._mqStickyDismissed) {
@@ -8506,14 +8559,17 @@
             ? `${CUR()}${payHigh.toLocaleString()}/mo`
             : `${CUR()}${payLow.toLocaleString()}/mo – ${CUR()}${payHigh.toLocaleString()}/mo`;
           financingPayEl.textContent = ` · as low as ${payText}*`;
+          financingPayEl.setAttribute('data-mq-amt', `as low as ${payText}*`);
           financingPayEl.title = 'Estimated payment only — subject to approval and final terms.';
           if (financingDisclaimerEl) financingDisclaimerEl.style.display = 'block';
         } else {
           financingPayEl.textContent = '';
+          financingPayEl.removeAttribute('data-mq-amt');
           if (financingDisclaimerEl) financingDisclaimerEl.style.display = 'none';
         }
       } else {
         financingPayEl.textContent = '';
+        financingPayEl.removeAttribute('data-mq-amt');
         if (financingDisclaimerEl) financingDisclaimerEl.style.display = 'none';
       }
     }
@@ -8631,7 +8687,87 @@
     let raw = [];
     try { raw = shop['Widget passwords'] ? JSON.parse(shop['Widget passwords']) : []; } catch(e) { raw = []; }
     if (!Array.isArray(raw)) raw = [];
-    return raw.map(x => (x && typeof x === 'object') ? { p: String(x.p == null ? '' : x.p), t: Number(x.t) || 0 } : { p: String(x), t: 0 });
+    return raw.map(x => (x && typeof x === 'object')
+      ? { p: String(x.p == null ? '' : x.p), t: Number(x.t) || 0, d: Math.min(100, Math.max(0, parseFloat(x.d) || 0)), s: x.s !== false, l: String(x.l == null ? '' : x.l).trim() }
+      : { p: String(x), t: 0, d: 0, s: true, l: '' });
+  }
+
+  // ── Password discounts ──
+  // A password can carry a discount (d = percent off, s = show the discount
+  // to the customer, l = label such as "Contractor discount"). Whichever
+  // password this browser unlocked with decides the discount. It comes off
+  // the FINAL quote — after the project type's own % adjustments — so
+  // calcCabinet/calcCountertop apply it as their very last step and every
+  // screen, the live price bar, financing and both emails then agree.
+  function mqResolveDiscount(shop) {
+    if (!shop || shop['Widget password protected'] !== 'Yes') return null;
+    let stored = null;
+    try { stored = localStorage.getItem(mqWidgetPwStorageKey()); } catch(e) { stored = null; }
+    if (!stored) return null;
+    let rec = null;
+    try { rec = JSON.parse(stored); } catch(e) { rec = null; }
+    const entries = mqWidgetPwEntries(shop);
+    let en = null;
+    if (rec && typeof rec === 'object' && 'p' in rec) en = entries.find(x => x.p === String(rec.p) && x.t === (Number(rec.t) || 0));
+    else en = entries.find(x => x.t === 0 && x.p === stored);
+    if (!en || !(en.d > 0)) return null;
+    return { pct: en.d, show: en.s, label: en.l, pw: en.p };
+  }
+  function mqDiscountPctText(d) { return String(Math.round(d.pct * 100) / 100); }
+  function mqEsc(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c])); }
+  function mqDiscountName(d) { return (d && d.label) ? d.label : 'Discount'; }
+  // Mutates and returns a calc result. low/high/total become the discounted
+  // figures; the originals are kept on result.discount for the "regular
+  // price / you save" box. Two bold lines (never shown to customers; they
+  // appear in the shop's notification email) record the math.
+  function mqApplyDiscount(r) {
+    const d = window._mqDiscount;
+    if (!d || !(d.pct > 0) || !r || !((r.total || 0) > 0 || (r.high || 0) > 0)) return r;
+    const k = 1 - d.pct / 100;
+    const preLow = r.low, preHigh = r.high, preTotal = r.total;
+    r.low = Math.round(preLow * k / 10) * 10;
+    r.high = Math.round(preHigh * k / 10) * 10;
+    r.total = Math.round(preTotal * k);
+    r.sub = r.total;
+    r.discount = { pct: d.pct, label: d.label, show: d.show, preLow, preHigh, preTotal };
+    r.lines = [...(r.lines || []),
+      { label: `${mqDiscountName(d)} (${mqDiscountPctText(d)}% off)`, cost: -(preTotal - r.total), bold: true, discount: true },
+      { label: 'Subtotal after discount (before tax)', cost: r.total, bold: true }];
+    return r;
+  }
+  function mqCombineDiscount(a, b) {
+    const x = a && a.discount, y = b && b.discount;
+    if (!x && !y) return null;
+    const base = x || y;
+    const pre = (r, k, fb) => (r && r.discount) ? r.discount[k] : (r ? r[fb] : 0) || 0;
+    return { pct: base.pct, label: base.label, show: base.show,
+      preLow: pre(a, 'preLow', 'low') + pre(b, 'preLow', 'low'),
+      preHigh: pre(a, 'preHigh', 'high') + pre(b, 'preHigh', 'high'),
+      preTotal: pre(a, 'preTotal', 'total') + pre(b, 'preTotal', 'total') };
+  }
+  // "Regular price / discount / you save" box, only when the password's
+  // "show discount" switch is on. Created on demand so a widget with no
+  // discounts has exactly the same markup as before.
+  function mqRenderDiscountBox(prefix, disc, low, high, total) {
+    const panel = document.getElementById(`mq-${prefix}-result`);
+    if (!panel) return;
+    let box = document.getElementById(`mq-${prefix}-discount`);
+    if (!disc || !disc.show) { if (box) { box.style.display = 'none'; box.innerHTML = ''; } return; }
+    if (!box) {
+      box = document.createElement('div');
+      box.id = `mq-${prefix}-discount`;
+      box.className = 'mq-discount-box';
+      const anchor = prefix === 'b' ? panel.querySelector('.mq-grand-total') : panel.querySelector('.mq-res-hdr');
+      if (!anchor) return;
+      if (prefix === 'b') anchor.parentNode.insertBefore(box, anchor);
+      else anchor.after(box);
+    }
+    const esc = t => String(t).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+    const regular = mqFmtPrice(prefix, disc.preLow, disc.preHigh, disc.preTotal);
+    const saves = mqFmtPrice(prefix, disc.preLow - low, disc.preHigh - high, disc.preTotal - total);
+    box.innerHTML = `<div class="mq-disc-row"><span>Regular price</span><span class="mq-disc-was">${regular}</span></div>
+      <div class="mq-disc-row mq-disc-sav"><span>🏷️ ${esc(mqDiscountName(disc))} · ${mqDiscountPctText(disc)}% off</span><span>You save ${saves}</span></div>`;
+    box.style.display = 'block';
   }
   function mqCheckWidgetPassword(shop) {
     const entries = mqWidgetPwEntries(shop);
@@ -8741,6 +8877,7 @@
     }
 
     window._mqShopData=shop;
+    window._mqDiscount = mqResolveDiscount(shop);
     window._mqFullData=data; // cached so mqStartNewEstimate can rebuild without refetching
     // window._mqIsDemoPlan was already set in loadShopData (needed earlier
     // there, before shopPhotos got parsed) — not re-set here since `shop` is
@@ -8831,9 +8968,10 @@
   // section is on screen. Off-screen sections are kept in the DOM (just
   // visually hidden) so every existing function that reads them, including
   // the offsetParent-based mqGetVisibleSections, keeps working unchanged.
-  // window._mqFxOn is hard-wired true in this test file; later it becomes a
-  // per-shop setting (Classic vs Focused).
-  window._mqFxOn = true;
+  // window._mqFxOn is decided per shop in loadShopData (Shop Info → Widget
+  // layout, or a ?layout= override on the page URL). Every hook above checks
+  // it, so Classic shops run exactly the original code paths.
+  window._mqFxOn = false;
   window._mqFxDir = null;
   const _mqFxLastPct = {};
 
@@ -8893,17 +9031,52 @@
   // is stepping through questions in full-screen mode it would pin the
   // Back/Continue footer far above the bottom of the screen, so it's hidden
   // then and only shown on the results screen.
+  // Focused layout: the "sticky bar" (financing badge, Book / Ask buttons,
+  // Email me a copy, I'd like to be contacted) is the SAME element Classic
+  // uses, so every id and handler keeps working. It is only moved and
+  // restyled: on desktop it is re-parented into the side panel (so it no
+  // longer eats a strip along the bottom of the screen); on phones it stays
+  // at the bottom but takes the shop's box colours instead of dark grey.
+  const MQ_FX_VARS = ['--fxs-bg', '--fxs-ink', '--fxs-soft', '--fxs-mute', '--fxs-line', '--fxs-line2', '--fxs-card', '--fxs-green', '--fxs-focal', '--fxs-focal-ink'];
+  function mqFxPlaceBar() {
+    if (!window._mqFxOn) return;
+    const bar = document.getElementById('mq-sticky-bar');
+    const side = document.getElementById('mq-fx-side');
+    if (!bar || !side) { window._mqFxBarSide = false; return; }
+    MQ_FX_VARS.forEach(v => bar.style.setProperty(v, side.style.getPropertyValue(v)));
+    bar.classList.add('mq-fx-sbar');
+    const wantSide = !!(window._mqFxFull && window.matchMedia && window.matchMedia('(min-width:900px)').matches);
+    let slot = document.getElementById('mq-fx-side-act');
+    if (!slot) {
+      slot = document.createElement('div');
+      slot.id = 'mq-fx-side-act';
+      const live = side.querySelector('.mq-fx-live');
+      if (live) live.after(slot); else side.appendChild(slot);
+    }
+    if (wantSide) { if (bar.parentNode !== slot) slot.appendChild(bar); }
+    else if (bar.parentNode !== document.body) document.body.appendChild(bar);
+    bar.classList.toggle('mq-fx-sbar-side', wantSide);
+    window._mqFxBarSide = wantSide;
+  }
+  window.mqFxPlaceBar = mqFxPlaceBar;
   function mqFxSyncSticky() {
     const tab = mqFxTabEl(window._mqActiveTabPrefix || 'b');
     const hide = !!(window._mqFxFull && tab && !tab.classList.contains('mq-fx-results'));
     document.documentElement.classList.toggle('mq-fx-nosticky', hide);
+    // On desktop the bottom bar moves into the side panel (see mqFxPlaceBar).
+    mqFxPlaceBar();
     mqAdjustWidgetBottomPadding();
     // Live price while editing: the tall sticky bar is hidden, so a compact
     // chip (phone: strip under the top bar; desktop: card in the side panel)
     // mirrors its number. Only after a first Calculate — before that the
-    // lead form still gates the price, so nothing is shown early.
+    // lead form still gates the price, so nothing is shown early. On desktop
+    // the side card also stays on the results screen, because the bar that
+    // used to carry the price there now lives in the side panel.
     const c = document.getElementById('midasquote-widget');
-    if (c) c.classList.toggle('mq-fx-live-on', hide && !!window._mqStickyPrefix);
+    if (c) {
+      c.classList.toggle('mq-fx-live-on', !!window._mqStickyPrefix && (hide || !!window._mqFxBarSide));
+      c.classList.toggle('mq-fx-onres', !!(window._mqFxFull && tab && tab.classList.contains('mq-fx-results')));
+    }
     const priceEl = document.getElementById('mq-sticky-price');
     if (priceEl && !priceEl._mqFxObs) {
       priceEl._mqFxObs = true;
@@ -8913,14 +9086,82 @@
   }
   function mqFxCopyPrice() {
     const priceEl = document.getElementById('mq-sticky-price');
-    if (!priceEl) return;
-    const txt = priceEl.textContent.trim();
+    // The combined total from the quote cart (kept in step with removing a
+    // project) wins over the sticky bar's number, which only refreshes on a
+    // recalculation.
+    const txt = window._mqFxTotalText || (priceEl ? priceEl.textContent.trim() : '');
+    if (!txt) return;
     document.querySelectorAll('.mq-fx-live-val').forEach(el => {
       if (el.textContent === txt) return;
       el.textContent = txt;
       el.classList.remove('mq-fx-pulse'); void el.offsetWidth; el.classList.add('mq-fx-pulse');
     });
   }
+  // Per-project totals for the side panel (desktop, always shown) and the
+  // phone price strip (tap ▾ to open) — the same project-by-project list the
+  // Classic sticky bar's breakdown shows. Called by mqRenderQuoteCart.
+  const mqFxEsc = t => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  window.mqFxRenderBreakdown = function(rows, totalText) {
+    if (!window._mqFxOn) return;
+    // A project with nothing entered yet (just switched to, or just cleared)
+    // would only show as "$0" — leave it out until it has a price. If that
+    // leaves nothing at all, the card shows a dash instead of a $0 total.
+    rows = (rows || []).filter(r => r.id || !r.empty);
+    window._mqFxRows = rows;
+    window._mqFxTotalText = rows.length ? totalText : '—';
+    // A list only helps once there's more than one project, or a project
+    // already added that could be removed.
+    const multi = !!rows && (rows.some(r => r.id) || rows.length > 1);
+    const c = document.getElementById('midasquote-widget');
+    if (c) c.classList.toggle('mq-fx-live-multi', multi);
+    // Phone strip: the list opens by itself when a second project is added,
+    // so the separate totals are visible right away; the customer can still
+    // collapse it (their choice sticks until the list goes away again).
+    if (multi && !window._mqFxWasMulti) {
+      document.querySelectorAll('.mq-fx-live').forEach(el => {
+        el.classList.add('mq-fx-live-open');
+        const t = el.querySelector('.mq-fx-live-tog'); if (t) t.textContent = '▴';
+      });
+    }
+    window._mqFxWasMulti = multi;
+    const html = multi ? rows.map(r =>
+      `<div class="mq-fx-live-row${r.id ? '' : ' mq-fx-live-curr'}"><span class="mq-fx-live-name">${mqFxEsc(r.label)}${r.id ? '' : ' <em>(current)</em>'}</span><strong>${mqFxEsc(r.price)}</strong><button type="button" class="mq-fx-live-x" title="${r.id ? 'Remove this project' : 'Clear this project and start it over'}" aria-label="${r.id ? 'Remove this project' : 'Clear this project'}" onclick="${r.id ? `mqRemoveFromQuoteCart('${mqFxEsc(r.id)}')` : 'mqFxClearCurrent()'}">✕</button></div>`).join('') : '';
+    document.querySelectorAll('.mq-fx-live-list').forEach(el => { el.innerHTML = html; });
+    document.querySelectorAll('.mq-fx-live-lbl').forEach(el => { el.textContent = multi ? 'Total estimate' : 'Your estimate'; });
+    if (!multi) document.querySelectorAll('.mq-fx-live').forEach(el => {
+      el.classList.remove('mq-fx-live-open');
+      const t = el.querySelector('.mq-fx-live-tog'); if (t) t.textContent = '▾';
+    });
+    mqFxCopyPrice();
+  };
+  window.mqFxToggleLive = function(btn) {
+    const box = btn && btn.closest('.mq-fx-live');
+    if (!box) return;
+    const open = box.classList.toggle('mq-fx-live-open');
+    btn.textContent = open ? '▴' : '▾';
+  };
+  // ✕ on the project being worked on right now: wipe just that project and
+  // go back to its step 1 (other projects already added stay).
+  window.mqFxClearCurrent = function() {
+    const prefix = window._mqActiveTabPrefix || 'b';
+    if (!confirm('Clear this project and start it over?')) return;
+    const tab = mqFxTabEl(prefix);
+    if (tab) tab.classList.remove('mq-fx-results');
+    if (window.mqResetCurrentProject) window.mqResetCurrentProject(prefix);
+    if (!(window._mqQuoteCart || []).length) {
+      // Nothing left to total — drop the price so a stale number isn't shown.
+      window._mqStickyPrefix = null;
+      window._mqStickyLast = null;
+      window._mqFxTotalText = null;
+      const sb = document.getElementById('mq-sticky-bar');
+      if (sb) sb.classList.remove('show');
+    }
+    window._mqFxDir = 'back';
+    window.mqUpdateStepFocus(prefix);
+    window.mqFxScrollToStep();
+    mqFxSyncSticky();
+  };
+
   window.mqFxApply = function(prefix) {
     if (!window._mqFxOn) return;
     const tab = mqFxTabEl(prefix);
@@ -9043,24 +9284,37 @@
     window.scrollTo(0, window._mqFxScrollY || 0);
   };
 
+  // Leaving the full-screen view (✕ Exit, Esc, the side panel's "Exit quote",
+  // or "← Exit" on step 1) ends the quote: everything is wiped and the
+  // customer lands back on the chooser, so coming back never drops them in
+  // the middle of an old quote at, say, step 9. It's the same full rebuild
+  // as "Start new estimate" (mqStartNewEstimate), so every answer, result
+  // panel and step position is reset together. "Edit my answers" and
+  // "Quote another project type" on the results screen do NOT come through
+  // here — they keep the quote.
   window.mqFxToChooser = function() {
     const container = document.getElementById('midasquote-widget');
     if (!container) return;
     window.mqFxExitFull();
-    container.classList.add('mq-fx-chooser-on');
-    const active = window._mqActiveTabPrefix;
-    container.querySelectorAll('.mq-fx-card').forEach(c => {
-      const p = mqFxPrefixOfTabId(c.dataset.tab);
-      const isCur = p === active;
-      c.classList.toggle('mq-fx-card-current', isCur);
-      const subEl = c.querySelector('.mq-fx-card-sub');
-      if (!subEl) return;
-      if (subEl.dataset.orig === undefined) subEl.dataset.orig = subEl.textContent;
-      const tab = mqFxTabEl(p);
-      const hasProgress = isCur && ((window._mqStepIndex[p] || 0) > 0 || (tab && tab.classList.contains('mq-fx-results')));
-      subEl.textContent = hasProgress ? 'Pick up where you left off' : subEl.dataset.orig;
-    });
-    window.mqScrollWithOffset && window.mqScrollWithOffset(container, 20);
+    // The rebuild below only recreates the widget's own DOM. The running
+    // multi-project quote (cart + live preview), the remembered previous
+    // project type, the typed-in email used for "email me a copy" and the
+    // side panel's totals all live outside it, so they are cleared here too.
+    window._mqQuoteCart = [];
+    window._mqLivePreview = null;
+    window._mqPrevRoomId = {};
+    window._mqLeadEmail = '';
+    window._mqFxRows = [];
+    window._mqFxWasMulti = false;
+    window._mqFxTotalText = null;
+    window._mqStickyPrefix = null;
+    window._mqStickyLast = null;
+    const stickyPr = document.getElementById('mq-sticky-price');
+    if (stickyPr) stickyPr.textContent = '';
+    container.classList.remove('mq-fx-live-multi', 'mq-fx-live-on');
+    if (window.mqStartNewEstimate) window.mqStartNewEstimate();
+    else container.classList.add('mq-fx-chooser-on');
+    if (window.mqRenderQuoteCart) window.mqRenderQuoteCart();
   };
 
   window.mqFxStart = function(id) {
@@ -9262,7 +9516,18 @@
 
 
       /* Live price chip (full-screen, while editing after a first estimate) */
-      .mq-fx-live{display:none;align-items:center;justify-content:space-between;gap:10px}
+      .mq-fx-live{display:none;flex-direction:column;align-items:stretch;gap:0}
+      .mq-fx-live-main{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%}
+      .mq-fx-live-tog{display:none;margin-left:auto;background:none;border:0;color:#166534;font-size:15px;line-height:1;padding:4px 6px;cursor:pointer;font-family:inherit}
+      .mq-fx-live-list{display:none}
+      .mq-fx-live-row{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:13px;color:#14532d}
+      .mq-fx-live-name{flex:1;min-width:0;overflow-wrap:anywhere;line-height:1.25}
+      .mq-fx-live-name em{font-style:italic;font-weight:500;opacity:.75}
+      .mq-fx-live-row strong{font-weight:800;flex-shrink:0}
+      .mq-fx-live-x{background:none;border:0;color:inherit;opacity:.6;cursor:pointer;font-size:12px;line-height:1;padding:4px 5px;font-family:inherit;flex-shrink:0}
+      .mq-fx-live-x:hover{opacity:1}
+      #midasquote-widget.mq-fx-live-multi #mq-fx-top .mq-fx-live-tog{display:inline-flex}
+      #midasquote-widget.mq-fx-live-multi #mq-fx-top .mq-fx-live.mq-fx-live-open .mq-fx-live-list{display:block;max-height:38vh;overflow-y:auto;margin-top:4px;padding-top:4px;border-top:1px solid #bbf7d0}
       .mq-fx-live-lbl{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#6b7280}
       .mq-fx-live-val{font-size:17px;font-weight:800;color:#111827}
       .mq-fx-live-val.mq-fx-pulse{animation:mqFxPulse .6s ease}
@@ -9273,8 +9538,56 @@
       @media (min-width:900px){
         #midasquote-widget.mq-fx-full.mq-fx-live-on #mq-fx-top .mq-fx-live{display:none}
         #midasquote-widget.mq-fx-full.mq-fx-live-on #mq-fx-side .mq-fx-live{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:12px 16px;border-radius:12px;background:rgba(34,197,94,.14);border:1px solid rgba(34,197,94,.35);margin-bottom:20px}
-        #mq-fx-side .mq-fx-live-lbl{color:#86efac}
-        #mq-fx-side .mq-fx-live-val{color:#fff;font-size:20px}
+        #mq-fx-side .mq-fx-live-lbl{color:var(--fxs-green,#86efac)}
+        #mq-fx-side .mq-fx-live-val{color:var(--fxs-ink,#fff);font-size:20px}
+        #mq-fx-side .mq-fx-live-main{flex-direction:column;align-items:flex-start;gap:2px}
+        #midasquote-widget.mq-fx-live-multi #mq-fx-side .mq-fx-live-list{display:block;width:100%;margin-top:8px;padding-top:6px;border-top:1px solid var(--fxs-line,rgba(255,255,255,.2))}
+        #mq-fx-side .mq-fx-live-row{color:var(--fxs-soft,#e5e7eb)}
+        #mq-fx-side .mq-fx-live-curr .mq-fx-live-name{color:var(--fxs-ink,#fff)}
+      }
+
+
+      /* Bottom bar, Focused layout only (.mq-fx-sbar is set from JS, so Classic
+         keeps its dark bar exactly as it was). Phone: shop's box colours.
+         Desktop: lives in the side panel (.mq-fx-sbar-side). */
+      #mq-sticky-bar.mq-fx-sbar{background:var(--fxs-bg,#1d2027);box-shadow:0 -8px 24px rgba(0,0,0,.14)}
+      #mq-sticky-bar.mq-fx-sbar #mq-sticky-label{color:var(--fxs-soft)}
+      #mq-sticky-bar.mq-fx-sbar #mq-sticky-price{color:var(--fxs-ink);text-shadow:none}
+      #mq-sticky-bar.mq-fx-sbar #mq-sticky-breakdown,
+      #mq-sticky-bar.mq-fx-sbar #mq-sticky-breakdown span,
+      #mq-sticky-bar.mq-fx-sbar #mq-sticky-breakdown strong,
+      #mq-sticky-bar.mq-fx-sbar #mq-sticky-breakdown button,
+      #mq-sticky-bar.mq-fx-sbar #mq-sticky-breakdown div{color:var(--fxs-ink)!important;border-color:var(--fxs-line2)!important}
+      #mq-sticky-bar.mq-fx-sbar #mq-sticky-breakdown-toggle{background:var(--fxs-card)!important;border-color:var(--fxs-line2)!important;color:var(--fxs-ink)!important}
+      #mq-sticky-bar.mq-fx-sbar #mq-sticky-links-row button{color:var(--fxs-soft)!important}
+      #mq-sticky-bar.mq-fx-sbar #mq-sticky-ctas button{background:var(--fxs-card);border-color:var(--fxs-line2);color:var(--fxs-ink);box-shadow:none}
+      #mq-sticky-bar.mq-fx-sbar #mq-sticky-ctas button.mq-pri{border-color:transparent;background:var(--fxs-focal)!important;color:var(--fxs-focal-ink)!important}
+      #mq-sticky-bar.mq-fx-sbar #mq-sticky-financing{border-top-color:var(--fxs-line)}
+      #mq-sticky-bar.mq-fx-sbar #mq-sticky-financing-main{color:var(--fxs-green)}
+      #mq-sticky-bar.mq-fx-sbar #mq-sticky-financing-disclaimer{color:var(--fxs-mute)}
+      #mq-fx-side-act{display:none}
+      @media (min-width:900px){
+        #midasquote-widget.mq-fx-full #mq-fx-side-act{display:block}
+        #mq-sticky-bar.mq-fx-sbar-side{position:static;z-index:auto;background:none;border:0!important;box-shadow:none;padding:0;margin:0 0 18px;animation:none}
+        #mq-sticky-bar.mq-fx-sbar-side #mq-sticky-label-row,
+        #mq-sticky-bar.mq-fx-sbar-side #mq-sticky-price-wrap,
+        #mq-sticky-bar.mq-fx-sbar-side #mq-sticky-breakdown,
+        #mq-sticky-bar.mq-fx-sbar-side #mq-sticky-close{display:none!important}
+        #mq-sticky-bar.mq-fx-sbar-side #mq-sticky-inner{display:flex;flex-direction:column;max-width:none;gap:10px}
+        #mq-sticky-bar.mq-fx-sbar-side #mq-sticky-main{display:contents}
+        #mq-sticky-bar.mq-fx-sbar-side #mq-sticky-financing{order:1;margin:0;padding:10px 12px;border:1px solid var(--fxs-line);border-radius:12px;background:var(--fxs-card);text-align:left}
+        #mq-sticky-bar.mq-fx-sbar-side #mq-sticky-financing-main{justify-content:flex-start;flex-wrap:wrap;font-size:13px;line-height:1.35}
+        #mq-sticky-bar.mq-fx-sbar-side #mq-sticky-financing-payment{display:block;width:100%;font-size:0;line-height:0}
+        #mq-sticky-bar.mq-fx-sbar-side #mq-sticky-financing-payment::after{content:attr(data-mq-amt);font-size:15px;line-height:1.3;font-weight:800}
+        #mq-sticky-bar.mq-fx-sbar-side #mq-sticky-ctas{order:2;flex-direction:column-reverse;gap:8px}
+        #mq-sticky-bar.mq-fx-sbar-side #mq-sticky-ctas button{width:100%;padding:12px 10px;font-size:13.5px;white-space:normal;border-radius:10px}
+        #mq-sticky-bar.mq-fx-sbar-side #mq-sticky-content{order:3;flex:none}
+        #mq-sticky-bar.mq-fx-sbar-side #mq-sticky-links-row{display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:0!important}
+        #mq-sticky-bar.mq-fx-sbar-side #mq-sticky-links-row button{margin:0!important;font-size:12.5px!important}
+        /* On the results screen every step is done, so the step list gives its
+           room to the quote actions. */
+        #midasquote-widget.mq-fx-onres #mq-fx-steps{display:none}
+        #midasquote-widget.mq-fx-onres #mq-fx-side .mq-fx-side-foot{margin-top:auto}
       }
 
       /* Chooser cards: white, with a brand-colour gradient border */
@@ -9301,7 +9614,7 @@
       #midasquote-widget.mq-fx-full .mq-step-footer{margin:18px calc(var(--mq-fx-pad,16px) * -1) calc(var(--mq-fx-pad,16px) * -1);padding:12px var(--mq-fx-pad,16px);border-radius:0 0 16px 16px}
       @media (min-width:900px){
         #midasquote-widget.mq-fx.mq-fx-full{padding-left:300px;background:#f1f3f6}
-        #midasquote-widget.mq-fx-full #mq-fx-side{display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:var(--mq-sticky-h,0px);width:300px;padding:30px 24px 22px;background:linear-gradient(180deg,#14161b 0%,#1d2027 100%);color:#fff;z-index:30;overflow-y:auto}
+        #midasquote-widget.mq-fx-full #mq-fx-side{display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:var(--mq-sticky-h,0px);width:300px;padding:30px 24px 22px;background:var(--fxs-bg,#1d2027);color:var(--fxs-ink,#fff);border-right:1px solid var(--fxs-line,transparent);z-index:30;overflow-y:auto}
         #midasquote-widget.mq-fx-full #mq-fx-top{background:transparent;border-bottom:0;justify-content:flex-end;padding:18px 28px 0;pointer-events:none}
         #midasquote-widget.mq-fx-full #mq-fx-top .mq-fx-top-brand{display:none}
         #midasquote-widget.mq-fx-full #mq-fx-top .mq-fx-exit{pointer-events:auto;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.08)}
@@ -9313,9 +9626,9 @@
         #midasquote-widget.mq-fx-full .mq-fx-bar{display:none}
         #midasquote-widget.mq-fx-full .mq-fx-head{margin-bottom:24px}
       }
-      #mq-fx-side{scrollbar-width:thin;scrollbar-color:#3a3f4b transparent;overflow-x:hidden}
+      #mq-fx-side{scrollbar-width:thin;scrollbar-color:var(--fxs-line,#3a3f4b) transparent;overflow-x:hidden}
       #mq-fx-side::-webkit-scrollbar{width:6px}
-      #mq-fx-side::-webkit-scrollbar-thumb{background:#3a3f4b;border-radius:99px}
+      #mq-fx-side::-webkit-scrollbar-thumb{background:var(--fxs-line,#3a3f4b);border-radius:99px}
       @media (min-width:900px) and (max-height:800px){
         #midasquote-widget.mq-fx-full #mq-fx-side{padding:20px 20px 16px}
         #mq-fx-side .mq-fx-side-brand{margin-bottom:14px}
@@ -9327,30 +9640,35 @@
         .mq-fx-side-foot{margin-top:10px;padding-top:12px;gap:8px}
       }
       #mq-fx-side .mq-fx-side-brand{display:flex;align-items:center;gap:12px;padding:0;border:0;margin-bottom:26px}
-      #mq-fx-side .mq-fx-side-brand .mq-shop-name{color:#fff;font-size:16px;font-weight:800}
-      #mq-fx-side .mq-fx-side-brand .mq-shop-sub{color:#9ca3af;font-size:12.5px}
+      #mq-fx-side .mq-fx-side-brand .mq-shop-name{color:var(--fxs-ink,#fff);font-size:16px;font-weight:800}
+      #mq-fx-side .mq-fx-side-brand .mq-shop-sub{color:var(--fxs-mute,#9ca3af);font-size:12.5px}
       #mq-fx-side .mq-fx-side-brand>*{flex-shrink:0}
       #mq-fx-side .mq-fx-side-brand>div[style*="flex:1"]{flex:1;min-width:0}
-      #mq-fx-side-type{display:flex;flex-direction:column;gap:2px;padding:14px 16px;border-radius:12px;background:rgba(255,255,255,.07);margin-bottom:22px}
-      .mq-fx-side-type-kicker{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#9ca3af}
-      .mq-fx-side-type-name{font-size:16px;font-weight:800;color:#fff}
-      .mq-fx-side-type-room{font-size:13px;color:#cbd5e1}
+      #mq-fx-side-type{display:flex;flex-direction:column;gap:2px;padding:14px 16px;border-radius:12px;background:var(--fxs-card,rgba(255,255,255,.07));margin-bottom:22px}
+      .mq-fx-side-type-kicker{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--fxs-mute,#9ca3af)}
+      .mq-fx-side-type-name{font-size:16px;font-weight:800;color:var(--fxs-ink,#fff)}
+      .mq-fx-side-type-room{font-size:13px;color:var(--fxs-soft,#cbd5e1)}
       #mq-fx-steps{list-style:none;margin:0;padding:0;flex:1}
-      .mq-fx-stp{display:flex;align-items:center;gap:12px;padding:8px 0;position:relative;color:#8b93a1;font-size:14.5px;font-weight:600}
-      .mq-fx-stp:not(:last-child)::after{content:'';position:absolute;left:13px;top:36px;bottom:-8px;width:2px;background:rgba(255,255,255,.12)}
-      .mq-fx-stp-dot{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:800;border:2px solid rgba(255,255,255,.18);flex-shrink:0;background:#1d2027;position:relative;z-index:1}
-      .mq-fx-stp-cur{color:#fff}
-      .mq-fx-stp-cur .mq-fx-stp-dot{background:${fc};border-color:${fc};color:#fff;box-shadow:0 0 0 4px ${fc}40}
-      .mq-fx-stp-done{color:#d1d5db;cursor:pointer}
-      .mq-fx-stp-done:hover{color:#fff}
+      .mq-fx-stp{display:flex;align-items:center;gap:12px;padding:8px 0;position:relative;color:var(--fxs-mute,#8b93a1);font-size:14.5px;font-weight:600}
+      .mq-fx-stp:not(:last-child)::after{content:'';position:absolute;left:13px;top:36px;bottom:-8px;width:2px;background:var(--fxs-line,rgba(255,255,255,.12))}
+      .mq-fx-stp-dot{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:800;border:2px solid var(--fxs-dot,rgba(255,255,255,.18));flex-shrink:0;background:var(--fxs-bg,#1d2027);position:relative;z-index:1}
+      .mq-fx-stp-cur{color:var(--fxs-ink,#fff)}
+      .mq-fx-stp-cur .mq-fx-stp-dot{background:${fc};border-color:${fc};color:var(--fxs-focal-ink,#fff);box-shadow:0 0 0 4px ${fc}40}
+      .mq-fx-stp-done{color:var(--fxs-soft,#d1d5db);cursor:pointer}
+      .mq-fx-stp-done:hover{color:var(--fxs-ink,#fff)}
       .mq-fx-stp-done .mq-fx-stp-dot{background:#16a34a;border-color:#16a34a;color:#fff}
-      .mq-fx-side-foot{display:flex;flex-direction:column;gap:10px;margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,.12)}
-      .mq-fx-side-link{color:#cbd5e1;font-size:13px;font-weight:600;text-decoration:none}
-      .mq-fx-side-link:hover{color:#fff}
-      .mq-fx-side-pw{font-size:11.5px;color:#7b8494;font-weight:600}
-      .mq-fx-side-pw a{color:#aab2c0;text-decoration:none}
-      .mq-fx-side-exit{background:transparent;border:1px solid rgba(255,255,255,.22);color:#e5e7eb;border-radius:10px;padding:9px 12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;text-align:center}
-      .mq-fx-side-exit:hover{background:rgba(255,255,255,.08)}
+      .mq-fx-side-foot{display:flex;flex-direction:column;gap:10px;margin-top:18px;padding-top:16px;border-top:1px solid var(--fxs-line,rgba(255,255,255,.12))}
+      .mq-fx-side-link{color:var(--fxs-soft,#cbd5e1);font-size:13px;font-weight:600;text-decoration:none}
+      .mq-fx-side-link:hover{color:var(--fxs-ink,#fff)}
+      .mq-fx-side-pw{font-size:11.5px;color:var(--fxs-mute,#7b8494);font-weight:600}
+      .mq-fx-side-pw a{color:var(--fxs-soft,#aab2c0);text-decoration:none}
+      .mq-fx-side-exit{background:transparent;border:1px solid var(--fxs-line2,rgba(255,255,255,.22));color:var(--fxs-ink,#e5e7eb);border-radius:10px;padding:9px 12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;text-align:center}
+      .mq-fx-side-exit:hover{background:var(--fxs-card,rgba(255,255,255,.08))}
+      /* The logo always sits on its own clean white tile: a logo with a solid white
+         background looks intentional instead of like a white box, and a dark
+         transparent logo stays readable whatever colours the shop picked. */
+      #mq-fx-side .mq-logo-real{height:auto;width:auto;max-width:112px;padding:7px 9px;background:#fff;border-radius:12px;box-shadow:0 0 0 1px rgba(0,0,0,.08),0 2px 6px rgba(0,0,0,.1);display:flex;align-items:center;justify-content:center}
+      #mq-fx-side .mq-logo-real img{display:block;max-width:92px;max-height:56px;width:auto;height:auto;object-fit:contain}
     `;
     document.head.appendChild(s);
   }
@@ -9428,7 +9746,7 @@
       const nameEl = hdr && hdr.querySelector('.mq-shop-name');
       const top = document.createElement('div');
       top.id = 'mq-fx-top';
-      top.innerHTML = `<div class="mq-fx-top-brand"><span class="mq-fx-top-name">${nameEl ? nameEl.textContent : ''}</span><span class="mq-fx-top-pw">⚡ Powered by <a href="https://www.midasquote.com" target="_blank" rel="noopener">MidasQuote</a></span></div><button type="button" class="mq-fx-exit" onclick="mqFxToChooser()" aria-label="Exit">✕ <span>Exit</span></button><div class="mq-fx-live"><span class="mq-fx-live-lbl">Your estimate</span><span class="mq-fx-live-val">—</span></div>`;
+      top.innerHTML = `<div class="mq-fx-top-brand"><span class="mq-fx-top-name">${nameEl ? nameEl.textContent : ''}</span><span class="mq-fx-top-pw">⚡ Powered by <a href="https://www.midasquote.com" target="_blank" rel="noopener">MidasQuote</a></span></div><button type="button" class="mq-fx-exit" onclick="mqFxToChooser()" aria-label="Exit">✕ <span>Exit</span></button><div class="mq-fx-live"><div class="mq-fx-live-main"><span class="mq-fx-live-lbl">Your estimate</span><span class="mq-fx-live-val">—</span><button type="button" class="mq-fx-live-tog" onclick="mqFxToggleLive(this)" aria-label="Show each project total">▾</button></div><div class="mq-fx-live-list"></div></div>`;
       container.insertBefore(top, container.firstChild);
     }
     if (!document.getElementById('mq-fx-side')) {
@@ -9440,11 +9758,46 @@
       const showroom = hdr && hdr.querySelector('a[href]');
       const side = document.createElement('aside');
       side.id = 'mq-fx-side';
+      // Sidebar colours come from the shop's own "box" colours (Shop Info →
+      // box background + box text), the same pair the quote boxes use, so it
+      // always matches. If that pair is too low-contrast to read, fall back to
+      // a safe light/dark text colour chosen from the background. The active
+      // step uses the shop's focal colour.
+      (function() {
+        const norm = h => { h = String(h || '').trim(); if (/^#[0-9a-f]{3}$/i.test(h)) h = '#' + h.slice(1).split('').map(c => c + c).join(''); return /^#[0-9a-f]{6}$/i.test(h) ? h.toLowerCase() : null; };
+        const rgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+        const lin = c => { c /= 255; return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
+        const lum = h => { const [r, g, b] = rgb(h); return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b); };
+        const ratio = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+        const rgba = (h, a) => { const [r, g, b] = rgb(h); return `rgba(${r},${g},${b},${a})`; };
+        const bg = norm(window._mqBoxBg) || '#eff6ff';
+        let ink = norm(window._mqBoxText) || '#1e40af';
+        if (ratio(bg, ink) < 4.5) ink = lum(bg) > 0.4 ? '#111827' : '#ffffff';
+        const focal = norm(window._mqFocalColor) || '#2563eb';
+        const light = lum(bg) > 0.4;
+        const st = side.style;
+        st.setProperty('--fxs-bg', bg);
+        st.setProperty('--fxs-ink', ink);
+        st.setProperty('--fxs-soft', rgba(ink, 0.85));
+        st.setProperty('--fxs-mute', rgba(ink, 0.68));
+        st.setProperty('--fxs-line', rgba(ink, 0.16));
+        st.setProperty('--fxs-line2', rgba(ink, 0.32));
+        st.setProperty('--fxs-dot', rgba(ink, 0.3));
+        st.setProperty('--fxs-card', rgba(ink, 0.07));
+        st.setProperty('--fxs-green', light ? '#166534' : '#86efac');
+        st.setProperty('--fxs-focal', focal);
+        st.setProperty('--fxs-focal-ink', ratio(focal, '#ffffff') >= 3 ? '#ffffff' : '#111827');
+      })();
       side.appendChild(brand);
-      side.insertAdjacentHTML('beforeend', `<div id="mq-fx-side-type"></div><div class="mq-fx-live"><span class="mq-fx-live-lbl">Your estimate</span><span class="mq-fx-live-val">—</span></div><ol id="mq-fx-steps"></ol><div class="mq-fx-side-foot">${showroom ? `<a class="mq-fx-side-link" href="${showroom.getAttribute('href')}" target="_blank" rel="noopener">🖼️ See our showroom</a>` : ''}<div class="mq-fx-side-pw">⚡ Powered by <a href="https://www.midasquote.com" target="_blank" rel="noopener">MidasQuote</a></div><button type="button" class="mq-fx-side-exit" onclick="mqFxToChooser()">✕ Exit quote</button></div>`);
+      side.insertAdjacentHTML('beforeend', `<div id="mq-fx-side-type"></div><div class="mq-fx-live"><div class="mq-fx-live-main"><span class="mq-fx-live-lbl">Your estimate</span><span class="mq-fx-live-val">—</span><button type="button" class="mq-fx-live-tog" onclick="mqFxToggleLive(this)" aria-label="Show each project total">▾</button></div><div class="mq-fx-live-list"></div></div><ol id="mq-fx-steps"></ol><div class="mq-fx-side-foot">${showroom ? `<a class="mq-fx-side-link" href="${showroom.getAttribute('href')}" target="_blank" rel="noopener">🖼️ See our showroom</a>` : ''}<div class="mq-fx-side-pw">⚡ Powered by <a href="https://www.midasquote.com" target="_blank" rel="noopener">MidasQuote</a></div><button type="button" class="mq-fx-side-exit" onclick="mqFxToChooser()">✕ Exit quote</button></div>`);
       container.insertBefore(side, container.firstChild);
     }
     mqFxInstallSwipe(container);
+    if (!window._mqFxResizeBound) {
+      window._mqFxResizeBound = true;
+      let rt;
+      window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { if (window._mqFxOn) mqFxSyncSticky(); }, 120); });
+    }
     if (!window._mqFxEscBound) {
       window._mqFxEscBound = true;
       document.addEventListener('keydown', e => {

@@ -421,6 +421,10 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
           <p style="margin:0">Require a password before customers can use your widget at all, for when you don't want it fully public. Add as many passwords as you like; removing one instantly locks out anyone whose browser had it saved.</p>
         </div>
         <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
+          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">🎛️ Widget layout</div>
+          <p style="margin:0">Pick <strong>Classic</strong> (one scrolling page, the original look) or <strong>Focused</strong> (one question at a time, full screen). It changes your embedded widget and your standalone link everywhere at once — no new embed code to paste. Use the Preview links to try either one before choosing. MidasQuote Pro always stays the same.</p>
+        </div>
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">🗂️ Estimator tabs</div>
           <p style="margin:0">A card further down lets you turn off any of your widget's top-level tabs (Full project quote, Cabinets only, Countertops only) per shop — whatever's left automatically fills the space. At least one has to stay on, and there's a checkbox to apply the same choice to MidasQuote Pro.</p>
         </div>
@@ -971,14 +975,15 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   // never see it again, tracked by storing that version string on the shop
   // record. Brand new shops never see past announcements — they get the
   // current app as-is, so nothing worth announcing to them retroactively.
-  const MQ_LATEST_ANNOUNCEMENT = 'sep2026-countertop-shapes';
+  const MQ_LATEST_ANNOUNCEMENT = 'oct2026-island-pricing-videos';
   const MQ_ANNOUNCEMENT_CONTENT = {
     title: '🎉 Recently added',
     body: `
-      <p style="margin-bottom:14px"><strong>Countertop shapes</strong> — customers quoting a countertop can now choose Straight, L-Shape, or U-Shape and measure each section on its own, instead of trying to boil an irregular counter down into one combined number. It's a quicker, more accurate way for them to get you measurements you can actually trust.</p>
-      <p style="margin-bottom:14px;padding:12px 14px;background:#f9fafb;border-radius:8px;font-size:13px;color:#4b5563;line-height:1.6">📬 <strong>Quick reminder:</strong> replies to your support form submissions occasionally land in junk or spam mail instead of your inbox. If you've submitted a request and haven't heard back, it's worth a quick check there before following up again.</p>
+      <p style="margin-bottom:14px"><strong>Island pricing</strong> — customers can now add an island to a cabinet quote, single-row or double-row (back-to-back), with an option for a built-in dishwasher. Turn it on for any project type in <strong>Project Types</strong>. Then, in the Pricing tab, the new <strong>Island panel pricing</strong> section lets you price finished flat and decorative panels once per door style — tag your doors to a style (or a whole door group at once) and the price scales with whichever door the customer picks. Panel installation prices are entered once and apply to every style.</p>
+      <p style="margin-bottom:14px"><strong>Training videos</strong> — short walkthrough videos now sit at the top of Project Types, the Pricing tab, and the new Island panel pricing section. Hide any of them once you've watched it, and bring it back whenever you like.</p>
+      <p style="margin-bottom:14px"><strong>Help guide overhaul</strong> — a new folder-tab layout, a step-by-step Getting started walkthrough, and a brand new MidasQuote Pro topic.</p>
       <p style="margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid #e5e7eb;font-size:12px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em">Coming soon</p>
-      <p style="font-size:13px;color:#4b5563;line-height:1.6">More countertop updates — photos and videos walking customers through exactly how to measure their space, plus new options for refacing-style projects using specialty item variants.</p>
+      <p style="font-size:13px;color:#4b5563;line-height:1.6">More training videos covering other parts of the dashboard.</p>
     `,
   };
   window.mqShowAnnouncementModal = function() {
@@ -1271,6 +1276,8 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       #midasquote-dashboard .mq-page{display:none;position:relative}
       #midasquote-dashboard .mq-help-btn{position:absolute;top:-32px;right:0;background:#eff6ff;color:#2563eb;border:1.5px solid #93c5fd;border-radius:999px;padding:6px 14px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;transition:background 0.15s;z-index:5}
       #midasquote-dashboard .mq-help-btn:hover{background:#dbeafe}
+      /* Trial/Demo banner: 80% wide on desktop so the floating "Need help?" button (which pokes up into the banner's space) never sits on top of it. Full width on phones, where that button sits clear above it. */
+      #midasquote-dashboard #mq-plan-banner > div{max-width:80%}
       #midasquote-dashboard .mq-help-badge{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:#2563eb;color:#fff;font-size:11px;font-weight:800;flex-shrink:0}
       #midasquote-dashboard .mq-page.active{display:block}
       #midasquote-dashboard .mq-page-title{font-size:22px;font-weight:700;color:#111;margin-bottom:6px}
@@ -1391,6 +1398,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         #midasquote-dashboard .mq-nav-item.active{border-left-color:transparent;border-bottom-color:transparent}
         #midasquote-dashboard .mq-content{padding:1.25rem}
         #midasquote-dashboard .mq-help-btn{top:-13px}
+        #midasquote-dashboard #mq-plan-banner > div{max-width:100%}
         #midasquote-dashboard .mq-spec-scroll-arrow{display:none!important}
         #midasquote-dashboard #mq-pd-sticky-preview{top:auto!important;bottom:14px!important;right:14px!important;max-width:300px!important;width:auto!important;padding:10px!important;height:auto!important}
         #midasquote-dashboard #mq-pd-sticky-preview canvas{width:260px!important;height:auto!important;margin-bottom:8px!important}
@@ -1437,9 +1445,17 @@ window.logoutMember = async function () {
   // tracking cookies until the visitor actually plays it) inside a
   // responsive 16:9 wrapper, since an <iframe> has no natural aspect ratio
   // of its own the way a <video> tag does.
+  // Player size: max-width 640px (was 320px). YouTube picks its starting
+  // quality from the player's on-screen size, and a 320px box always got
+  // 360p no matter how sharp the upload was. The box still shrinks to fit
+  // phones/narrow screens (width:100%).
   const MQ_TRAINING_VIDEOS = {
     rooms: { youtubeId: 'nbTFS0b1C2g' },
     pricing: { youtubeId: 'tQyYyFALg7c' },
+    islandPanel: { youtubeId: 'LHsz0MRmeM0' },
+    specialty: { youtubeId: 'pZ4UNfpPVSs' },
+    products: { youtubeId: 'xbYtl12XChc' },
+    shop: { youtubeId: '_vcQFocImJk' },
   };
   function mqTrainingVideoBlockHTML(key) {
     const video = MQ_TRAINING_VIDEOS[key];
@@ -1461,9 +1477,10 @@ window.logoutMember = async function () {
     return `
       <div id="mq-training-video-${key}" style="display:${hidden ? 'none' : 'block'};margin-bottom:1rem">
         <div style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px;color:#1a1a1a;margin-bottom:8px">Watch the video <span style="font-size:17px">→</span></div>
-        <div style="position:relative;width:100%;max-width:320px;aspect-ratio:16/9;border-radius:8px;overflow:hidden;background:#000">
+        <div style="position:relative;width:100%;max-width:640px;aspect-ratio:16/9;border-radius:8px;overflow:hidden;background:#000">
           <iframe src="https://www.youtube-nocookie.com/embed/${video.youtubeId}" title="Training video" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;border:0"></iframe>
         </div>
+        <div style="max-width:640px;margin-top:6px;font-size:12px;color:#6b7280;line-height:1.5">Video looks blurry? Click the ⚙ gear on the video → Quality → 1080p, or <a href="https://www.youtube.com/watch?v=${video.youtubeId}" target="_blank" rel="noopener" style="color:#2563eb;text-decoration:underline">open it on YouTube ↗</a></div>
         <button type="button" class="mq-btn mq-btn-sm" style="margin-top:10px" onclick="mqHideTrainingVideo('${key}')">Hide video</button>
       </div>
       <div id="mq-training-video-reshow-${key}" style="display:${hidden ? 'block' : 'none'};margin-bottom:1rem">
@@ -1583,6 +1600,8 @@ window.logoutMember = async function () {
 
         <div class="mq-content">
 
+          <div id="mq-plan-banner">${mqPlanBannerInnerHTML()}</div>
+
           <!-- OVERVIEW -->
           <div class="mq-page active" id="mq-page-overview">
             <button class="mq-help-btn" onclick="mqShowHelp('overview')"><span class="mq-help-badge">?</span> Need help?</button>
@@ -1601,7 +1620,7 @@ window.logoutMember = async function () {
             </div>
             <div class="mq-card">
               <div class="mq-card-title">🔗 Your widget embed code</div>
-              <p style="font-size:13px;color:#6b7280;margin-bottom:8px">Copy and paste this into your website where you want the widget to appear.</p>
+              <p style="font-size:13px;color:#6b7280;margin-bottom:8px">Copy and paste this into your website where you want the widget to appear. Whether it shows the Classic or Focused layout is set in Shop Info → 🎛️ Widget layout — changing it there updates this widget instantly, no new code needed.</p>
               <div class="mq-embed-box" id="mq-embed-preview"><span>${embedCode}</span><button class="mq-copy-btn" id="mq-copy-embed-1">Copy</button></div>
             </div>
           </div>
@@ -1637,6 +1656,7 @@ window.logoutMember = async function () {
             <button class="mq-help-btn" onclick="mqShowHelp('shop')"><span class="mq-help-badge">?</span> Need help?</button>
             <div class="mq-page-title">Shop info</div>
             <div class="mq-page-sub">This info appears on your widget and in emails to customers</div>
+            ${mqTrainingVideoBlockHTML('shop')}
             <div id="mq-shop-msg"></div>
 
             <div class="mq-card">
@@ -1875,12 +1895,37 @@ window.logoutMember = async function () {
               <div id="mq-widgetpw-wrap" style="display:none;margin-top:1rem;padding:12px 14px;background:#fef2f2;border:1px solid #fecaca;border-radius:10px">
                 <label class="mq-label">Passwords <span style="font-weight:400;color:#9ca3af">(any one of these unlocks the widget)</span></label>
                 <div id="mq-widgetpw-list" style="display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px"></div>
-                <div style="display:flex;gap:8px">
-                  <input type="text" id="mq-widgetpw-new" placeholder="Add a password" style="flex:1;font-size:13px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit" onkeydown="if(event.key==='Enter'){event.preventDefault();mqAddWidgetPassword();}"/>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                  <input type="text" id="mq-widgetpw-new" placeholder="Add a password" style="flex:1;min-width:150px;font-size:13px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit" onkeydown="if(event.key==='Enter'){event.preventDefault();mqAddWidgetPassword();}"/>
+                  <input type="number" id="mq-widgetpw-new-disc" min="0" max="100" step="0.5" placeholder="Discount %" title="Optional — percent off the final quote for anyone using this password" style="width:105px;font-size:13px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit" onkeydown="if(event.key==='Enter'){event.preventDefault();mqAddWidgetPassword();}"/>
                   <button type="button" class="mq-btn mq-btn-sm" onclick="mqAddWidgetPassword()">+ Add</button>
                 </div>
                 <span class="mq-hint" style="display:block;margin-top:8px">Once a customer enters a correct password, their browser remembers it — they will not be asked again unless you remove that specific password from this list.</span>
+                <span class="mq-hint" style="display:block;margin-top:6px"><strong>Discounts:</strong> a password with a discount takes that % off the final quote (after your project type adjustments) for anyone who unlocks the widget with it — ranges and single prices alike. Discounts only apply while the password requirement above is on. Leave the discount at 0 for a plain access password.</span>
               </div>
+              </div>
+            </div>
+
+            <div class="mq-card">
+              <div class="mq-card-title" onclick="mqToggleShopSection('layout')" style="cursor:pointer;user-select:none">
+                <span id="mq-shopsec-layout-chevron" style="font-size:11px;color:#6b7280;display:inline-block;transition:transform 0.15s">▶</span>
+                🎛️ Widget layout
+              </div>
+              <div id="mq-shopsec-layout-body" style="display:none">
+              <div class="mq-hint" style="display:block;margin-bottom:1rem">Choose how your widget feels to customers. This applies to your embedded widget and your standalone widget link everywhere at once — there's nothing to re-paste. MidasQuote Pro isn't affected — it always keeps its standard layout.</div>
+              <div style="display:flex;gap:12px;flex-wrap:wrap">
+                <div id="mq-layout-classic" onclick="mqSetWidgetLayout('Classic')" style="flex:1;min-width:230px;border:2px solid #e5e7eb;border-radius:10px;padding:1rem;cursor:pointer">
+                  <div style="font-size:14px;font-weight:700;margin-bottom:4px">📜 Classic</div>
+                  <div style="font-size:12px;color:#6b7280;line-height:1.5">One scrolling page. Customers see every step and can jump around freely. This is how your widget has always worked.</div>
+                  <a href="https://widget.midasquote.com/?shop=${token}&layout=classic" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:inline-block;margin-top:10px;font-size:12px;font-weight:600;color:#1d4ed8;text-decoration:none">Preview Classic ↗</a>
+                </div>
+                <div id="mq-layout-focused" onclick="mqSetWidgetLayout('Focused')" style="flex:1;min-width:230px;border:2px solid #e5e7eb;border-radius:10px;padding:1rem;cursor:pointer">
+                  <div style="font-size:14px;font-weight:700;margin-bottom:4px">🎯 Focused</div>
+                  <div style="font-size:12px;color:#6b7280;line-height:1.5">One question at a time, in a clean full-screen view with photo cards to start, a progress stepper, and a live price. Great on phones.</div>
+                  <a href="https://widget.midasquote.com/?shop=${token}&layout=focused" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:inline-block;margin-top:10px;font-size:12px;font-weight:600;color:#1d4ed8;text-decoration:none">Preview Focused ↗</a>
+                </div>
+              </div>
+              <div id="mq-layout-note" style="font-size:12px;color:#6b7280;margin-top:10px"></div>
               </div>
             </div>
 
@@ -1984,6 +2029,7 @@ window.logoutMember = async function () {
                 <div class="mq-page-sub">Anything you want to price and attach to a project type — not just add-ons. Price flat-rate, per linear foot, or per square foot; include the full cost — materials, hardware, and installation. What you enter is what gets added to the quote.</div>
               </div>
             </div>
+            ${mqTrainingVideoBlockHTML('specialty')}
             <div id="mq-spec-msg"></div>
             <div id="mq-spec-tips-card" class="mq-card" style="padding:0;overflow:hidden;margin-bottom:1rem;border-color:#86efac;background:#f0fdf4;max-width:480px">
               <div onclick="mqToggleSpecTips()" style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;cursor:pointer">
@@ -2204,6 +2250,7 @@ window.logoutMember = async function () {
             <button class="mq-help-btn" onclick="mqShowHelp('products')"><span class="mq-help-badge">?</span> Need help?</button>
             <div class="mq-page-title">My Products</div>
             <div class="mq-page-sub">Manage everything about how each item shows up on your widget: photos and thumbnails customers see while quoting, which project types each item is available for, and which items to hide entirely. Category-level shortcuts let you show or hide a whole group at once — individual items can still override that.</div>
+            ${mqTrainingVideoBlockHTML('products')}
             <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:1rem 1.25rem;margin-bottom:1.5rem;font-size:13px;color:#92400e;line-height:1.7">
               <strong>💡 How to add a photo:</strong><br>
               <strong>Option 1 —</strong> Click <em>"📤 Upload a photo"</em> on any item below and choose a photo straight from your device — easiest option, hosted permanently for you.<br>
@@ -3882,14 +3929,17 @@ window.logoutMember = async function () {
         swatch.value = /^#[0-9a-fA-F]{6}$/.test(loadedColor) ? loadedColor : fallbackSwatch;
         if (!swatch.dataset.mqWired) {
           swatch.dataset.mqWired = '1';
-          swatch.addEventListener('input', () => { if (textField) textField.value = swatch.value; });
+          const stateId = fieldId.replace('mq-shop-', '');
+          swatch.addEventListener('input', () => { if (textField) textField.value = swatch.value; mqRenderColorState(stateId); });
           if (textField) {
             textField.addEventListener('input', () => {
               if (/^#[0-9a-fA-F]{6}$/.test(textField.value)) swatch.value = textField.value;
+              mqRenderColorState(stateId);
             });
           }
         }
       }
+      mqRenderColorState(fieldId.replace('mq-shop-', ''));
     });
     set('mq-shop-range-low',  f['Quote range low']  || '5');
     set('mq-shop-range-high', f['Quote range high'] || '20');
@@ -3968,6 +4018,7 @@ window.logoutMember = async function () {
       const applyProChk = el('mq-tabs-applypro-toggle');
       if (applyProChk) applyProChk.checked = tabsCfg.applyToPro;
     })();
+    mqRenderWidgetLayoutUI(f['Widget layout']);
     const notifyEveryToggle = el('mq-notify-every-toggle');
     if (notifyEveryToggle) {
       notifyEveryToggle.classList.toggle('on', f['Notify on every estimate'] === 'Yes');
@@ -4690,14 +4741,11 @@ window.logoutMember = async function () {
             🏝️ Add "Add Island" button <span style="font-weight:400;color:#9ca3af">(lets customers measure island cabinets separately from base cabinets — only makes sense for kitchen-style project types)</span>
           </label>
           <div id="mq-room-island-settings-${idx}" style="display:${r.showIslandButton?'block':'none'};margin:0 0 10px 24px;padding:10px 12px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px">
-            <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#374151;margin-bottom:8px;cursor:pointer">
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#374151;cursor:pointer">
               <input type="checkbox" id="mq-room-islanddouble-${idx}" ${r.islandAllowDoubleRow?'checked':''} onchange="mqSaveRooms()" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
               Allow double-row (back-to-back) islands
             </label>
-            <div style="font-size:11px;color:#9ca3af;line-height:1.5;margin-bottom:8px">Island panel pricing is set once, shop-wide, in the <strong>Pricing</strong> tab — not per project type. Look for "🏝️ Island panel pricing" there.</div>
-            <div style="border-top:1px dashed #e5e7eb;padding-top:8px">
-              ${mqRoomAdjRow('island-mat', idx, r.islandMaterialAdjPct || 0, 'Islands', 'independent from the Base/Upper cabinets % above — only affects island cabinet materials, not the rest of this project type')}
-            </div>
+            <div style="font-size:11px;color:#9ca3af;line-height:1.5">Island panel pricing is set once, shop-wide, in the <strong>Pricing</strong> tab — not per project type. Look for "🏝️ Island panel pricing" there.</div>
           </div>` : ''}
           ${isCountertop ? `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin-bottom:10px">
             <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:8px">💰 Price adjustments for this project type</label>
@@ -4707,6 +4755,7 @@ window.logoutMember = async function () {
             <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:8px">💰 Price adjustments for this project type</label>
             ${mqRoomAdjRow('mat', idx, r.materialAdjPct !== undefined ? r.materialAdjPct : (r.adjustment || 0), 'Base cabinets', 'e.g. bathroom vanities run smaller than kitchen cabinets, or commercial jobs may always be pilaster cabinets')}
             ${mqRoomAdjRow('upper-mat', idx, r.upperMaterialAdjPct || 0, 'Upper cabinets', 'e.g. commercial jobs may always use a specific upper cabinet style')}
+            ${r.showIslandButton ? mqRoomAdjRow('island-mat', idx, r.islandMaterialAdjPct || 0, 'Islands', 'independent from the Base/Upper cabinets % above') : ''}
             ${mqRoomAdjRow('install', idx, r.installAdjPct || 0, 'Installation', 'use if this project type\'s install should run higher or lower than typical — only affects the installation cost')}
             ${mqRoomAdjRow('total', idx, r.totalAdjPct || 0, 'Total ballpark', 'use if this project type\'s overall ballpark price should be inflated or deflated')}
           </div>`}
@@ -5149,28 +5198,109 @@ window.logoutMember = async function () {
     return `${datePart} · ${timePart}`;
   }
 
-  // Free trial expiry date, shown on the Account tab so a trialing shop
-  // knows the exact day they'll be moved to the free Demo tier (Jordan:
-  // "add a trial count down ... just the day their trial expires would be
-  // even better"). The real 30-day cutoff is ENFORCED server-side by the
-  // midasquote-signup-worker Cloudflare Worker's daily Cron Trigger — this
-  // is purely a client-side display of when that cutoff will land, computed
-  // from the Shops record's own Airtable `createdTime` (set automatically
-  // when the onboarding Worker creates the row at signup) + 30 days. No
-  // dedicated "trial start" field exists in Airtable to read instead — this
-  // was confirmed with Jordan rather than assumed, since getting a
-  // customer-facing date wrong would be worse than not showing one. If a
-  // dedicated field is ever added (e.g. because the signup-worker's own
-  // cutoff logic turns out to be based on something else), swap the
-  // `shopRecord.createdTime` line below for that field instead — everything
-  // downstream of it (formatting, days-left math) stays the same.
+  // Free trial expiry date, shown on the Account tab and in the top banner so
+  // a trialing shop knows the day their trial ends (Jordan: "add a trial count
+  // down ... just the day their trial expires would be even better"). The real
+  // cutoff is ENFORCED server-side by the midasquote-signup-worker's daily
+  // Cron Trigger (checked 2026-10-12 against its code): it flips every shop
+  // with Plan = "Free Trial" whose `Free trial start date` is BEFORE
+  // (today UTC - 30 days) to Plan = "Demo". The same worker's webhook is what
+  // stamps `Free trial start date` = today when a shop first gets the free plan.
+  // So this display reads that SAME field + 30 days (falling back to the
+  // record's createdTime only if the field is empty): the trial covers the whole
+  // end date, and the flip happens on the daily run after it.
   const MQ_FREE_TRIAL_DAYS = 30;
-  function mqFreeTrialExpiryDate(shopRecord) {
-    if (!shopRecord || !shopRecord.createdTime) return null;
-    const created = new Date(shopRecord.createdTime);
-    if (isNaN(created.getTime())) return null;
-    return new Date(created.getTime() + MQ_FREE_TRIAL_DAYS * 24 * 60 * 60 * 1000);
+  // 2026-10-12: now prefers the Shops table's own "Free trial start date"
+  // field (Jordan already has it — changing that date restarts a shop's
+  // trial countdown here), and only falls back to the record's createdTime
+  // when that field is empty. An Airtable date-only value ("2026-09-16") is
+  // read as a LOCAL calendar day — new Date("2026-09-16") would be UTC
+  // midnight and show as the previous evening in North American time zones.
+  function mqFreeTrialStartDate(shopRecord) {
+    if (!shopRecord) return null;
+    const raw = shopRecord.fields && shopRecord.fields['Free trial start date'];
+    if (raw) {
+      const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(raw).trim());
+      const d = m ? new Date(+m[1], +m[2] - 1, +m[3]) : new Date(raw);
+      if (!isNaN(d.getTime())) return d;
+    }
+    if (shopRecord.createdTime) {
+      const c = new Date(shopRecord.createdTime);
+      if (!isNaN(c.getTime())) return c;
+    }
+    return null;
   }
+  // Calendar days from today to the trial's end date. 0 = today IS the last
+  // day (the shop still has full access today — the cron only flips a shop on
+  // the run after its end date); negative = the end date has passed but the
+  // daily cron hasn't run yet.
+  function mqFreeTrialDaysLeft(expiry) {
+    const DAY = 24 * 60 * 60 * 1000;
+    const t = new Date();
+    const today = new Date(t.getFullYear(), t.getMonth(), t.getDate());
+    const end = new Date(expiry.getFullYear(), expiry.getMonth(), expiry.getDate());
+    return Math.round((end.getTime() - today.getTime()) / DAY);
+  }
+  function mqFreeTrialLeftText(n) { return n <= 0 ? 'last day' : `${n} day${n === 1 ? '' : 's'} left`; }
+  function mqFreeTrialExpiryDate(shopRecord) {
+    const start = mqFreeTrialStartDate(shopRecord);
+    if (!start) return null;
+    // Calendar-day arithmetic (not +30*24h) so a daylight-saving change inside the
+    // 30 days can't shift the displayed end date by a day.
+    return new Date(start.getFullYear(), start.getMonth(), start.getDate() + MQ_FREE_TRIAL_DAYS);
+  }
+
+  // Trial / Demo banner at the top of the dashboard (every tab). Jordan
+  // 2026-10-12: while a shop is on the free trial, show the day it ends plus
+  // a link to the Account tab; once it has ended, tell them they're welcome
+  // to stay on the free Demo plan and link to the Account tab if they want
+  // full access again. Paying shops see nothing. Uses the same Plan field and
+  // expiry-date helper as the Account tab (mqFreeTrialExpiryDate above), so the
+  // two can never disagree. The Demo version can be closed for the current
+  // visit (not remembered — it comes back next load, on purpose, since it's
+  // the upgrade nudge); the trial version can't be closed.
+  function mqPlanBannerInnerHTML() {
+    const rec = window._mqShopRecord;
+    const plan = (rec && rec.fields && rec.fields['Plan']) || '';
+    const btn = (label) => `<button type="button" class="mq-btn mq-btn-sm" style="white-space:nowrap;background:#fff" onclick="mqGoToAccountTab()">${label}</button>`;
+    if (plan === 'Free Trial') {
+      const expiry = mqFreeTrialExpiryDate(rec);
+      let msg, urgent = false;
+      if (!expiry) {
+        msg = `🗓️ You're on the <strong>free trial</strong> — full access. Add a plan any time in the Account tab to keep it.`;
+      } else if (mqFreeTrialDaysLeft(expiry) < 0) {
+        urgent = true;
+        msg = `🗓️ Your <strong>free trial is ending</strong> — your account moves to the free Demo plan shortly. Pick a plan in the Account tab to keep full access.`;
+      } else {
+        const dateStr = expiry.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+        const daysLeft = mqFreeTrialDaysLeft(expiry);
+        urgent = daysLeft <= 5;
+        msg = `🗓️ Your <strong>free trial ends ${dateStr}</strong> (${mqFreeTrialLeftText(daysLeft)}). You have full access until then — add a plan in the Account tab to keep it.`;
+      }
+      const c = urgent ? { bg:'#fef2f2', bd:'#fca5a5', tx:'#991b1b' } : { bg:'#fffbeb', bd:'#fcd34d', tx:'#92400e' };
+      return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px 16px;flex-wrap:wrap;background:${c.bg};border:1px solid ${c.bd};color:${c.tx};border-radius:10px;padding:12px 16px;margin-bottom:1.25rem;font-size:13px;line-height:1.5">
+        <span style="flex:1 1 280px">${msg}</span>${btn('Go to Account tab →')}</div>`;
+    }
+    if (plan === 'Demo' && !window._mqDemoBannerDismissed) {
+      return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px 16px;flex-wrap:wrap;background:#eff6ff;border:1px solid #bfdbfe;color:#1e3a8a;border-radius:10px;padding:12px 16px;margin-bottom:1.25rem;font-size:13px;line-height:1.5">
+        <span style="flex:1 1 280px">Your <strong>free trial has ended</strong> — you're welcome to stay on the free Demo plan. Want full access again? Pick a plan in the Account tab.</span>
+        <span style="display:flex;align-items:center;gap:10px">${btn('Get full access →')}<button type="button" aria-label="Dismiss" title="Dismiss" onclick="mqDismissDemoBanner()" style="background:none;border:none;color:#1e3a8a;font-size:16px;line-height:1;cursor:pointer;padding:2px 4px">✕</button></span></div>`;
+    }
+    return '';
+  }
+  window.mqRefreshPlanBanner = function() {
+    const holder = document.getElementById('mq-plan-banner');
+    if (holder) holder.innerHTML = mqPlanBannerInnerHTML();
+  };
+  window.mqDismissDemoBanner = function() {
+    window._mqDemoBannerDismissed = true;
+    window.mqRefreshPlanBanner();
+  };
+  window.mqGoToAccountTab = function() {
+    const navEl = document.querySelector('#midasquote-dashboard .mq-nav-item[onclick^="mqNav(\'billing\'"]');
+    if (navEl) window.mqNav('billing', navEl);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   function renderLeads(leads, limit, selectable) {
     if (!leads.length) return '<div class="mq-empty">No leads yet — share your widget to start capturing quotes!</div>';
@@ -6489,14 +6619,42 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // Clears one of the 4 optional color fields back to blank — blank means
   // "use the original MidasQuote blue scheme," not a preset value tied to
   // anything else, so this just empties the field and saves.
+  // The 4 optional guided-flow colours (focal / box border / box background /
+  // box text) can be blank = "use MidasQuote's default". A blank field plus a
+  // colour square that's merely very pale (the default box background is
+  // #eff6ff, which looks white in a tiny swatch) made a successful reset look
+  // like it hadn't worked, so each field now states plainly whether it's on
+  // the default or a custom colour, with a bordered dot of the colour actually
+  // in use.
+  function mqOptionalColorDefaults() { return { focalcolor: '#2563eb', boxbordercolor: '#93c5fd', boxbgcolor: '#eff6ff', boxtextcolor: '#1e40af' }; }
+  function mqRenderColorState(shortId) {
+    const textField = el('mq-shop-' + shortId);
+    if (!textField) return;
+    const wrap = textField.closest('.mq-field');
+    if (!wrap) return;
+    let st = wrap.querySelector('.mq-color-state');
+    if (!st) {
+      st = document.createElement('div');
+      st.className = 'mq-color-state';
+      st.style.cssText = 'font-size:12px;font-weight:600;color:#374151;margin-top:6px;display:flex;align-items:center;gap:6px';
+      wrap.appendChild(st);
+    }
+    const def = mqOptionalColorDefaults()[shortId];
+    const v = (textField.value || '').trim();
+    const custom = /^#[0-9a-fA-F]{6}$/.test(v);
+    const hex = custom ? v : def;
+    st.innerHTML = '<span style="display:inline-block;width:16px;height:16px;border-radius:50%;background:' + hex + ';border:1.5px solid #6b7280;flex-shrink:0"></span><span>' +
+      (custom ? 'Custom colour in use (' + v + ')' : (v ? 'Not a valid colour code — the default (' + def + ') is used' : '✓ Using the MidasQuote default (' + def + ')')) + '</span>';
+  }
+
   window.mqClearShopColorField = function(shortId, label) {
     const textField = el('mq-shop-' + shortId);
     const swatch = el('mq-shop-' + shortId + '-swatch');
     if (textField) textField.value = '';
     if (swatch) {
-      const defaults = { focalcolor: '#2563eb', boxbordercolor: '#93c5fd', boxbgcolor: '#eff6ff', boxtextcolor: '#1e40af' };
-      swatch.value = defaults[shortId] || '#1a1a1a';
+      swatch.value = mqOptionalColorDefaults()[shortId] || '#1a1a1a';
     }
+    mqRenderColorState(shortId);
     window.mqSaveShop();
     showMsg('mq-shop-msg', `✓ ${label} reset to the MidasQuote default.`);
   };
@@ -6990,7 +7148,12 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   window.mqHideAllSpecVariants = function(itemId, hide) {
     document.querySelectorAll(`[data-spec-group="${itemId}"] [id^="mq-hidden-"]`).forEach(cb => { cb.checked = hide; });
     mqMarkProductsDirty();
-    if (typeof window.mqSaveProducts === 'function') window.mqSaveProducts();
+    // A Templates (Admin) item's variant cards live on the master template
+    // shop, not the current shop -- save through the Templates save path
+    // instead of My Products' (the same variant-card markup is reused there).
+    if ((window._mqTemplateItems || []).some(x => x.id === itemId)) {
+      if (typeof window.mqSaveTemplatePhotos === 'function') window.mqSaveTemplatePhotos();
+    } else if (typeof window.mqSaveProducts === 'function') window.mqSaveProducts();
   };
 
   // Live preview for the group card's own dedicated "shared image" slot --
@@ -7061,6 +7224,22 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         previewWrap.innerHTML = `<img src="${url.replace(/"/g,'&quot;')}" style="width:100%;height:120px;object-fit:contain;background:#f0efeb;border-radius:8px;margin-bottom:10px" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/><div style="display:none;width:100%;height:120px;background:#f0efeb;border-radius:8px;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px">⭐</div>`;
       }
     });
+    // Templates (Admin) uses this same shared-photo control (Jordan: pushed a
+    // template with variants and "it pushed everything except the image...
+    // it didnt give me the option to use the image for all variants"). There
+    // the variant photo inputs live in the Templates tab and are saved to the
+    // master template shop, so: make sure the variant list is open so the
+    // result is visible, then autosave through mqSaveTemplatePhotos (which
+    // reports its own "Template photos saved" message) instead of waiting on
+    // a "Save changes" click.
+    if ((window._mqTemplateItems || []).some(x => x.id === itemId)) {
+      const body = document.getElementById('mq-tmpl-varphotos-body-' + itemId);
+      if (body && body.style.display === 'none') window.mqToggleTmplVarPhotos(itemId);
+      if (window.mqMarkProductsDirty) window.mqMarkProductsDirty();
+      if (typeof window.mqSaveTemplatePhotos === 'function') window.mqSaveTemplatePhotos();
+      window.mqUpdateTmplVarPhotoSummary(itemId);
+      return;
+    }
     const wrap = document.getElementById('mq-specgroup-wrap-' + itemId);
     const arrow = document.getElementById('mq-specgroup-arrow-' + itemId);
     const variantWraps = document.querySelectorAll(`[data-spec-group="${itemId}"]`);
@@ -7223,6 +7402,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         setTimeout(() => { btn.textContent = 'Save changes'; }, 2000);
       });
       showMsg('mq-templates-msg', '✓ Template photos saved!');
+      (window._mqTemplateItems || []).forEach(x => { if (window.mqUpdateTmplVarPhotoSummary) window.mqUpdateTmplVarPhotoSummary(x.id); });
     } catch(e) { showMsg('mq-templates-msg', 'Error saving — please try again.', 'error'); }
   };
 
@@ -7661,7 +7841,19 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // state already survives a grid-only rebuild.
     function mqRefreshCatSection(cat) {
       const wasOpen = document.getElementById(`mq-cat-body-${cat}`)?.style.display !== 'none';
-      const catEl = document.querySelector(`[data-mq-cat="${cat}"]`);
+      // Jordan: "when i create a new group in my products i only see the new
+      // group after i refresh the page." Root cause: this lookup used to be
+      // an UNSCOPED document.querySelector('[data-mq-cat="door"]'), but the
+      // Pricing tab (pricing-helper-v2.js) tags its own category blocks
+      // (.mqph-cat-block) with the very same data-mq-cat attribute — and the
+      // Pricing page sits EARLIER in the DOM than My Products. Once the
+      // Pricing tab had been opened in a session, querySelector found ITS
+      // block first, so the freshly built My Products card was written over
+      // the Pricing tab's block (corrupting it) while the real My Products
+      // card on screen stayed stale until a full page refresh. Scoped to
+      // #mq-products-content .mq-card (same selector the estimator-tab
+      // scoping above already uses) so it can only ever hit this tab's card.
+      const catEl = document.querySelector(`#mq-products-content .mq-card[data-mq-cat="${cat}"]`);
       if (!catEl) return;
       catEl.outerHTML = catSection(cat);
       if (wasOpen) {
@@ -8334,6 +8526,36 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       shopRec.fields['Show showroom'] = !isOn ? 'Show' : 'Hide';
       showMsg('mq-products-msg', !isOn ? '✓ Showroom link enabled on widget.' : '✓ Showroom link hidden from widget.');
     } catch(e) { toggle.classList.toggle('on', isOn); showMsg('mq-products-msg', 'Error saving.', 'error'); }
+  };
+
+  // Widget layout — 'Widget layout' on the Shops table (single line text):
+  // "Classic" (or blank = default) or "Focused". widget.js reads it at load,
+  // so the embed code and standalone link never need to change. widgetpro.js
+  // deliberately ignores it (Pro always stays Classic).
+  function mqRenderWidgetLayoutUI(value) {
+    const layout = String(value || '').trim().toLowerCase() === 'focused' ? 'Focused' : 'Classic';
+    const c = el('mq-layout-classic'), f = el('mq-layout-focused');
+    if (c) { c.style.borderColor = layout === 'Classic' ? '#1a1a1a' : '#e5e7eb'; c.style.background = layout === 'Classic' ? '#f9fafb' : '#fff'; }
+    if (f) { f.style.borderColor = layout === 'Focused' ? '#1a1a1a' : '#e5e7eb'; f.style.background = layout === 'Focused' ? '#f9fafb' : '#fff'; }
+    const note = el('mq-layout-note');
+    if (note) note.textContent = layout === 'Focused'
+      ? '🎯 Focused is live on your embedded widget and standalone link.'
+      : '📜 Classic is live on your embedded widget and standalone link.';
+  }
+  window.mqSetWidgetLayout = async function(layout) {
+    const shopRec = window._mqShopRecord;
+    if (!shopRec) return;
+    const prev = shopRec.fields['Widget layout'] || '';
+    if ((String(prev).trim().toLowerCase() === 'focused' ? 'Focused' : 'Classic') === layout) return;
+    mqRenderWidgetLayoutUI(layout);
+    try {
+      await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Widget layout': layout });
+      shopRec.fields['Widget layout'] = layout;
+      showMsg('mq-shop-msg', '✓ Widget layout set to ' + layout + '. It\'s live on your widget now.');
+    } catch(e) {
+      mqRenderWidgetLayoutUI(prev);
+      showMsg('mq-shop-msg', 'Error saving.', 'error');
+    }
   };
 
   // Estimator tabs (widget's Both/Cabinets/Countertops top-level tabs) —
@@ -9234,20 +9456,71 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // shop-data payload, so this is meant to keep an unlisted/trade-only
   // widget away from casual visitors, not to protect anything sensitive.
   function mqGetWidgetPasswords(shopRec) {
-    try { return shopRec.fields['Widget passwords'] ? JSON.parse(shopRec.fields['Widget passwords']) : []; }
+    try { const r = shopRec.fields['Widget passwords'] ? JSON.parse(shopRec.fields['Widget passwords']) : []; return Array.isArray(r) ? r : []; }
     catch(e) { return []; }
+  }
+  // Entries are plain strings (older) or {p, t} (t = when it was added). The
+  // time lets widget.js ask a browser again if a password is deleted and then
+  // added back — see mqWidgetPwEntries in widget.js.
+  function mqPwText(x) { return (x && typeof x === 'object') ? String(x.p == null ? '' : x.p) : String(x == null ? '' : x); }
+  function mqPwObj(x) {
+    if (x && typeof x === 'object') return x;
+    return { p: String(x == null ? '' : x), t: 0 };
   }
   function mqRenderWidgetPasswordList() {
     const shopRec = window._mqShopRecord;
     const list = el('mq-widgetpw-list');
     if (!list || !shopRec) return;
     const pwds = mqGetWidgetPasswords(shopRec);
-    list.innerHTML = pwds.length ? pwds.map((pw, idx) => `
-      <span style="display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid #fecaca;border-radius:999px;padding:5px 10px;font-size:12px;color:#374151">
-        <span style="font-family:monospace">${(pw||'').replace(/</g,'&lt;')}</span>
-        <button type="button" onclick="mqRemoveWidgetPassword(${idx})" title="Remove this password" style="background:none;border:none;cursor:pointer;color:#991b1b;font-weight:700;padding:0;line-height:1;font-size:13px">✕</button>
-      </span>`).join('') : '<span style="font-size:12px;color:#9ca3af">No passwords added yet — while the toggle above is on, no one can get into the widget until you add at least one.</span>';
+    const esc = t => String(t == null ? '' : t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+    list.style.cssText = 'display:flex;flex-direction:column;gap:8px;margin:6px 0 10px';
+    list.innerHTML = pwds.length ? pwds.map((pwEntry, idx) => {
+      const o = mqPwObj(pwEntry);
+      const pw = mqPwText(pwEntry);
+      const d = Math.min(100, Math.max(0, parseFloat(o.d) || 0));
+      const show = o.s !== false;
+      return `
+      <div style="background:#fff;border:1px solid #fecaca;border-radius:10px;padding:8px 12px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+          <span style="font-family:monospace;font-size:13px;color:#374151;word-break:break-all">${esc(pw)}</span>
+          <button type="button" onclick="mqRemoveWidgetPassword(${idx})" title="Remove this password" style="background:none;border:none;cursor:pointer;color:#991b1b;font-weight:700;padding:0;line-height:1;font-size:14px">✕</button>
+        </div>
+        <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px 14px;margin-top:8px;font-size:12px;color:#4b5563">
+          <label style="display:inline-flex;align-items:center;gap:6px">Discount
+            <input type="number" min="0" max="100" step="0.5" value="${d || ''}" placeholder="0" onchange="mqSetPasswordDiscount(${idx}, this.value)" style="width:72px;font-size:12.5px;padding:4px 7px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit"/> %
+          </label>
+          ${d > 0 ? `
+          <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" ${show ? 'checked' : ''} onchange="mqSetPasswordShow(${idx}, this.checked)"/> Show the discount to the customer</label>
+          ${show ? `<input type="text" value="${esc(o.l || '')}" maxlength="40" placeholder="Label, e.g. Contractor discount" onchange="mqSetPasswordLabel(${idx}, this.value)" style="flex:1;min-width:170px;font-size:12.5px;padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit"/>` : `<span style="color:#9ca3af">Customers just see the lower price.</span>`}` : ''}
+        </div>
+      </div>`; }).join('') : '<span style="font-size:12px;color:#9ca3af">No passwords added yet — while the toggle above is on, no one can get into the widget until you add at least one.</span>';
   }
+  // Saves one change to a single password entry. Entries that were plain
+  // strings (older ones) become {p, t:0} objects — t:0 keeps them working in
+  // browsers that already unlocked with them.
+  async function mqPatchWidgetPassword(idx, patch, okMsg) {
+    const shopRec = window._mqShopRecord;
+    if (!shopRec) return;
+    const pwds = mqGetWidgetPasswords(shopRec);
+    if (!pwds[idx]) return;
+    pwds[idx] = Object.assign({}, mqPwObj(pwds[idx]), patch);
+    try {
+      await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Widget passwords': JSON.stringify(pwds) });
+      shopRec.fields['Widget passwords'] = JSON.stringify(pwds);
+      mqRenderWidgetPasswordList();
+      showMsg('mq-shop-msg', okMsg);
+    } catch(e) { showMsg('mq-shop-msg', 'Error saving — please try again.', 'error'); mqRenderWidgetPasswordList(); }
+  }
+  window.mqSetPasswordDiscount = function(idx, val) {
+    const n = Math.min(100, Math.max(0, parseFloat(val) || 0));
+    return mqPatchWidgetPassword(idx, { d: n }, n > 0 ? `✓ Discount set to ${n}%.` : '✓ Discount removed.');
+  };
+  window.mqSetPasswordShow = function(idx, on) {
+    return mqPatchWidgetPassword(idx, { s: !!on }, on ? '✓ Customers will see the discount.' : '✓ Customers will only see the lower price.');
+  };
+  window.mqSetPasswordLabel = function(idx, val) {
+    return mqPatchWidgetPassword(idx, { l: String(val || '').trim().slice(0, 40) }, '✓ Label saved.');
+  };
   window.mqAddWidgetPassword = async function() {
     const shopRec = window._mqShopRecord;
     if (!shopRec) return;
@@ -9255,12 +9528,17 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const val = (input && input.value || '').trim();
     if (!val) return;
     const pwds = mqGetWidgetPasswords(shopRec);
-    if (pwds.includes(val)) { showMsg('mq-shop-msg', 'That password is already on the list.', 'error'); return; }
-    pwds.push(val);
+    if (pwds.some(x => mqPwText(x) === val)) { showMsg('mq-shop-msg', 'That password is already on the list.', 'error'); return; }
+    const discInput = el('mq-widgetpw-new-disc');
+    const disc = Math.min(100, Math.max(0, parseFloat(discInput && discInput.value) || 0));
+    const entry = { p: val, t: Date.now() };
+    if (disc > 0) { entry.d = disc; entry.s = true; entry.l = ''; }
+    pwds.push(entry);
     try {
       await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Widget passwords': JSON.stringify(pwds) });
       shopRec.fields['Widget passwords'] = JSON.stringify(pwds);
       if (input) input.value = '';
+      if (discInput) discInput.value = '';
       mqRenderWidgetPasswordList();
       showMsg('mq-shop-msg', '✓ Password added.');
     } catch(e) { showMsg('mq-shop-msg', 'Error saving — please try again.', 'error'); }
@@ -9327,6 +9605,29 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       // stale label (like "New template item") forever after a rename.
       if (field === 'Item name') updates['Special Items'] = value;
       await atUpdate(CONFIG.SPECIALTY_TABLE, id, updates);
+      // Jordan: the "⭐ Pro only" filter only picked up an item AFTER a page
+      // refresh once he'd just ticked its Pro only box. Cause: the filter
+      // never reads the saved record -- it reads a data-proonly="1/0"
+      // attribute stamped onto each row/card when the tab first rendered, and
+      // nothing updated that stamp when the checkbox changed. So sync it right
+      // here (plus the in-memory record, so a later re-render of that tab
+      // doesn't stamp the stale value back). The filter is deliberately NOT
+      // re-run here: if "Pro only" is already ticked in the filter, unchecking
+      // an item shouldn't make its row vanish out from under the cursor
+      // mid-edit -- it just drops out the next time the filter is touched.
+      if (field === 'Pro only') {
+        const flag = value ? '1' : '0';
+        const rec = mqFindVariantOwnerRecord(id);
+        if (rec) rec.fields['Pro only'] = !!value;
+        document.querySelectorAll(`tr[data-id="${id}"]`).forEach(tr => tr.setAttribute('data-proonly', flag));
+        const stamp = (node) => { if (node) node.setAttribute('data-proonly', flag); };
+        // My Products cards: a plain item's single card, or a variant item's
+        // group card + each popped-out variant card.
+        const photoPreview = document.getElementById('mq-photo-preview-spec_' + id);
+        if (photoPreview) stamp(photoPreview.closest('.mq-spec-card-wrap'));
+        stamp(document.getElementById('mq-specgroup-wrap-' + id));
+        document.querySelectorAll(`[data-spec-group="${id}"]`).forEach(stamp);
+      }
     } catch(e) { console.error('Failed to save specialty field', e); }
   };
 
@@ -9754,6 +10055,10 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     if (priceCell) priceCell.innerHTML = mqSpecPriceCellHTML(r);
     const pricedCell = document.getElementById(`mq-spec-pricedcell-${id}`);
     if (pricedCell) pricedCell.innerHTML = mqSpecPricedCellHTML(r);
+    // Templates (Admin) cards also carry the photos section, which switches
+    // between "one photo card" (no variants) and "one-for-all + a card per
+    // variant" -- re-render it whenever variants are added/removed.
+    if (document.getElementById(`mq-tmpl-photos-${id}`)) window.mqRefreshTemplatePhotos(id);
   }
 
   window.mqToggleVariantsPanel = function(id) {
@@ -10400,17 +10705,47 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // scroll wrapper). Recomputed fresh every time it opens.
     panel.style.position = 'fixed';
     panel.style.left = Math.round(anchorRect.left) + 'px';
-    panel.style.top = Math.round(anchorRect.bottom + 6) + 'px';
     panel.style.bottom = 'auto';
     panel.style.margin = '0';
+    panel.style.maxHeight = 'none';
+    panel.style.overflowY = 'visible';
 
-    const panelRect = panel.getBoundingClientRect();
-    if (panelRect.bottom > window.innerHeight) {
-      panel.style.top = 'auto';
-      panel.style.bottom = Math.round(window.innerHeight - anchorRect.top + 6) + 'px';
+    // Visible boundaries (Jordan 2026-10-04): the black top bar sits ABOVE
+    // this fixed-position panel, so a panel flipped upward from an item near
+    // the top of the screen used to have its first checkboxes hidden behind
+    // it ("the checkboxes disappear unless you have the item much farther
+    // down"). Never let the top of the list go above the bottom of the top
+    // bar (or the viewport top if the bar has scrolled away), and never let
+    // the bottom go past the viewport bottom.
+    const topbar = document.querySelector('#midasquote-dashboard .mq-topbar');
+    const minTop = Math.max(0, topbar ? Math.round(topbar.getBoundingClientRect().bottom) : 0) + 8;
+    const maxBottom = window.innerHeight - 8;
+    const gap = 6;
+    const panelH = panel.getBoundingClientRect().height;
+    const spaceBelow = maxBottom - (anchorRect.bottom + gap);
+    const spaceAbove = (anchorRect.top - gap) - minTop;
+
+    if (panelH <= spaceBelow) {
+      // Fits below the trigger — the normal case.
+      panel.style.top = Math.round(anchorRect.bottom + gap) + 'px';
+    } else if (panelH <= spaceAbove) {
+      // Doesn't fit below, but fits entirely above without touching the top bar.
+      panel.style.top = Math.round(anchorRect.top - gap - panelH) + 'px';
+    } else if (spaceBelow >= spaceAbove) {
+      // Fits neither way — use the roomier side, capped to it, and let the
+      // checkbox list scroll inside the panel so every item is still reachable.
+      panel.style.top = Math.round(anchorRect.bottom + gap) + 'px';
+      panel.style.maxHeight = Math.max(120, Math.floor(spaceBelow)) + 'px';
+      panel.style.overflowY = 'auto';
+    } else {
+      const h = Math.max(120, Math.floor(spaceAbove));
+      panel.style.maxHeight = h + 'px';
+      panel.style.overflowY = 'auto';
+      panel.style.top = Math.round(anchorRect.top - gap - Math.min(panelH, h)) + 'px';
     }
+    const panelRect = panel.getBoundingClientRect();
     if (panelRect.right > window.innerWidth) {
-      panel.style.left = Math.round(window.innerWidth - panelRect.width - 10) + 'px';
+      panel.style.left = Math.max(8, Math.round(window.innerWidth - panelRect.width - 10)) + 'px';
     }
 
     // Close on any click outside this details element. Deferred by one tick
@@ -10632,13 +10967,163 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     </div>`;
   }
 
+  // ---- Templates (Admin): photos for items WITH VARIANTS -------------------
+  // Jordan pushed a new specialty item from the Templates tab and "it pushed
+  // everything except the image... it didnt give me the option to use the
+  // image for all variants." Root cause: a shop's widget never uses an item's
+  // single main photo once the item has variants -- it shows each VARIANT's own
+  // photo (spec_<itemId>_v<variantId>). pushTemplateItemToOneShop already
+  // copies those per-variant photos from the master template shop verbatim,
+  // but the Templates card only ever offered the one main-photo card, so there
+  // was nowhere to set them and a variant item always arrived with no image.
+  // This gives a template with variants the same two tools My Products has:
+  // one photo for all N variants (with the "Apply to all?" confirm) and a
+  // photo card per variant. Everything autosaves to the master template
+  // shop's Photos via mqSaveTemplatePhotos, which is where the push reads.
+  function mqTmplSharedVariantPhotoUrl(itemId, variants, photosMap) {
+    if (!variants || !variants.length) return '';
+    const urls = variants.map(v => photosMap['spec_' + itemId + '_v' + v.id] || '');
+    return urls.every(u => u && u === urls[0]) ? urls[0] : '';
+  }
+
+  function mqTemplatePhotosHTML(r, savedPhotos, savedHidden) {
+    const variants = mqParseVariants(r);
+    if (!variants.length) {
+      return photoCardShared('spec_' + r.id, '', '⭐', 'specialty', [r.id], r.fields['Visible rooms'], savedPhotos, savedHidden, null, null, false, 'mqSaveTemplatePhotos');
+    }
+    const n = variants.length;
+    const itemName = (r.fields['Item name'] || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const withPhoto = variants.filter(v => savedPhotos['spec_' + r.id + '_v' + v.id]).length;
+    const sharedUrl = mqTmplSharedVariantPhotoUrl(r.id, variants, savedPhotos);
+    const allHidden = variants.every(v => savedHidden['spec_' + r.id + '_v' + v.id]);
+    const missing = withPhoto < n;
+    const placeholder = `<div style="width:100%;height:90px;background:#f0efeb;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:8px">⭐</div>`;
+    const sharedPreview = sharedUrl
+      ? `<img src="${sharedUrl.replace(/"/g, '&quot;')}" style="width:100%;height:90px;object-fit:contain;background:#f0efeb;border-radius:8px;margin-bottom:8px" onerror="this.outerHTML='<div style=\\'width:100%;height:90px;background:#f0efeb;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:8px\\'>⭐</div>'"/>`
+      : placeholder;
+    const variantCards = variants.map(v => `<div data-spec-group="${r.id}" style="background:#fffdf5;border:1px solid #fde68a;border-radius:10px;padding:5px">
+        ${photoCardShared('spec_' + r.id + '_v' + v.id, `${itemName} — ${((v.label || '').trim() || 'Variant').replace(/</g, '&lt;')}`, '⭐', 'specialty', null, null, savedPhotos, savedHidden, null, null, false, 'mqSaveTemplatePhotos')}
+      </div>`).join('');
+    return `<div style="background:#fffbeb;border:2px solid ${missing ? '#f59e0b' : '#fde68a'};border-radius:10px;padding:10px">
+      <div onclick="mqToggleTmplVarPhotos('${r.id}')" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:6px">
+        <div>
+          <div style="font-size:12px;font-weight:700;color:#92400e">🖼️ Photos for ${n} variant${n === 1 ? '' : 's'}</div>
+          <div id="mq-tmpl-varphotos-summary-${r.id}" style="font-size:11px;color:${missing ? '#b45309' : '#16a34a'};font-weight:600">${withPhoto} of ${n} have a photo${missing ? ' — add them so shops get images' : ' ✓'}</div>
+        </div>
+        <span id="mq-tmpl-varphotos-arrow-${r.id}" style="display:inline-block;transition:transform 0.2s;font-size:13px;color:#dc2626;flex-shrink:0">▼</span>
+      </div>
+      <div id="mq-tmpl-varphotos-body-${r.id}" style="display:none;margin-top:10px">
+        <div style="font-size:11px;color:#92400e;font-weight:600;margin-bottom:2px">Optional: one photo for all ${n} variants</div>
+        <div style="font-size:11px;color:#6b7280;line-height:1.4;margin-bottom:8px">Upload, paste, or choose a photo below and (after you confirm) it fills in all ${n} variants at once. Or leave it blank and set each variant's own photo further down. Whatever is set here is what gets pushed to shops.</div>
+        <div id="mq-specshared-preview-${r.id}">${sharedPreview}</div>
+        <label class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;margin-bottom:6px;text-align:center;cursor:pointer;display:block;box-sizing:border-box">
+          📤 Upload a photo
+          <input type="file" id="mq-specshared-upload-file-${r.id}" accept="image/*" style="display:none"/>
+        </label>
+        <div id="mq-specshared-upload-status-${r.id}" style="font-size:11px;text-align:center;margin-bottom:6px;min-height:14px"></div>
+        <div style="font-size:11px;color:#9ca3af;margin-bottom:4px">Or paste a photo URL <span style="color:#dc2626;font-weight:600">— don't use Facebook links, they expire and will break!</span></div>
+        <input type="text" id="mq-specshared-url-${r.id}" placeholder="https://your-site.com/photo.jpg"
+          style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:6px"
+          oninput="mqPreviewSpecSharedImage('${r.id}')" onblur="if(this.value.trim())mqApplySpecSharedImage('${r.id}')"/>
+        <button type="button" class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;color:#6b7280;margin-bottom:10px" onclick="mqOpenSpecSharedPhotoPicker('${r.id}')">📷 Choose from library</button>
+        <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:#92400e;font-weight:600;margin-bottom:8px;cursor:pointer">
+          <input type="checkbox" id="mq-hideall-spec-${r.id}" ${allHidden ? 'checked' : ''} onchange="mqHideAllSpecVariants('${r.id}', this.checked)" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
+          🙈 Hide all ${n} variants from showroom
+        </label>
+        <div style="font-size:11px;color:#92400e;font-weight:600;margin-bottom:6px">Each variant's own photo</div>
+        <div style="display:flex;flex-direction:column;gap:8px">${variantCards}</div>
+      </div>
+    </div>`;
+  }
+
+  window.mqToggleTmplVarPhotos = function(itemId) {
+    const body = document.getElementById('mq-tmpl-varphotos-body-' + itemId);
+    const arrow = document.getElementById('mq-tmpl-varphotos-arrow-' + itemId);
+    if (!body) return;
+    const opening = body.style.display === 'none';
+    body.style.display = opening ? 'block' : 'none';
+    if (arrow) arrow.style.transform = opening ? 'rotate(-90deg)' : 'rotate(0deg)';
+    window.mqUpdateTmplVarPhotoSummary(itemId);
+  };
+
+  // Recount from the live inputs (not the saved map) so the header stays
+  // honest after an upload / paste / apply-to-all without a re-render.
+  window.mqUpdateTmplVarPhotoSummary = function(itemId) {
+    const summary = document.getElementById('mq-tmpl-varphotos-summary-' + itemId);
+    if (!summary) return;
+    const inputs = [...document.querySelectorAll(`input[id^="mq-photo-spec_${itemId}_v"]`)];
+    const n = inputs.length;
+    if (!n) return;
+    const have = inputs.filter(i => i.value.trim()).length;
+    const missing = have < n;
+    summary.textContent = `${have} of ${n} have a photo${missing ? ' — add them so shops get images' : ' ✓'}`;
+    summary.style.color = missing ? '#b45309' : '#16a34a';
+  };
+
+  // Hooks up every upload button inside `scope` -- the normal per-card ones
+  // (mq-upload-file-<key>) AND the "one photo for all variants" ones
+  // (mq-specshared-upload-file-<itemId>, deliberately not "mq-photo-" prefixed
+  // so the save scan doesn't capture them -- see mqApplySpecSharedImage).
+  // Shared by renderTemplates and mqRefreshTemplatePhotos so a re-rendered
+  // photos section gets working uploads again.
+  function mqWireTemplatePhotoUploads(scope) {
+    if (!scope) return;
+    scope.querySelectorAll('input[type="file"][id^="mq-upload-file-"]').forEach(fileInput => {
+      const key = fileInput.id.replace('mq-upload-file-', '');
+      mqWireUploadButton(
+        null,
+        'mq-upload-file-' + key,
+        'mq-upload-status-' + key,
+        'mq-photo-' + key,
+        MASTER_TEMPLATE_SHOP_NAME,
+        'products',
+        // Save immediately once the upload finishes -- this tab's "Save all
+        // changes" button is easy to forget, and an uploaded-but-unsaved
+        // photo silently disappears the next time the tab reloads.
+        (url) => { mqPreviewPhoto(key); mqMarkProductsDirty(); if (typeof window.mqSaveTemplatePhotos === 'function') window.mqSaveTemplatePhotos(); }
+      );
+    });
+    scope.querySelectorAll('input[type="file"][id^="mq-specshared-upload-file-"]').forEach(fileInput => {
+      const itemId = fileInput.id.replace('mq-specshared-upload-file-', '');
+      mqWireUploadButton(
+        null,
+        'mq-specshared-upload-file-' + itemId,
+        'mq-specshared-upload-status-' + itemId,
+        'mq-specshared-url-' + itemId,
+        MASTER_TEMPLATE_SHOP_NAME,
+        'products',
+        (url) => { mqPreviewSpecSharedImage(itemId); mqApplySpecSharedImage(itemId); }
+      );
+    });
+  }
+
+  // Re-renders one template card's photos section (e.g. after a variant is
+  // added/removed, which flips it between the single-photo card and the
+  // variant-photos section). Keeps the section open if it already was.
+  window.mqRefreshTemplatePhotos = function(itemId) {
+    const box = document.getElementById('mq-tmpl-photos-' + itemId);
+    const r = (window._mqTemplateItems || []).find(x => x.id === itemId);
+    const masterShop = window._mqMasterTemplateShop;
+    if (!box || !r || !masterShop) return;
+    const prevBody = document.getElementById('mq-tmpl-varphotos-body-' + itemId);
+    const wasOpen = !!prevBody && prevBody.style.display !== 'none';
+    let photos = {}, hidden = {};
+    try { photos = masterShop.fields['Photos'] ? JSON.parse(masterShop.fields['Photos']) : {}; } catch(e) {}
+    try { hidden = masterShop.fields['Hidden'] ? JSON.parse(masterShop.fields['Hidden']) : {}; } catch(e) {}
+    box.innerHTML = mqTemplatePhotosHTML(r, photos, hidden);
+    mqWireTemplatePhotoUploads(box);
+    if (wasOpen) window.mqToggleTmplVarPhotos(itemId);
+  };
+
   // Template cards need editable name/price/unit fields too (regular My
   // Products items get that from the separate Specialty Items tab table —
   // templates don't have an equivalent, so it lives right on the card here).
   function templateItemCard(r, savedPhotos, savedHidden, allItems, allShops) {
     const itemName = r.fields['Item name'] || '';
     const variantCount = mqParseVariants(r).length;
-    const photoHtml = photoCardShared('spec_' + r.id, '', '⭐', 'specialty', [r.id], r.fields['Visible rooms'], savedPhotos, savedHidden, null, null, false, 'mqSaveTemplatePhotos');
+    // Wrapped in its own container so it can be re-rendered when variants are
+    // added/removed -- see mqTemplatePhotosHTML / mqRefreshTemplatePhotos.
+    const photoHtml = `<div id="mq-tmpl-photos-${r.id}">${mqTemplatePhotosHTML(r, savedPhotos, savedHidden)}</div>`;
     const categoryList = [...new Set((allItems||[]).map(x => (x.fields['Category']||'').trim()).filter(Boolean))];
     const shopOptions = (allShops||[]).map(s => `<option value="${s.id}">${(s.fields['Shop name']||'').replace(/"/g,'&quot;')}</option>`).join('');
     return `<div style="display:flex;flex-direction:column;gap:6px">
@@ -10752,23 +11237,9 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // Wire up upload buttons for every template card just rendered — this
     // step was missing entirely before, so the file picker existed visually
     // but selecting a file did nothing at all.
-    content.querySelectorAll('input[type="file"][id^="mq-upload-file-"]').forEach(fileInput => {
-      const key = fileInput.id.replace('mq-upload-file-', '');
-      mqWireUploadButton(
-        null,
-        'mq-upload-file-' + key,
-        'mq-upload-status-' + key,
-        'mq-photo-' + key,
-        MASTER_TEMPLATE_SHOP_NAME,
-        'products',
-        // Save immediately once the upload finishes, instead of only
-        // marking dirty — same reasoning as the autosave wiring in
-        // photoCardShared above: this tab's "Save all changes" button is
-        // easy to forget, and an uploaded-but-unsaved photo silently
-        // disappears the next time this tab is reloaded.
-        (url) => { mqPreviewPhoto(key); mqMarkProductsDirty(); if (typeof window.mqSaveTemplatePhotos === 'function') window.mqSaveTemplatePhotos(); }
-      );
-    });
+    // (Also wires the new "one photo for all variants" upload buttons for
+    // template items that have variants.)
+    mqWireTemplatePhotoUploads(content);
 
     // Every item's variants panel already exists in the DOM at this point
     // (inside its own hidden mq-spec-variants-row-<id>, built by
@@ -13914,6 +14385,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   const origMqNav = window.mqNav;
   window.mqNav = async function(page, navEl) {
     origMqNav(page, navEl);
+    if (window.mqRefreshPlanBanner) window.mqRefreshPlanBanner(); // plan may have changed since the page loaded
     // Re-checks on every tab switch, not just the initial page load — so a
     // shop already using the dashboard when a new announcement goes out
     // sees it the moment they click anywhere, no refresh needed. Skips
@@ -13996,8 +14468,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
             const expiryDate = mqFreeTrialExpiryDate(window._mqShopRecord);
             if (expiryDate) {
               const dateStr = expiryDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-              const daysLeft = Math.max(0, Math.ceil((expiryDate - new Date()) / (24 * 60 * 60 * 1000)));
-              trialExpiryHTML = `<p style="font-size:13px;color:#92400e;background:#fffbeb;border-radius:6px;padding:8px 10px;margin-bottom:10px">🗓️ Your free trial ends <strong>${dateStr}</strong> (${daysLeft} day${daysLeft === 1 ? '' : 's'} left).</p>`;
+              const daysLeft = mqFreeTrialDaysLeft(expiryDate);
+              trialExpiryHTML = `<p style="font-size:13px;color:#92400e;background:#fffbeb;border-radius:6px;padding:8px 10px;margin-bottom:10px">🗓️ Your free trial ends <strong>${dateStr}</strong> (${mqFreeTrialLeftText(daysLeft)}).</p>`;
             }
           }
           planEl.innerHTML = `
@@ -14143,7 +14615,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       if (helperContainer && !helperContainer.dataset.loaded) {
         helperContainer.dataset.loaded = 'true';
         const script = document.createElement('script');
-        script.src = 'https://widget.midasquote.com/pricing-helper-v2-test.js';
+        script.src = 'https://widget.midasquote.com/pricing-helper-v2.js';
         script.onload = function() {
           window.mqph2Init(window._mqShopRecord, window._mqPricingRecord);
         };
