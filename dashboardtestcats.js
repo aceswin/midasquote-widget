@@ -1729,8 +1729,8 @@ window.logoutMember = async function () {
                   </div>
                   <div class="mq-field"><label class="mq-label">Box background colour</label>
                     <div style="display:flex;align-items:center;gap:8px">
-                      <input type="text" id="mq-shop-boxbgcolor" placeholder="#eff6ff (default)" style="flex:1"/>
-                      <input type="color" id="mq-shop-boxbgcolor-swatch" value="#eff6ff" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer;flex-shrink:0"/>
+                      <input type="text" id="mq-shop-boxbgcolor" placeholder="#d6e7fb (default)" style="flex:1"/>
+                      <input type="color" id="mq-shop-boxbgcolor-swatch" value="#d6e7fb" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer;flex-shrink:0"/>
                       <button type="button" class="mq-btn mq-btn-sm" onclick="mqClearShopColorField('boxbgcolor','Box background colour')" title="Reset to MidasQuote default">↺</button>
                     </div>
                     <span class="mq-hint">Background of those same highlight boxes</span>
@@ -3918,7 +3918,7 @@ window.logoutMember = async function () {
     [
       ['mq-shop-focalcolor', 'Focal colour', '#2563eb'],
       ['mq-shop-boxbordercolor', 'Box border colour', '#93c5fd'],
-      ['mq-shop-boxbgcolor', 'Box background colour', '#eff6ff'],
+      ['mq-shop-boxbgcolor', 'Box background colour', '#d6e7fb'],
       ['mq-shop-boxtextcolor', 'Box text colour', '#1e40af'],
     ].forEach(([fieldId, airtableName, fallbackSwatch]) => {
       set(fieldId, f[airtableName]);
@@ -6626,7 +6626,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // like it hadn't worked, so each field now states plainly whether it's on
   // the default or a custom colour, with a bordered dot of the colour actually
   // in use.
-  function mqOptionalColorDefaults() { return { focalcolor: '#2563eb', boxbordercolor: '#93c5fd', boxbgcolor: '#eff6ff', boxtextcolor: '#1e40af' }; }
+  function mqOptionalColorDefaults() { return { focalcolor: '#2563eb', boxbordercolor: '#93c5fd', boxbgcolor: '#d6e7fb', boxtextcolor: '#1e40af' }; }
   function mqRenderColorState(shortId) {
     const textField = el('mq-shop-' + shortId);
     if (!textField) return;

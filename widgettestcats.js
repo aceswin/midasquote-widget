@@ -663,7 +663,7 @@
     const boxBgIsCustom = !!boxBg;
     focalColor = focalColor || '#2563eb';
     boxBorder = boxBorder || '#93c5fd';
-    boxBg = boxBg || '#eff6ff';
+    boxBg = boxBg || '#d6e7fb';
     boxText = boxText || '#1e40af';
     window._mqFocalColor = focalColor;
     window._mqBoxBorder = boxBorder;
@@ -672,7 +672,7 @@
     // Only run the auto-gradient math when they've actually set a custom
     // background — the original default already has its own two hand-picked
     // gradient stops (#eff6ff → #f0f9ff), no need to recompute those.
-    const boxBgStop2 = boxBgIsCustom ? mqLightenHex(boxBg, 0.3) : '#f0f9ff';
+    const boxBgStop2 = mqLightenHex(boxBg, 0.3);
     const s = document.createElement('style');
     s.textContent = `
       #midasquote-widget *{box-sizing:border-box;margin:0;padding:0}
@@ -1842,7 +1842,7 @@
       window._mqGroupFilter[selectId] = groupNames[0];
     }
     const boxBorderColor = window._mqBoxBorder || '#93c5fd';
-    const boxBgColor = window._mqBoxBg || '#eff6ff';
+    const boxBgColor = window._mqBoxBg || '#d6e7fb';
     const boxTextColor = window._mqBoxText || '#1e40af';
     const chips = items.map((it,i)=>{
       const safePhoto = (it.photoUrl||'').replace(/'/g,"\\'");
@@ -9770,7 +9770,7 @@
         const lum = h => { const [r, g, b] = rgb(h); return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b); };
         const ratio = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
         const rgba = (h, a) => { const [r, g, b] = rgb(h); return `rgba(${r},${g},${b},${a})`; };
-        const bg = norm(window._mqBoxBg) || '#eff6ff';
+        const bg = norm(window._mqBoxBg) || '#d6e7fb';
         let ink = norm(window._mqBoxText) || '#1e40af';
         if (ratio(bg, ink) < 4.5) ink = lum(bg) > 0.4 ? '#111827' : '#ffffff';
         const focal = norm(window._mqFocalColor) || '#2563eb';
