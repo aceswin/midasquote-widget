@@ -9862,7 +9862,15 @@
         if (r.forCountertops) return ['kitchen', 'bathroom', 'laundry', 'garage', 'commercial', 'other'].includes(k) ? CT_BASE + k + '.jpg' : '';
         return (['refacing', 'repainting', 'restaining'].includes(k) ? PT_ALT : PT_BASE) + k + '.jpg';
       };
-      const typesFor = id => rooms.filter(r => (id === 'countertops') === (r.forCountertops === true));
+      // The chooser lists exactly what that tab's own Project type dropdown
+      // lists (the dropdown leaves out Pro-only types, for instance), so the
+      // two can never disagree. Falls back to the same rule if the dropdown
+      // isn't there.
+      const typesFor = id => {
+        const sel = document.getElementById('mq-' + mqFxPrefixOfTabId(id) + '-room');
+        const have = sel ? new Set([...sel.options].map(o => o.value)) : null;
+        return rooms.filter(r => (id === 'countertops') === (r.forCountertops === true) && (have ? have.has(r.id) : !r.proOnly));
+      };
       const escH = t => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
       const ptHTML = t => {
         const list = typesFor(t.id);
