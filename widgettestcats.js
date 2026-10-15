@@ -9534,13 +9534,16 @@
       #mq-fx-chooser .mq-fx-card-sub{font-size:13.5px;color:#6b7280;display:block;margin-top:2px}
       #mq-fx-chooser .mq-fx-card-arrow{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;background:var(--mq-card-tint,#f3f4f6);color:var(--mq-card-ink,#1a1a1a);font-size:22px;line-height:1;padding-bottom:3px;flex-shrink:0;transition:transform .18s,background .18s,color .18s}
       #mq-fx-chooser .mq-fx-card:hover .mq-fx-card-arrow,#mq-fx-chooser .mq-fx-card:focus-visible .mq-fx-card-arrow{transform:translateX(3px)}
-      #mq-fx-chooser .mq-fx-cards{align-items:start}
-      #mq-fx-chooser .mq-fx-cardwrap{display:flex;flex-direction:column;gap:8px;min-width:0}
-      #mq-fx-chooser .mq-fx-ptog{display:inline-flex;align-items:center;justify-content:center;gap:6px;align-self:center;background:none;border:0;padding:6px 10px;font-family:inherit;font-size:13.5px;font-weight:700;color:var(--mq-card-ink,#1a1a1a);cursor:pointer;border-radius:99px}
-      #mq-fx-chooser .mq-fx-ptog:hover{background:var(--mq-card-tint,#f3f4f6)}
-      #mq-fx-chooser .mq-fx-ptog-c{display:inline-block;transition:transform .2s;font-size:14px;line-height:1}
+      #mq-fx-chooser .mq-fx-cards{align-items:stretch}
+      #mq-fx-chooser .mq-fx-cards:has(.mq-fx-ptog-open){align-items:start}
+      #mq-fx-chooser .mq-fx-cardwrap{display:flex;flex-direction:column;gap:0;min-width:0;background:#fff;border:2px solid #e5e7eb;border-radius:16px;overflow:hidden;transition:transform .18s,box-shadow .18s}
+      #mq-fx-chooser .mq-fx-cardwrap .mq-fx-card{flex:1 1 auto;border:0;border-radius:0;box-shadow:none;background:transparent}
+      #mq-fx-chooser .mq-fx-ptog{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;background:none;border:0;border-top:1px solid #e5e7eb;padding:11px 16px;font-family:inherit;font-size:13.5px;font-weight:700;color:var(--mq-card-ink,#1a1a1a);cursor:pointer;text-align:left;transition:background .15s}
+      #mq-fx-chooser .mq-fx-ptog:focus-visible{background:var(--mq-card-tint,#f3f4f6);outline:none}
+      @media (hover:hover){#mq-fx-chooser .mq-fx-ptog:hover{background:var(--mq-card-tint,#f3f4f6)}}
+      #mq-fx-chooser .mq-fx-ptog-c{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--mq-card-tint,#f3f4f6);transition:transform .2s;font-size:13px;line-height:1;flex-shrink:0}
       #mq-fx-chooser .mq-fx-ptog-open .mq-fx-ptog-c{transform:rotate(180deg)}
-      #mq-fx-chooser .mq-fx-ptypes{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:10px;box-shadow:0 3px 12px rgba(0,0,0,.06);animation:mqFxInNext .25s ease backwards}
+      #mq-fx-chooser .mq-fx-ptypes{background:#f9fafb;border-top:1px solid #e5e7eb;padding:12px 12px 14px;animation:mqFxInNext .25s ease backwards}
       #mq-fx-chooser .mq-fx-ptypes[hidden]{display:none}
       #mq-fx-chooser .mq-fx-pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px}
       #mq-fx-chooser .mq-fx-pt{display:flex;flex-direction:column;align-items:stretch;gap:5px;padding:0;background:none;border:0;cursor:pointer;font-family:inherit;text-align:center;border-radius:10px}
@@ -9651,8 +9654,9 @@
       }
 
       /* Chooser cards: white, with a brand-colour gradient border */
-      #mq-fx-chooser .mq-fx-card{background:linear-gradient(#fff,#fff) padding-box,linear-gradient(135deg,var(--mq-card-a,#1a1a1a),var(--mq-card-b,#888)) border-box;border:2px solid transparent;box-shadow:0 4px 14px rgba(0,0,0,.07)}
-      #mq-fx-chooser .mq-fx-card:hover,#mq-fx-chooser .mq-fx-card:focus-visible{border-color:transparent;transform:translateY(-3px);box-shadow:0 14px 30px rgba(0,0,0,.16),0 0 0 4px var(--mq-card-tint,#e5e7eb);outline:none}
+      #mq-fx-chooser .mq-fx-cardwrap{background:linear-gradient(#fff,#fff) padding-box,linear-gradient(135deg,var(--mq-card-a,#1a1a1a),var(--mq-card-b,#888)) border-box;border:2px solid transparent;box-shadow:0 4px 14px rgba(0,0,0,.07)}
+      #mq-fx-chooser .mq-fx-card:hover,#mq-fx-chooser .mq-fx-card:focus-visible{transform:none;box-shadow:none;outline:none}
+      #mq-fx-chooser .mq-fx-cardwrap:has(.mq-fx-card:hover),#mq-fx-chooser .mq-fx-cardwrap:has(.mq-fx-card:focus-visible){transform:translateY(-3px);box-shadow:0 14px 30px rgba(0,0,0,.16),0 0 0 4px var(--mq-card-tint,#e5e7eb)}
       #mq-fx-chooser .mq-fx-card-current{box-shadow:0 0 0 4px var(--mq-card-tint,#e5e7eb),0 4px 14px rgba(0,0,0,.07)}
 
       /* ── Full-screen focus mode ── */
