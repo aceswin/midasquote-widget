@@ -9336,6 +9336,49 @@
     window.mqFxScrollToStep();
   };
 
+  // Collapsible "project types" list under a chooser card. Opening one closes
+  // the others so the first screen never grows much.
+  window.mqFxToggleTypes = function(tabId, btn) {
+    const wrap = btn && btn.closest('.mq-fx-cardwrap');
+    if (!wrap) return;
+    const panel = wrap.querySelector('.mq-fx-ptypes');
+    if (!panel) return;
+    const open = panel.hasAttribute('hidden');
+    document.querySelectorAll('#mq-fx-chooser .mq-fx-cardwrap').forEach(w => {
+      const p = w.querySelector('.mq-fx-ptypes'), b = w.querySelector('.mq-fx-ptog');
+      if (!p || !b) return;
+      const mine = w === wrap;
+      if (mine && open) p.removeAttribute('hidden'); else p.setAttribute('hidden', '');
+      b.setAttribute('aria-expanded', mine && open ? 'true' : 'false');
+      b.classList.toggle('mq-fx-ptog-open', mine && open);
+      const t = b.querySelector('.mq-fx-ptog-t');
+      if (t) t.textContent = mine && open ? 'Hide project types' : 'Tap to see project types';
+    });
+  };
+  // A project type picked from that list: start the same flow the card
+  // starts (cabinets only / cabinets + countertops / countertops only), with
+  // the type already chosen — the same change the dropdown makes — and jump
+  // past step 1 (Back still goes there).
+  window.mqFxStartType = function(tabId, roomId) {
+    const prefix = mqFxPrefixOfTabId(tabId);
+    const sel = document.getElementById(`mq-${prefix}-room`);
+    if (sel && [...sel.options].some(o => o.value === roomId)) {
+      window._mqPrevRoomId = window._mqPrevRoomId || {};
+      window._mqPrevRoomId[prefix] = sel.value;
+      sel.value = roomId;
+      sel.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    window.mqFxStart(tabId);
+    const secs = window.mqGetVisibleSections(prefix);
+    if (sel && sel.value === roomId && secs.length > 1) {
+      window._mqStepIndex[prefix] = 1;
+      _mqFxLastPct[prefix] = null;
+      window._mqFxDir = 'next';
+      window.mqUpdateStepFocus(prefix);
+      window.mqFxScrollToStep();
+    }
+  };
+
   // Desktop side stepper — rebuilt on every step change.
   function mqFxRenderSide(prefix, labels, idx, inResults) {
     const ol = document.getElementById('mq-fx-steps');
@@ -9491,6 +9534,23 @@
       #mq-fx-chooser .mq-fx-card-sub{font-size:13.5px;color:#6b7280;display:block;margin-top:2px}
       #mq-fx-chooser .mq-fx-card-arrow{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;background:var(--mq-card-tint,#f3f4f6);color:var(--mq-card-ink,#1a1a1a);font-size:22px;line-height:1;padding-bottom:3px;flex-shrink:0;transition:transform .18s,background .18s,color .18s}
       #mq-fx-chooser .mq-fx-card:hover .mq-fx-card-arrow,#mq-fx-chooser .mq-fx-card:focus-visible .mq-fx-card-arrow{transform:translateX(3px)}
+      #mq-fx-chooser .mq-fx-cards{align-items:start}
+      #mq-fx-chooser .mq-fx-cardwrap{display:flex;flex-direction:column;gap:8px;min-width:0}
+      #mq-fx-chooser .mq-fx-ptog{display:inline-flex;align-items:center;justify-content:center;gap:6px;align-self:center;background:none;border:0;padding:6px 10px;font-family:inherit;font-size:13.5px;font-weight:700;color:var(--mq-card-ink,#1a1a1a);cursor:pointer;border-radius:99px}
+      #mq-fx-chooser .mq-fx-ptog:hover{background:var(--mq-card-tint,#f3f4f6)}
+      #mq-fx-chooser .mq-fx-ptog-c{display:inline-block;transition:transform .2s;font-size:14px;line-height:1}
+      #mq-fx-chooser .mq-fx-ptog-open .mq-fx-ptog-c{transform:rotate(180deg)}
+      #mq-fx-chooser .mq-fx-ptypes{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:10px;box-shadow:0 3px 12px rgba(0,0,0,.06);animation:mqFxInNext .25s ease backwards}
+      #mq-fx-chooser .mq-fx-ptypes[hidden]{display:none}
+      #mq-fx-chooser .mq-fx-pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px}
+      #mq-fx-chooser .mq-fx-pt{display:flex;flex-direction:column;align-items:stretch;gap:5px;padding:0;background:none;border:0;cursor:pointer;font-family:inherit;text-align:center;border-radius:10px}
+      #mq-fx-chooser .mq-fx-pt-img{position:relative;display:block;height:62px;border-radius:10px;overflow:hidden;background:var(--mq-card-tint,#f3f4f6);border:2px solid transparent;transition:border-color .15s,transform .15s}
+      #mq-fx-chooser .mq-fx-pt-ico{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--mq-card-ink,#1a1a1a);opacity:.8}
+      #mq-fx-chooser .mq-fx-pt-ico svg{width:26px;height:26px}
+      #mq-fx-chooser .mq-fx-pt-img img{position:relative;z-index:1;display:block;width:100%;height:100%;object-fit:cover}
+      #mq-fx-chooser .mq-fx-pt:hover .mq-fx-pt-img,#mq-fx-chooser .mq-fx-pt:focus-visible .mq-fx-pt-img{border-color:var(--mq-card-a,#1a1a1a);transform:translateY(-2px)}
+      #mq-fx-chooser .mq-fx-pt:focus-visible{outline:none}
+      #mq-fx-chooser .mq-fx-pt-name{font-size:12.5px;font-weight:700;color:#111827;line-height:1.25;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
       #mq-fx-chooser .mq-fx-trust{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 16px;margin:-6px auto 20px;font-size:13px;font-weight:600;color:#4b5563}
       #mq-fx-chooser .mq-fx-trust span{display:inline-flex;align-items:center;gap:6px}
       #mq-fx-chooser .mq-fx-trust svg{width:15px;height:15px;color:var(--mq-card-ink,#1a1a1a);flex-shrink:0}
@@ -9714,6 +9774,35 @@
       const ctDefaultKey = ctRoom ? String(ctRoom.id || '').replace(/^ct_/, '') : 'kitchen';
       const ctPhoto = cleanUrl((ctRoom && !window._mqIsDemoPlan && (ctRoom.coverImage || '').trim()) || CT_BASE + (['kitchen', 'bathroom', 'laundry', 'garage', 'commercial', 'other'].includes(ctDefaultKey) ? ctDefaultKey : 'kitchen') + '.jpg');
       const photosFor = id => (id === 'cabinets' ? [cabPhoto] : id === 'countertops' ? [ctPhoto] : [cabPhoto, ctPhoto]);
+      // Project-type thumbnails (collapsible list under each card). The same
+      // cover photos the quote itself shows on its first step; a Demo shop
+      // gets the standard library photos. Cabinets and Cabinets + countertops
+      // list the cabinet project types; Countertops lists the counter ones.
+      const PT_BASE = 'https://raw.githubusercontent.com/aceswin/midasquote-widget/main/cover-images/';
+      const PT_ALT = 'https://aceswin.github.io/midasquote-widget/cover-images/';
+      const PT_KEYS = ['kitchen', 'bathroom', 'laundry', 'garage', 'commercial', 'other', 'refacing', 'repainting', 'restaining'];
+      const ptKey = r => {
+        const id = String(r.id || '').toLowerCase().replace(/^ct_/, '');
+        if (PT_KEYS.includes(id)) return id;
+        const nm = String(r.name || '').toLowerCase();
+        return PT_KEYS.find(k => nm.includes(k)) || null;
+      };
+      const ptPhoto = r => {
+        const own = !window._mqIsDemoPlan && String(r.coverImage || '').trim();
+        if (own) return cleanUrl(own);
+        const k = ptKey(r);
+        if (!k) return '';
+        if (r.forCountertops) return ['kitchen', 'bathroom', 'laundry', 'garage', 'commercial', 'other'].includes(k) ? CT_BASE + k + '.jpg' : '';
+        return (['refacing', 'repainting', 'restaining'].includes(k) ? PT_ALT : PT_BASE) + k + '.jpg';
+      };
+      const typesFor = id => rooms.filter(r => (id === 'countertops') === (r.forCountertops === true));
+      const escH = t => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+      const ptHTML = t => {
+        const list = typesFor(t.id);
+        if (list.length < 2) return '';
+        return `<button type="button" class="mq-fx-ptog" aria-expanded="false" onclick="mqFxToggleTypes('${t.id}',this)"><span class="mq-fx-ptog-t">Tap to see project types</span><span class="mq-fx-ptog-c" aria-hidden="true">▾</span></button>`
+          + `<div class="mq-fx-ptypes" hidden><div class="mq-fx-pgrid">${list.map(r => { const u = ptPhoto(r); return `<button type="button" class="mq-fx-pt" onclick="mqFxStartType('${t.id}','${escH(r.id)}')"><span class="mq-fx-pt-img"><span class="mq-fx-pt-ico">${t.icon}</span>${u ? `<img src="${u}" alt="" loading="lazy" decoding="async" onerror="this.remove()">` : ''}</span><span class="mq-fx-pt-name">${escH(r.name)}</span></button>`; }).join('')}</div></div>`;
+      };
       const imgs = id => photosFor(id).map(u => `<img src="${u}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`).join('');
       const TR = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
       const trust = `<div class="mq-fx-trust"><span>${TR('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>')}About 5 minutes</span><span>${TR('<path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/>')}No obligation</span><span>${TR('<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>')}Instant ballpark</span></div>`;
@@ -9721,7 +9810,7 @@
         <div class="mq-fx-ch-sub">${one ? 'Answer a few quick questions to get your estimate.' : 'Pick one to get started.'}</div>
         ${trust}
         <div class="mq-fx-cards mq-fx-cards-${shown.length}">${shown.map(t =>
-          `<button type="button" class="mq-fx-card" data-tab="${t.id}" onclick="mqFxStart('${t.id}')"><span class="mq-fx-card-photo"><span class="mq-fx-card-icon">${t.icon}</span>${imgs(t.id)}</span><span class="mq-fx-card-body"><span class="mq-fx-card-text"><span class="mq-fx-card-title">${one ? t.startTitle : t.title}</span><span class="mq-fx-card-sub">${one ? 'Takes about 5 minutes' : t.sub}</span></span><span class="mq-fx-card-arrow">›</span></span></button>`).join('')}
+          `<div class="mq-fx-cardwrap"><button type="button" class="mq-fx-card" data-tab="${t.id}" onclick="mqFxStart('${t.id}')"><span class="mq-fx-card-photo"><span class="mq-fx-card-icon">${t.icon}</span>${imgs(t.id)}</span><span class="mq-fx-card-body"><span class="mq-fx-card-text"><span class="mq-fx-card-title">${one ? t.startTitle : t.title}</span><span class="mq-fx-card-sub">${one ? 'Takes about 5 minutes' : t.sub}</span></span><span class="mq-fx-card-arrow">›</span></span></button>${ptHTML(t)}</div>`).join('')}
         </div>`;
       // Cards are white with a gradient BORDER of the shop's own Brand colour
       // (brand -> a lighter shade of it); the icon tile is a soft tint of the
