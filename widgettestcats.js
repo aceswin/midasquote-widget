@@ -9530,11 +9530,11 @@
       #mq-fx-chooser .mq-fx-cards:has(.mq-fx-ptog-open){align-items:start}
       #mq-fx-chooser .mq-fx-cardwrap{display:flex;flex-direction:column;gap:0;min-width:0;background:#fff;border:2px solid #e5e7eb;border-radius:16px;overflow:hidden;transition:transform .18s,box-shadow .18s}
       #mq-fx-chooser .mq-fx-cardwrap .mq-fx-card{flex:1 1 auto;border:0;border-radius:0;box-shadow:none;background:transparent}
-      #mq-fx-chooser .mq-fx-ptog{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;background:none;border:0;border-top:1px solid #e5e7eb;padding:11px 16px;font-family:inherit;font-size:13.5px;font-weight:700;color:var(--mq-card-ink,#1a1a1a);cursor:pointer;text-align:left;transition:background .15s}
+      #mq-fx-chooser .mq-fx-ptog{display:flex;align-items:center;justify-content:flex-start;gap:8px;width:100%;background:none;border:0;border-top:1px solid #e5e7eb;padding:12px 16px;font-family:inherit;font-size:13.5px;font-weight:700;color:var(--mq-card-ink,#1a1a1a);cursor:pointer;text-align:left;transition:background .15s}
       #mq-fx-chooser .mq-fx-ptog:focus-visible{background:var(--mq-card-tint,#f3f4f6);outline:none}
       @media (hover:hover){#mq-fx-chooser .mq-fx-ptog:hover{background:var(--mq-card-tint,#f3f4f6)}}
-      #mq-fx-chooser .mq-fx-ptog-c{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:var(--mq-card-tint,#f3f4f6);transition:transform .2s;font-size:13px;line-height:1;flex-shrink:0}
-      #mq-fx-chooser .mq-fx-ptog-open .mq-fx-ptog-c{transform:rotate(180deg)}
+      #mq-fx-chooser .mq-fx-ptog-c{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .2s}
+      #mq-fx-chooser .mq-fx-ptog-open .mq-fx-ptog-c{transform:rotate(90deg)}
       #mq-fx-chooser .mq-fx-ptypes{background:#f9fafb;border-top:1px solid #e5e7eb;padding:12px 12px 14px;animation:mqFxInNext .25s ease backwards}
       #mq-fx-chooser .mq-fx-ptypes[hidden]{display:none}
       #mq-fx-chooser .mq-fx-pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px}
@@ -9796,7 +9796,7 @@
       const ptHTML = t => {
         const list = typesFor(t.id);
         if (list.length < 2) return '';
-        return `<button type="button" class="mq-fx-ptog" aria-expanded="false" onclick="mqFxToggleTypes('${t.id}',this)"><span class="mq-fx-ptog-t">Tap to see project types</span><span class="mq-fx-ptog-c" aria-hidden="true"><svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v9M4 8.5l4 4 4-4"/></svg></span></button>`
+        return `<button type="button" class="mq-fx-ptog" aria-expanded="false" onclick="mqFxToggleTypes('${t.id}',this)"><span class="mq-fx-ptog-t">Tap to see project types</span><span class="mq-fx-ptog-c" aria-hidden="true"><svg viewBox="0 0 16 16" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8h11M9.5 4l4 4-4 4"/></svg></span></button>`
           + `<div class="mq-fx-ptypes" hidden><div class="mq-fx-pgrid">${list.map(r => { const u = ptPhoto(r); return `<button type="button" class="mq-fx-pt" onclick="mqFxStartType('${t.id}','${escH(r.id)}')"><span class="mq-fx-pt-img"><span class="mq-fx-pt-ico">${t.icon}</span>${u ? `<img src="${u}" alt="" loading="lazy" decoding="async" onerror="this.remove()">` : ''}</span><span class="mq-fx-pt-name">${escH(r.name)}</span></button>`; }).join('')}</div></div>`;
       };
       const imgs = id => photosFor(id).map(u => `<img src="${u}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`).join('');
