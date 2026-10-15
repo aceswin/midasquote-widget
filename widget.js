@@ -9515,7 +9515,7 @@
       #mq-fx-chooser .mq-fx-ch-sub{font-size:15px;color:#4b5563;margin-bottom:20px}
       #mq-fx-chooser .mq-fx-cards{display:grid;gap:12px;max-width:520px;margin:0 auto}
       #mq-fx-chooser .mq-fx-card{display:flex;flex-direction:column;align-items:stretch;gap:0;text-align:left;width:100%;padding:0;overflow:hidden;background:#fff;border:2px solid #e5e7eb;border-radius:16px;cursor:pointer;font-family:inherit;transition:transform .18s,box-shadow .18s;box-shadow:0 3px 10px rgba(0,0,0,.06)}
-      #mq-fx-chooser .mq-fx-card-photo{order:2;position:relative;display:flex;gap:2px;width:100%;height:118px;background:#fff;overflow:hidden;flex-shrink:0}
+      #mq-fx-chooser .mq-fx-card-photo{order:2;margin-top:auto;position:relative;display:flex;gap:2px;width:100%;height:118px;background:#fff;overflow:hidden;flex-shrink:0}
       #mq-fx-chooser .mq-fx-card-photo img{position:relative;z-index:1;flex:1 1 0;min-width:0;height:100%;object-fit:cover;display:block;transition:transform .45s ease;box-shadow:inset 0 -56px 44px -34px rgba(0,0,0,.3)}
       #mq-fx-chooser .mq-fx-card:hover .mq-fx-card-photo img,#mq-fx-chooser .mq-fx-card:focus-visible .mq-fx-card-photo img{transform:scale(1.06)}
       #mq-fx-chooser .mq-fx-card-icon{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:var(--mq-card-tint,#f3f4f6);color:var(--mq-card-ink,#1a1a1a)}
