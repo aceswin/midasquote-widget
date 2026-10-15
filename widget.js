@@ -4930,6 +4930,8 @@
       if (cabSec) cabSec.style.display = cabActive ? '' : 'none';
       const cabSelSec = document.getElementById(`mq-${prefix}-cabinet-selections-sec`);
       if (cabSelSec) cabSelSec.style.display = cabActive ? '' : 'none';
+      const cabDoorSec = document.getElementById(`mq-${prefix}-cabinet-doors-sec`); // Focused layout only (split off the selections step)
+      if (cabDoorSec) cabDoorSec.style.display = cabActive ? '' : 'none';
       // Measuring shows for most project types — each one can have its own
       // tailored guide (set in the dashboard) — but a shop owner can flag a
       // specific project type (e.g. a flat-rate-only "Odd jobs" type) to
@@ -9010,7 +9012,19 @@
         ? { t: 'Do you need installation?', l: 'Installation', s: "Just the cabinets, or installed too? You can also let us know if the old ones need to come out." }
         : { t: 'Anything to remove first?', l: 'Removal', s: 'Let us know if your existing cabinets need to come out.' };
     }
-    if (ends('-cabinet-selections-sec')) return { t: 'Pick your cabinet style', l: 'Cabinet style', s: 'Choose a material and a door style.' };
+    if (ends('-cabinet-selections-sec')) {
+      // Focused splits doors/hinges off into their own step (mqFxSplitDoors); only when that happened is this step material-only.
+      const split = !!document.getElementById(id.replace('-cabinet-selections-sec', '-cabinet-doors-sec'));
+      return split
+        ? { t: 'Pick your cabinet material', l: 'Material', s: 'Choose the material for your cabinet boxes. Doors and hinges come next.' }
+        : { t: 'Pick your cabinet style', l: 'Cabinet style', s: 'Choose a material and a door style.' };
+    }
+    if (ends('-cabinet-doors-sec')) {
+      const hing = !!document.getElementById(id.replace('-cabinet-doors-sec', '-hinge'));
+      return hing
+        ? { t: 'Pick your doors & hinges', l: 'Doors', s: 'Choose a door style and the hinges you want. This is what your cabinets will look like.' }
+        : { t: 'Pick your doors', l: 'Doors', s: 'Choose a door style. This is what your cabinets will look like.' };
+    }
     if (ends('-cabinet-measurements-sec')) return { t: 'How much cabinetry do you need?', l: 'Size', s: 'Enter your linear feet. A rough measurement is fine for a ballpark.' };
     if (ends('-drawers-sec')) return { t: 'How about drawers?', l: 'Drawers', s: 'Tell us roughly how drawer-heavy you want your cabinets to be.' };
     if (ends('-tallcabs-sec')) return { t: 'Need any tall cabinets?', l: 'Tall cabinets', s: 'Pantries, linen towers, oven cabinets — add as many as you need, or just continue.' };
@@ -9173,7 +9187,7 @@
     window._mqFxDir = null;
     const roomSelEl = document.getElementById(`mq-${prefix}-room`);
     const roomName = roomSelEl && roomSelEl.selectedOptions[0] ? roomSelEl.selectedOptions[0].textContent.trim() : '';
-    const PRICED_RE = /(cabinet-selections|cabinet-measurements|drawers|tallcabs)-sec$/;
+    const PRICED_RE = /(cabinet-selections|cabinet-doors|cabinet-measurements|drawers|tallcabs)-sec$/;
     const prompts = secs.map((sec, i) => mqFxPromptFor(sec, i, { priced: secs.slice(0, i).some(x => PRICED_RE.test(x.id || '')), room: roomName }));
     const labels = prompts.map(pr => pr.l || pr.t);
     secs.forEach((sec, i) => {
@@ -9197,7 +9211,7 @@
         ${p.s ? `<p class="mq-fx-sub">${p.s}</p>` : ''}`;
       sec.insertBefore(head, sec.firstChild);
       const legend = tab.querySelector(':scope > .mq-fx-legend');
-      if (legend && /(cabinet-selections-sec|ct-options-sec|ct-surfaces-sec)$/.test(sec.id || '')) {
+      if (legend && /(cabinet-selections-sec|cabinet-doors-sec|ct-options-sec|ct-surfaces-sec)$/.test(sec.id || '')) {
         const lc = legend.cloneNode(true);
         lc.classList.remove('mq-fx-legend');
         lc.classList.add('mq-fx-legend-clone');
@@ -9731,12 +9745,69 @@
 
   // Runs after every full render of the widget (initial load and "start a new
   // estimate", which both replace the container's innerHTML).
+  // Focused layout only: "Cabinet selections" holds box material AND door
+  // style AND hinges in one step, and customers could scroll right past the
+  // doors. This moves the door-style + hinge fields (same elements, so every
+  // id, picker and handler keeps working) into their own step directly after
+  // it. In "different styles for uppers and lowers" mode the door step shows
+  // the same upper / base split. Classic never calls this.
+  function mqFxSplitDoors() {
+    ['c', 'b'].forEach(p => {
+      const selSec = document.getElementById(`mq-${p}-cabinet-selections-sec`);
+      if (!selSec || document.getElementById(`mq-${p}-cabinet-doors-sec`)) return;
+      const sharedEl = document.getElementById(`mq-${p}-shared`);
+      const diffEl = document.getElementById(`mq-${p}-diff`);
+      const fieldOf = id => { const e = document.getElementById(id); return e ? e.closest('.mq-field') : null; };
+      const door = fieldOf(`mq-${p}-door`);
+      if (!sharedEl || !diffEl || !door) return;
+      const hdr = selSec.querySelector('.mq-sec-header-row');
+      if (!hdr) return;
+      const sec = document.createElement('div');
+      sec.className = 'mq-sec';
+      sec.id = `mq-${p}-cabinet-doors-sec`;
+      sec.setAttribute('onclick', `mqOpenIfClosed('${p}-cabinet-doors')`);
+      sec.style.display = selSec.style.display;
+      const hdrHtml = hdr.outerHTML.split(`${p}-cabinet-selections`).join(`${p}-cabinet-doors`).replace('Cabinet selections', 'Doors &amp; hinges');
+      sec.innerHTML = `${hdrHtml}<div id="mq-${p}-cabinet-doors-body" style="display:none"><div id="mq-${p}-shared-d"></div><div id="mq-${p}-diff-d" style="display:none"></div></div>`;
+      selSec.parentNode.insertBefore(sec, selSec.nextSibling);
+      const sharedD = sec.querySelector(`#mq-${p}-shared-d`);
+      const diffD = sec.querySelector(`#mq-${p}-diff-d`);
+      sharedD.appendChild(door);
+      const hinge = fieldOf(`mq-${p}-hinge`);
+      if (hinge) sharedD.appendChild(hinge);
+      [['u', 'upper', '🔼 Upper cabinets', ''], ['b', 'base', '🔽 Base cabinets', 'margin-top:8px']].forEach(([k, cls, title, st]) => {
+        const sub = document.createElement('div');
+        sub.className = `mq-sub-sec mq-sub-${cls}`;
+        if (st) sub.style.cssText = st;
+        sub.innerHTML = `<p class="mq-sub-title">${title}</p>`;
+        const d = fieldOf(`mq-${p}-${k}-door`), h = fieldOf(`mq-${p}-${k}-hinge`);
+        if (d) sub.appendChild(d);
+        if (h) sub.appendChild(h);
+        diffD.appendChild(sub);
+      });
+      // The toggle lives on the material step; keep the door step's view in sync.
+      const orig = window.mqTogDiff;
+      if (typeof orig === 'function' && !orig._mqFxDoors) {
+        const wrapped = function(prefix) {
+          orig(prefix);
+          const sh = document.getElementById(`mq-${prefix}-shared`), sd = document.getElementById(`mq-${prefix}-shared-d`), dd = document.getElementById(`mq-${prefix}-diff-d`);
+          const on = sh && sh.style.display === 'none';
+          if (sd) sd.style.display = on ? 'none' : 'block';
+          if (dd) dd.style.display = on ? 'block' : 'none';
+        };
+        wrapped._mqFxDoors = true;
+        window.mqTogDiff = wrapped;
+      }
+    });
+  }
+
   window.mqFxInit = function() {
     const container = document.getElementById('midasquote-widget');
     if (!container || !window._mqFxOn) return;
     if (window._mqFxFull) window.mqFxExitFull(); // a rebuild (start new estimate) always lands back inline
     container.classList.add('mq-fx');
     mqFxInjectStyles();
+    mqFxSplitDoors();
     container.querySelectorAll('.mq-tab-content').forEach(tab => {
       const prefix = mqFxPrefixOfTabId(tab.id.replace('mq-tab-', ''));
       const legend = tab.firstElementChild;
