@@ -1066,7 +1066,7 @@
       #midasquote-widget .mq-financing-box-body{padding:0.9rem 1.25rem}
       #midasquote-widget .mq-financing-box-val{font-size:18px;font-weight:700;color:#166534}
       #midasquote-widget .mq-financing-box-sub{font-size:11px;color:#6b7280;margin-top:6px;font-style:italic}
-      .mq-lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:100000;align-items:center;justify-content:center;padding:1.5rem;cursor:zoom-out;flex-direction:column;gap:0.75rem;overscroll-behavior:contain}
+      .mq-lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:1000020;align-items:center;justify-content:center;padding:1.5rem;cursor:zoom-out;flex-direction:column;gap:0.75rem;overscroll-behavior:contain}
       .mq-hover-preview{display:none;position:fixed;z-index:100001;background:#fff;border-radius:10px;padding:8px;box-shadow:0 12px 32px rgba(0,0,0,0.28);pointer-events:none}
       .mq-hover-preview.show{display:block}
       .mq-hover-preview img{display:block;max-width:180px;max-height:180px;border-radius:6px;object-fit:contain}
@@ -2499,6 +2499,34 @@
     totalEl.textContent = _mqCalcMode === 'linear' ? `${total.toFixed(2)} linear ft` : _mqCalcMode === 'inches' ? `${total.toFixed(2)} in` : `${total.toFixed(2)} sq ft`;
   }
 
+  // How-to-measure photos inside the calculator (Base / Upper / Island linear
+  // feet only): the same pictures the Measuring step shows for the chosen
+  // project type, as a small strip you can tap to zoom (shared lightbox).
+  function mqCalcGuideInfo() {
+    const m = /^mq-([a-z]+)-(bft|uft|islandft)$/.exec(_mqCalcTargetId || '');
+    if (!m || _mqCalcMode !== 'linear') return null;
+    const info = window._mqMeasurePhotos && window._mqMeasurePhotos[m[1]];
+    if (!info || !info.photos || !info.photos.length) return null;
+    return info;
+  }
+  function mqCalcGuideHTML() {
+    const info = mqCalcGuideInfo();
+    if (!info) return '';
+    const esc = u => String(u).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+    const one = info.photos.length === 1;
+    const imgs = info.photos.map((u, i) => `<img src="${esc(u)}" alt="Measuring guide photo ${i + 1}" loading="lazy" onclick="mqCalcOpenGuide(${i})" onerror="this.style.display='none'" style="height:${one ? 120 : 92}px;width:${one ? '100%' : 'auto'};max-width:${one ? '100%' : 'none'};object-fit:${one ? 'contain' : 'cover'};flex:0 0 auto;border-radius:8px;border:1px solid #e5e7eb;background:#f9fafb;cursor:zoom-in"/>`).join('');
+    return `<div style="margin-bottom:14px">
+        <div style="font-size:12px;font-weight:700;color:#2563eb;margin-bottom:6px">📸 How to measure — tap to zoom</div>
+        <div style="display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px">${imgs}</div>
+      </div>`;
+  }
+  window.mqCalcOpenGuide = function(i) {
+    const info = mqCalcGuideInfo();
+    if (!info || !window.mqPhotoLightbox) return;
+    const list = info.photos.map((src, k) => ({ src, label: info.roomName ? `${info.roomName} — measuring guide (${k + 1}/${info.photos.length})` : `Measuring guide (${k + 1}/${info.photos.length})` }));
+    window.mqPhotoLightbox(list[i].src, list[i].label, list, i);
+  };
+
   function mqRenderCalc() {
     const card = document.getElementById('mq-calc-card');
     if (!card) return;
@@ -2523,6 +2551,7 @@
     card.innerHTML = `
       <div style="font-size:16px;font-weight:700;color:#111;margin-bottom:4px">${_mqCalcMode === 'sqft' ? '📐 Square footage calculator' : '📏 Measurement calculator'}${_mqCalcFieldLabel ? ` <span style="font-weight:600;color:#2563eb">(${_mqCalcFieldLabel})</span>` : ''}</div>
       <div style="font-size:13px;color:#4b5563;margin-bottom:14px">${_mqCalcMode === 'linear' ? "Measure each section, and we'll add them all up and convert to feet for you." : _mqCalcMode === 'inches' ? "Enter the measurement in whatever unit is easiest, and we'll convert it to inches for you." : "Measure the width and height of each section, and we'll convert and total the square footage for you."}</div>
+      ${mqCalcGuideHTML()}
       <div style="display:flex;gap:8px;margin-bottom:14px">
         <button type="button" onclick="mqCalcSetUnit('ft')" style="flex:1;padding:8px;border-radius:6px;border:1.5px solid ${_mqCalcUnit === 'ft' ? '#1a1a1a' : '#d1d5db'};background:${_mqCalcUnit === 'ft' ? '#1a1a1a' : '#fff'};color:${_mqCalcUnit === 'ft' ? '#fff' : '#374151'};font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Feet</button>
         <button type="button" onclick="mqCalcSetUnit('in')" style="flex:1;padding:8px;border-radius:6px;border:1.5px solid ${_mqCalcUnit === 'in' ? '#1a1a1a' : '#d1d5db'};background:${_mqCalcUnit === 'in' ? '#1a1a1a' : '#fff'};color:${_mqCalcUnit === 'in' ? '#fff' : '#374151'};font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Inches</button>
@@ -4327,6 +4356,14 @@
       const allImages = customPrimary
         ? [customPrimary, ...customExtra]
         : (customExtra.length ? customExtra : (room ? (room.forCountertops ? MQ_DEFAULT_MEASURE_IMAGES.countertop : (MQ_DEFAULT_MEASURE_IMAGES[mqDefaultImageKey(room)] || [])) : []));
+      // Remember the guide's PHOTOS (videos can't be zoomed) per tab so the
+      // measurement calculator can show the same pictures. A project type
+      // that hides the measuring guide gets none.
+      window._mqMeasurePhotos = window._mqMeasurePhotos || {};
+      window._mqMeasurePhotos[prefix] = {
+        roomName: room && room.name ? room.name : '',
+        photos: (room && room.hideMeasureGuide) ? [] : allImages.filter(u => u && !mqVideoEmbedInfo(u))
+      };
       guideEl.innerHTML = ''; // clear before rebuilding
       if (allImages.length > 1) {
         guideEl.appendChild(mqBuildMeasureCarousel(allImages, room));
@@ -4930,6 +4967,8 @@
       if (cabSec) cabSec.style.display = cabActive ? '' : 'none';
       const cabSelSec = document.getElementById(`mq-${prefix}-cabinet-selections-sec`);
       if (cabSelSec) cabSelSec.style.display = cabActive ? '' : 'none';
+      const cabDoorSec = document.getElementById(`mq-${prefix}-cabinet-doors-sec`); // Focused layout only (split off the selections step)
+      if (cabDoorSec) cabDoorSec.style.display = cabActive ? '' : 'none';
       // Measuring shows for most project types — each one can have its own
       // tailored guide (set in the dashboard) — but a shop owner can flag a
       // specific project type (e.g. a flat-rate-only "Odd jobs" type) to
@@ -9010,7 +9049,19 @@
         ? { t: 'Do you need installation?', l: 'Installation', s: "Just the cabinets, or installed too? You can also let us know if the old ones need to come out." }
         : { t: 'Anything to remove first?', l: 'Removal', s: 'Let us know if your existing cabinets need to come out.' };
     }
-    if (ends('-cabinet-selections-sec')) return { t: 'Pick your cabinet style', l: 'Cabinet style', s: 'Choose a material and a door style.' };
+    if (ends('-cabinet-selections-sec')) {
+      // Focused splits doors/hinges off into their own step (mqFxSplitDoors); only when that happened is this step material-only.
+      const split = !!document.getElementById(id.replace('-cabinet-selections-sec', '-cabinet-doors-sec'));
+      return split
+        ? { t: 'Pick your cabinet material', l: 'Material', s: 'Choose the material for your cabinet boxes. Doors and hinges come next.' }
+        : { t: 'Pick your cabinet style', l: 'Cabinet style', s: 'Choose a material and a door style.' };
+    }
+    if (ends('-cabinet-doors-sec')) {
+      const hing = !!document.getElementById(id.replace('-cabinet-doors-sec', '-hinge'));
+      return hing
+        ? { t: 'Pick your doors & hinges', l: 'Doors', s: 'Choose a door style and the hinges you want. This is what your cabinets will look like.' }
+        : { t: 'Pick your doors', l: 'Doors', s: 'Choose a door style. This is what your cabinets will look like.' };
+    }
     if (ends('-cabinet-measurements-sec')) return { t: 'How much cabinetry do you need?', l: 'Size', s: 'Enter your linear feet. A rough measurement is fine for a ballpark.' };
     if (ends('-drawers-sec')) return { t: 'How about drawers?', l: 'Drawers', s: 'Tell us roughly how drawer-heavy you want your cabinets to be.' };
     if (ends('-tallcabs-sec')) return { t: 'Need any tall cabinets?', l: 'Tall cabinets', s: 'Pantries, linen towers, oven cabinets — add as many as you need, or just continue.' };
@@ -9173,7 +9224,7 @@
     window._mqFxDir = null;
     const roomSelEl = document.getElementById(`mq-${prefix}-room`);
     const roomName = roomSelEl && roomSelEl.selectedOptions[0] ? roomSelEl.selectedOptions[0].textContent.trim() : '';
-    const PRICED_RE = /(cabinet-selections|cabinet-measurements|drawers|tallcabs)-sec$/;
+    const PRICED_RE = /(cabinet-selections|cabinet-doors|cabinet-measurements|drawers|tallcabs)-sec$/;
     const prompts = secs.map((sec, i) => mqFxPromptFor(sec, i, { priced: secs.slice(0, i).some(x => PRICED_RE.test(x.id || '')), room: roomName }));
     const labels = prompts.map(pr => pr.l || pr.t);
     secs.forEach((sec, i) => {
@@ -9197,7 +9248,7 @@
         ${p.s ? `<p class="mq-fx-sub">${p.s}</p>` : ''}`;
       sec.insertBefore(head, sec.firstChild);
       const legend = tab.querySelector(':scope > .mq-fx-legend');
-      if (legend && /(cabinet-selections-sec|ct-options-sec|ct-surfaces-sec)$/.test(sec.id || '')) {
+      if (legend && /(cabinet-selections-sec|cabinet-doors-sec|ct-options-sec|ct-surfaces-sec)$/.test(sec.id || '')) {
         const lc = legend.cloneNode(true);
         lc.classList.remove('mq-fx-legend');
         lc.classList.add('mq-fx-legend-clone');
@@ -9515,12 +9566,12 @@
       #mq-fx-chooser .mq-fx-ch-sub{font-size:15px;color:#4b5563;margin-bottom:20px}
       #mq-fx-chooser .mq-fx-cards{display:grid;gap:12px;max-width:520px;margin:0 auto}
       #mq-fx-chooser .mq-fx-card{display:flex;flex-direction:column;align-items:stretch;gap:0;text-align:left;width:100%;padding:0;overflow:hidden;background:#fff;border:2px solid #e5e7eb;border-radius:16px;cursor:pointer;font-family:inherit;transition:transform .18s,box-shadow .18s;box-shadow:0 3px 10px rgba(0,0,0,.06)}
-      #mq-fx-chooser .mq-fx-card-photo{position:relative;display:flex;gap:2px;width:100%;height:118px;background:#fff;overflow:hidden;flex-shrink:0}
+      #mq-fx-chooser .mq-fx-card-photo{order:2;margin-top:auto;position:relative;display:flex;gap:2px;width:100%;height:118px;background:#fff;overflow:hidden;flex-shrink:0}
       #mq-fx-chooser .mq-fx-card-photo img{position:relative;z-index:1;flex:1 1 0;min-width:0;height:100%;object-fit:cover;display:block;transition:transform .45s ease;box-shadow:inset 0 -56px 44px -34px rgba(0,0,0,.3)}
       #mq-fx-chooser .mq-fx-card:hover .mq-fx-card-photo img,#mq-fx-chooser .mq-fx-card:focus-visible .mq-fx-card-photo img{transform:scale(1.06)}
       #mq-fx-chooser .mq-fx-card-icon{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:var(--mq-card-tint,#f3f4f6);color:var(--mq-card-ink,#1a1a1a)}
       #mq-fx-chooser .mq-fx-card-icon svg{width:44px;height:44px}
-      #mq-fx-chooser .mq-fx-card-body{display:flex;align-items:center;gap:12px;padding:13px 16px 15px}
+      #mq-fx-chooser .mq-fx-card-body{order:1;display:flex;align-items:center;gap:12px;padding:13px 16px 15px}
       #mq-fx-chooser .mq-fx-card-text{flex:1;min-width:0}
       #mq-fx-chooser .mq-fx-card-title{font-size:17px;font-weight:800;color:#111827;display:block}
       #mq-fx-chooser .mq-fx-card-sub{font-size:13.5px;color:#6b7280;display:block;margin-top:2px}
@@ -9731,12 +9782,69 @@
 
   // Runs after every full render of the widget (initial load and "start a new
   // estimate", which both replace the container's innerHTML).
+  // Focused layout only: "Cabinet selections" holds box material AND door
+  // style AND hinges in one step, and customers could scroll right past the
+  // doors. This moves the door-style + hinge fields (same elements, so every
+  // id, picker and handler keeps working) into their own step directly after
+  // it. In "different styles for uppers and lowers" mode the door step shows
+  // the same upper / base split. Classic never calls this.
+  function mqFxSplitDoors() {
+    ['c', 'b'].forEach(p => {
+      const selSec = document.getElementById(`mq-${p}-cabinet-selections-sec`);
+      if (!selSec || document.getElementById(`mq-${p}-cabinet-doors-sec`)) return;
+      const sharedEl = document.getElementById(`mq-${p}-shared`);
+      const diffEl = document.getElementById(`mq-${p}-diff`);
+      const fieldOf = id => { const e = document.getElementById(id); return e ? e.closest('.mq-field') : null; };
+      const door = fieldOf(`mq-${p}-door`);
+      if (!sharedEl || !diffEl || !door) return;
+      const hdr = selSec.querySelector('.mq-sec-header-row');
+      if (!hdr) return;
+      const sec = document.createElement('div');
+      sec.className = 'mq-sec';
+      sec.id = `mq-${p}-cabinet-doors-sec`;
+      sec.setAttribute('onclick', `mqOpenIfClosed('${p}-cabinet-doors')`);
+      sec.style.display = selSec.style.display;
+      const hdrHtml = hdr.outerHTML.split(`${p}-cabinet-selections`).join(`${p}-cabinet-doors`).replace('Cabinet selections', 'Doors &amp; hinges');
+      sec.innerHTML = `${hdrHtml}<div id="mq-${p}-cabinet-doors-body" style="display:none"><div id="mq-${p}-shared-d"></div><div id="mq-${p}-diff-d" style="display:none"></div></div>`;
+      selSec.parentNode.insertBefore(sec, selSec.nextSibling);
+      const sharedD = sec.querySelector(`#mq-${p}-shared-d`);
+      const diffD = sec.querySelector(`#mq-${p}-diff-d`);
+      sharedD.appendChild(door);
+      const hinge = fieldOf(`mq-${p}-hinge`);
+      if (hinge) sharedD.appendChild(hinge);
+      [['u', 'upper', '🔼 Upper cabinets', ''], ['b', 'base', '🔽 Base cabinets', 'margin-top:8px']].forEach(([k, cls, title, st]) => {
+        const sub = document.createElement('div');
+        sub.className = `mq-sub-sec mq-sub-${cls}`;
+        if (st) sub.style.cssText = st;
+        sub.innerHTML = `<p class="mq-sub-title">${title}</p>`;
+        const d = fieldOf(`mq-${p}-${k}-door`), h = fieldOf(`mq-${p}-${k}-hinge`);
+        if (d) sub.appendChild(d);
+        if (h) sub.appendChild(h);
+        diffD.appendChild(sub);
+      });
+      // The toggle lives on the material step; keep the door step's view in sync.
+      const orig = window.mqTogDiff;
+      if (typeof orig === 'function' && !orig._mqFxDoors) {
+        const wrapped = function(prefix) {
+          orig(prefix);
+          const sh = document.getElementById(`mq-${prefix}-shared`), sd = document.getElementById(`mq-${prefix}-shared-d`), dd = document.getElementById(`mq-${prefix}-diff-d`);
+          const on = sh && sh.style.display === 'none';
+          if (sd) sd.style.display = on ? 'none' : 'block';
+          if (dd) dd.style.display = on ? 'block' : 'none';
+        };
+        wrapped._mqFxDoors = true;
+        window.mqTogDiff = wrapped;
+      }
+    });
+  }
+
   window.mqFxInit = function() {
     const container = document.getElementById('midasquote-widget');
     if (!container || !window._mqFxOn) return;
     if (window._mqFxFull) window.mqFxExitFull(); // a rebuild (start new estimate) always lands back inline
     container.classList.add('mq-fx');
     mqFxInjectStyles();
+    mqFxSplitDoors();
     container.querySelectorAll('.mq-tab-content').forEach(tab => {
       const prefix = mqFxPrefixOfTabId(tab.id.replace('mq-tab-', ''));
       const legend = tab.firstElementChild;
@@ -9791,7 +9899,15 @@
         if (r.forCountertops) return ['kitchen', 'bathroom', 'laundry', 'garage', 'commercial', 'other'].includes(k) ? CT_BASE + k + '.jpg' : '';
         return (['refacing', 'repainting', 'restaining'].includes(k) ? PT_ALT : PT_BASE) + k + '.jpg';
       };
-      const typesFor = id => rooms.filter(r => (id === 'countertops') === (r.forCountertops === true));
+      // The chooser lists exactly what that tab's own Project type dropdown
+      // lists (the dropdown leaves out Pro-only types, for instance), so the
+      // two can never disagree. Falls back to the same rule if the dropdown
+      // isn't there.
+      const typesFor = id => {
+        const sel = document.getElementById('mq-' + mqFxPrefixOfTabId(id) + '-room');
+        const have = sel ? new Set([...sel.options].map(o => o.value)) : null;
+        return rooms.filter(r => (id === 'countertops') === (r.forCountertops === true) && (have ? have.has(r.id) : !r.proOnly));
+      };
       const escH = t => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
       const ptHTML = t => {
         const list = typesFor(t.id);
