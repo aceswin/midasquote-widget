@@ -5609,7 +5609,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // ---- Proposal template editor helpers --------------------------------
   // Collapsible section inside a template card.
   function mqPropSection(id, key, title, summary, bodyHtml, open, maxWidth) {
-    return `<div style="border:1px solid #d1d5db;border-radius:8px;margin:12px 0;overflow:hidden${maxWidth ? ';max-width:' + maxWidth + 'px' : ''}">
+    return `<div style="border:1px solid #d1d5db;border-radius:8px;margin:12px 0;overflow:hidden;overflow:clip${maxWidth ? ';max-width:' + maxWidth + 'px' : ''}">
       <div onclick="mqToggleProposalSection('${id}','${key}')" style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:#f3f4f6;cursor:pointer;flex-wrap:wrap">
         <span id="mq-prop-sec-chev-${id}-${key}" style="font-size:11px;color:#6b7280;display:inline-block;transition:transform 0.15s;transform:rotate(${open ? 90 : 0}deg)">▶</span>
         <strong style="font-size:13.5px">${title}</strong>
@@ -5764,45 +5764,76 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     </div>`;
   }
 
+  function mqPbPlain(s) {
+    return String(s || '').replace(/\{color:#[0-9a-fA-F]{3,8}\}|\{\/color\}|\*\*/g, '').replace(/\{([a-z_]+)\}/g, (m, n) => '‹' + ((MQ_PB_INLINE[n] || {}).l || n) + '›').replace(/\s+/g, ' ').trim();
+  }
+  // What a collapsed block shows: a pill (same style as the palette) + a short grey summary.
+  function mqPbPill(b) {
+    if (b.type === 'text') return { pill: '✏️ Text box', dark: true, sum: mqPbPlain(b.text) || 'empty — click to type' };
+    if (b.type === 'box') return { pill: '▭ Coloured box', dark: true, swatch: b.hex || '#eff6ff', sum: mqPbPlain(b.text) || 'empty — click to type' };
+    if (b.type === 'field') return { pill: (MQ_PB_INLINE[b.tok] || { l: b.tok }).l, sum: (b.label || '').trim() };
+    if (b.type === 'items') return { pill: 'Item list', sum: MQ_PB_ITEMS[b.tok] || '' };
+    if (b.type === 'totals') return { pill: 'Totals', sum: MQ_PB_TOTALS[b.tok] || '' };
+    const s = MQ_PB_SIMPLE[b.tok] || ['', b.tok, ''];
+    return { pill: s[1], sum: '' };
+  }
+
   function mqPbBlockHTML(id, b, i, blocks) {
-    const ctl = (txt, title, fn, dis) => `<button type="button" title="${title}" ${dis ? 'disabled' : ''} onclick="${fn}" style="border:none;background:none;cursor:${dis ? 'default' : 'pointer'};color:${dis ? '#d1d5db' : '#6b7280'};font-size:13px;padding:2px 6px;line-height:1.2">${txt}</button>`;
-    const lbl = (icon, name) => `<div style="font-size:10.5px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:5px">${icon} ${name}</div>`;
-    const sel = (key, map, cur) => `<select onchange="mqPbSet('${id}',${i},'tok',this.value)" style="width:auto;font-size:12.5px">${Object.keys(map).map(k => `<option value="${k}" ${k === cur ? 'selected' : ''}>${typeof map[k] === 'string' ? map[k] : map[k][1]}</option>`).join('')}</select>`;
+    const ctl = (txt, title, fn, dis) => `<button type="button" title="${title}" ${dis ? 'disabled' : ''} onclick="event.stopPropagation();${fn}" style="border:none;background:none;cursor:${dis ? 'default' : 'pointer'};color:${dis ? '#d1d5db' : '#6b7280'};font-size:12px;padding:2px 5px;line-height:1.2">${txt}</button>`;
+    const sel = (map, cur) => `<select onchange="mqPbSet('${id}',${i},'tok',this.value)" style="width:auto;font-size:12.5px">${Object.keys(map).map(k => `<option value="${k}" ${k === cur ? 'selected' : ''}>${map[k]}</option>`).join('')}</select>`;
     const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
-    let inner = '';
+    let panel = '';
     if (b.type === 'text') {
-      inner = lbl('✏️', 'Text box') + mqPbMiniToolbar(id, i, b) +
+      panel = mqPbMiniToolbar(id, i, b) +
         `<textarea id="mq-pb-ta-${id}-${i}" rows="3" placeholder="Type here… use **bold**, or the buttons above" onfocus="this.dataset.t='1'" oninput="mqPbSet('${id}',${i},'text',this.value);mqPbGrow(this)" onblur="mqPbFlush('${id}')" style="width:100%;font-size:13px;line-height:1.5;box-sizing:border-box">${esc(b.text)}</textarea>`;
     } else if (b.type === 'box') {
-      inner = `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">${lbl('▭', 'Coloured box').replace('margin-bottom:5px', 'margin-bottom:0')}
-          <input type="color" value="${esc(b.hex || '#eff6ff')}" title="Box colour" oninput="mqPbSet('${id}',${i},'hex',this.value);document.getElementById('mq-pb-ta-${id}-${i}').style.background=this.value" style="width:30px;height:24px;padding:1px;border:1px solid #d1d5db;border-radius:4px;cursor:pointer"/>
-          <span style="font-size:11px;color:#9ca3af">box colour</span></div>` + mqPbMiniToolbar(id, i, b) +
+      panel = `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <input type="color" value="${esc(b.hex || '#eff6ff')}" title="Box colour" oninput="mqPbSet('${id}',${i},'hex',this.value);document.getElementById('mq-pb-ta-${id}-${i}').style.background=this.value;document.getElementById('mq-pb-sw-${id}-${i}').style.background=this.value" style="width:30px;height:24px;padding:1px;border:1px solid #d1d5db;border-radius:4px;cursor:pointer"/>
+          <span style="font-size:12px;color:#6b7280">Box colour</span></div>` + mqPbMiniToolbar(id, i, b) +
         `<textarea id="mq-pb-ta-${id}-${i}" rows="3" placeholder="Text inside the box…" onfocus="this.dataset.t='1'" oninput="mqPbSet('${id}',${i},'text',this.value);mqPbGrow(this)" onblur="mqPbFlush('${id}')" style="width:100%;font-size:13px;line-height:1.5;box-sizing:border-box;background:${esc(b.hex || '#eff6ff')}">${esc(b.text)}</textarea>`;
     } else if (b.type === 'field') {
       const prev = blocks[i - 1];
-      const info = MQ_PB_INLINE[b.tok] || { l: b.tok };
-      inner = `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-          <span style="background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;border-radius:5px;padding:3px 9px;font-size:12px;font-weight:700;white-space:nowrap">${info.l}</span>
-          <input type="text" value="${esc(b.label)}" placeholder="Label in front (optional)" oninput="mqPbSet('${id}',${i},'label',this.value)" onblur="mqPbFlush('${id}')" style="flex:1;min-width:120px;max-width:240px;font-size:12.5px"/>
+      panel = `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <input type="text" value="${esc(b.label)}" placeholder="Label in front (optional), e.g. Job:" oninput="mqPbSet('${id}',${i},'label',this.value)" onblur="mqPbFlush('${id}')" style="flex:1;min-width:140px;max-width:260px;font-size:12.5px"/>
           <label style="font-size:12px;color:#4b5563;display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" ${b.bold ? 'checked' : ''} onchange="mqPbSet('${id}',${i},'bold',this.checked)"/> Bold label</label>
           ${prev && prev.type === 'field' ? `<label style="font-size:12px;color:#4b5563;display:flex;align-items:center;gap:4px;cursor:pointer" title="No gap between this and the block above"><input type="checkbox" ${b.tight ? 'checked' : ''} onchange="mqPbSet('${id}',${i},'tight',this.checked)"/> Tight to line above</label>` : ''}
         </div>`;
     } else if (b.type === 'items') {
-      inner = `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><strong style="font-size:13px">📋 Item list</strong>${sel('tok', MQ_PB_ITEMS, b.tok)}</div>`;
+      panel = `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:12.5px;color:#4b5563">Style:</span>${sel(MQ_PB_ITEMS, b.tok)}</div>`;
     } else if (b.type === 'totals') {
-      inner = `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><strong style="font-size:13px">🧮 Totals</strong>${sel('tok', MQ_PB_TOTALS, b.tok)}</div>`;
-    } else {
-      const s = MQ_PB_SIMPLE[b.tok] || ['▫️', b.tok, ''];
-      inner = `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><strong style="font-size:13px">${s[0]} ${s[1]}</strong>${s[2] ? `<span style="font-size:11.5px;color:#9ca3af">${s[2]}</span>` : ''}</div>`;
+      panel = `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:12.5px;color:#4b5563">Style:</span>${sel(MQ_PB_TOTALS, b.tok)}</div>`;
     }
-    return `<div class="mq-pb" data-i="${i}" ondragstart="mqPbBlockDragStart(event,'${id}',${i})" ondragend="mqPbBlockDragEnd(event,'${id}')" style="display:flex;align-items:stretch;background:#fff;border:1px solid #d1d5db;border-radius:6px;margin-bottom:8px;overflow:hidden">
-      <div title="Drag to reorder" onmousedown="this.parentNode.draggable=true" onmouseup="this.parentNode.draggable=false" style="width:26px;flex-shrink:0;background:#f3f4f6;border-right:1px solid #d1d5db;display:flex;align-items:center;justify-content:center;cursor:grab;color:#9ca3af;font-size:16px;user-select:none">⠿</div>
-      <div style="flex:1;min-width:0;padding:8px 10px">${inner}</div>
-      <div style="display:flex;flex-direction:column;justify-content:center;border-left:1px solid #e5e7eb;background:#fafafa">
-        ${ctl('▲', 'Move up', `mqPbMove('${id}',${i},-1)`, i === 0)}${ctl('▼', 'Move down', `mqPbMove('${id}',${i},1)`, i === blocks.length - 1)}${ctl('✕', 'Delete this block', `mqPbDel('${id}',${i})`, false)}
+    const P = mqPbPill(b);
+    const open = !!panel && !!b.open;
+    const pillStyle = P.dark ? 'background:#1a1a1a;border:1px solid #1a1a1a;color:#fff' : 'background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af';
+    const swatch = P.swatch ? `<span id="mq-pb-sw-${id}-${i}" style="display:inline-block;width:11px;height:11px;border-radius:3px;border:1px solid rgba(255,255,255,0.7);background:${esc(P.swatch)};margin-right:6px;vertical-align:-1px"></span>` : '';
+    return `<div class="mq-pb" data-i="${i}" style="background:#fff;border:1px solid #d1d5db;border-radius:6px;margin-bottom:5px">
+      <div class="mq-pb-head" draggable="true" ondragstart="mqPbBlockDragStart(event,'${id}',${i})" ondragend="mqPbBlockDragEnd(event,'${id}')" ${panel ? `onclick="mqPbToggle('${id}',${i})"` : ''} style="display:flex;align-items:center;gap:8px;padding:4px 6px 4px 4px;cursor:${panel ? 'pointer' : 'grab'}">
+        <span title="Drag to reorder" style="width:18px;text-align:center;color:#9ca3af;font-size:15px;cursor:grab;user-select:none;flex-shrink:0">⠿</span>
+        <span style="${pillStyle};border-radius:5px;padding:4px 10px;font-size:12px;font-weight:600;white-space:nowrap;flex-shrink:0">${swatch}${P.pill}</span>
+        <span id="mq-pb-sum-${id}-${i}" style="flex:1;min-width:0;font-size:12px;color:#9ca3af;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(P.sum)}</span>
+        <span style="display:flex;align-items:center;flex-shrink:0">
+          ${ctl('▲', 'Move up', `mqPbMove('${id}',${i},-1)`, i === 0)}${ctl('▼', 'Move down', `mqPbMove('${id}',${i},1)`, i === blocks.length - 1)}${ctl('✕', 'Delete this block', `mqPbDel('${id}',${i})`, false)}
+          ${panel ? `<span id="mq-pb-chev-${id}-${i}" style="font-size:10px;color:#6b7280;padding:2px 4px 2px 6px;display:inline-block;transition:transform 0.15s;transform:rotate(${open ? 90 : 0}deg)">▶</span>` : '<span style="width:20px"></span>'}
+        </span>
       </div>
+      ${panel ? `<div id="mq-pb-panel-${id}-${i}" style="display:${open ? 'block' : 'none'};padding:8px 10px 10px;border-top:1px solid #e5e7eb;background:#fafafa">${panel}</div>` : ''}
     </div>`;
   }
+
+  window.mqPbToggle = function(id, i) {
+    const b = (_mqPropBlocks[id] || [])[i];
+    const pn = document.getElementById(`mq-pb-panel-${id}-${i}`);
+    const ch = document.getElementById(`mq-pb-chev-${id}-${i}`);
+    if (!b || !pn) return;
+    b.open = pn.style.display === 'none';
+    pn.style.display = b.open ? 'block' : 'none';
+    if (ch) ch.style.transform = b.open ? 'rotate(90deg)' : 'rotate(0deg)';
+    if (b.open) {
+      const ta = document.getElementById(`mq-pb-ta-${id}-${i}`);
+      if (ta) { window.mqPbGrow(ta); }
+    }
+  };
 
   window.mqPbGrow = function(ta) { ta.style.height = 'auto'; ta.style.height = Math.min(320, Math.max(64, ta.scrollHeight + 2)) + 'px'; };
 
@@ -5830,6 +5861,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const b = (_mqPropBlocks[id] || [])[i];
     if (!b) return;
     b[key] = val;
+    const se = document.getElementById(`mq-pb-sum-${id}-${i}`);
+    if (se && (key === 'text' || key === 'label')) se.textContent = mqPbPill(b).sum;
     if (rerender || key === 'tok') window.mqPbRender(id);
     mqPbCommit(id, key === 'tok' || key === 'bold' || key === 'tight');
   };
@@ -5847,6 +5880,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   window.mqPbAdd = function(id, tok, at) {
     const a = _mqPropBlocks[id] || (_mqPropBlocks[id] = []);
     const nb = mqPbNew(tok);
+    if (nb.type === 'text' || nb.type === 'box') nb.open = true;
     const idx = at == null ? a.length : at;
     a.splice(idx, 0, nb);
     window.mqPbRender(id, (nb.type === 'text' || nb.type === 'box') ? idx : null);
@@ -5899,10 +5933,11 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     _mqPbDrag = { kind: 'move', from: i };
     ev.dataTransfer.effectAllowed = 'move';
     try { ev.dataTransfer.setData('text/plain', 'mq-block'); } catch (e) {}
-    setTimeout(() => { if (ev.target && ev.target.style) ev.target.style.opacity = '0.4'; }, 0);
+    const row = ev.currentTarget && ev.currentTarget.parentNode;
+    setTimeout(() => { if (row && row.style) row.style.opacity = '0.4'; }, 0);
   };
   window.mqPbBlockDragEnd = function(ev, id) {
-    if (ev.currentTarget) { ev.currentTarget.draggable = false; ev.currentTarget.style.opacity = ''; }
+    if (ev.currentTarget && ev.currentTarget.parentNode) ev.currentTarget.parentNode.style.opacity = '';
     window.mqPbClearInd(id);
     _mqPbDrag = null;
   };
@@ -6035,7 +6070,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
 
         <div id="mq-prop-blocks-${id}" style="display:${mode === 'blocks' ? 'block' : 'none'}">
           <div style="font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px">Your proposal, top to bottom <span style="font-weight:400;color:#9ca3af">— drag ⠿ to reorder</span></div>
-          <div id="mq-prop-canvas-${id}" ondragover="mqPbDragOver(event,'${id}')" ondragleave="mqPbDragLeave(event,'${id}')" ondrop="mqPbDrop(event,'${id}')" style="min-height:60px;border-radius:8px"></div>
+          <div id="mq-prop-canvas-${id}" ondragover="mqPbDragOver(event,'${id}')" ondragleave="mqPbDragLeave(event,'${id}')" ondrop="mqPbDrop(event,'${id}')" style="min-height:50px;border-radius:8px"></div>
         </div>
 
         <div id="mq-prop-raw-${id}" style="display:${mode === 'raw' ? 'block' : 'none'}">
@@ -6133,7 +6168,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const accent = f['Accent colour'] || '#1a3a6b';
       const name = f['Template name'] || 'Untitled';
       return `
-      <div class="mq-card" style="margin-bottom:1rem;padding:0;overflow:hidden">
+      <div class="mq-card" style="margin-bottom:1rem;padding:0;overflow:hidden;overflow:clip">
         <div onclick="mqToggleProposalCard('${t.id}')" style="display:flex;align-items:center;gap:10px;padding:14px 16px;cursor:pointer">
           <span id="mq-prop-chevron-${t.id}" style="font-size:11px;color:#6b7280;display:inline-block;transition:transform 0.15s">▶</span>
           <span style="width:14px;height:14px;border-radius:4px;background:${accent};flex-shrink:0"></span>
