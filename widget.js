@@ -4169,6 +4169,7 @@
       descEl.innerHTML = ''; // clear previous content before rebuilding
       if (coverImg) {
         const img = document.createElement('img');
+        if (window._mqFxOn) img.loading = 'lazy';
         img.src = coverImg;
         img.style.cssText = 'width:100%;max-height:160px;object-fit:cover;border-radius:6px;margin-bottom:8px;display:block;cursor:zoom-in';
         img.onerror = () => { img.style.display = 'none'; };
@@ -4301,6 +4302,7 @@
           slide.appendChild(mqBuildVideoEmbedEl(video, src));
         } else {
           const img = document.createElement('img');
+          if (window._mqFxOn) img.loading = 'lazy';
           img.src = src;
           img.style.cssText = 'width:100%;height:auto;max-height:480px;object-fit:contain;display:block;cursor:zoom-in;border-radius:6px';
           img.onerror = () => { slide.style.display = 'none'; };
@@ -4403,6 +4405,7 @@
           guideEl.appendChild(mqBuildVideoEmbedEl(singleVideo, allImages[0]));
         } else {
         const img = document.createElement('img');
+        if (window._mqFxOn) img.loading = 'lazy';
         img.src = allImages[0];
         img.className = 'mq-measure-guide-img';
         // height:auto + object-fit:contain (not cover) so the whole image
@@ -8115,7 +8118,7 @@
     buildCTMAT(data);
     buildTRIM(data);
     buildTALLCAB(data);
-    container.innerHTML = buildWidgetHTML(shop, specs, data);
+    container.innerHTML = mqFxLazyImgs(buildWidgetHTML(shop, specs, data));
     wireWidget(data);
     if (window._mqIsDemoPlan) mqInjectDemoWatermark(container);
     if (window.mqFxInit) window.mqFxInit();
@@ -8963,7 +8966,7 @@
     buildCTMAT(data);
     buildTRIM(data);
     buildTALLCAB(data);
-    container.innerHTML=buildWidgetHTML(shop,specs,data);
+    container.innerHTML=mqFxLazyImgs(buildWidgetHTML(shop,specs,data));
     wireWidget(data);
     if (window._mqIsDemoPlan) mqInjectDemoWatermark(container);
     if (window.mqFxInit) window.mqFxInit();
@@ -9866,6 +9869,38 @@
     });
   }
 
+  // Focused layout, page speed: the first screen is just the chooser, but the
+  // widget HTML also contains every hidden step's photos (cover images,
+  // measuring-guide pictures, material/door thumbnails, three times over for
+  // the three tabs). Browsers fetch those immediately, so the handful of
+  // photos the visitor can actually SEE queue behind megabytes they can't.
+  // In Focused every <img> in the page markup (the header logo excepted) is
+  // marked lazy; mqFxWarmImages() brings them in once the first screen is
+  // done. Classic is untouched.
+  function mqFxLazyImgs(html) {
+    if (!window._mqFxOn) return html;
+    return String(html).replace(/(?<!class="mq-logo-real">)<img (?![^>]*\bloading=)/g, '<img loading="lazy" ');
+  }
+
+  // After the chooser's own photos have arrived (or a few seconds, whichever
+  // is first), let the browser fetch the hidden steps' images in the background
+  // so steps still open with their pictures ready.
+  function mqFxWarmImages() {
+    if (window._mqFxWarmTimer) return;
+    const warm = () => {
+      window._mqFxWarmTimer = null;
+      document.querySelectorAll('#midasquote-widget .mq-tab-content img[loading="lazy"]').forEach(i => { i.loading = 'eager'; });
+    };
+    const started = Date.now();
+    const tick = () => {
+      const vis = [...document.querySelectorAll('#mq-fx-chooser .mq-fx-card-photo img')];
+      const done = vis.every(i => i.complete) || Date.now() - started > 5000;
+      if (done) { window._mqFxWarmTimer = setTimeout(warm, 400); return; }
+      window._mqFxWarmTimer = setTimeout(tick, 150);
+    };
+    window._mqFxWarmTimer = setTimeout(tick, 150);
+  }
+
   window.mqFxInit = function() {
     const container = document.getElementById('midasquote-widget');
     if (!container || !window._mqFxOn) return;
@@ -9943,7 +9978,7 @@
         return `<button type="button" class="mq-fx-ptog" aria-expanded="false" onclick="mqFxToggleTypes('${t.id}',this)"><span class="mq-fx-ptog-t">Tap to see project types</span><span class="mq-fx-ptog-c" aria-hidden="true"><svg viewBox="0 0 16 16" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8h11M9.5 4l4 4-4 4"/></svg></span></button>`
           + `<div class="mq-fx-ptypes" hidden><div class="mq-fx-pgrid">${list.map(r => { const u = ptPhoto(r); return `<button type="button" class="mq-fx-pt" onclick="mqFxStartType('${t.id}','${escH(r.id)}')"><span class="mq-fx-pt-img"><span class="mq-fx-pt-ico">${t.icon}</span>${u ? `<img src="${u}" alt="" loading="lazy" decoding="async" onerror="this.remove()">` : ''}</span><span class="mq-fx-pt-name">${escH(r.name)}</span></button>`; }).join('')}</div></div>`;
       };
-      const imgs = id => photosFor(id).map(u => `<img src="${u}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`).join('');
+      const imgs = id => photosFor(id).map(u => `<img src="${u}" alt="" fetchpriority="high" decoding="async" onerror="this.remove()">`).join('');
       const TR = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
       const trust = `<div class="mq-fx-trust"><span>${TR('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>')}About 5 minutes</span><span>${TR('<path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/>')}No obligation</span><span>${TR('<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>')}Instant ballpark</span></div>`;
       ch.innerHTML = `<div class="mq-fx-ch-title">${one ? 'Ready for your estimate?' : 'What would you like a quote for?'}</div>
@@ -9968,6 +10003,7 @@
       const tabBar = container.querySelector('.mq-tab-bar');
       if (tabBar) tabBar.insertAdjacentElement('afterend', ch); else container.appendChild(ch);
     }
+    mqFxWarmImages();
     // Top bar (Exit button; shop name on phones) and desktop side stepper —
     // only visible in full-screen mode (CSS).
     if (!document.getElementById('mq-fx-top')) {
