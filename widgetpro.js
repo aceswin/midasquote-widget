@@ -8885,10 +8885,65 @@
     // inline spans (color runs last since it wraps already-bolded HTML).
     // Shared by both top-level paragraphs and the inside of a {box}, so
     // formatting behaves identically whether it's inside a box or not.
+    // ---- Extended block formatting for proposal bodies (keep IDENTICAL in widgetpro.js and dashboard.js) ----
+    // {box:#bg|#border}…{/box}                  legacy coloured box
+    // {box:bg=#hex;border=#hex;align=center;size=24;list=bullets}…{/box}   any mix of options
+    // {cols}left text{|}right text{/cols}       two columns
+    // {img:https://…|w=50|a=center}             image (w = % of page width, a = left/center/right)
+    function mqFmtAttrs(str) {
+      str = String(str || '').trim();
+      const o = {};
+      if (str.charAt(0) === '#') {
+        const p = str.split('|');
+        if (/^#[0-9a-fA-F]{3,8}$/.test(p[0])) o.bg = p[0];
+        if (p[1] && /^#[0-9a-fA-F]{3,8}$/.test(p[1])) o.border = p[1];
+      } else {
+        str.split(';').forEach(kv => { const i = kv.indexOf('='); if (i > 0) o[kv.slice(0, i).trim()] = kv.slice(i + 1).trim(); });
+        if (o.bg && !/^#[0-9a-fA-F]{3,8}$/.test(o.bg)) delete o.bg;
+        if (o.border && !/^#[0-9a-fA-F]{3,8}$/.test(o.border)) delete o.border;
+      }
+      return o;
+    }
+    function mqFmtBlock(o, inner, fmt) {
+      const text = String(inner || '').trim();
+      let body;
+      if (o.list === 'bullets' || o.list === 'numbers') {
+        const items = text.split('\n').map(l => l.trim()).filter(Boolean).map(l => `<li style="margin:0 0 4px">${fmt(l)}</li>`).join('');
+        const tag = o.list === 'numbers' ? 'ol' : 'ul';
+        body = `<${tag} style="margin:0;padding-left:22px">${items}</${tag}>`;
+      } else {
+        body = text.split(/\n{2,}/).map(p => fmt(p)).join('<div style="height:12px"></div>');
+      }
+      let extra = '';
+      if (o.align && /^(left|center|right|justify)$/.test(o.align)) extra += `text-align:${o.align};`;
+      const sz = parseInt(o.size, 10);
+      if (sz >= 8 && sz <= 60) extra += `font-size:${sz}px;line-height:1.25;`;
+      if (o.bg || o.border) {
+        return `<div style="${o.bg ? 'background:' + o.bg + ';' : ''}${o.border ? 'border:2px solid ' + o.border + ';' : ''}${extra}border-radius:10px;padding:14px 16px;margin:16px 0">${body}</div>`;
+      }
+      return `<div style="${extra}margin-bottom:16px">${body}</div>`;
+    }
+    function mqFmtCols(inner, fmt) {
+      const parts = String(inner || '').split('{|}');
+      const col = t => `<div style="flex:1;min-width:0">${String(t || '').trim().split(/\n{2,}/).map(p => fmt(p)).join('<div style="height:12px"></div>')}</div>`;
+      return `<div style="display:flex;gap:28px;align-items:flex-start;margin:0 0 16px">${col(parts[0])}${col(parts[1])}</div>`;
+    }
+    function mqFmtImg(str) {
+      const p = String(str || '').split('|');
+      const url = (p[0] || '').trim().replace(/"/g, '%22').replace(/</g, '%3C').replace(/>/g, '%3E');
+      if (!/^https?:\/\//i.test(url)) return '';
+      const o = {};
+      p.slice(1).forEach(kv => { const i = kv.indexOf('='); if (i > 0) o[kv.slice(0, i).trim()] = kv.slice(i + 1).trim(); });
+      const w = Math.min(100, Math.max(5, parseInt(o.w, 10) || 50));
+      const a = /^(left|center|right)$/.test(o.a) ? o.a : 'center';
+      return `<div style="text-align:${a};margin:0 0 16px"><img src="${url}" crossorigin="anonymous" style="width:${w}%;max-width:100%;height:auto"/></div>`;
+    }
+
     function mqFormatProposalTextChunk(text) {
       let html = mqEscapeHtml(text).replace(/\n/g, '<br>');
       html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
       html = html.replace(/\{color:(#[0-9a-fA-F]{3,8})\}([\s\S]*?)\{\/color\}/g, (m, hex, inner) => `<span style="color:${hex}">${inner}</span>`);
+      html = html.replace(/\{i\}([\s\S]*?)\{\/i\}/g, '<em>$1</em>').replace(/\{u\}([\s\S]*?)\{\/u\}/g, '<span style="text-decoration:underline">$1</span>');
       return html;
     }
 
@@ -8920,15 +8975,24 @@
       // in once the surrounding paragraph HTML is built.
       const customBlocks = {};
       let blockIndex = 0;
-      const textWithPlaceholders = filteredText.replace(/\{box:(#[0-9a-fA-F]{3,8})(?:\|(#[0-9a-fA-F]{3,8}))?\}([\s\S]*?)\{\/box\}/g, (match, hex, bd, inner) => {
-        const key = `\u0000BOX${blockIndex++}\u0000`;
-        // Split into paragraphs so line breaks render correctly; the box
-        // itself and its paragraphs are plain flowing content — no
-        // page-break-avoid marking anywhere (see note below on why).
-        const innerParas = inner.trim().split(/\n{2,}/).map(p => mqFormatProposalTextChunk(p)).join('<div style="height:12px"></div>');
-        customBlocks[key] = `<div style="background:${hex};${bd ? 'border:2px solid ' + bd + ';' : ''}border-radius:10px;padding:14px 16px;margin:16px 0">${innerParas}</div>`;
-        return key;
-      });
+      // Boxes, columns and images are all "block" items extracted before
+      // paragraph-splitting (see mqFmt* helpers above).
+      const textWithPlaceholders = filteredText
+        .replace(/\{box:([^}]*)\}([\s\S]*?)\{\/box\}/g, (match, attrs, inner) => {
+          const key = `\u0000BOX${blockIndex++}\u0000`;
+          customBlocks[key] = mqFmtBlock(mqFmtAttrs(attrs), inner, mqFormatProposalTextChunk);
+          return key;
+        })
+        .replace(/\{cols\}([\s\S]*?)\{\/cols\}/g, (match, inner) => {
+          const key = `\u0000BOX${blockIndex++}\u0000`;
+          customBlocks[key] = mqFmtCols(inner, mqFormatProposalTextChunk);
+          return key;
+        })
+        .replace(/\{img:([^}]*)\}/g, (match, a) => {
+          const key = `\u0000BOX${blockIndex++}\u0000`;
+          customBlocks[key] = mqFmtImg(a);
+          return key;
+        });
 
       // Grouped into paragraphs (blank-line separated). Deliberately NOT
       // marked page-break-inside:avoid anywhere in this document — that was
