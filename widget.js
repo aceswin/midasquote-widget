@@ -9426,7 +9426,7 @@
   // for reduced motion get a gentle fade-free swap every few seconds instead.
   window.mqFxStartTickers = function(root) {
     const reduce = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
-    const SPEED = 46, GAP = 34; // px per second, px between names
+    const SPEED = 36, GAP = 34; // px per second, px between names
     root.querySelectorAll('.mq-fx-ptick').forEach(box => {
       let names = [];
       try { names = JSON.parse(box.getAttribute('data-names') || '[]').filter(n => typeof n === 'string' && n); } catch (e) {}
