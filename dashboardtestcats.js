@@ -5642,16 +5642,16 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // text directly and is always available.
   // ======================================================================
   const MQ_PB_INLINE = {
-    customer_name: { l: 'Customer name', lab: 'Customer:' },
-    customer_address: { l: 'Address', lab: 'Address:' },
-    customer_phone: { l: 'Phone', lab: 'Phone:' },
-    job_name: { l: 'Job name', lab: 'Job:' },
-    description: { l: 'Description', lab: '' },
-    date: { l: 'Date', lab: 'Date:' },
-    subtotal: { l: 'Subtotal', lab: 'Subtotal:' },
-    tax: { l: 'Tax', lab: 'Tax:' },
-    total: { l: 'Total', lab: 'Total:' },
-    deposit: { l: 'Deposit', lab: 'Deposit:' },
+    customer_name: { l: 'Customer name', lab: 'Customer:', note: 'Filled in automatically with the customer\'s name on each proposal.' },
+    customer_address: { l: 'Address', lab: 'Address:', note: 'Filled in automatically from the customer\'s address on each proposal. If it\'s left blank on a proposal, this whole line disappears.' },
+    customer_phone: { l: 'Phone', lab: 'Phone:', note: 'Filled in automatically from the customer\'s phone number on each proposal. If it\'s left blank, this whole line disappears.' },
+    job_name: { l: 'Job name', lab: 'Job name:', note: 'Filled in automatically from the job name typed in MidasQuote Pro. If it\'s left blank, this whole line disappears.' },
+    description: { l: 'Description', lab: '', note: 'Filled in automatically with the job description typed in MidasQuote Pro when each proposal is made — nothing to type here. If it\'s left blank, this whole line disappears.' },
+    date: { l: 'Date', lab: 'Date:', note: 'Filled in automatically with the date the proposal is made.' },
+    subtotal: { l: 'Subtotal', lab: 'Subtotal:', note: 'Calculated automatically from the items on each proposal.' },
+    tax: { l: 'Tax', lab: 'Tax:', note: 'Calculated automatically from your tax % setting.' },
+    total: { l: 'Total', lab: 'Total:', note: 'Calculated automatically from the items and tax.' },
+    deposit: { l: 'Deposit', lab: 'Deposit:', note: 'Calculated automatically from your deposit setting.' },
   };
   const MQ_PB_ITEMS = { items: 'Coloured list', items_plain: 'Plain list', items_plain_light: 'Light list (names not bold)' };
   const MQ_PB_TOTALS = { totals_box: 'Coloured box with deposit', totals_plain: 'Plain lines' };
@@ -5701,7 +5701,18 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         if (MQ_PB_SIMPLE[n]) { blocks.push({ type: 'simple', tok: n }); return; }
       }
       const lines = p.split('\n');
-      const parsed = lines.map(parseField);
+      const parseLine = line => {
+        const f = parseField(line);
+        if (f) return f;
+        const t = line.trim().match(/^\{([a-z_]+)\}$/);
+        if (t) {
+          if (MQ_PB_ITEMS[t[1]]) return { type: 'items', tok: t[1] };
+          if (MQ_PB_TOTALS[t[1]]) return { type: 'totals', tok: t[1] };
+          if (MQ_PB_SIMPLE[t[1]]) return { type: 'simple', tok: t[1] };
+        }
+        return null;
+      };
+      const parsed = lines.map(parseLine);
       if (parsed.some(Boolean)) {
         // Lines that are fields become field pills; runs of other lines become text boxes.
         let pending = [], first = true;
@@ -5734,7 +5745,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     }
     return `{${b.tok}}`;
   }
-  function mqPbPlainLike(b) { return b.type === 'field' || (b.type === 'text' && !b.bg && !b.border); }
+  function mqPbPlainLike(b) { return !(b.type === 'text' && (b.bg || b.border)); }
   function mqPbSerialize(blocks) {
     let out = '', prev = null;
     blocks.forEach(b => {
@@ -5849,7 +5860,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // What a collapsed block shows: a pill (same style as the palette) + a short grey summary.
   function mqPbPill(b) {
     if (b.type === 'text') return { pill: '✏️ Text box', dark: true, bg: b.bg, bd: b.border, sum: mqPbPlain(b.text) || 'empty — click to type' };
-    if (b.type === 'field') return { pill: (MQ_PB_INLINE[b.tok] || { l: b.tok }).l, sum: [(b.label || '').trim(), b.suffix ? '… ' + b.suffix.trim() : ''].join(' ').trim() };
+    if (b.type === 'field') return { pill: (MQ_PB_INLINE[b.tok] || { l: b.tok }).l, sum: [(b.label || '').trim(), b.suffix ? '… ' + b.suffix.trim() : ''].join(' ').trim() || 'filled in automatically' };
     if (b.type === 'items') return { pill: 'Item list', sum: MQ_PB_ITEMS[b.tok] || '' };
     if (b.type === 'totals') return { pill: 'Totals', sum: MQ_PB_TOTALS[b.tok] || '' };
     const s = MQ_PB_SIMPLE[b.tok] || ['', b.tok, ''];
@@ -5876,7 +5887,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           ${tightBox}
         </div>`;
     } else if (b.type === 'field') {
-      panel = `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      panel = `<div style="font-size:11.5px;color:#6b7280;margin-bottom:8px;line-height:1.4">${esc((MQ_PB_INLINE[b.tok] || {}).note || '')}</div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
           <span style="font-size:12px;color:#4b5563">Before:</span>
           <input type="text" value="${esc(b.label)}" placeholder="e.g. Job:" oninput="mqPbSet('${id}',${i},'label',this.value)" onblur="mqPbFlush('${id}')" style="width:150px;font-size:12.5px"/>
           <span style="font-size:12px;color:#4b5563">After:</span>
@@ -5888,9 +5900,11 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           ${tightBox}
         </div>`;
     } else if (b.type === 'items') {
-      panel = `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:12.5px;color:#4b5563">Style:</span>${sel(MQ_PB_ITEMS, b.tok)}</div>`;
+      panel = `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:12.5px;color:#4b5563">Style:</span>${sel(MQ_PB_ITEMS, b.tok)}${tightBox}</div>`;
     } else if (b.type === 'totals') {
-      panel = `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:12.5px;color:#4b5563">Style:</span>${sel(MQ_PB_TOTALS, b.tok)}</div>`;
+      panel = `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:12.5px;color:#4b5563">Style:</span>${sel(MQ_PB_TOTALS, b.tok)}${tightBox}</div>`;
+    } else if (tightBox) {
+      panel = `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">${tightBox}</div>`;
     }
     const P = mqPbPill(b);
     const open = !!panel && !!b.open;
@@ -6101,6 +6115,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const from = d.from;
       if (from == null || from < 0 || from >= a.length) return;
       const [x] = a.splice(from, 1);
+      x.tight = false; // a moved block starts with a normal gap
       a.splice(idx > from ? idx - 1 : idx, 0, x);
       window.mqPbRender(id); mqPbCommit(id, true);
     }
