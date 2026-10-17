@@ -2622,6 +2622,19 @@ window.logoutMember = async function () {
   @media(max-width:1100px){#midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
   @media(max-width:560px){#midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-grid{gap:10px!important}#midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-thumb-area{height:160px}}
 
+  /* v2.4: scroll-following preview uses JS translation so ancestor overflow rules
+     cannot silently disable CSS sticky. */
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-preview-wrap{
+    position:relative!important;top:auto!important;align-self:start!important;
+    will-change:transform;
+  }
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-preview-wrap canvas{
+    max-height:min(560px, 65vh)!important;
+  }
+  @media(max-width:1100px){
+    #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-preview-wrap{transform:none!important;will-change:auto}
+  }
+
   /* v2.3 — force actual spacing inside the host dashboard. */
   #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-hero{
     padding:30px 36px!important; margin:0 0 22px!important; gap:22px!important;
@@ -13221,6 +13234,38 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const quoteLink=()=>(_mqCustomPostLink||shopRecord.fields['Marketing link']||`https://widget.midasquote.com/?shop=${shopRecord.fields['Shop token']||''}`);
     const grid=root.querySelector('#mq-studio-grid'), workspace=root.querySelector('#mq-studio-workspace');
     const field=id=>root.querySelector('#mq-studio-'+id);
+    // Keep the design visible while the owner edits long settings panels.
+    // Dashboard ancestors use overflow rules that break position:sticky;
+    // moving the preview within its own grid row avoids that limitation.
+    const preview=workspace.querySelector('.mq-studio-preview-wrap');
+    const controls=workspace.querySelector('.mq-studio-fields');
+    let previewShift=0, followQueued=false;
+    function followPreview(){
+      followQueued=false;
+      if(!preview||!controls||workspace.style.display==='none'||!mqStudioSelected){return}
+      if(window.innerWidth<=1100){
+        previewShift=0;preview.style.transform='';return;
+      }
+      const previewTop=preview.getBoundingClientRect().top-previewShift;
+      const maxTravel=Math.max(0,controls.getBoundingClientRect().height-preview.offsetHeight);
+      const target=Math.max(0,Math.min(maxTravel,96-previewTop));
+      if(Math.abs(target-previewShift)>.5){
+        previewShift=target;
+        preview.style.transform=`translate3d(0, ${target}px, 0)`;
+      }
+    }
+    function queuePreviewFollow(){
+      if(followQueued)return;
+      followQueued=true;
+      requestAnimationFrame(followPreview);
+    }
+    if(!root.dataset.previewFollowInstalled){
+      root.dataset.previewFollowInstalled='true';
+      // Capture scrolls on window AND nested dashboard content scrollers.
+      window.addEventListener('scroll',queuePreviewFollow,true);
+      window.addEventListener('resize',queuePreviewFollow);
+    }
+
     const safeColor=(v,fallback)=>/^#[0-9a-f]{6}$/i.test(v||'')?v:(fallback||'#56314b');
     const fontFace=(key,fallbackSerif=false)=>({georgia:'Georgia, serif',arial:'Arial, sans-serif',trebuchet:'"Trebuchet MS", Arial, sans-serif',verdana:'Verdana, Arial, sans-serif',times:'"Times New Roman", Georgia, serif'}[key]||(fallbackSerif?'Georgia, serif':'Arial, sans-serif'));
     const font=(size,fam,weight=700)=>`${weight} ${Math.round(size)}px ${fontFace(fam)}`;
@@ -13378,14 +13423,14 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         btn.addEventListener('click',()=>select(t));grid.appendChild(btn);
       });
     }
-    function update(){if(!mqStudioSelected)return;syncRangeLabels();const canvas=field('canvas');const sizes={square:[1080,1080],portrait:[1080,1350],story:[1080,1920],poster:[1080,1620],landscape:[1620,1080]};[canvas.width,canvas.height]=sizes[field('size').value]||sizes.square;paint(canvas,mqStudioSelected,currentOpts())}
+    function update(){if(!mqStudioSelected)return;syncRangeLabels();const canvas=field('canvas');const sizes={square:[1080,1080],portrait:[1080,1350],story:[1080,1920],poster:[1080,1620],landscape:[1620,1080]};[canvas.width,canvas.height]=sizes[field('size').value]||sizes.square;paint(canvas,mqStudioSelected,currentOpts());queuePreviewFollow()}
     function setDefaults(){
       field('headline-font').value='georgia';field('sub-font').value='arial';field('cta-font').value='arial';field('align').value='left';
       field('headline-color').value='#ffffff';field('sub-color').value=mqStudioSelected && mqStudioSelected.mode==='minimal' ? '#685861' : '#f0e7ee';field('cta-bg').value='#f2e1ca';field('cta-color').value='#2b2430';
       field('headline-scale').value='100';field('sub-scale').value='100';field('cta-scale').value='100';field('headline-spacing').value='0';field('sub-spacing').value='0';field('content-x').value='0';field('content-y').value='0';field('cta-x').value='0';field('cta-y').value='0';
       syncRangeLabels();
     }
-    function select(t){mqStudioSelected=t;field('edit-title').textContent=t.title;field('headline').value=t.headline;field('subline').value=t.sub;field('cta').value=t.cta;field('color').value=safeColor(color);field('size').value=t.id==='yard'?'landscape':t.category==='print'?'poster':'square';setDefaults();if(t.mode==='minimal'){field('headline-color').value='#382b36';field('sub-color').value='#685861'}workspace.style.display='block';update();workspace.scrollIntoView({behavior:'smooth',block:'start'});}
+    function select(t){mqStudioSelected=t;field('edit-title').textContent=t.title;field('headline').value=t.headline;field('subline').value=t.sub;field('cta').value=t.cta;field('color').value=safeColor(color);field('size').value=t.id==='yard'?'landscape':t.category==='print'?'poster':'square';setDefaults();if(t.mode==='minimal'){field('headline-color').value='#382b36';field('sub-color').value='#685861'}workspace.style.display='block';previewShift=0;preview.style.transform='';update();workspace.scrollIntoView({behavior:'smooth',block:'start'});}
     if(!root.dataset.studioInitialized){
       root.dataset.studioInitialized='true';
       root.querySelectorAll('[data-studio-filter]').forEach(btn=>btn.addEventListener('click',()=>{root.querySelectorAll('[data-studio-filter]').forEach(b=>b.classList.toggle('active',b===btn));renderGallery(btn.dataset.studioFilter)}));
@@ -13396,7 +13441,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       });
       field('photo').addEventListener('change',e=>{const file=e.target.files&&e.target.files[0];if(!file)return;if(!file.type.startsWith('image/'))return;const blob=URL.createObjectURL(file);const image=new Image();image.onload=()=>{URL.revokeObjectURL(blob);mqStudioPhoto=image;update()};image.onerror=()=>{URL.revokeObjectURL(blob);mqShowToast('Could not read image','error')};image.src=blob});
       field('remove-photo').addEventListener('click',()=>{mqStudioPhoto=null;field('photo').value='';update()});
-      field('back').addEventListener('click',()=>{workspace.style.display='none';root.scrollIntoView({behavior:'smooth',block:'start'})});
+      field('back').addEventListener('click',()=>{workspace.style.display='none';previewShift=0;preview.style.transform='';root.scrollIntoView({behavior:'smooth',block:'start'})});
       field('download').addEventListener('click',()=>{update();const a=document.createElement('a');a.href=field('canvas').toDataURL('image/png');a.download=(shopName+'-'+mqStudioSelected.id+'-'+field('size').value).toLowerCase().replace(/[^a-z0-9-]+/g,'-')+'.png';a.click()});
       field('copy-caption').addEventListener('click',()=>{const caption=[field('headline').value,field('subline').value,field('cta').value+': '+quoteLink()].join('\n\n');if(navigator.clipboard?.writeText)navigator.clipboard.writeText(caption).then(()=>mqShowToast('Caption copied')).catch(()=>mqShowToast('Could not copy caption','error'));else mqShowToast('Clipboard not available','error')});
     }
