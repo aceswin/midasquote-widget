@@ -2560,7 +2560,8 @@ window.logoutMember = async function () {
 
           
 <style>
-  /* MidasQuote Marketing Studio v2.2 — enhanced editor */
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700;900&family=Cinzel:wght@500;700;800&family=Cormorant+Garamond:wght@500;700&family=Montserrat:wght@400;600;700;800&family=Poppins:wght@400;600;700;800&family=Oswald:wght@500;600;700&family=Bebas+Neue&family=Libre+Baskerville:wght@400;700&family=DM+Serif+Display&display=swap');
+  /* MidasQuote Marketing Studio v3.0 — enhanced editor */
   #mq-page-marketing .mq-studio{--mqs-ink:#24212b;--mqs-sub:#716e79;--mqs-panel:#ffffff;--mqs-line:#e7e1e8;--mqs-soft:#f7f3f6;margin:0 0 26px;color:var(--mqs-ink);font-family:inherit}
   .mq-studio-hero{display:flex;justify-content:space-between;align-items:center;gap:20px;background:linear-gradient(115deg,#211c2c 0%,#46314c 64%,#7b5060 100%);color:white;padding:30px 34px;border-radius:18px;overflow:hidden;margin-bottom:22px}
   .mq-studio-kicker{display:block;font-size:10px;font-weight:800;letter-spacing:.16em;color:#c9aa81;margin-bottom:9px}
@@ -2600,7 +2601,7 @@ window.logoutMember = async function () {
   .mq-studio-tip{font-size:11px;color:#79727e;line-height:1.6;margin:4px 0 0}
   .mq-studio-preview-wrap{background:#f5f2f4;border:1px solid #eae5e9;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;min-width:0;position:sticky;top:16px}
   .mq-studio-preview-wrap canvas{display:block;width:auto;height:auto;max-width:100%;max-height:560px;border-radius:8px;box-shadow:0 10px 35px rgba(18,13,22,.17)}
-  .mq-studio-preview-wrap p{font-size:10px;color:#8d8390;text-align:center;margin:12px 0 0}
+  .mq-studio-preview-wrap p{font-size:10px;color:#8d8390;text-align:center;margin:12px 0 0}.mq-studio-preview-tip{font-size:11px;color:#6b6371;background:#fff;border:1px dashed #d8cfda;border-radius:10px;padding:8px 10px;margin:0 0 12px;text-align:center}
   .mq-studio-legacy{border-top:1px solid #e7e2e9;padding-top:17px;color:#716a76;font-size:12px}.mq-studio-legacy summary{cursor:pointer;color:#4d4152;font-weight:700}.mq-studio-legacy p{line-height:1.6}
   @media(max-width:1100px){.mq-studio-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.mq-studio-editor-layout{grid-template-columns:1fr}.mq-studio-preview-wrap{position:relative;top:auto}}
   @media(max-width:560px){.mq-studio-hero{padding:22px}.mq-studio-hero-star{display:none}.mq-studio-grid{gap:10px}.mq-studio-thumb{height:135px}.mq-studio-workspace{padding:14px}.mq-studio-editor-top{flex-wrap:wrap}.mq-studio-two-col,.mq-studio-color-grid,.mq-studio-three-col{grid-template-columns:1fr}}
@@ -2747,7 +2748,7 @@ window.logoutMember = async function () {
                     <div class="mq-studio-control-card">
                       <div class="mq-studio-card-title">Brand signature</div>
                       <div class="mq-studio-two-col">
-                        <label>Shop name font<select id="mq-studio-shop-font"><option value="arial">Modern sans</option><option value="georgia">Elegant serif</option><option value="trebuchet">Contemporary</option><option value="times">Classic</option></select></label>
+                        <label>Shop name font<select id="mq-studio-shop-font"><option value="playfair">Playfair Display</option><option value="cinzel">Cinzel</option><option value="dmserif">DM Serif Display</option><option value="cormorant">Cormorant Garamond</option><option value="montserrat">Montserrat</option><option value="poppins">Poppins</option><option value="oswald">Oswald</option><option value="bebas">Bebas Neue</option><option value="libre">Libre Baskerville</option><option value="arial">Arial</option><option value="georgia">Georgia</option><option value="trebuchet">Trebuchet</option><option value="verdana">Verdana</option><option value="times">Times New Roman</option></select></label>
                         <label>Shop name colour<input type="color" id="mq-studio-shop-color" value="#ffffff"></label>
                       </div>
                       <div class="mq-studio-two-col">
@@ -2763,11 +2764,11 @@ window.logoutMember = async function () {
                     </div><div class="mq-studio-control-card">
                       <div class="mq-studio-card-title">Typography</div>
                       <div class="mq-studio-two-col">
-                        <label>Headline font<select id="mq-studio-headline-font"><option value="georgia">Elegant serif</option><option value="arial">Clean sans</option><option value="trebuchet">Modern sans</option><option value="verdana">Readable sans</option><option value="times">Classic serif</option></select></label>
-                        <label>Supporting font<select id="mq-studio-sub-font"><option value="arial">Clean sans</option><option value="georgia">Elegant serif</option><option value="trebuchet">Modern sans</option><option value="verdana">Readable sans</option><option value="times">Classic serif</option></select></label>
+                        <label>Headline font<select id="mq-studio-headline-font"><option value="playfair">Playfair Display</option><option value="cinzel">Cinzel</option><option value="dmserif">DM Serif Display</option><option value="cormorant">Cormorant Garamond</option><option value="montserrat">Montserrat</option><option value="poppins">Poppins</option><option value="oswald">Oswald</option><option value="bebas">Bebas Neue</option><option value="libre">Libre Baskerville</option><option value="georgia">Georgia</option><option value="arial">Arial</option><option value="trebuchet">Trebuchet</option><option value="verdana">Verdana</option><option value="times">Times New Roman</option></select></label>
+                        <label>Supporting font<select id="mq-studio-sub-font"><option value="montserrat">Montserrat</option><option value="poppins">Poppins</option><option value="oswald">Oswald</option><option value="bebas">Bebas Neue</option><option value="playfair">Playfair Display</option><option value="cinzel">Cinzel</option><option value="dmserif">DM Serif Display</option><option value="cormorant">Cormorant Garamond</option><option value="libre">Libre Baskerville</option><option value="arial">Arial</option><option value="georgia">Georgia</option><option value="trebuchet">Trebuchet</option><option value="verdana">Verdana</option><option value="times">Times New Roman</option></select></label>
                       </div>
                       <div class="mq-studio-two-col">
-                        <label>Button font<select id="mq-studio-cta-font"><option value="arial">Clean sans</option><option value="georgia">Elegant serif</option><option value="trebuchet">Modern sans</option><option value="verdana">Readable sans</option><option value="times">Classic serif</option></select></label>
+                        <label>Button font<select id="mq-studio-cta-font"><option value="montserrat">Montserrat</option><option value="poppins">Poppins</option><option value="oswald">Oswald</option><option value="bebas">Bebas Neue</option><option value="playfair">Playfair Display</option><option value="cinzel">Cinzel</option><option value="dmserif">DM Serif Display</option><option value="cormorant">Cormorant Garamond</option><option value="libre">Libre Baskerville</option><option value="arial">Arial</option><option value="georgia">Georgia</option><option value="trebuchet">Trebuchet</option><option value="verdana">Verdana</option><option value="times">Times New Roman</option></select></label>
                         <label>Text alignment<select id="mq-studio-align"><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option></select></label>
                       </div>
                     </div>
@@ -2813,7 +2814,7 @@ window.logoutMember = async function () {
                       <p class="mq-studio-tip">Your shop name and marketing link are automatically added. Upload a project photo for the most effective result.</p>
                     </div>
                   </div>
-                  <div class="mq-studio-preview-wrap"><canvas id="mq-studio-canvas" width="1080" height="1080" aria-label="Live marketing graphic preview"></canvas><p>Live preview · The downloaded image exports at full resolution</p></div>
+                  <div class="mq-studio-preview-wrap"><div class="mq-studio-preview-tip">Tip: drag the shop name, headline, button, or website directly on the preview.</div><canvas id="mq-studio-canvas" width="1080" height="1080" aria-label="Live marketing graphic preview"></canvas><p>Live preview · The downloaded image exports at full resolution</p></div>
                 </div>
               </div>
               <details class="mq-studio-legacy"><summary>More marketing tools & advanced designers <span>⌄</span></summary><p>All your original marketing tools are still available below, including advanced poster controls, standalone QR codes, social captions, and printable materials.</p></details>
@@ -13249,7 +13250,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   };
 
 
-  // MARKETING STUDIO v2 — self-contained and non-destructive; all original
+  // MARKETING STUDIO v3.0 — self-contained and non-destructive; all original
   // marketing widgets remain available. No new Airtable fields required.
   const MQ_STUDIO_TEMPLATES = [
     {id:'launch',title:'Instant Estimates',category:'social',tag:'Announcement',headline:'YOUR DREAM KITCHEN STARTS HERE',sub:'Get a ballpark estimate in minutes — at your convenience.',cta:'GET YOUR ESTIMATE',mode:'editorial'},
@@ -13304,7 +13305,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     }
 
     const safeColor=(v,fallback)=>/^#[0-9a-f]{6}$/i.test(v||'')?v:(fallback||'#56314b');
-    const fontFace=(key,fallbackSerif=false)=>({georgia:'Georgia, serif',arial:'Arial, sans-serif',trebuchet:'"Trebuchet MS", Arial, sans-serif',verdana:'Verdana, Arial, sans-serif',times:'"Times New Roman", Georgia, serif'}[key]||(fallbackSerif?'Georgia, serif':'Arial, sans-serif'));
+    const fontFace=(key,fallbackSerif=false)=>({playfair:'"Playfair Display", Georgia, serif',cinzel:'"Cinzel", Georgia, serif',dmserif:'"DM Serif Display", Georgia, serif',cormorant:'"Cormorant Garamond", Georgia, serif',libre:'"Libre Baskerville", Georgia, serif',montserrat:'"Montserrat", Arial, sans-serif',poppins:'"Poppins", Arial, sans-serif',oswald:'"Oswald", Arial, sans-serif',bebas:'"Bebas Neue", Impact, sans-serif',georgia:'Georgia, serif',arial:'Arial, sans-serif',trebuchet:'"Trebuchet MS", Arial, sans-serif',verdana:'Verdana, Arial, sans-serif',times:'"Times New Roman", Georgia, serif'}[key]||(fallbackSerif?'Georgia, serif':'Arial, sans-serif'));
     const font=(size,fam,weight=700)=>`${weight} ${Math.round(size)}px ${fontFace(fam)}`;
     const textWidthWithSpacing=(ctx,txt,spacing=0)=>{txt=String(txt||'');if(!txt)return 0;return ctx.measureText(txt).width+Math.max(0,txt.length-1)*spacing};
     const wrap=(ctx,txt,maxWidth,maxLines=5,spacing=0)=>{
@@ -13525,9 +13526,12 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       while(ctx.measureText(link).width>urlMax&&urlSize>10*k){urlSize-=k;ctx.font=font(urlSize,opts.subFont||'arial',500)}
       ctx.fillStyle=safeColor(opts.urlColor,t.mode==='minimal'?'#45323e':'#e8d9dd');
       drawSpacedText(ctx,link,urlX,urlY,0,align);
+      const brandW=Math.min(W-2*pad, Math.max(220*k, textWidthWithSpacing(ctx,String(shopDisplay||''),shopSpacing)+40*k));
+      const brandX=align==='left'?clamp(shopAnchorX-10*k,8*k,W-brandW-8*k):align==='center'?clamp(shopAnchorX-brandW/2,8*k,W-brandW-8*k):clamp(shopAnchorX-brandW+10*k,8*k,W-brandW-8*k);
+      const regions={brand:[brandX,Math.max(8*k,nameY-58*k),brandW,72*k],headline:[pad,Math.max(15*k,baseTop-80*k),W-2*pad,Math.max(100*k,(lines.length+1)*lineHeight)],sub:[pad,subTop-38*k,W-2*pad,Math.max(70*k,(subLines.length+1)*subLH)],cta:[bx-10*k,by-10*k,bw+20*k,ctaH+20*k],url:[clamp(urlX-20*k,8*k,W-220*k),urlY-38*k,Math.min(420*k,W*.76),55*k],photo:[10*k,10*k,W-20*k,H-20*k]};
+      canvas._mqRegions=regions;canvas._mqUnit=k;
       // Only show selection hints in live preview (never in exported PNG).
       if(opts.highlight){
-        const regions={brand:[pad,Math.max(10*k,nameY-85*k),W-2*pad,105*k],headline:[pad,Math.max(15*k,baseTop-80*k),W-2*pad,Math.max(100*k,(lines.length+1)*lineHeight)],sub:[pad,subTop-38*k,W-2*pad,Math.max(70*k,(subLines.length+1)*subLH)],cta:[bx-10*k,by-10*k,bw+20*k,ctaH+20*k],url:[clamp(urlX-20*k,8*k,W-190*k),urlY-38*k,Math.min(360*k,W*.70),55*k],photo:[10*k,10*k,W-20*k,H-20*k]};
         const r=regions[opts.highlight];if(r){ctx.save();ctx.strokeStyle='#38bdf8';ctx.lineWidth=4*k;ctx.setLineDash([14*k,8*k]);ctx.strokeRect(...r);ctx.restore()}
       }
     }
@@ -13542,9 +13546,9 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     let mqStudioFocus=null, mqStudioFocusTimer=null;
     function update(forExport=false){if(!mqStudioSelected)return;syncRangeLabels();const canvas=field('canvas');const sizes={square:[1080,1080],portrait:[1080,1350],story:[1080,1920],poster:[1080,1620],landscape:[1620,1080]};[canvas.width,canvas.height]=sizes[field('size').value]||sizes.square;paint(canvas,mqStudioSelected,{...currentOpts(),highlight:forExport?null:mqStudioFocus});queuePreviewFollow()}
     function setDefaults(){
-      field('shop-font').value='arial';field('shop-color').value=mqStudioSelected && mqStudioSelected.mode==='minimal'?'#382b36':'#ffffff';field('shop-scale').value='100';field('shop-spacing').value='2';field('shop-x').value='0';field('shop-y').value='0';field('logo-scale').value='100';field('composition').value='original';field('focal').value='50';field('finish').value='cinematic';field('overlay').value='46';field('accent').value='none';field('accent-color').value='#d9be97';
+      field('shop-font').value='playfair';field('shop-color').value=mqStudioSelected && mqStudioSelected.mode==='minimal'?'#382b36':'#ffffff';field('shop-scale').value='100';field('shop-spacing').value='2';field('shop-x').value='0';field('shop-y').value='0';field('logo-scale').value='100';field('composition').value='original';field('focal').value='50';field('finish').value='cinematic';field('overlay').value='46';field('accent').value='none';field('accent-color').value='#d9be97';
       field('url-text').value='';field('url-x').value='0';field('url-y').value='0';field('url-color').value=mqStudioSelected?.mode==='minimal'?'#45323e':'#e8d9dd';field('url-scale').value='100';
-      field('headline-font').value='georgia';field('sub-font').value='arial';field('cta-font').value='arial';field('align').value='left';
+      field('headline-font').value='playfair';field('sub-font').value='montserrat';field('cta-font').value='montserrat';field('align').value='left';
       field('headline-color').value='#ffffff';field('sub-color').value=mqStudioSelected && mqStudioSelected.mode==='minimal' ? '#685861' : '#f0e7ee';field('cta-bg').value='#f2e1ca';field('cta-color').value='#2b2430';
       field('headline-scale').value='100';field('sub-scale').value='100';field('cta-scale').value='100';field('headline-spacing').value='0';field('sub-spacing').value='0';field('content-x').value='0';field('content-y').value='0';field('cta-x').value='0';field('cta-y').value='0';
       syncRangeLabels();
@@ -13582,6 +13586,16 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       field('back').addEventListener('click',()=>{workspace.style.display='none';previewShift=0;preview.style.transform='';root.scrollIntoView({behavior:'smooth',block:'start'})});
       field('download').addEventListener('click',()=>{update(true);const a=document.createElement('a');a.href=field('canvas').toDataURL('image/png');a.download=(shopName+'-'+mqStudioSelected.id+'-'+field('size').value).toLowerCase().replace(/[^a-z0-9-]+/g,'-')+'.png';a.click();update()});
       field('copy-caption').addEventListener('click',()=>{const caption=[field('headline').value,field('subline').value,field('cta').value+': '+quoteLink()].join('\n\n');if(navigator.clipboard?.writeText)navigator.clipboard.writeText(caption).then(()=>mqShowToast('Caption copied')).catch(()=>mqShowToast('Could not copy caption','error'));else mqShowToast('Clipboard not available','error')});
+      const canvas=field('canvas');
+      const clampField=(id,val)=>{const el=field(id);if(!el)return;const min=Number(el.min||-9999),max=Number(el.max||9999);el.value=String(Math.round(clamp(val,min,max)));};
+      const canvasPoint=e=>{const rect=canvas.getBoundingClientRect();return {x:(e.clientX-rect.left)*(canvas.width/rect.width),y:(e.clientY-rect.top)*(canvas.height/rect.height)}};
+      const regionAt=pt=>{const regions=canvas._mqRegions||{};const order=['cta','url','headline','sub','brand'];for(const key of order){const r=regions[key];if(!r)continue; if(pt.x>=r[0]&&pt.x<=r[0]+r[2]&&pt.y>=r[1]&&pt.y<=r[1]+r[3])return key;}return null;};
+      let drag=null;
+      canvas.style.cursor='grab';
+      canvas.addEventListener('pointerdown',e=>{if(!mqStudioSelected)return;const part=regionAt(canvasPoint(e));if(!part)return;drag={part,start:canvasPoint(e),unit:canvas._mqUnit||1,vals:{shopX:Number(field('shop-x').value)||0,shopY:Number(field('shop-y').value)||0,contentX:Number(field('content-x').value)||0,contentY:Number(field('content-y').value)||0,ctaX:Number(field('cta-x').value)||0,ctaY:Number(field('cta-y').value)||0,urlX:Number(field('url-x').value)||0,urlY:Number(field('url-y').value)||0}}; mqStudioFocus=part; update(); canvas.setPointerCapture(e.pointerId); canvas.style.cursor='grabbing'; e.preventDefault();});
+      canvas.addEventListener('pointermove',e=>{const pt=canvasPoint(e);const hover=regionAt(pt);canvas.style.cursor=drag?'grabbing':(hover?'grab':'default');if(!drag)return;const dx=(pt.x-drag.start.x)/(drag.unit||1),dy=(pt.y-drag.start.y)/(drag.unit||1); if(drag.part==='brand'){clampField('shop-x',drag.vals.shopX+dx);clampField('shop-y',drag.vals.shopY+dy);} else if(drag.part==='cta'){clampField('cta-x',drag.vals.ctaX+dx);clampField('cta-y',drag.vals.ctaY+dy);} else if(drag.part==='url'){clampField('url-x',drag.vals.urlX+dx);clampField('url-y',drag.vals.urlY+dy);} else {clampField('content-x',drag.vals.contentX+dx);clampField('content-y',drag.vals.contentY+dy);} update();});
+      const endDrag=e=>{if(drag){drag=null;canvas.style.cursor='default'; if(canvas.hasPointerCapture && e.pointerId!=null){try{canvas.releasePointerCapture(e.pointerId);}catch(err){}} clearTimeout(mqStudioFocusTimer); mqStudioFocusTimer=setTimeout(()=>{mqStudioFocus=null;update();},900);}};
+      canvas.addEventListener('pointerup',endDrag);canvas.addEventListener('pointercancel',endDrag);canvas.addEventListener('pointerleave',e=>{if(!drag)canvas.style.cursor='default';});
     }
     renderGallery(root.querySelector('[data-studio-filter].active')?.dataset.studioFilter||'all');if(mqStudioSelected)update();
   }
