@@ -5631,8 +5631,363 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     return `${f['Size category'] || 'Standard'} · ${dep} · ${f['Tax percent'] || 0}% tax · prices ${f['Show item prices'] === false ? 'hidden' : 'shown'}`;
   }
 
+  // ======================================================================
+  // Drag & drop BLOCK editor for the proposal Body.
+  // The Body is still saved as the exact same text format the proposal
+  // builder in MidasQuote Pro already understands (paragraphs separated by
+  // blank lines, {tags}, **bold**, {box:#hex}…{/box}) — so nothing in Pro
+  // or in older templates changes. The block editor just parses that text
+  // into blocks, lets shop owners add / drag / edit / delete them, and
+  // writes the same text back out. "Text (advanced)" mode edits the raw
+  // text directly and is always available.
+  // ======================================================================
+  const MQ_PB_INLINE = {
+    customer_name: { l: 'Customer name', lab: 'Customer:' },
+    customer_address: { l: 'Address', lab: 'Address:' },
+    customer_phone: { l: 'Phone', lab: 'Phone:' },
+    job_name: { l: 'Job name', lab: 'Job:' },
+    description: { l: 'Description', lab: '' },
+    date: { l: 'Date', lab: 'Date:' },
+    subtotal: { l: 'Subtotal', lab: 'Subtotal:' },
+    tax: { l: 'Tax', lab: 'Tax:' },
+    total: { l: 'Total', lab: 'Total:' },
+    deposit: { l: 'Deposit', lab: 'Deposit:' },
+  };
+  const MQ_PB_ITEMS = { items: 'Coloured list', items_plain: 'Plain list', items_plain_light: 'Light list (names not bold)' };
+  const MQ_PB_TOTALS = { totals_box: 'Coloured box with deposit', totals_plain: 'Plain lines' };
+  const MQ_PB_SIMPLE = { items_header: ['📑', 'Item / Price header row', 'Place above a plain or light item list.'], hr: ['➖', 'Divider line', ''], break: ['↕', 'Extra space', ''], signature_line: ['✍️', 'Signature + date line', ''] };
+
+  var _mqPropBlocks = {}, _mqPropMode = {}, _mqPbDrag = null, _mqPbSaveT = {}, _mqPbPending = {};
+
+  function mqPbParse(body) {
+    body = (body || '').replace(/\r\n/g, '\n').trim();
+    if (!body) return [];
+    const boxes = [];
+    const masked = body.replace(/\{box:(#[0-9a-fA-F]{3,8})\}([\s\S]*?)\{\/box\}/g, (m, hex, inner) => {
+      boxes.push({ hex, inner: inner.trim(), raw: m });
+      return '\u0000BOX' + (boxes.length - 1) + '\u0000';
+    });
+    const unmask = s => s.replace(/\u0000BOX(\d+)\u0000/g, (m, n) => boxes[+n].raw);
+    const inlineNames = Object.keys(MQ_PB_INLINE).join('|');
+    const fieldRe = new RegExp('^(.*?)\\s*\\{(' + inlineNames + ')\\}$');
+    const parseField = line => {
+      const m = line.match(fieldRe);
+      if (!m) return null;
+      const prefix = m[1].trim();
+      if (/[{}\u0000]/.test(prefix)) return null;
+      if (!prefix) return { type: 'field', tok: m[2], label: '', bold: false };
+      const bm = prefix.match(/^\*\*([^*]+)\*\*$/);
+      if (bm) return { type: 'field', tok: m[2], label: bm[1], bold: true };
+      if (prefix.includes('*')) return null;
+      return { type: 'field', tok: m[2], label: prefix, bold: false };
+    };
+    const blocks = [];
+    masked.split(/\n{2,}/).forEach(para => {
+      const p = para.trim();
+      if (!p) return;
+      const bx = p.match(/^\u0000BOX(\d+)\u0000$/);
+      if (bx) { const b = boxes[+bx[1]]; blocks.push({ type: 'box', hex: b.hex, text: b.inner }); return; }
+      const tokm = p.match(/^\{([a-z_]+)\}$/);
+      if (tokm) {
+        const n = tokm[1];
+        if (MQ_PB_ITEMS[n]) { blocks.push({ type: 'items', tok: n }); return; }
+        if (MQ_PB_TOTALS[n]) { blocks.push({ type: 'totals', tok: n }); return; }
+        if (MQ_PB_SIMPLE[n]) { blocks.push({ type: 'simple', tok: n }); return; }
+      }
+      const lines = p.split('\n');
+      const fields = lines.map(parseField);
+      if (fields.every(Boolean)) { fields.forEach((f, i) => { if (i > 0) f.tight = true; blocks.push(f); }); return; }
+      blocks.push({ type: 'text', text: unmask(p) });
+    });
+    return blocks;
+  }
+
+  function mqPbBlockText(b) {
+    if (b.type === 'text') return (b.text || '').trim();
+    if (b.type === 'box') { const t = (b.text || '').trim(); return t ? `{box:${b.hex || '#eff6ff'}}${t}{/box}` : ''; }
+    if (b.type === 'field') {
+      const lab = (b.label || '').trim();
+      return (lab ? (b.bold ? `**${lab}**` : lab) + ' ' : '') + `{${b.tok}}`;
+    }
+    return `{${b.tok}}`;
+  }
+  function mqPbSerialize(blocks) {
+    let out = '', prevType = null;
+    blocks.forEach(b => {
+      const s = mqPbBlockText(b);
+      if (!s) return;
+      if (prevType !== null) out += (b.type === 'field' && b.tight && prevType === 'field') ? '\n' : '\n\n';
+      out += s;
+      prevType = b.type;
+    });
+    return out;
+  }
+
+  function mqPbNew(tok) {
+    if (tok === '@text') return { type: 'text', text: '' };
+    if (tok === '@box') return { type: 'box', hex: '#eff6ff', text: '' };
+    const n = tok.replace(/[{}]/g, '');
+    if (MQ_PB_INLINE[n]) return { type: 'field', tok: n, label: MQ_PB_INLINE[n].lab, bold: !!MQ_PB_INLINE[n].lab };
+    if (MQ_PB_ITEMS[n]) return { type: 'items', tok: n };
+    if (MQ_PB_TOTALS[n]) return { type: 'totals', tok: n };
+    return { type: 'simple', tok: n };
+  }
+
+  function mqPbCommit(id, immediate) {
+    const val = mqPbSerialize(_mqPropBlocks[id] || []);
+    const ta = document.getElementById(`mq-prop-body-${id}`);
+    if (ta) ta.value = val;
+    const cached = (window._mqProposalTemplatesCache || []).find(t => t.id === id);
+    if (cached) cached.fields['Body'] = val;
+    window.mqProposalBodyInput(id);
+    clearTimeout(_mqPbSaveT[id]);
+    _mqPbPending[id] = val;
+    if (immediate) window.mqPbFlush(id);
+    else _mqPbSaveT[id] = setTimeout(() => window.mqPbFlush(id), 700);
+  }
+  window.mqPbFlush = function(id) {
+    clearTimeout(_mqPbSaveT[id]);
+    if (_mqPbPending[id] === undefined) return;
+    const v = _mqPbPending[id];
+    delete _mqPbPending[id];
+    mqSaveProposalField(id, 'Body', v);
+  };
+
+  function mqPbMiniToolbar(id, i, b) {
+    const hexDefault = '#dc2626';
+    const opts = Object.keys(MQ_PB_INLINE).map(k => `<option value="${k}">${MQ_PB_INLINE[k].l}</option>`).join('');
+    return `<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px">
+      <button type="button" class="mq-btn mq-btn-sm" title="Bold — select text first" onclick="mqPbWrap('${id}',${i},'bold')"><strong>B</strong></button>
+      <input type="color" id="mq-pb-tc-${id}-${i}" value="${hexDefault}" title="Text colour" style="width:26px;height:24px;padding:1px;border:1px solid #d1d5db;border-radius:4px;cursor:pointer"/>
+      <button type="button" class="mq-btn mq-btn-sm" title="Colour the selected text" onclick="mqPbWrap('${id}',${i},'color')">A Colour</button>
+      <select onchange="mqPbInsField('${id}',${i},this)" title="Insert a customer / job field into this text" style="font-size:12px;padding:3px 4px;width:auto"><option value="">＋ Field…</option>${opts}</select>
+    </div>`;
+  }
+
+  function mqPbBlockHTML(id, b, i, blocks) {
+    const ctl = (txt, title, fn, dis) => `<button type="button" title="${title}" ${dis ? 'disabled' : ''} onclick="${fn}" style="border:none;background:none;cursor:${dis ? 'default' : 'pointer'};color:${dis ? '#d1d5db' : '#6b7280'};font-size:13px;padding:2px 6px;line-height:1.2">${txt}</button>`;
+    const lbl = (icon, name) => `<div style="font-size:10.5px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:5px">${icon} ${name}</div>`;
+    const sel = (key, map, cur) => `<select onchange="mqPbSet('${id}',${i},'tok',this.value)" style="width:auto;font-size:12.5px">${Object.keys(map).map(k => `<option value="${k}" ${k === cur ? 'selected' : ''}>${typeof map[k] === 'string' ? map[k] : map[k][1]}</option>`).join('')}</select>`;
+    const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+    let inner = '';
+    if (b.type === 'text') {
+      inner = lbl('✏️', 'Text box') + mqPbMiniToolbar(id, i, b) +
+        `<textarea id="mq-pb-ta-${id}-${i}" rows="3" placeholder="Type here… use **bold**, or the buttons above" onfocus="this.dataset.t='1'" oninput="mqPbSet('${id}',${i},'text',this.value);mqPbGrow(this)" onblur="mqPbFlush('${id}')" style="width:100%;font-size:13px;line-height:1.5;box-sizing:border-box">${esc(b.text)}</textarea>`;
+    } else if (b.type === 'box') {
+      inner = `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">${lbl('▭', 'Coloured box').replace('margin-bottom:5px', 'margin-bottom:0')}
+          <input type="color" value="${esc(b.hex || '#eff6ff')}" title="Box colour" oninput="mqPbSet('${id}',${i},'hex',this.value);document.getElementById('mq-pb-ta-${id}-${i}').style.background=this.value" style="width:30px;height:24px;padding:1px;border:1px solid #d1d5db;border-radius:4px;cursor:pointer"/>
+          <span style="font-size:11px;color:#9ca3af">box colour</span></div>` + mqPbMiniToolbar(id, i, b) +
+        `<textarea id="mq-pb-ta-${id}-${i}" rows="3" placeholder="Text inside the box…" onfocus="this.dataset.t='1'" oninput="mqPbSet('${id}',${i},'text',this.value);mqPbGrow(this)" onblur="mqPbFlush('${id}')" style="width:100%;font-size:13px;line-height:1.5;box-sizing:border-box;background:${esc(b.hex || '#eff6ff')}">${esc(b.text)}</textarea>`;
+    } else if (b.type === 'field') {
+      const prev = blocks[i - 1];
+      const info = MQ_PB_INLINE[b.tok] || { l: b.tok };
+      inner = `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span style="background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;border-radius:5px;padding:3px 9px;font-size:12px;font-weight:700;white-space:nowrap">${info.l}</span>
+          <input type="text" value="${esc(b.label)}" placeholder="Label in front (optional)" oninput="mqPbSet('${id}',${i},'label',this.value)" onblur="mqPbFlush('${id}')" style="flex:1;min-width:120px;max-width:240px;font-size:12.5px"/>
+          <label style="font-size:12px;color:#4b5563;display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" ${b.bold ? 'checked' : ''} onchange="mqPbSet('${id}',${i},'bold',this.checked)"/> Bold label</label>
+          ${prev && prev.type === 'field' ? `<label style="font-size:12px;color:#4b5563;display:flex;align-items:center;gap:4px;cursor:pointer" title="No gap between this and the block above"><input type="checkbox" ${b.tight ? 'checked' : ''} onchange="mqPbSet('${id}',${i},'tight',this.checked)"/> Tight to line above</label>` : ''}
+        </div>`;
+    } else if (b.type === 'items') {
+      inner = `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><strong style="font-size:13px">📋 Item list</strong>${sel('tok', MQ_PB_ITEMS, b.tok)}</div>`;
+    } else if (b.type === 'totals') {
+      inner = `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><strong style="font-size:13px">🧮 Totals</strong>${sel('tok', MQ_PB_TOTALS, b.tok)}</div>`;
+    } else {
+      const s = MQ_PB_SIMPLE[b.tok] || ['▫️', b.tok, ''];
+      inner = `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><strong style="font-size:13px">${s[0]} ${s[1]}</strong>${s[2] ? `<span style="font-size:11.5px;color:#9ca3af">${s[2]}</span>` : ''}</div>`;
+    }
+    return `<div class="mq-pb" data-i="${i}" ondragstart="mqPbBlockDragStart(event,'${id}',${i})" ondragend="mqPbBlockDragEnd(event,'${id}')" style="display:flex;align-items:stretch;background:#fff;border:1px solid #d1d5db;border-radius:6px;margin-bottom:8px;overflow:hidden">
+      <div title="Drag to reorder" onmousedown="this.parentNode.draggable=true" onmouseup="this.parentNode.draggable=false" style="width:26px;flex-shrink:0;background:#f3f4f6;border-right:1px solid #d1d5db;display:flex;align-items:center;justify-content:center;cursor:grab;color:#9ca3af;font-size:16px;user-select:none">⠿</div>
+      <div style="flex:1;min-width:0;padding:8px 10px">${inner}</div>
+      <div style="display:flex;flex-direction:column;justify-content:center;border-left:1px solid #e5e7eb;background:#fafafa">
+        ${ctl('▲', 'Move up', `mqPbMove('${id}',${i},-1)`, i === 0)}${ctl('▼', 'Move down', `mqPbMove('${id}',${i},1)`, i === blocks.length - 1)}${ctl('✕', 'Delete this block', `mqPbDel('${id}',${i})`, false)}
+      </div>
+    </div>`;
+  }
+
+  window.mqPbGrow = function(ta) { ta.style.height = 'auto'; ta.style.height = Math.min(320, Math.max(64, ta.scrollHeight + 2)) + 'px'; };
+
+  window.mqPbRender = function(id, focusIdx) {
+    const box = document.getElementById(`mq-prop-canvas-${id}`);
+    if (!box) return;
+    const blocks = _mqPropBlocks[id] || [];
+    box.innerHTML = blocks.length
+      ? blocks.map((b, i) => mqPbBlockHTML(id, b, i, blocks)).join('')
+      : `<div style="padding:26px 12px;text-align:center;color:#9ca3af;font-size:13px;border:2px dashed #d1d5db;border-radius:8px">Your proposal is empty.<br>Click or drag a block from above to start.</div>`;
+    box.querySelectorAll('textarea').forEach(window.mqPbGrow);
+    if (focusIdx != null) {
+      const ta = document.getElementById(`mq-pb-ta-${id}-${focusIdx}`);
+      if (ta) ta.focus();
+    }
+  };
+
+  window.mqPbInit = function(id) {
+    const t = (window._mqProposalTemplatesCache || []).find(x => x.id === id);
+    _mqPropBlocks[id] = mqPbParse(t ? t.fields['Body'] : '');
+    window.mqPbRender(id);
+  };
+
+  window.mqPbSet = function(id, i, key, val, rerender) {
+    const b = (_mqPropBlocks[id] || [])[i];
+    if (!b) return;
+    b[key] = val;
+    if (rerender || key === 'tok') window.mqPbRender(id);
+    mqPbCommit(id, key === 'tok' || key === 'bold' || key === 'tight');
+  };
+  window.mqPbMove = function(id, i, d) {
+    const a = _mqPropBlocks[id]; const j = i + d;
+    if (!a || j < 0 || j >= a.length) return;
+    const [x] = a.splice(i, 1); a.splice(j, 0, x);
+    window.mqPbRender(id); mqPbCommit(id, true);
+  };
+  window.mqPbDel = function(id, i) {
+    const a = _mqPropBlocks[id]; if (!a) return;
+    a.splice(i, 1);
+    window.mqPbRender(id); mqPbCommit(id, true);
+  };
+  window.mqPbAdd = function(id, tok, at) {
+    const a = _mqPropBlocks[id] || (_mqPropBlocks[id] = []);
+    const nb = mqPbNew(tok);
+    const idx = at == null ? a.length : at;
+    a.splice(idx, 0, nb);
+    window.mqPbRender(id, (nb.type === 'text' || nb.type === 'box') ? idx : null);
+    mqPbCommit(id, true);
+    if (at == null) { const box = document.getElementById(`mq-prop-canvas-${id}`); const last = box && box.lastElementChild; if (last && last.scrollIntoView) last.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+  };
+
+  // Bold / colour on the selected text inside a text or box block.
+  window.mqPbWrap = function(id, i, kind) {
+    const ta = document.getElementById(`mq-pb-ta-${id}-${i}`);
+    const b = (_mqPropBlocks[id] || [])[i];
+    if (!ta || !b) return;
+    let s = ta.dataset.t ? ta.selectionStart : ta.value.length;
+    let e = ta.dataset.t ? ta.selectionEnd : ta.value.length;
+    let sel = ta.value.substring(s, e);
+    if (s === e) sel = kind === 'bold' ? 'bold text' : 'coloured text';
+    let o, c;
+    if (kind === 'bold') { o = '**'; c = '**'; }
+    else { const ci = document.getElementById(`mq-pb-tc-${id}-${i}`); const hex = ci ? ci.value : '#dc2626'; o = `{color:${hex}}`; c = '{/color}'; }
+    ta.value = ta.value.substring(0, s) + o + sel + c + ta.value.substring(e);
+    b.text = ta.value;
+    ta.focus(); ta.selectionStart = s + o.length; ta.selectionEnd = s + o.length + sel.length; ta.dataset.t = '1';
+    window.mqPbGrow(ta);
+    mqPbCommit(id, true);
+  };
+  window.mqPbInsField = function(id, i, selEl) {
+    const name = selEl.value; selEl.value = '';
+    if (!name) return;
+    const ta = document.getElementById(`mq-pb-ta-${id}-${i}`);
+    const b = (_mqPropBlocks[id] || [])[i];
+    if (!ta || !b) return;
+    const s = ta.dataset.t ? ta.selectionStart : ta.value.length;
+    const e = ta.dataset.t ? ta.selectionEnd : ta.value.length;
+    const tag = `{${name}}`;
+    ta.value = ta.value.substring(0, s) + tag + ta.value.substring(e);
+    b.text = ta.value;
+    ta.focus(); ta.selectionStart = ta.selectionEnd = s + tag.length; ta.dataset.t = '1';
+    window.mqPbGrow(ta);
+    mqPbCommit(id, true);
+  };
+
+  // ---- drag & drop ----
+  window.mqPbChipDragStart = function(ev, id, tok) {
+    if ((_mqPropMode[id] || 'blocks') !== 'blocks') { ev.preventDefault(); return; }
+    _mqPbDrag = { kind: 'new', tok };
+    ev.dataTransfer.effectAllowed = 'copy';
+    try { ev.dataTransfer.setData('text/plain', 'mq-block'); } catch (e) {}
+  };
+  window.mqPbBlockDragStart = function(ev, id, i) {
+    _mqPbDrag = { kind: 'move', from: i };
+    ev.dataTransfer.effectAllowed = 'move';
+    try { ev.dataTransfer.setData('text/plain', 'mq-block'); } catch (e) {}
+    setTimeout(() => { if (ev.target && ev.target.style) ev.target.style.opacity = '0.4'; }, 0);
+  };
+  window.mqPbBlockDragEnd = function(ev, id) {
+    if (ev.currentTarget) { ev.currentTarget.draggable = false; ev.currentTarget.style.opacity = ''; }
+    window.mqPbClearInd(id);
+    _mqPbDrag = null;
+  };
+  window.mqPbChipDragEnd = function(id) { window.mqPbClearInd(id); _mqPbDrag = null; };
+  window.mqPbClearInd = function(id) {
+    const box = document.getElementById(`mq-prop-canvas-${id}`);
+    if (!box) return;
+    box.style.outline = '';
+    box.querySelectorAll('.mq-pb').forEach(el => { el.style.boxShadow = ''; });
+  };
+  function mqPbDropIndex(id, ev) {
+    const box = document.getElementById(`mq-prop-canvas-${id}`);
+    const els = Array.from(box.querySelectorAll('.mq-pb'));
+    for (let k = 0; k < els.length; k++) {
+      const r = els[k].getBoundingClientRect();
+      if (ev.clientY < r.top + r.height / 2) return k;
+    }
+    return els.length;
+  }
+  window.mqPbDragOver = function(ev, id) {
+    if (!_mqPbDrag) return;
+    ev.preventDefault();
+    ev.dataTransfer.dropEffect = _mqPbDrag.kind === 'new' ? 'copy' : 'move';
+    window.mqPbClearInd(id);
+    const box = document.getElementById(`mq-prop-canvas-${id}`);
+    const els = Array.from(box.querySelectorAll('.mq-pb'));
+    const idx = mqPbDropIndex(id, ev);
+    if (!els.length) { box.style.outline = '2px solid #2563eb'; return; }
+    if (idx < els.length) els[idx].style.boxShadow = '0 -4px 0 0 #2563eb';
+    else els[els.length - 1].style.boxShadow = '0 4px 0 0 #2563eb';
+  };
+  window.mqPbDragLeave = function(ev, id) {
+    const box = document.getElementById(`mq-prop-canvas-${id}`);
+    if (box && !box.contains(ev.relatedTarget)) window.mqPbClearInd(id);
+  };
+  window.mqPbDrop = function(ev, id) {
+    if (!_mqPbDrag) return;
+    ev.preventDefault();
+    const idx = mqPbDropIndex(id, ev);
+    window.mqPbClearInd(id);
+    const d = _mqPbDrag; _mqPbDrag = null;
+    const a = _mqPropBlocks[id] || (_mqPropBlocks[id] = []);
+    if (d.kind === 'new') {
+      window.mqPbAdd(id, d.tok, idx);
+    } else {
+      const from = d.from;
+      if (from == null || from < 0 || from >= a.length) return;
+      const [x] = a.splice(from, 1);
+      a.splice(idx > from ? idx - 1 : idx, 0, x);
+      window.mqPbRender(id); mqPbCommit(id, true);
+    }
+  };
+
+  // Palette click: add a block in Blocks mode, insert raw text in Text mode.
+  window.mqPropChip = function(id, tok, block) {
+    if ((_mqPropMode[id] || 'blocks') === 'blocks') window.mqPbAdd(id, tok);
+    else if (tok.charAt(0) !== '@') window.mqInsertProposalToken(id, tok, block);
+  };
+
+  window.mqPropSetMode = function(id, mode) {
+    if (mode === 'blocks') {
+      const ta = document.getElementById(`mq-prop-body-${id}`);
+      _mqPropBlocks[id] = mqPbParse(ta ? ta.value : '');
+      window.mqPbRender(id);
+    } else {
+      window.mqPbFlush(id);
+    }
+    _mqPropMode[id] = mode;
+    const show = (sel, on) => { const e = document.getElementById(sel); if (e) e.style.display = on ? '' : 'none'; };
+    show(`mq-prop-blocks-${id}`, mode === 'blocks');
+    show(`mq-prop-raw-${id}`, mode === 'raw');
+    show(`mq-prop-basics-${id}`, mode === 'blocks');
+    const hint = document.getElementById(`mq-prop-hint-${id}`);
+    if (hint) hint.textContent = mode === 'blocks' ? 'Click a block to add it — or drag it into your proposal' : 'Click to insert a tag into the text below';
+    const on = 'background:#1a1a1a;color:#fff;border-color:#1a1a1a', off = 'background:#fff;color:#374151;border-color:#d1d5db';
+    const bb = document.getElementById(`mq-prop-modebtn-blocks-${id}`), rb = document.getElementById(`mq-prop-modebtn-raw-${id}`);
+    if (bb) bb.style.cssText = (mode === 'blocks' ? on : off) + ';padding:5px 12px;font-size:12.5px;font-weight:600;border-width:1px;border-style:solid;border-radius:6px 0 0 6px;cursor:pointer';
+    if (rb) rb.style.cssText = (mode === 'raw' ? on : off) + ';padding:5px 12px;font-size:12.5px;font-weight:600;border-width:1px;border-style:solid;border-radius:0 6px 6px 0;cursor:pointer;margin-left:-1px';
+  };
+
   // Click-to-insert tags. block:true tags need to sit on their own paragraph.
   const MQ_PROP_CHIPS = [
+    { group: 'Add your own', blocksOnly: true, items: [
+      { t: '@text', l: '＋ Text box', tip: 'A free text box — type anything, use bold, colours and customer fields inside it.' },
+      { t: '@box', l: '＋ Coloured box', tip: 'A coloured callout box with your own text inside. Pick any colour.' } ] },
     { group: 'Customer & job', items: [
       { t: '{customer_name}', l: 'Customer name', tip: 'The customer\'s name, filled in when the proposal is created.' },
       { t: '{customer_address}', l: 'Address', tip: 'Customer address. If left blank on a proposal, the whole line disappears.' },
@@ -5660,14 +6015,30 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
 
   function mqPropEditorHTML(t) {
     const id = t.id;
-    const chip = c => `<button type="button" title="${c.tip.replace(/"/g, '&quot;')}" onclick="mqInsertProposalToken('${id}','${c.t}',${c.block ? 'true' : 'false'})" style="background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;border-radius:5px;padding:4px 10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">${c.l}</button>`;
-    const palette = MQ_PROP_CHIPS.map(g => `<div style="display:flex;align-items:stretch;background:#fff;border:1px solid #d1d5db;border-radius:6px;margin-bottom:8px;overflow:hidden">
+    const mode = _mqPropMode[id] || 'blocks';
+    const chip = c => {
+      const special = c.t.charAt(0) === '@';
+      const st = special ? 'background:#1a1a1a;border:1px solid #1a1a1a;color:#fff' : 'background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af';
+      return `<button type="button" draggable="true" ondragstart="mqPbChipDragStart(event,'${id}','${c.t}')" ondragend="mqPbChipDragEnd('${id}')" title="${c.tip.replace(/"/g, '&quot;')}" onclick="mqPropChip('${id}','${c.t}',${c.block ? 'true' : 'false'})" style="${st};border-radius:5px;padding:4px 10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">${c.l}</button>`;
+    };
+    const palette = MQ_PROP_CHIPS.map(g => `<div ${g.blocksOnly ? `id="mq-prop-basics-${id}" style="display:${mode === 'blocks' ? 'flex' : 'none'};` : 'style="display:flex;'}align-items:stretch;background:#fff;border:1px solid #d1d5db;border-radius:6px;margin-bottom:8px;overflow:hidden">
         <div style="width:96px;flex-shrink:0;display:flex;align-items:center;padding:8px 10px;background:#f3f4f6;border-right:1px solid #d1d5db;font-size:10.5px;font-weight:700;color:#4b5563;text-transform:uppercase;letter-spacing:0.04em;line-height:1.3">${g.group}</div>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:8px 10px;flex:1;min-width:0">${g.items.map(chip).join('')}</div></div>`).join('');
+    const modeBtn = (m, label) => `<button type="button" id="mq-prop-modebtn-${m}-${id}" onclick="mqPropSetMode('${id}','${m}')" style="${mode === m ? 'background:#1a1a1a;color:#fff;border-color:#1a1a1a' : 'background:#fff;color:#374151;border-color:#d1d5db'};padding:5px 12px;font-size:12.5px;font-weight:600;border-width:1px;border-style:solid;border-radius:${m === 'blocks' ? '6px 0 0 6px' : '0 6px 6px 0'};cursor:pointer${m === 'raw' ? ';margin-left:-1px' : ''}">${label}</button>`;
     return `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px;align-items:start">
       <div style="min-width:0">
-        <div style="font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px">Click to add to your proposal</div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+          <div style="display:flex">${modeBtn('blocks', '🧩 Blocks (drag &amp; drop)')}${modeBtn('raw', '&lt;/&gt; Text (advanced)')}</div>
+        </div>
+        <div style="font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px"><span id="mq-prop-hint-${id}">Click a block to add it — or drag it into your proposal</span></div>
         <div style="padding:10px 10px 2px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:10px">${palette}</div>
+
+        <div id="mq-prop-blocks-${id}" style="display:${mode === 'blocks' ? 'block' : 'none'}">
+          <div style="font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px">Your proposal, top to bottom <span style="font-weight:400;color:#9ca3af">— drag ⠿ to reorder</span></div>
+          <div id="mq-prop-canvas-${id}" ondragover="mqPbDragOver(event,'${id}')" ondragleave="mqPbDragLeave(event,'${id}')" ondrop="mqPbDrop(event,'${id}')" style="min-height:60px;border-radius:8px"></div>
+        </div>
+
+        <div id="mq-prop-raw-${id}" style="display:${mode === 'raw' ? 'block' : 'none'}">
         <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:8px;padding:8px 10px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px">
           <button class="mq-btn mq-btn-sm" onclick="mqInsertProposalFormatting('${id}','bold')" title="Make the selected text bold"><strong>B</strong> Bold</button>
           <div style="display:flex;align-items:center;gap:5px">
@@ -5681,8 +6052,9 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           <span style="font-size:10.5px;color:#9ca3af">Select text in the box first (or click with nothing selected to add a placeholder).</span>
         </div>
         <textarea id="mq-prop-body-${id}" rows="18" style="width:100%;font-family:ui-monospace,monospace;font-size:12.5px;line-height:1.6" onfocus="this.dataset.touched='1'" oninput="mqProposalBodyInput('${id}')" onblur="mqSaveProposalField('${id}','Body',this.value)">${(t.fields['Body'] || '').replace(/</g, '&lt;')}</textarea>
+        </div>
       </div>
-      <div style="min-width:0">
+      <div style="min-width:0;position:sticky;top:8px">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px">
           <span style="font-size:11.5px;font-weight:700;color:#374151">Live preview <span style="font-weight:400;color:#9ca3af">(sample customer &amp; items)</span></span>
           <button class="mq-btn mq-btn-sm" onclick="mqPreviewProposalTemplate('${id}')">👁 Full size</button>
@@ -5821,6 +6193,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         </div>
       </div>`;
     }).join('');
+    templates.forEach(t => window.mqPbInit(t.id));
   }
 
   window.mqToggleProposalCard = function(id) {
