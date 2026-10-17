@@ -9418,6 +9418,45 @@
     window.mqFxScrollToStep();
   };
 
+  // The slow "project types" ticker on each chooser card: one type name at a time
+  // drifts in from the right edge toward the left and fades out (via the box's CSS
+  // mask) well before it reaches the arrow; the next name follows right behind it.
+  // Pure requestAnimationFrame + transform; paused while off-screen, while the
+  // card's list is open, or while the chooser is hidden; people who ask their device
+  // for reduced motion get a gentle fade-free swap every few seconds instead.
+  window.mqFxStartTickers = function(root) {
+    const reduce = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    const SPEED = 46, GAP = 34; // px per second, px between names
+    root.querySelectorAll('.mq-fx-ptick').forEach(box => {
+      let names = [];
+      try { names = JSON.parse(box.getAttribute('data-names') || '[]').filter(n => typeof n === 'string' && n); } catch (e) {}
+      if (!names.length) return;
+      const mk = txt => { const el = document.createElement('span'); el.className = 'mq-fx-ptick-i'; el.textContent = txt; box.appendChild(el); return el; };
+      if (reduce) {
+        const el = mk(names[0]); let i = 0;
+        const iv = setInterval(() => { if (!box.isConnected) { clearInterval(iv); return; } if (!box.clientWidth) return; i = (i + 1) % names.length; el.textContent = names[i]; }, 2600);
+        return;
+      }
+      let next = Math.floor(Math.random() * names.length), items = [], last = 0, onScreen = true;
+      if (window.IntersectionObserver) new IntersectionObserver(es => { onScreen = es[es.length - 1].isIntersecting; }).observe(box);
+      const spawn = x => { const el = mk(names[next]); next = (next + 1) % names.length; const it = { el, x, w: el.offsetWidth }; el.style.transform = 'translateX(' + x + 'px)'; items.push(it); };
+      const frame = ts => {
+        if (!box.isConnected) return; // chooser was rebuilt: this loop ends
+        const cw = box.clientWidth, dt = Math.min(0.05, Math.max(0, (ts - last) / 1000));
+        last = ts;
+        if (cw && onScreen && !box.closest('.mq-fx-ptog-open')) {
+          items.forEach(it => { it.x -= SPEED * dt; it.el.style.transform = 'translateX(' + it.x + 'px)'; });
+          items = items.filter(it => { if (it.x + it.w < -6) { it.el.remove(); return false; } return true; });
+          const tail = items[items.length - 1];
+          if (!tail) spawn(cw * (0.3 + Math.random() * 0.45));
+          else if (tail.x + tail.w + GAP <= cw) spawn(cw);
+        }
+        requestAnimationFrame(frame);
+      };
+      requestAnimationFrame(frame);
+    });
+  };
+
   // Collapsible "project types" list under a chooser card. Opening one closes
   // the others so the first screen never grows much.
   window.mqFxToggleTypes = function(tabId, btn) {
@@ -9433,8 +9472,7 @@
       if (mine && open) p.removeAttribute('hidden'); else p.setAttribute('hidden', '');
       b.setAttribute('aria-expanded', mine && open ? 'true' : 'false');
       b.classList.toggle('mq-fx-ptog-open', mine && open);
-      const t = b.querySelector('.mq-fx-ptog-t');
-      if (t) t.textContent = mine && open ? 'Hide project types' : 'Tap to see project types';
+      // (the label stays "Project types"; aria-expanded + the turning arrow show the state)
     });
   };
   // A project type picked from that list: start the same flow the card
@@ -9615,6 +9653,9 @@
       #mq-fx-chooser .mq-fx-ptog{display:flex;align-items:center;justify-content:flex-start;gap:8px;width:100%;background:none;border:0;border-top:1px solid #e5e7eb;padding:12px 16px;font-family:inherit;font-size:13.5px;font-weight:700;color:var(--mq-card-ink,#1a1a1a);cursor:pointer;text-align:left;transition:background .15s}
       #mq-fx-chooser .mq-fx-ptog:focus-visible{background:var(--mq-card-tint,#f3f4f6);outline:none}
       @media (hover:hover){#mq-fx-chooser .mq-fx-ptog:hover{background:var(--mq-card-tint,#f3f4f6)}}
+      #mq-fx-chooser .mq-fx-ptick{position:relative;flex:1 1 0;min-width:0;height:22px;margin-left:12px;overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 34px,#000 calc(100% - 18px),transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 34px,#000 calc(100% - 18px),transparent 100%)}
+      #mq-fx-chooser .mq-fx-ptick-i{position:absolute;left:0;top:0;line-height:22px;white-space:nowrap;font-size:13.5px;font-weight:400;color:var(--mq-card-fg,#fff);will-change:transform}
+      #mq-fx-chooser .mq-fx-ptog-open .mq-fx-ptick{visibility:hidden}
       #mq-fx-chooser .mq-fx-ptog-c{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .2s}
       #mq-fx-chooser .mq-fx-ptog-open .mq-fx-ptog-c{transform:rotate(90deg)}
       #mq-fx-chooser .mq-fx-ptypes{background:#f9fafb;border-top:1px solid #e5e7eb;padding:12px 12px 14px;animation:mqFxInNext .25s ease backwards}
@@ -9982,7 +10023,7 @@
       const ptHTML = t => {
         const list = typesFor(t.id);
         if (list.length < 2) return '';
-        return `<button type="button" class="mq-fx-ptog" aria-expanded="false" onclick="mqFxToggleTypes('${t.id}',this)"><span class="mq-fx-ptog-t">Tap to see project types</span><span class="mq-fx-ptog-c" aria-hidden="true"><svg viewBox="0 0 16 16" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8h11M9.5 4l4 4-4 4"/></svg></span></button>`
+        return `<button type="button" class="mq-fx-ptog" aria-expanded="false" onclick="mqFxToggleTypes('${t.id}',this)"><span class="mq-fx-ptog-t">Project types</span><span class="mq-fx-ptog-c" aria-hidden="true"><svg viewBox="0 0 16 16" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8h11M9.5 4l4 4-4 4"/></svg></span><span class="mq-fx-ptick" aria-hidden="true" data-names="${escH(JSON.stringify(list.map(r => r.name)))}"></span></button>`
           + `<div class="mq-fx-ptypes" hidden><div class="mq-fx-pgrid">${list.map(r => { const u = ptPhoto(r); return `<button type="button" class="mq-fx-pt" onclick="mqFxStartType('${t.id}','${escH(r.id)}')"><span class="mq-fx-pt-img"><span class="mq-fx-pt-ico">${t.icon}</span>${u ? `<img src="${u}" alt="" loading="lazy" decoding="async" onerror="this.remove()">` : ''}</span><span class="mq-fx-pt-name">${escH(r.name)}</span></button>`; }).join('')}</div></div>`;
       };
       const imgs = id => photosFor(id).map(u => `<img src="${u}" alt="" fetchpriority="high" decoding="async" onerror="this.remove()">`).join('');
@@ -10037,6 +10078,7 @@
       setTimeout(eqHeads, 400);
       const tabBar = container.querySelector('.mq-tab-bar');
       if (tabBar) tabBar.insertAdjacentElement('afterend', ch); else container.appendChild(ch);
+      if (window.mqFxStartTickers) window.mqFxStartTickers(ch);
     }
     mqFxWarmImages();
     // Top bar (Exit button; shop name on phones) and desktop side stepper —
