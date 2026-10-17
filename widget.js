@@ -1066,7 +1066,7 @@
       #midasquote-widget .mq-financing-box-body{padding:0.9rem 1.25rem}
       #midasquote-widget .mq-financing-box-val{font-size:18px;font-weight:700;color:#166534}
       #midasquote-widget .mq-financing-box-sub{font-size:11px;color:#6b7280;margin-top:6px;font-style:italic}
-      .mq-lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:100000;align-items:center;justify-content:center;padding:1.5rem;cursor:zoom-out;flex-direction:column;gap:0.75rem;overscroll-behavior:contain}
+      .mq-lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:1000020;align-items:center;justify-content:center;padding:1.5rem;cursor:zoom-out;flex-direction:column;gap:0.75rem;overscroll-behavior:contain}
       .mq-hover-preview{display:none;position:fixed;z-index:100001;background:#fff;border-radius:10px;padding:8px;box-shadow:0 12px 32px rgba(0,0,0,0.28);pointer-events:none}
       .mq-hover-preview.show{display:block}
       .mq-hover-preview img{display:block;max-width:180px;max-height:180px;border-radius:6px;object-fit:contain}
@@ -2381,8 +2381,26 @@
   // breakdown no longer reflects reality, so it starts fresh instead.
   let _mqCalcSavedSections = {};
 
+  // The calculator's boxes accept fractions as well as decimals, e.g.
+  // "36 3/4", "36-3/4", "3/8", "½", "36¾" or plain "36.75". Anything it
+  // can't read counts as 0, same as an empty box always did.
+  const MQ_CALC_UNICODE_FRACS = { '½': ' 1/2', '¼': ' 1/4', '¾': ' 3/4', '⅛': ' 1/8', '⅜': ' 3/8', '⅝': ' 5/8', '⅞': ' 7/8', '⅓': ' 1/3', '⅔': ' 2/3', '⅙': ' 1/6', '⅚': ' 5/6', '⅕': ' 1/5', '⅖': ' 2/5', '⅗': ' 3/5', '⅘': ' 4/5' };
+  function mqCalcParse(val) {
+    let t = String(val == null ? '' : val).toLowerCase();
+    t = t.replace(/[½¼¾⅛⅜⅝⅞⅓⅔⅙⅚⅕⅖⅗⅘]/g, c => MQ_CALC_UNICODE_FRACS[c]);
+    t = t.replace(/[″”"]/g, '').replace(/(inches|inch|in)\b/g, '');
+    t = t.replace(/(\d)\s*-\s*(\d+\s*\/)/, '$1 $2');           // 36-3/4 -> 36 3/4
+    t = t.replace(/\s*\/\s*/g, '/').replace(/\s+/g, ' ').trim();
+    let m = /^(\d*\.?\d+) (\d+)\/(\d+)$/.exec(t);               // mixed number
+    if (m) return +m[3] ? (+m[1]) + (+m[2]) / (+m[3]) : 0;
+    m = /^(\d+)\/(\d+)$/.exec(t);                               // plain fraction
+    if (m) return +m[2] ? (+m[1]) / (+m[2]) : 0;
+    const n = parseFloat(t);
+    return isNaN(n) ? 0 : n;
+  }
+
   function mqCalcToFeet(val, unit) {
-    const n = parseFloat(val) || 0;
+    const n = mqCalcParse(val);
     if (unit === 'ft') return n;
     return unit === 'mm' ? n / 304.8 : n / 12;
   }
@@ -2392,14 +2410,14 @@
   // those fields reuse the exact same ft/in/mm calculator, just landing the
   // total in inches instead of feet.
   function mqCalcToInches(val, unit) {
-    const n = parseFloat(val) || 0;
+    const n = mqCalcParse(val);
     if (unit === 'in') return n;
     return unit === 'mm' ? n / 25.4 : n * 12;
   }
 
   function mqCalcComputeTotalFor(sections, mode, unit) {
     if (mode === 'linear' || mode === 'inches') {
-      const totalUnits = sections.reduce((sum, s) => sum + (parseFloat(s.val) || 0), 0);
+      const totalUnits = sections.reduce((sum, s) => sum + mqCalcParse(s.val), 0);
       return mode === 'inches' ? mqCalcToInches(totalUnits, unit) : mqCalcToFeet(totalUnits, unit);
     }
     return sections.reduce((sum, s) => sum + mqCalcToFeet(s.w, unit) * mqCalcToFeet(s.h, unit), 0);
@@ -2499,6 +2517,43 @@
     totalEl.textContent = _mqCalcMode === 'linear' ? `${total.toFixed(2)} linear ft` : _mqCalcMode === 'inches' ? `${total.toFixed(2)} in` : `${total.toFixed(2)} sq ft`;
   }
 
+  // How-to-measure photos inside the calculator (Base / Upper / Island linear
+  // feet only): the same pictures the Measuring step shows for the chosen
+  // project type, as a small strip you can tap to zoom (shared lightbox).
+  function mqCalcGuideInfo() {
+    const m = /^mq-([a-z]+)-(bft|uft|islandft)$/.exec(_mqCalcTargetId || '');
+    if (!m || _mqCalcMode !== 'linear') return null;
+    const info = window._mqMeasurePhotos && window._mqMeasurePhotos[m[1]];
+    if (!info || !info.photos || !info.photos.length) return null;
+    return info;
+  }
+  function mqCalcGuideHTML() {
+    const info = mqCalcGuideInfo();
+    if (!info) return '';
+    const esc = u => String(u).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+    const one = info.photos.length === 1;
+    const imgs = info.photos.map((u, i) => `<img src="${esc(u)}" alt="Measuring guide photo ${i + 1}" loading="lazy" onclick="mqCalcOpenGuide(${i})" onerror="this.style.display='none'" style="height:${one ? 120 : 92}px;width:${one ? '100%' : 'auto'};max-width:${one ? '100%' : 'none'};object-fit:${one ? 'contain' : 'cover'};flex:0 0 auto;border-radius:8px;border:1px solid #e5e7eb;background:#f9fafb;cursor:zoom-in"/>`).join('');
+    return `<div style="margin-bottom:14px">
+        <div style="font-size:12px;font-weight:700;color:#2563eb;margin-bottom:6px">📸 How to measure — tap to zoom</div>
+        <div style="display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px">${imgs}</div>
+      </div>`;
+  }
+  window.mqCalcOpenGuide = function(i) {
+    const info = mqCalcGuideInfo();
+    if (!info || !window.mqPhotoLightbox) return;
+    const list = info.photos.map((src, k) => ({ src, label: info.roomName ? `${info.roomName} — measuring guide (${k + 1}/${info.photos.length})` : `Measuring guide (${k + 1}/${info.photos.length})` }));
+    window.mqPhotoLightbox(list[i].src, list[i].label, list, i);
+  };
+
+  // Inches get the full keyboard (the number pad has no "/"); feet and mm
+  // keep the number pad since fractions are rarely typed there.
+  function mqCalcInputAttrs() {
+    return `inputmode="${_mqCalcUnit === 'in' ? 'text' : 'decimal'}" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"`;
+  }
+  function mqCalcEsc(v) {
+    return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+  }
+
   function mqRenderCalc() {
     const card = document.getElementById('mq-calc-card');
     if (!card) return;
@@ -2506,15 +2561,15 @@
     const rows = _mqCalcSections.map((s, idx) => (_mqCalcMode === 'linear' || _mqCalcMode === 'inches') ? `
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
         ${_mqCalcMode === 'linear' ? `<span style="font-size:13px;color:#4b5563;width:64px;flex-shrink:0">Section ${idx + 1}</span>` : ''}
-        <input type="number" value="${s.val}" placeholder="0" oninput="mqCalcUpdateSection(${idx},'val',this.value)" style="flex:1;font-size:16px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit"/>
+        <input type="text" ${mqCalcInputAttrs()} value="${mqCalcEsc(s.val)}" placeholder="0" oninput="mqCalcUpdateSection(${idx},'val',this.value)" style="flex:1;font-size:16px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit"/>
         <span style="font-size:13px;color:#4b5563;width:44px">${unitLabel}</span>
         ${_mqCalcMode === 'linear' && _mqCalcSections.length > 1 ? `<button type="button" onclick="mqCalcRemoveSection(${idx})" style="background:none;border:none;color:#dc2626;font-size:16px;cursor:pointer;padding:0 4px">✕</button>` : (_mqCalcMode === 'linear' ? '<span style="width:20px;flex-shrink:0"></span>' : '')}
       </div>` : `
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
         <span style="font-size:13px;color:#4b5563;width:64px;flex-shrink:0">Section ${idx + 1}</span>
-        <input type="number" value="${s.w}" placeholder="Width" oninput="mqCalcUpdateSection(${idx},'w',this.value)" style="flex:1;min-width:0;font-size:16px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit"/>
+        <input type="text" ${mqCalcInputAttrs()} value="${mqCalcEsc(s.w)}" placeholder="Width" oninput="mqCalcUpdateSection(${idx},'w',this.value)" style="flex:1;min-width:0;font-size:16px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit"/>
         <span style="font-size:12px;color:#6b7280;flex-shrink:0">×</span>
-        <input type="number" value="${s.h}" placeholder="Height" oninput="mqCalcUpdateSection(${idx},'h',this.value)" style="flex:1;min-width:0;font-size:16px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit"/>
+        <input type="text" ${mqCalcInputAttrs()} value="${mqCalcEsc(s.h)}" placeholder="Height" oninput="mqCalcUpdateSection(${idx},'h',this.value)" style="flex:1;min-width:0;font-size:16px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit"/>
         <span style="font-size:13px;color:#4b5563;width:44px">${unitLabel}</span>
         ${_mqCalcSections.length > 1 ? `<button type="button" onclick="mqCalcRemoveSection(${idx})" style="background:none;border:none;color:#dc2626;font-size:16px;cursor:pointer;padding:0 4px">✕</button>` : '<span style="width:20px;flex-shrink:0"></span>'}
       </div>`
@@ -2523,11 +2578,13 @@
     card.innerHTML = `
       <div style="font-size:16px;font-weight:700;color:#111;margin-bottom:4px">${_mqCalcMode === 'sqft' ? '📐 Square footage calculator' : '📏 Measurement calculator'}${_mqCalcFieldLabel ? ` <span style="font-weight:600;color:#2563eb">(${_mqCalcFieldLabel})</span>` : ''}</div>
       <div style="font-size:13px;color:#4b5563;margin-bottom:14px">${_mqCalcMode === 'linear' ? "Measure each section, and we'll add them all up and convert to feet for you." : _mqCalcMode === 'inches' ? "Enter the measurement in whatever unit is easiest, and we'll convert it to inches for you." : "Measure the width and height of each section, and we'll convert and total the square footage for you."}</div>
+      ${mqCalcGuideHTML()}
       <div style="display:flex;gap:8px;margin-bottom:14px">
         <button type="button" onclick="mqCalcSetUnit('ft')" style="flex:1;padding:8px;border-radius:6px;border:1.5px solid ${_mqCalcUnit === 'ft' ? '#1a1a1a' : '#d1d5db'};background:${_mqCalcUnit === 'ft' ? '#1a1a1a' : '#fff'};color:${_mqCalcUnit === 'ft' ? '#fff' : '#374151'};font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Feet</button>
         <button type="button" onclick="mqCalcSetUnit('in')" style="flex:1;padding:8px;border-radius:6px;border:1.5px solid ${_mqCalcUnit === 'in' ? '#1a1a1a' : '#d1d5db'};background:${_mqCalcUnit === 'in' ? '#1a1a1a' : '#fff'};color:${_mqCalcUnit === 'in' ? '#fff' : '#374151'};font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Inches</button>
         <button type="button" onclick="mqCalcSetUnit('mm')" style="flex:1;padding:8px;border-radius:6px;border:1.5px solid ${_mqCalcUnit === 'mm' ? '#1a1a1a' : '#d1d5db'};background:${_mqCalcUnit === 'mm' ? '#1a1a1a' : '#fff'};color:${_mqCalcUnit === 'mm' ? '#fff' : '#374151'};font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Millimeters</button>
       </div>
+      ${_mqCalcUnit === 'in' ? `<div style="font-size:12px;color:#6b7280;margin:-6px 0 10px">Fractions are fine — e.g. 36 3/4 or 3/8</div>` : ''}
       <div id="mq-calc-rows">${rows}</div>
       ${_mqCalcMode !== 'inches' ? `<button type="button" onclick="mqCalcAddSection()" style="width:100%;padding:8px;border-radius:6px;border:1.5px dashed #93c5fd;background:#eff6ff;color:#1e40af;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:14px">+ Add another section</button>` : ''}
       <div style="background:#f0fdf4;border-radius:8px;padding:10px 12px;margin-bottom:14px;text-align:center">
@@ -2549,7 +2606,7 @@
     // one decimal place; everything else (uft/bft/trim) supports full
     // decimals.
     const total = (_mqCalcTargetId && _mqCalcTargetId.startsWith('mq-qty-')) || _mqCalcMode === 'inches'
-      ? Math.round(rawTotal * 10) / 10
+      ? (_mqCalcMode === 'inches' ? Math.round(rawTotal * 1000) / 1000 : Math.round(rawTotal * 10) / 10)
       : Math.round(rawTotal * 100) / 100;
     const targetEl = document.getElementById(_mqCalcTargetId);
     if (targetEl) {
@@ -4327,6 +4384,14 @@
       const allImages = customPrimary
         ? [customPrimary, ...customExtra]
         : (customExtra.length ? customExtra : (room ? (room.forCountertops ? MQ_DEFAULT_MEASURE_IMAGES.countertop : (MQ_DEFAULT_MEASURE_IMAGES[mqDefaultImageKey(room)] || [])) : []));
+      // Remember the guide's PHOTOS (videos can't be zoomed) per tab so the
+      // measurement calculator can show the same pictures. A project type
+      // that hides the measuring guide gets none.
+      window._mqMeasurePhotos = window._mqMeasurePhotos || {};
+      window._mqMeasurePhotos[prefix] = {
+        roomName: room && room.name ? room.name : '',
+        photos: (room && room.hideMeasureGuide) ? [] : allImages.filter(u => u && !mqVideoEmbedInfo(u))
+      };
       guideEl.innerHTML = ''; // clear before rebuilding
       if (allImages.length > 1) {
         guideEl.appendChild(mqBuildMeasureCarousel(allImages, room));
