@@ -13526,8 +13526,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       while(ctx.measureText(link).width>urlMax&&urlSize>10*k){urlSize-=k;ctx.font=font(urlSize,opts.subFont||'arial',500)}
       ctx.fillStyle=safeColor(opts.urlColor,t.mode==='minimal'?'#45323e':'#e8d9dd');
       drawSpacedText(ctx,link,urlX,urlY,0,align);
-      const brandW=Math.min(W-2*pad, Math.max(220*k, textWidthWithSpacing(ctx,String(shopDisplay||''),shopSpacing)+40*k));
-      const brandX=align==='left'?clamp(shopAnchorX-10*k,8*k,W-brandW-8*k):align==='center'?clamp(shopAnchorX-brandW/2,8*k,W-brandW-8*k):clamp(shopAnchorX-brandW+10*k,8*k,W-brandW-8*k);
+      const brandW=Math.min(W-2*pad, Math.max(220*k, textWidthWithSpacing(ctx,String(shopDisplay||''),nameSpace)+40*k));
+      const brandX=align==='left'?clamp(nameX-10*k,8*k,W-brandW-8*k):align==='center'?clamp(nameX-brandW/2,8*k,W-brandW-8*k):clamp(nameX-brandW+10*k,8*k,W-brandW-8*k);
       const regions={brand:[brandX,Math.max(8*k,nameY-58*k),brandW,72*k],headline:[pad,Math.max(15*k,baseTop-80*k),W-2*pad,Math.max(100*k,(lines.length+1)*lineHeight)],sub:[pad,subTop-38*k,W-2*pad,Math.max(70*k,(subLines.length+1)*subLH)],cta:[bx-10*k,by-10*k,bw+20*k,ctaH+20*k],url:[clamp(urlX-20*k,8*k,W-220*k),urlY-38*k,Math.min(420*k,W*.76),55*k],photo:[10*k,10*k,W-20*k,H-20*k]};
       canvas._mqRegions=regions;canvas._mqUnit=k;
       // Only show selection hints in live preview (never in exported PNG).
