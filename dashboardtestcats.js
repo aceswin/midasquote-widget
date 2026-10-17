@@ -1279,6 +1279,32 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       /* Trial/Demo banner: 80% wide on desktop so the floating "Need help?" button (which pokes up into the banner's space) never sits on top of it. Full width on phones, where that button sits clear above it. */
       #midasquote-dashboard #mq-plan-banner > div{max-width:80%}
       #midasquote-dashboard .mq-help-badge{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:#2563eb;color:#fff;font-size:11px;font-weight:800;flex-shrink:0}
+      /* Showroom tab — tighter, centered column with hairline cards (scoped, nothing else changes) */
+      #midasquote-dashboard .mq-sr-tab{max-width:860px}
+      #midasquote-dashboard .mq-sr-tab .mq-page-sub{margin-bottom:1.25rem;line-height:1.55;max-width:640px}
+      #midasquote-dashboard .mq-sr-card,#midasquote-dashboard .mq-sr-tab .mq-card{padding:0;margin-bottom:10px;overflow:hidden;overflow:clip;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 1px 2px rgba(16,24,40,0.04)}
+      #midasquote-dashboard .mq-sr-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:.8rem 1.1rem;cursor:pointer;transition:background 0.12s}
+      #midasquote-dashboard .mq-sr-head:hover{background:#fafafa}
+      #midasquote-dashboard .mq-sr-title{font-size:13px;font-weight:600;color:#111;letter-spacing:-0.005em}
+      #midasquote-dashboard .mq-sr-chev{font-size:10px;color:#9ca3af;transition:transform 0.2s}
+      #midasquote-dashboard .mq-sr-body{padding:.9rem 1.1rem 1.1rem;border-top:1px solid #f0f1f3}
+      #midasquote-dashboard .mq-sr-tab .mq-sr-body > p{font-size:12.5px !important;line-height:1.55;max-width:620px}
+      #midasquote-dashboard .mq-sr-pick{flex:1;min-width:200px;border:1px solid #e5e7eb;border-radius:8px;padding:.7rem .85rem;cursor:pointer;transition:border-color 0.12s,box-shadow 0.12s}
+      #midasquote-dashboard .mq-sr-pick:hover{border-color:#9ca3af}
+      #midasquote-dashboard .mq-sr-tab .mq-toggle-row{padding:7px 0;margin-bottom:0 !important;border-bottom:1px solid #f3f4f6}
+      #midasquote-dashboard .mq-sr-tab .mq-embed-box{padding:.7rem .85rem;margin-top:.5rem;font-size:11.5px;border-radius:8px}
+      #midasquote-dashboard .mq-sr-tab .mq-btn{padding:6px 12px;font-size:12px;border-radius:7px}
+      #midasquote-dashboard .mq-sr-cat{margin-bottom:8px}
+      #midasquote-dashboard .mq-sr-cathead{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:.6rem .9rem;flex-wrap:wrap}
+      #midasquote-dashboard .mq-sr-reorder{display:flex;flex-direction:column;gap:2px;flex-shrink:0}
+      #midasquote-dashboard .mq-sr-reorder .mq-btn{padding:0;width:22px;height:15px;font-size:8px;line-height:1;border-radius:4px}
+      #midasquote-dashboard .mq-sr-catbody{padding:.2rem .9rem .9rem}
+      #midasquote-dashboard .mq-sr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:8px}
+      #midasquote-dashboard .mq-sr-thumb{background:#fafafa;border:1px solid #eceef1;border-radius:8px;padding:.5rem}
+      #midasquote-dashboard .mq-sr-thumb img{width:100%;height:84px;object-fit:contain;background:#f3f2ee;border-radius:6px;margin-bottom:6px;display:block}
+      #midasquote-dashboard .mq-sr-thumb .mq-sr-name{font-size:12px;font-weight:600;color:#111;margin-bottom:6px;line-height:1.3}
+      #midasquote-dashboard .mq-sr-thumb .mq-btn{width:100%;font-size:10.5px;padding:4px 6px}
+      #midasquote-dashboard .mq-sr-note{font-size:11px;color:#9ca3af;margin-bottom:8px;line-height:1.5}
       #midasquote-dashboard .mq-page.active{display:block}
       #midasquote-dashboard .mq-page-title{font-size:22px;font-weight:700;color:#111;margin-bottom:6px}
       #midasquote-dashboard .mq-page-sub{font-size:13px;color:#6b7280;margin-bottom:2rem}
@@ -2269,30 +2295,30 @@ window.logoutMember = async function () {
           </div>
 
           <!-- SHOWROOM -->
-          <div class="mq-page" id="mq-page-showroom">
+          <div class="mq-page mq-sr-tab" id="mq-page-showroom">
             <button class="mq-help-btn" onclick="mqShowHelp('showroom')"><span class="mq-help-badge">?</span> Need help?</button>
             <div class="mq-page-title">🖼️ Showroom</div>
-            <div class="mq-page-sub">Manage everything that can appear on your showroom page — your real priced categories (materials, doors, specialty items, etc.) and any extra portfolio-style categories you add yourself. Reorder, rename (showroom display only — never touches your pricing or the widget), hide a whole category, or remove individual items. To add photos to a priced item so it starts showing up here, use the My Products tab.</div>
+            <div class="mq-page-sub" style="max-width:640px">Manage everything that can appear on your showroom page — your real priced categories (materials, doors, specialty items, etc.) and any extra portfolio-style categories you add yourself. Reorder, rename (showroom display only — never touches your pricing or the widget), hide a whole category, or remove individual items. To add photos to a priced item so it starts showing up here, use the My Products tab.</div>
             <div id="mq-showroom-msg"></div>
 
-            <div class="mq-card" style="margin-bottom:1.5rem;padding:0;overflow:hidden">
-              <div onclick="mqToggleShowroomSection('link')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
-                <div class="mq-card-title" style="margin:0">🔗 Your showroom link</div>
-                <span id="mq-sr-arrow-link" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
+            <div class="mq-card mq-sr-card">
+              <div onclick="mqToggleShowroomSection('link')" class="mq-sr-head">
+                <div class="mq-sr-title">🔗 Your showroom link</div>
+                <span id="mq-sr-arrow-link" class="mq-sr-chev">▼</span>
               </div>
-              <div id="mq-sr-body-link" style="display:none;padding:0 1.25rem 1.25rem">
+              <div id="mq-sr-body-link" class="mq-sr-body" style="display:none">
                 <p style="font-size:13px;color:#6b7280;margin-bottom:0.75rem">This is a standalone page with its own link — share it anywhere, including as a page in your own website's navigation. It works on its own, with or without the widget.</p>
                 <div class="mq-embed-box"><span id="mq-showroomtab-link-text"></span><button class="mq-copy-btn" id="mq-showroomtab-copy-btn">Copy</button></div>
                 <button class="mq-btn" style="margin-top:10px" id="mq-showroomtab-open-btn">Open showroom ↗</button>
               </div>
             </div>
 
-            <div class="mq-card" style="margin-bottom:1.5rem;padding:0;overflow:hidden">
-              <div onclick="mqToggleShowroomSection('embed')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
-                <div class="mq-card-title" style="margin:0">🧩 Embed on a page</div>
-                <span id="mq-sr-arrow-embed" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
+            <div class="mq-card mq-sr-card">
+              <div onclick="mqToggleShowroomSection('embed')" class="mq-sr-head">
+                <div class="mq-sr-title">🧩 Embed on a page</div>
+                <span id="mq-sr-arrow-embed" class="mq-sr-chev">▼</span>
               </div>
-              <div id="mq-sr-body-embed" style="display:none;padding:0 1.25rem 1.25rem">
+              <div id="mq-sr-body-embed" class="mq-sr-body" style="display:none">
               <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Prefer it to show up right inside a page on your own site instead of opening a new tab? Paste the code below where you want it to appear — no need to pick a size, it automatically sizes itself to fit its own content. These four switches only affect how it looks <strong>once embedded</strong> — your standalone showroom link/popup always shows everything, exactly as it does today.</p>
               <div class="mq-toggle-row" style="margin-bottom:1rem">
                 <div>
@@ -2329,20 +2355,20 @@ window.logoutMember = async function () {
               </div>
             </div>
 
-            <div class="mq-card" style="margin-bottom:1.5rem;padding:0;overflow:hidden">
-              <div onclick="mqToggleShowroomSection('button')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
-                <div class="mq-card-title" style="margin:0">🖱️ "See our showroom" button (on the widget)</div>
-                <span id="mq-sr-arrow-button" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
+            <div class="mq-card mq-sr-card">
+              <div onclick="mqToggleShowroomSection('button')" class="mq-sr-head">
+                <div class="mq-sr-title">🖱️ "See our showroom" button (on the widget)</div>
+                <span id="mq-sr-arrow-button" class="mq-sr-chev">▼</span>
               </div>
-              <div id="mq-sr-body-button" style="display:none;padding:0 1.25rem 1.25rem">
+              <div id="mq-sr-body-button" class="mq-sr-body" style="display:none">
               <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Your widget already has its own "🖼️ See our showroom" button for customers. If you've embedded the showroom on a page of your own (above), you can send that button there instead of popping open a new tab on widget.midasquote.com. You can always have both — this only changes where the widget's own button goes; it doesn't affect whether your embedded page exists.</p>
               <div style="display:flex;gap:12px;flex-wrap:wrap">
-                <div id="mq-showroom-target-popup" onclick="mqShowroomSetButtonTarget('popup')" style="flex:1;min-width:220px;border:2px solid #e5e7eb;border-radius:10px;padding:1rem;cursor:pointer">
-                  <div style="font-size:14px;font-weight:700;margin-bottom:4px">🪟 Popup (default)</div>
+                <div id="mq-showroom-target-popup" onclick="mqShowroomSetButtonTarget('popup')" class="mq-sr-pick">
+                  <div style="font-size:13px;font-weight:600;margin-bottom:3px">🪟 Popup (default)</div>
                   <div style="font-size:12px;color:#6b7280">Opens your standalone showroom link in a new tab — today's behavior. Works whether or not you've embedded the showroom anywhere.</div>
                 </div>
-                <div id="mq-showroom-target-page" onclick="mqShowroomSetButtonTarget('own_page')" style="flex:1;min-width:220px;border:2px solid #e5e7eb;border-radius:10px;padding:1rem;cursor:pointer">
-                  <div style="font-size:14px;font-weight:700;margin-bottom:4px">🔗 My own page</div>
+                <div id="mq-showroom-target-page" onclick="mqShowroomSetButtonTarget('own_page')" class="mq-sr-pick">
+                  <div style="font-size:13px;font-weight:600;margin-bottom:3px">🔗 My own page</div>
                   <div style="font-size:12px;color:#6b7280">Sends customers to a page on your own site instead — still opens in a new tab, so their quote stays open too. Needs the URL below.</div>
                 </div>
               </div>
@@ -2356,20 +2382,20 @@ window.logoutMember = async function () {
               </div>
             </div>
 
-            <div class="mq-card" style="margin-bottom:1.5rem;padding:0;overflow:hidden">
-              <div onclick="mqToggleShowroomSection('style')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
-                <div class="mq-card-title" style="margin:0">🎭 Showroom style</div>
-                <span id="mq-sr-arrow-style" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
+            <div class="mq-card mq-sr-card">
+              <div onclick="mqToggleShowroomSection('style')" class="mq-sr-head">
+                <div class="mq-sr-title">🎭 Showroom style</div>
+                <span id="mq-sr-arrow-style" class="mq-sr-chev">▼</span>
               </div>
-              <div id="mq-sr-body-style" style="display:none;padding:0 1.25rem 1.25rem">
+              <div id="mq-sr-body-style" class="mq-sr-body" style="display:none">
               <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Choose how your showroom page looks. Specialty Items show either way — everything else depends on which one's picked.</p>
               <div style="display:flex;gap:12px;flex-wrap:wrap">
-                <div id="mq-showroom-mode-default" onclick="mqShowroomSetMode('default')" style="flex:1;min-width:220px;border:2px solid #e5e7eb;border-radius:10px;padding:1rem;cursor:pointer">
-                  <div style="font-size:14px;font-weight:700;margin-bottom:4px">🏭 Default showroom</div>
+                <div id="mq-showroom-mode-default" onclick="mqShowroomSetMode('default')" class="mq-sr-pick">
+                  <div style="font-size:13px;font-weight:600;margin-bottom:3px">🏭 Default showroom</div>
                   <div style="font-size:12px;color:#6b7280">Your regular priced categories (Box Materials, Door Styles, etc.) plus Specialty Items — the classic MidasQuote showroom.</div>
                 </div>
-                <div id="mq-showroom-mode-custom" onclick="mqShowroomSetMode('custom')" style="flex:1;min-width:220px;border:2px solid #e5e7eb;border-radius:10px;padding:1rem;cursor:pointer">
-                  <div style="font-size:14px;font-weight:700;margin-bottom:4px">🎨 Build my own</div>
+                <div id="mq-showroom-mode-custom" onclick="mqShowroomSetMode('custom')" class="mq-sr-pick">
+                  <div style="font-size:13px;font-weight:600;margin-bottom:3px">🎨 Build my own</div>
                   <div style="font-size:12px;color:#6b7280">Only your custom categories below plus Specialty Items. Your regular priced categories are hidden from the showroom — and from this tab too, so it stays uncluttered — but nothing about them is deleted; pick Default above any time to bring them right back. The project-type filter at the top of your showroom is hidden too, since there'd be nothing left for it to filter.</div>
                 </div>
               </div>
@@ -2383,12 +2409,12 @@ window.logoutMember = async function () {
               </div>
             </div>
 
-            <div class="mq-card" style="margin-bottom:1.5rem;padding:0;overflow:hidden">
-              <div onclick="mqToggleShowroomSection('categories')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
-                <div class="mq-card-title" style="margin:0">📦 Your categories</div>
-                <span id="mq-sr-arrow-categories" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
+            <div class="mq-card mq-sr-card">
+              <div onclick="mqToggleShowroomSection('categories')" class="mq-sr-head">
+                <div class="mq-sr-title">📦 Your categories</div>
+                <span id="mq-sr-arrow-categories" class="mq-sr-chev">▼</span>
               </div>
-              <div id="mq-sr-body-categories" style="display:none;padding:0 1.25rem 1.25rem">
+              <div id="mq-sr-body-categories" class="mq-sr-body" style="display:none">
               <p id="mq-showroom-cats-intro" style="font-size:13px;color:#6b7280;margin-bottom:1rem">Use the ▲▼ arrows to reorder. Every change saves right away — no separate "Save" button on this tab.</p>
               <div id="mq-showroom-cats"><div class="mq-loading">Loading...</div></div>
               <div id="mq-showroom-addcat-note" style="font-size:12px;color:#6b7280;display:none"></div>
@@ -2396,17 +2422,17 @@ window.logoutMember = async function () {
               </div>
             </div>
 
-            <div class="mq-card" style="padding:0;overflow:hidden">
-              <div onclick="mqToggleShowroomSection('preview')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
-                <div class="mq-card-title" style="margin:0">👁️ Live preview</div>
-                <span id="mq-sr-arrow-preview" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
+            <div class="mq-card mq-sr-card">
+              <div onclick="mqToggleShowroomSection('preview')" class="mq-sr-head">
+                <div class="mq-sr-title">👁️ Live preview</div>
+                <span id="mq-sr-arrow-preview" class="mq-sr-chev">▼</span>
               </div>
               <div id="mq-sr-body-preview" style="display:none">
-                <div style="padding:0 1.25rem 1rem">
+                <div style="padding:0 1.1rem .75rem">
                   <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">This is your actual showroom page, loaded live — it updates automatically as you make changes above, or click refresh any time.</p>
                   <button class="mq-btn mq-btn-sm" style="margin-bottom:1rem" onclick="mqRefreshShowroomPreview()">🔄 Refresh preview</button>
                 </div>
-                <iframe id="mq-showroom-preview-frame" style="width:100%;height:800px;border:0;border-top:1px solid #e5e7eb;display:block"></iframe>
+                <iframe id="mq-showroom-preview-frame" style="width:100%;height:720px;border:0;border-top:1px solid #eceef1;display:block"></iframe>
               </div>
             </div>
           </div>
@@ -2532,8 +2558,40 @@ window.logoutMember = async function () {
             </div>
           </div>
 
+          <style>
+  /* MidasQuote Marketing Studio v2 — isolated styles */
+  #mq-page-marketing .mq-studio{--mqs-ink:#24212b;--mqs-sub:#716e79;margin:0 0 26px;color:var(--mqs-ink);font-family:inherit}
+  .mq-studio-hero{display:flex;justify-content:space-between;align-items:center;gap:20px;background:linear-gradient(115deg,#211c2c 0%,#46314c 64%,#7b5060 100%);color:white;padding:30px 34px;border-radius:18px;overflow:hidden;margin-bottom:22px}
+  .mq-studio-kicker{display:block;font-size:10px;font-weight:800;letter-spacing:.16em;color:#c9aa81;margin-bottom:9px}
+  .mq-studio-hero h2{font-size:clamp(22px,3vw,32px);line-height:1.16;margin:0 0 8px;color:white;font-family:Georgia,serif;font-weight:500}
+  .mq-studio-hero p{font-size:13px;line-height:1.65;margin:0;color:#e3dce3;max-width:520px}
+  .mq-studio-hero-star{font-size:74px;color:#d0aa76;opacity:.7;line-height:1}
+  .mq-studio-nav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+  .mq-studio-nav button,.mq-studio-muted-btn{cursor:pointer;border:1px solid #dfdce2;background:#fff;color:#494452;border-radius:9px;padding:9px 14px;font-size:12px;font-weight:700;transition:.15s}
+  .mq-studio-nav button.active,.mq-studio-nav button:hover{background:#2c2436;border-color:#2c2436;color:white}
+  .mq-studio-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;margin-bottom:20px}
+  .mq-studio-tile{background:#fff;border:1px solid #e9e6e9;border-radius:13px;padding:9px;text-align:left;cursor:pointer;box-shadow:0 3px 18px rgba(32,26,41,.04);transition:transform .2s,border-color .2s,box-shadow .2s;color:inherit}
+  .mq-studio-tile:hover,.mq-studio-tile:focus-visible{transform:translateY(-3px);border-color:#a98caa;box-shadow:0 10px 28px rgba(32,26,41,.12);outline:none}
+  .mq-studio-thumb{display:block;width:100%;height:175px;object-fit:cover;border-radius:8px;background:#eee8e9}
+  .mq-studio-tile-meta{display:flex;align-items:flex-start;justify-content:space-between;gap:6px;padding:11px 5px 4px}
+  .mq-studio-tile strong{font-size:13px;display:block}.mq-studio-tile small{display:block;margin-top:4px;font-size:11px;color:#78727c}
+  .mq-studio-tile-meta b{font-size:17px;color:#6f5368;font-weight:400}
+  .mq-studio-workspace{background:#fff;border:1px solid #e9e6e9;border-radius:16px;padding:21px;margin:12px 0 24px;box-shadow:0 9px 30px rgba(36,30,44,.06);scroll-margin-top:80px}
+  .mq-studio-editor-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:21px}.mq-studio-editor-top h3{font-size:21px;font-family:Georgia,serif;margin:0}
+  .mq-studio-editor-layout{display:grid;grid-template-columns:minmax(210px,.85fr) minmax(0,1.15fr);gap:27px}
+  .mq-studio-fields{display:flex;flex-direction:column;gap:12px}.mq-studio-fields label{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:700;color:#494451}
+  .mq-studio-fields input:not([type=file]),.mq-studio-fields select{box-sizing:border-box;width:100%;border:1px solid #ddd8df;border-radius:8px;background:white;padding:10px;color:#24212b;font-size:13px}
+  .mq-studio-fields input[type=color]{height:43px;padding:4px;cursor:pointer}.mq-studio-fields input[type=file]{width:100%;font-size:11px;padding:8px;border:1px dashed #d6d0d8;border-radius:8px}
+  .mq-studio-editor-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}.mq-studio-editor-actions button{flex:1;min-width:120px}
+  .mq-studio-tip{font-size:11px;color:#79727e;line-height:1.6;margin:3px 0}
+  .mq-studio-preview-wrap{background:#f5f2f4;border:1px solid #eae5e9;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:15px;min-width:0}
+  .mq-studio-preview-wrap canvas{width:auto;height:auto;max-width:100%;max-height:495px;border-radius:6px;box-shadow:0 10px 35px rgba(18,13,22,.17)}.mq-studio-preview-wrap p{font-size:10px;color:#8d8390;text-align:center;margin:12px 0 0}
+  .mq-studio-legacy{border-top:1px solid #e7e2e9;padding-top:17px;color:#716a76;font-size:12px}.mq-studio-legacy summary{cursor:pointer;color:#4d4152;font-weight:700}.mq-studio-legacy p{line-height:1.6}
+  @media(max-width:820px){.mq-studio-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.mq-studio-editor-layout{grid-template-columns:1fr}.mq-studio-preview-wrap canvas{max-height:420px}}
+  @media(max-width:480px){.mq-studio-hero{padding:23px}.mq-studio-hero-star{display:none}.mq-studio-grid{gap:9px}.mq-studio-thumb{height:135px}.mq-studio-workspace{padding:13px}.mq-studio-editor-top{flex-wrap:wrap}.mq-studio-nav button{padding:8px 10px;font-size:11px}}
+</style>
           <!-- MARKETING KIT -->
-          <div class="mq-page" id="mq-page-marketing">
+          <div class="mq-page mq-sr-tab" id="mq-page-marketing">
             <button class="mq-help-btn" onclick="mqShowHelp('marketing')"><span class="mq-help-badge">?</span> Need help?</button>
             <div class="mq-page-title">Marketing Kit</div>
             <div class="mq-page-sub">Ready-made copy to help you promote your new quote widget — personalized with your shop's link</div>
@@ -2548,23 +2606,44 @@ window.logoutMember = async function () {
               <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 12px;margin-top:8px;font-size:12px;color:#166534">✅ Once applied, this link is automatically used across every marketing item on this page — posts, graphics, QR codes, and everything else.</div>
             </div>
 
-            <div class="mq-card" style="padding:0;overflow:hidden">
-              <div onclick="mqToggleMkSection('social')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
-                <div class="mq-card-title" style="margin:0">📱 Social media posts</div>
-                <span id="mq-mk-arrow-social" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
+            <!-- MARKETING STUDIO v2: Visual template gallery and canvas editor. Legacy tools preserved below. -->
+            <section id="mq-studio" class="mq-studio">
+              <div class="mq-studio-hero"><div><span class="mq-studio-kicker">✦ YOUR CREATIVE WORKSPACE</span><h2>Make something worth sharing.</h2><p>Choose a design, add your latest project photo, and download a polished promotion in seconds.</p></div><span class="mq-studio-hero-star">✳</span></div>
+              <div class="mq-studio-nav" role="group" aria-label="Filter templates"><button type="button" class="active" data-studio-filter="all">All designs</button><button type="button" data-studio-filter="social">Social posts</button><button type="button" data-studio-filter="print">Posters & signs</button><button type="button" data-studio-filter="qr">QR promotions</button></div>
+              <div class="mq-studio-grid" id="mq-studio-grid"></div>
+              <div id="mq-studio-workspace" class="mq-studio-workspace" style="display:none">
+                <div class="mq-studio-editor-top"><div><span class="mq-studio-kicker">CUSTOMIZE YOUR DESIGN</span><h3 id="mq-studio-edit-title">Edit template</h3></div><button type="button" class="mq-studio-muted-btn" id="mq-studio-back">← All templates</button></div>
+                <div class="mq-studio-editor-layout"><div class="mq-studio-fields">
+                  <label>Headline<input id="mq-studio-headline" type="text" maxlength="90"></label>
+                  <label>Supporting line<input id="mq-studio-subline" type="text" maxlength="140"></label>
+                  <label>Call to action<input id="mq-studio-cta" type="text" maxlength="48"></label>
+                  <label>Brand colour <input id="mq-studio-color" type="color" value="#56314b" aria-label="Brand colour"></label>
+                  <label>Project photo<input id="mq-studio-photo" type="file" accept="image/*"></label>
+                  <button type="button" class="mq-studio-muted-btn" id="mq-studio-remove-photo">Remove photo</button>
+                  <label>Export size<select id="mq-studio-size"><option value="square">Square · 1080 × 1080</option><option value="portrait">Feed portrait · 1080 × 1350</option><option value="story">Story / Reel · 1080 × 1920</option><option value="poster">Poster · 1080 × 1620</option><option value="landscape">Yard sign · 1620 × 1080</option></select></label>
+                  <div class="mq-studio-editor-actions"><button type="button" id="mq-studio-download" class="mq-btn mq-btn-primary">↓ Download PNG</button><button type="button" id="mq-studio-copy-caption" class="mq-studio-muted-btn">Copy caption</button></div>
+                  <p class="mq-studio-tip">Your shop name and marketing link are automatically added. Upload a project photo for the most effective result.</p>
+                </div><div class="mq-studio-preview-wrap"><canvas id="mq-studio-canvas" width="1080" height="1080" aria-label="Live marketing graphic preview"></canvas><p>Live preview · The downloaded image exports at full resolution</p></div></div>
               </div>
-              <div id="mq-mk-body-social" style="display:none;padding:0 1.25rem 1.25rem">
+              <details class="mq-studio-legacy"><summary>More marketing tools & advanced designers <span>⌄</span></summary><p>All your original marketing tools are still available below, including advanced poster controls, standalone QR codes, social captions, and printable materials.</p></details>
+            </section>
+            <div class="mq-card mq-sr-card">
+              <div onclick="mqToggleMkSection('social')" class="mq-sr-head">
+                <div class="mq-sr-title">📱 Social media posts</div>
+                <span id="mq-mk-arrow-social" class="mq-sr-chev">▼</span>
+              </div>
+              <div id="mq-mk-body-social" class="mq-sr-body" style="display:none">
               <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Copy and paste these straight into Facebook or Instagram.</p>
               <div id="mq-mk-social"></div>
               </div>
             </div>
 
-            <div class="mq-card" style="padding:0;overflow:hidden">
-              <div onclick="mqToggleMkSection('graphic')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
-                <div class="mq-card-title" style="margin:0">🖼️ Social graphic — ready to post</div>
-                <span id="mq-mk-arrow-graphic" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
+            <div class="mq-card mq-sr-card">
+              <div onclick="mqToggleMkSection('graphic')" class="mq-sr-head">
+                <div class="mq-sr-title">🖼️ Social graphic — ready to post</div>
+                <span id="mq-mk-arrow-graphic" class="mq-sr-chev">▼</span>
               </div>
-              <div id="mq-mk-body-graphic" style="display:none;padding:0 1.25rem 1.25rem">
+              <div id="mq-mk-body-graphic" class="mq-sr-body" style="display:none">
               <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem">A square Instagram/Facebook-ready graphic with your shop name, brand colour, and quote link already on it. Download and post — no design needed.</p>
               <div style="display:flex;flex-direction:column;align-items:center;gap:1rem">
                 <canvas id="mq-mk-canvas" width="1080" height="1080" style="width:280px;height:280px;border-radius:14px;display:block"></canvas>
@@ -2590,12 +2669,12 @@ window.logoutMember = async function () {
               </div>
             </div>
 
-            <div class="mq-card" id="mq-pd-outer-card" style="padding:0;overflow:hidden">
-              <div onclick="mqToggleMkSection('poster')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
-                <div class="mq-card-title" style="margin:0">🎨 Custom Poster & Sign Designer</div>
-                <span id="mq-mk-arrow-poster" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
+            <div class="mq-card mq-sr-card" id="mq-pd-outer-card">
+              <div onclick="mqToggleMkSection('poster')" class="mq-sr-head">
+                <div class="mq-sr-title">🎨 Custom Poster & Sign Designer</div>
+                <span id="mq-mk-arrow-poster" class="mq-sr-chev">▼</span>
               </div>
-              <div id="mq-mk-body-poster" style="display:none;padding:0 1.25rem 1.25rem">
+              <div id="mq-mk-body-poster" class="mq-sr-body" style="display:none">
               <p style="font-size:13px;color:var(--text-mid);margin-bottom:1rem">Pick a style, add your own project photo, and download a print-ready poster or yard sign — pick "Landscape" below for a yard sign.</p>
 
               <div class="mq-field" style="margin-bottom:12px">
@@ -2815,23 +2894,23 @@ window.logoutMember = async function () {
 
             </div>
 
-            <div class="mq-card" style="padding:0;overflow:hidden">
-              <div onclick="mqToggleMkSection('dm')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
-                <div class="mq-card-title" style="margin:0">💬 Direct message template</div>
-                <span id="mq-mk-arrow-dm" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
+            <div class="mq-card mq-sr-card">
+              <div onclick="mqToggleMkSection('dm')" class="mq-sr-head">
+                <div class="mq-sr-title">💬 Direct message template</div>
+                <span id="mq-mk-arrow-dm" class="mq-sr-chev">▼</span>
               </div>
-              <div id="mq-mk-body-dm" style="display:none;padding:0 1.25rem 1.25rem">
+              <div id="mq-mk-body-dm" class="mq-sr-body" style="display:none">
               <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem">Send this to past customers or leads who might have a future project.</p>
               <div id="mq-mk-dm"></div>
               </div>
             </div>
 
-            <div class="mq-card" style="padding:0;overflow:hidden">
-              <div onclick="mqToggleMkSection('qrposter')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
-                <div class="mq-card-title" style="margin:0">🖨️ Printable QR poster</div>
-                <span id="mq-mk-arrow-qrposter" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
+            <div class="mq-card mq-sr-card">
+              <div onclick="mqToggleMkSection('qrposter')" class="mq-sr-head">
+                <div class="mq-sr-title">🖨️ Printable QR poster</div>
+                <span id="mq-mk-arrow-qrposter" class="mq-sr-chev">▼</span>
               </div>
-              <div id="mq-mk-body-qrposter" style="display:none;padding:0 1.25rem 1.25rem">
+              <div id="mq-mk-body-qrposter" class="mq-sr-body" style="display:none">
               <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem">A print-ready poster with a QR code linking straight to your quote page — perfect for a sandwich board, front desk, or restroom poster. Walk-in customers just scan and go.</p>
               <div style="display:flex;flex-direction:column;align-items:center;gap:1rem">
                 <canvas id="mq-mk-qr-canvas" width="1080" height="1620" style="width:200px;height:300px;border-radius:10px;display:block"></canvas>
@@ -2879,12 +2958,12 @@ window.logoutMember = async function () {
             </div>
 
 
-            <div class="mq-card" style="padding:0;overflow:hidden">
-              <div onclick="mqToggleMkSection('whereto')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
-                <div class="mq-card-title" style="margin:0">📍 Where to post</div>
-                <span id="mq-mk-arrow-whereto" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
+            <div class="mq-card mq-sr-card">
+              <div onclick="mqToggleMkSection('whereto')" class="mq-sr-head">
+                <div class="mq-sr-title">📍 Where to post</div>
+                <span id="mq-mk-arrow-whereto" class="mq-sr-chev">▼</span>
               </div>
-              <div id="mq-mk-body-whereto" style="display:none;padding:0 1.25rem 1.25rem">
+              <div id="mq-mk-body-whereto" class="mq-sr-body" style="display:none">
               <div style="font-size:13px;color:#374151;line-height:2">
                 ✓ Your website homepage or a dedicated "Get a Quote" page<br>
                 ✓ Pin a post to the top of your Facebook Business Page<br>
@@ -2897,12 +2976,12 @@ window.logoutMember = async function () {
               </div>
             </div>
 
-            <div class="mq-card" style="padding:0;overflow:hidden">
-              <div onclick="mqToggleMkSection('qrcode')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
-                <div class="mq-card-title" style="margin:0">QR code</div>
-                <span id="mq-mk-arrow-qrcode" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
+            <div class="mq-card mq-sr-card">
+              <div onclick="mqToggleMkSection('qrcode')" class="mq-sr-head">
+                <div class="mq-sr-title">QR code</div>
+                <span id="mq-mk-arrow-qrcode" class="mq-sr-chev">▼</span>
               </div>
-              <div id="mq-mk-body-qrcode" style="display:none;padding:0 1.25rem 1.25rem">
+              <div id="mq-mk-body-qrcode" class="mq-sr-body" style="display:none">
               <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem">Just the QR code by itself, no poster or headline — handy if you want to drop it into your own flyer, sign, or menu.</p>
               <div style="display:flex;flex-direction:column;align-items:center;gap:1rem">
                 <canvas id="mq-mk-qrcode-canvas" width="600" height="600" style="width:180px;height:180px;border-radius:10px;display:block;border:1px solid #e5e7eb"></canvas>
@@ -2912,12 +2991,12 @@ window.logoutMember = async function () {
               </div>
             </div>
 
-            <div class="mq-card" style="border-color:#86efac;background:#f0fdf4;padding:0;overflow:hidden">
-              <div onclick="mqToggleMkSection('checklist')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
-                <div class="mq-card-title" style="margin:0">✅ Pre-launch checklist</div>
-                <span id="mq-mk-arrow-checklist" style="font-size:13px;color:#166534;transition:transform 0.2s">▼</span>
+            <div class="mq-card mq-sr-card" style="border-color:#86efac;background:#f0fdf4">
+              <div onclick="mqToggleMkSection('checklist')" class="mq-sr-head">
+                <div class="mq-sr-title">✅ Pre-launch checklist</div>
+                <span id="mq-mk-arrow-checklist" class="mq-sr-chev" style="color:#166534">▼</span>
               </div>
-              <div id="mq-mk-body-checklist" style="display:none;padding:0 1.25rem 1.25rem">
+              <div id="mq-mk-body-checklist" class="mq-sr-body" style="display:none">
               <div style="font-size:13px;color:#166534;line-height:2">
                 ☐ Widget is embedded and tested on your site<br>
                 ☐ Link works on both desktop and mobile<br>
@@ -9777,8 +9856,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const mode = (window._mqShowroomSettings && window._mqShowroomSettings.mode === 'custom') ? 'custom' : 'default';
     const defCard = el('mq-showroom-mode-default');
     const curCard = el('mq-showroom-mode-custom');
-    if (defCard) { defCard.style.borderColor = mode === 'default' ? '#1a1a1a' : '#e5e7eb'; defCard.style.background = mode === 'default' ? '#f9fafb' : '#fff'; }
-    if (curCard) { curCard.style.borderColor = mode === 'custom'  ? '#1a1a1a' : '#e5e7eb'; curCard.style.background = mode === 'custom'  ? '#f9fafb' : '#fff'; }
+    if (defCard) { defCard.style.borderColor = mode === 'default' ? '#1a1a1a' : '#e5e7eb'; defCard.style.background = mode === 'default' ? '#f9fafb' : '#fff'; defCard.style.boxShadow = mode === 'default' ? '0 0 0 1px #1a1a1a' : 'none'; }
+    if (curCard) { curCard.style.borderColor = mode === 'custom'  ? '#1a1a1a' : '#e5e7eb'; curCard.style.background = mode === 'custom'  ? '#f9fafb' : '#fff'; curCard.style.boxShadow = mode === 'custom' ? '0 0 0 1px #1a1a1a' : 'none'; }
     const note = el('mq-showroom-mode-note');
     if (note) note.textContent = mode === 'custom'
       ? '🎨 Build My Own is active — your priced categories are tucked out of sight below (nothing about them is deleted). Pick Default above any time to bring them back.'
@@ -9828,8 +9907,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const target = settings.buttonTarget === 'own_page' ? 'own_page' : 'popup';
     const popupCard = el('mq-showroom-target-popup');
     const pageCard  = el('mq-showroom-target-page');
-    if (popupCard) { popupCard.style.borderColor = target === 'popup'    ? '#1a1a1a' : '#e5e7eb'; popupCard.style.background = target === 'popup'    ? '#f9fafb' : '#fff'; }
-    if (pageCard)  { pageCard.style.borderColor  = target === 'own_page' ? '#1a1a1a' : '#e5e7eb'; pageCard.style.background  = target === 'own_page' ? '#f9fafb' : '#fff'; }
+    if (popupCard) { popupCard.style.borderColor = target === 'popup'    ? '#1a1a1a' : '#e5e7eb'; popupCard.style.background = target === 'popup'    ? '#f9fafb' : '#fff'; popupCard.style.boxShadow = target === 'popup' ? '0 0 0 1px #1a1a1a' : 'none'; }
+    if (pageCard)  { pageCard.style.borderColor  = target === 'own_page' ? '#1a1a1a' : '#e5e7eb'; pageCard.style.background  = target === 'own_page' ? '#f9fafb' : '#fff'; pageCard.style.boxShadow = target === 'own_page' ? '0 0 0 1px #1a1a1a' : 'none'; }
     const urlWrap = el('mq-showroom-target-url-wrap');
     if (urlWrap) urlWrap.style.display = target === 'own_page' ? 'block' : 'none';
     const urlInput = el('mq-showroom-target-url-input');
@@ -10068,16 +10147,16 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const visibleOrder = order.filter(isRelevantNow);
 
     wrap.innerHTML = visibleOrder.map((catKey, idx) => {
-      const upBtn   = `<button class="mq-btn mq-btn-sm" ${idx===0?'disabled':''} onclick="mqShowroomMoveCat('${catKey}',-1)" title="Move up">▲</button>`;
-      const downBtn = `<button class="mq-btn mq-btn-sm" ${idx===visibleOrder.length-1?'disabled':''} onclick="mqShowroomMoveCat('${catKey}',1)" title="Move down">▼</button>`;
+      const upBtn   = `<button class="mq-btn" ${idx===0?'disabled':''} onclick="mqShowroomMoveCat('${catKey}',-1)" title="Move up">▲</button>`;
+      const downBtn = `<button class="mq-btn" ${idx===visibleOrder.length-1?'disabled':''} onclick="mqShowroomMoveCat('${catKey}',1)" title="Move down">▼</button>`;
 
       const cat = customById[catKey];
       if (cat) {
         const collapsed = mqShowroomIsCollapsed(catKey, false);
-        return `<div class="mq-card" style="padding:0;overflow:hidden;margin-bottom:12px">
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;gap:10px;flex-wrap:wrap">
+        return `<div class="mq-card mq-sr-cat">
+          <div class="mq-sr-cathead">
             <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:120px">
-              <div style="display:flex;gap:4px;flex-shrink:0">${upBtn}${downBtn}</div>
+              <div class="mq-sr-reorder">${upBtn}${downBtn}</div>
               <div style="display:flex;align-items:center;gap:8px;cursor:pointer;min-width:0" onclick="mqShowroomToggleCat('${catKey}')">
                 <span id="mq-showroom-cat-arrow-${catKey}" style="display:inline-block;flex-shrink:0;transition:transform 0.2s;font-size:12px;color:#9ca3af;transform:rotate(${collapsed?0:90}deg)">▶</span>
                 <span style="font-size:14px;font-weight:600;color:#111">${(cat.name||'Untitled').replace(/</g,'&lt;')} <span style="font-size:12px;font-weight:400;color:#9ca3af">(${(cat.items||[]).length})</span></span>
@@ -10088,11 +10167,11 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
               <button class="mq-btn mq-btn-sm" style="color:#dc2626" onclick="mqDeleteShowroomCategory('${cat.id}')">🗑️ Delete category</button>
             </div>
           </div>
-          <div id="mq-showroom-cat-body-${catKey}" style="display:${collapsed?'none':'block'};padding:0 1.25rem 1.25rem">
-            <div id="mq-showroom-grid-${cat.id}" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px;margin-bottom:12px">
-              ${(cat.items||[]).map(item => mqShowroomItemCardHTML(cat.id, item)).join('') || '<div style="font-size:12px;color:#9ca3af">No items in this category yet.</div>'}
+          <div id="mq-showroom-cat-body-${catKey}" class="mq-sr-catbody" style="display:${collapsed?'none':'block'}">
+            <div id="mq-showroom-grid-${cat.id}" class="mq-sr-grid" style="margin-bottom:10px">
+              ${(cat.items||[]).map(item => mqShowroomItemCardHTML(cat.id, item)).join('') || '<div style="grid-column:1/-1;font-size:12px;color:#9ca3af">No items in this category yet.</div>'}
             </div>
-            ${(cat.items||[]).length > 1 ? '<p style="font-size:11px;color:#9ca3af;margin-bottom:10px">Drag any photo\'s ⠿ handle to reorder it.</p>' : ''}
+            ${(cat.items||[]).length > 1 ? '<p class="mq-sr-note">Drag any photo\'s ⠿ handle to reorder it.</p>' : ''}
             <label class="mq-btn mq-btn-sm mq-btn-primary" style="cursor:pointer;display:inline-block">
               📤 Add photos
               <input type="file" accept="image/*" multiple style="display:none" onchange="mqBulkAddShowroomItems('${cat.id}', this.files); this.value=''"/>
@@ -10105,11 +10184,11 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const isHidden = !!settings.hidden[catKey];
       const displayName = settings.names[catKey] || mqShowroomDefaultCatName(catKey);
       const items = mqShowroomVisibleItemsFor(catKey);
-      const collapsed = mqShowroomIsCollapsed(catKey, isHidden);
-      return `<div class="mq-card" style="padding:0;overflow:hidden;margin-bottom:12px;${isHidden?'opacity:0.55':''}">
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;gap:10px;flex-wrap:wrap">
+      const collapsed = mqShowroomIsCollapsed(catKey, isHidden || !items.length); // empty categories start tucked away too
+      return `<div class="mq-card mq-sr-cat" style="${isHidden?'opacity:0.55':''}">
+        <div class="mq-sr-cathead">
           <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:120px">
-            <div style="display:flex;gap:4px;flex-shrink:0">${upBtn}${downBtn}</div>
+            <div class="mq-sr-reorder">${upBtn}${downBtn}</div>
             <div style="display:flex;align-items:center;gap:8px;cursor:pointer;min-width:0" onclick="mqShowroomToggleCat('${catKey}')">
               <span id="mq-showroom-cat-arrow-${catKey}" style="display:inline-block;flex-shrink:0;transition:transform 0.2s;font-size:12px;color:#9ca3af;transform:rotate(${collapsed?0:90}deg)">▶</span>
               <span style="font-size:14px;font-weight:600;color:#111">${displayName.replace(/</g,'&lt;')} <span style="font-size:12px;font-weight:400;color:#9ca3af">(${items.length}${isHidden?' — hidden':''})</span></span>
@@ -10121,15 +10200,15 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
             <button class="mq-btn mq-btn-sm" style="${isHidden?'':'color:#dc2626'}" onclick="mqShowroomToggleHideCat('${catKey}')">${isHidden ? '👁️ Show category' : '🚫 Hide category'}</button>
           </div>
         </div>
-        <div id="mq-showroom-cat-body-${catKey}" style="display:${collapsed?'none':'block'};padding:0 1.25rem 1.25rem">
-          <p style="font-size:11px;color:#9ca3af;margin-bottom:10px">Renaming or hiding this only changes your showroom page — your pricing and widget are never affected. Add photos (so more items show up here) or brand new priced items from the My Products tab.</p>
-          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px">
+        <div id="mq-showroom-cat-body-${catKey}" class="mq-sr-catbody" style="display:${collapsed?'none':'block'}">
+          <p class="mq-sr-note">Renaming or hiding this only changes your showroom page — your pricing and widget are never affected. Add photos (so more items show up here) or brand new priced items from the My Products tab.</p>
+          <div class="mq-sr-grid">
             ${items.length ? items.map(it => `
-              <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:1rem">
-                <img src="${it.photo}" style="width:100%;height:120px;object-fit:contain;background:#f0efeb;border-radius:8px;margin-bottom:10px" onerror="this.style.display='none'"/>
-                <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:8px">${(it.name||'').replace(/</g,'&lt;')}</div>
-                <button class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;color:#dc2626" onclick="mqShowroomHideItem('${it.itemKey.replace(/'/g,"\\'")}')">🚫 Remove from showroom</button>
-              </div>`).join('') : '<div style="font-size:12px;color:#9ca3af">Nothing showing here yet — add photos on the My Products tab.</div>'}
+              <div class="mq-sr-thumb">
+                <img src="${it.photo}" onerror="this.style.display='none'"/>
+                <div class="mq-sr-name">${(it.name||'').replace(/</g,'&lt;')}</div>
+                <button class="mq-btn mq-btn-sm" style="color:#dc2626" onclick="mqShowroomHideItem('${it.itemKey.replace(/'/g,"\\'")}')">🚫 Remove from showroom</button>
+              </div>`).join('') : '<div style="grid-column:1/-1;font-size:12px;color:#9ca3af">Nothing showing here yet — add photos on the My Products tab.</div>'}
           </div>
         </div>
       </div>`;
@@ -10294,23 +10373,25 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const photo = item.photo || '';
     const hasName = !!(item.name||'').trim();
     const preview = photo
-      ? `<img src="${photo}" style="width:100%;height:120px;object-fit:contain;background:#f0efeb;border-radius:8px;margin-bottom:10px" onerror="this.style.display='none'"/>`
-      : `<div style="width:100%;height:120px;background:#f0efeb;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px">🖼️</div>`;
-    return `<div class="mq-showroom-item-card" data-item-id="${item.id}" style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:1rem;transition:opacity 0.15s">
-      <div class="mq-showroom-drag-handle" title="Drag to reorder" style="cursor:grab;text-align:center;color:#b0b0b0;font-size:14px;line-height:1;margin:-4px 0 8px;user-select:none">⠿</div>
+      ? `<img src="${photo}" style="width:100%;height:84px;object-fit:contain;background:#f3f2ee;border-radius:6px;margin-bottom:6px;display:block" onerror="this.style.display='none'"/>`
+      : `<div style="width:100%;height:84px;background:#f3f2ee;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:6px">🖼️</div>`;
+    return `<div class="mq-showroom-item-card" data-item-id="${item.id}" style="background:#fafafa;border:1px solid #eceef1;border-radius:8px;padding:.5rem;transition:opacity 0.15s">
+      <div class="mq-showroom-drag-handle" title="Drag to reorder" style="cursor:grab;text-align:center;color:#b0b0b0;font-size:13px;line-height:1;margin:-2px 0 4px;user-select:none">⠿</div>
       ${preview}
-      <div style="font-size:13px;font-weight:${hasName?600:400};font-style:${hasName?'normal':'italic'};color:${hasName?'#111':'#9ca3af'};margin-bottom:8px">${hasName ? (item.name||'').replace(/</g,'&lt;') : 'Untitled item'}</div>
+      <div style="font-size:12px;font-weight:${hasName?600:400};font-style:${hasName?'normal':'italic'};color:${hasName?'#111':'#9ca3af'};margin-bottom:6px;line-height:1.3">${hasName ? (item.name||'').replace(/</g,'&lt;') : 'Untitled item'}</div>
       <label class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;margin-bottom:6px;text-align:center;cursor:pointer;display:block;box-sizing:border-box">
         📤 ${photo ? 'Replace photo' : 'Upload a photo'}
         <input type="file" id="mq-showroom-upload-${key}" accept="image/*" style="display:none"/>
       </label>
       <div id="mq-showroom-upload-status-${key}" style="font-size:11px;text-align:center;margin-bottom:6px;min-height:14px"></div>
-      <div style="font-size:11px;color:#9ca3af;margin-bottom:4px">Or paste a photo URL</div>
+      <div style="font-size:10.5px;color:#9ca3af;margin-bottom:3px">Or paste a photo URL</div>
       <input type="text" id="mq-showroom-url-${key}" value="${photo.replace(/"/g,'&quot;')}" placeholder="https://your-site.com/photo.jpg"
-        style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:6px"/>
-      <button class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;margin-bottom:4px" onclick="mqSaveShowroomItemPhoto('${key}', document.getElementById('mq-showroom-url-${key}').value.trim())">Save photo URL</button>
-      <button class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;margin-bottom:4px" onclick="mqRenameShowroomItem('${catId}','${item.id}')">${hasName ? '✏️ Rename' : '✏️ Add name'}</button>
-      <button class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;color:#dc2626" onclick="mqDeleteShowroomItem('${catId}','${item.id}')">Delete item</button>
+        style="font-size:11.5px;padding:5px 7px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:5px"/>
+      <button class="mq-btn mq-btn-sm" style="width:100%;font-size:10.5px;margin-bottom:5px" onclick="mqSaveShowroomItemPhoto('${key}', document.getElementById('mq-showroom-url-${key}').value.trim())">Save photo URL</button>
+      <div style="display:flex;gap:4px">
+        <button class="mq-btn mq-btn-sm" style="flex:1;white-space:nowrap;font-size:10.5px;padding:4px 2px" onclick="mqRenameShowroomItem('${catId}','${item.id}')">${hasName ? '✏️ Rename' : '✏️ Name'}</button>
+        <button class="mq-btn mq-btn-sm" style="flex:1;white-space:nowrap;font-size:10.5px;padding:4px 2px;color:#dc2626" onclick="mqDeleteShowroomItem('${catId}','${item.id}')">Delete</button>
+      </div>
     </div>`;
   }
 
@@ -12976,6 +13057,89 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     el('mq-leads-table').innerHTML = renderLeads(leads, null, true);
   };
 
+
+  // MARKETING STUDIO v2 — self-contained and non-destructive; all original
+  // marketing widgets remain available. No new Airtable fields required.
+  const MQ_STUDIO_TEMPLATES = [
+    {id:'launch',title:'Instant Estimates',category:'social',tag:'Announcement',headline:'YOUR DREAM KITCHEN STARTS HERE',sub:'Get a ballpark estimate in minutes — at your convenience.',cta:'GET YOUR ESTIMATE',mode:'editorial'},
+    {id:'quote',title:'Quote While You Relax',category:'social',tag:'Lead generation',headline:'KNOW YOUR PRICE. LOVE YOUR SPACE.',sub:'Explore your kitchen project with an instant online estimate.',cta:'TRY OUR ESTIMATOR',mode:'split'},
+    {id:'premium',title:'The Luxury Edit',category:'social',tag:'Premium style',headline:'BEAUTIFUL KITCHENS. CLEARER PRICING.',sub:'Your next kitchen starts with a simple estimate.',cta:'GET STARTED',mode:'luxury'},
+    {id:'before',title:'Dream Project',category:'social',tag:'Project showcase',headline:'IMAGINE WHAT WE COULD BUILD',sub:'Custom cabinetry designed for the way you live.',cta:'PLAN YOUR PROJECT',mode:'frame'},
+    {id:'poster',title:'Your Next Kitchen',category:'print',tag:'Print poster',headline:'LET’S MAKE ROOM FOR SOMETHING BEAUTIFUL',sub:'Explore a new kitchen with a fast ballpark estimate.',cta:'START HERE',mode:'editorial'},
+    {id:'yard',title:'Another Great Project',category:'print',tag:'Yard sign',headline:'ANOTHER PROJECT WE’RE PROUD OF',sub:'Custom kitchens, cabinetry and millwork.',cta:'SEE WHAT WE CAN BUILD',mode:'split'},
+    {id:'scan',title:'Scan & Estimate',category:'qr',tag:'QR promotion',headline:'SCAN. PLAN. GET INSPIRED.',sub:'Scan the code to explore your next cabinet project.',cta:'INSTANT BALLPARK ESTIMATE',mode:'qr'},
+    {id:'simple',title:'The Minimalist',category:'qr',tag:'QR / counter card',headline:'YOUR NEW KITCHEN IS CLOSER THAN YOU THINK',sub:'Scan to get a quick estimate from our team.',cta:'SCAN TO START',mode:'minimal'},
+  ];
+  let mqStudioPhoto=null, mqStudioSelected=null;
+  function mqInitMarketingStudio(shopRecord){
+    const root=document.getElementById('mq-studio');
+    if(!root)return;
+    const shopName=shopRecord.fields['Shop name']||'YOUR CABINET SHOP';
+    const color=shopRecord.fields['Brand colour']||'#56314b';
+    const quoteLink=()=>(_mqCustomPostLink||shopRecord.fields['Marketing link']||`https://widget.midasquote.com/?shop=${shopRecord.fields['Shop token']||''}`);
+    const grid=root.querySelector('#mq-studio-grid'), workspace=root.querySelector('#mq-studio-workspace');
+    const field=id=>root.querySelector('#mq-studio-'+id);
+    const safeColor=(v)=>/^#[0-9a-f]{6}$/i.test(v||'')?v:'#56314b';
+    const font=(size,serif=false,weight=700)=>`${weight} ${Math.round(size)}px ${serif?'Georgia, serif':'Arial, sans-serif'}`;
+    const wrap=(ctx,txt,maxWidth,maxLines=5)=>{
+      const words=String(txt||'').split(/\s+/),lines=[];let current='';
+      for(const word of words){const next=current?current+' '+word:word;if(ctx.measureText(next).width>maxWidth&&current){lines.push(current);current=word}else current=next}
+      if(current)lines.push(current);return lines.slice(0,maxLines);
+    };
+    const rounded=(ctx,x,y,w,h,r)=>{ctx.beginPath();ctx.roundRect(x,y,w,h,r)};
+    const cover=(ctx,img,x,y,w,h)=>{if(!img)return;const ratio=Math.max(w/img.width,h/img.height);const sw=w/ratio,sh=h/ratio;ctx.drawImage(img,(img.width-sw)/2,(img.height-sh)/2,sw,sh,x,y,w,h)};
+    function paint(canvas,t,opts={}){
+      const W=canvas.width,H=canvas.height,ctx=canvas.getContext('2d');
+      const k=Math.min(W,H)/1080, landscape=W>H, b=safeColor(opts.color||color), hasPhoto=!!opts.photo;
+      ctx.clearRect(0,0,W,H);ctx.fillStyle='#f3ede5';ctx.fillRect(0,0,W,H);
+      // Template compositions use geometry, not stretched screenshots.
+      let panel={x:0,y:0,w:W,h:H};
+      if(t.mode==='luxury'){ctx.fillStyle='#171921';ctx.fillRect(0,0,W,H);if(hasPhoto){cover(ctx,opts.photo,0,0,W,H);ctx.fillStyle='rgba(12,13,18,.63)';ctx.fillRect(0,0,W,H)}}
+      else if(t.mode==='editorial'){ctx.fillStyle=b;ctx.fillRect(0,0,W,H);if(hasPhoto){cover(ctx,opts.photo,W*.34,0,W*.66,H);const g=ctx.createLinearGradient(0,0,W,0);g.addColorStop(0,b);g.addColorStop(.38,b);g.addColorStop(1,'#00000010');ctx.fillStyle=g;ctx.fillRect(0,0,W,H)}else{ctx.fillStyle='#ffffff13';ctx.beginPath();ctx.arc(W*.9,H*.23,H*.37,0,Math.PI*2);ctx.fill()}}
+      else if(t.mode==='split'){ctx.fillStyle=b;ctx.fillRect(0,0,W,H);const x=landscape?W*.53:W*.12,y=landscape?H*.11:H*.48,w=landscape?W*.42:W*.76,h=landscape?H*.78:H*.39;ctx.fillStyle='#e5d7c7';rounded(ctx,x,y,w,h,18*k);ctx.fill();if(hasPhoto){ctx.save();rounded(ctx,x,y,w,h,18*k);ctx.clip();cover(ctx,opts.photo,x,y,w,h);ctx.restore()}else{ctx.fillStyle='#b39d9b';ctx.fillRect(x+w*.1,y+h*.18,w*.8,h*.58)}}
+      else if(t.mode==='frame'){ctx.fillStyle='#eae1d8';ctx.fillRect(0,0,W,H);ctx.fillStyle=b;ctx.fillRect(27*k,27*k,W-54*k,H-54*k);const x=W*.1,y=H*.12,w=W*.8,h=H*.44;ctx.fillStyle='#dbc9b7';ctx.fillRect(x,y,w,h);if(hasPhoto)cover(ctx,opts.photo,x,y,w,h)}
+      else {ctx.fillStyle=t.mode==='minimal'?'#f3ede5':b;ctx.fillRect(0,0,W,H);ctx.fillStyle=t.mode==='minimal'?b:'#ffffff1d';ctx.fillRect(45*k,45*k,W-90*k,H-90*k)}
+      const darkText=t.mode==='minimal'||t.mode==='frame';const primary=darkText?'#2e2734':'#ffffff';const muted=darkText?'#5f5361':'#f0e3e8';const inset=landscape?65*k:76*k;
+      const top=t.mode==='frame'?H*.60:t.mode==='split'&&!landscape?H*.12:t.mode==='editorial'?H*.23:t.mode==='luxury'?H*.28:H*.17;
+      const maxWidth=t.mode==='editorial'&&hasPhoto?W*.62-inset:t.mode==='split'&&landscape?W*.53-inset:W-2*inset;
+      ctx.fillStyle=primary;ctx.textAlign='left';ctx.font=font(23*k);ctx.fillText(String(shopName).toUpperCase().slice(0,35),inset,Math.max(42*k,top-95*k));
+      ctx.fillStyle=t.mode==='minimal'?b:'#daba8a';ctx.fillRect(inset,top-45*k,85*k,5*k);
+      ctx.fillStyle=primary;ctx.font=font((t.mode==='frame'?53:landscape?62:64)*k,true,700);
+      const lines=wrap(ctx,opts.headline||t.headline,maxWidth,4);const lh=78*k;
+      lines.forEach((line,i)=>ctx.fillText(line,inset,top+i*lh));
+      let subY=top+lines.length*lh+20*k;
+      if(t.mode==='split'&&!landscape)subY=Math.min(subY,H*.40);
+      ctx.font=font(28*k,false,400);ctx.fillStyle=muted;
+      wrap(ctx,opts.sub||t.sub,maxWidth,3).forEach((line,i)=>ctx.fillText(line,inset,subY+i*41*k));
+      const cta=String(opts.cta||t.cta).toUpperCase();const by=H-143*k;
+      ctx.font=font(21*k,false,700);const bw=Math.min(W-2*inset,Math.max(245*k,ctx.measureText(cta).width+65*k));
+      ctx.fillStyle=darkText?b:'#f3e4cf';rounded(ctx,inset,by,bw,66*k,7*k);ctx.fill();ctx.fillStyle=darkText?'#fff':'#2d2632';ctx.textAlign='center';ctx.fillText(cta,inset+bw/2,by+41*k);ctx.textAlign='left';
+      // A scannable QR is intentionally limited to the designated QR templates.
+      if(t.category==='qr'&&typeof MQ_QR_LIB_FACTORY==='function'){
+        try {const qr=MQ_QR_LIB_FACTORY()(0,'M');qr.addData(quoteLink());qr.make();const n=qr.getModuleCount(),size=(landscape?205:210)*k,qx=W-size-inset,qy=H-size-65*k,step=size/n;ctx.fillStyle='#fff';ctx.fillRect(qx-12*k,qy-12*k,size+24*k,size+24*k);ctx.fillStyle='#171717';for(let r=0;r<n;r++)for(let c=0;c<n;c++)if(qr.isDark(r,c))ctx.fillRect(qx+c*step,qy+r*step,Math.ceil(step),Math.ceil(step));}catch(e){}
+      }else{ctx.font=font(18*k,false,400);ctx.fillStyle=muted;let link=quoteLink().replace(/^https?:\/\//,'');if(link.length>60)link=link.slice(0,57)+'…';ctx.fillText(link,inset,H-43*k)}
+    }
+    function thumb(t){const canvas=document.createElement('canvas');canvas.width=360;canvas.height=360;paint(canvas,t,{color,photo:mqStudioPhoto});return canvas.toDataURL('image/png')}
+    function renderGallery(filter='all'){
+      grid.innerHTML='';MQ_STUDIO_TEMPLATES.filter(t=>filter==='all'||t.category===filter).forEach(t=>{
+        const btn=document.createElement('button');btn.type='button';btn.className='mq-studio-tile';btn.innerHTML=`<img class="mq-studio-thumb" alt=""/><div class="mq-studio-tile-meta"><span><strong></strong><small></small></span><b aria-hidden="true">↗</b></div>`;
+        btn.querySelector('img').src=thumb(t);btn.querySelector('strong').textContent=t.title;btn.querySelector('small').textContent=t.tag;
+        btn.addEventListener('click',()=>select(t));grid.appendChild(btn);
+      });
+    }
+    function update(){if(!mqStudioSelected)return;const canvas=field('canvas');const sizes={square:[1080,1080],portrait:[1080,1350],story:[1080,1920],poster:[1080,1620],landscape:[1620,1080]};[canvas.width,canvas.height]=sizes[field('size').value]||sizes.square;paint(canvas,mqStudioSelected,{headline:field('headline').value,sub:field('subline').value,cta:field('cta').value,color:field('color').value,photo:mqStudioPhoto})}
+    function select(t){mqStudioSelected=t;field('edit-title').textContent=t.title;field('headline').value=t.headline;field('subline').value=t.sub;field('cta').value=t.cta;field('color').value=safeColor(color);field('size').value=t.id==='yard'?'landscape':t.category==='print'?'poster':'square';workspace.style.display='block';update();workspace.scrollIntoView({behavior:'smooth',block:'start'});}
+    if(!root.dataset.studioInitialized){root.dataset.studioInitialized='true';root.querySelectorAll('[data-studio-filter]').forEach(btn=>btn.addEventListener('click',()=>{root.querySelectorAll('[data-studio-filter]').forEach(b=>b.classList.toggle('active',b===btn));renderGallery(btn.dataset.studioFilter)}));
+      ['headline','subline','cta','color','size'].forEach(id=>field(id).addEventListener('input',update));
+      field('photo').addEventListener('change',e=>{const file=e.target.files&&e.target.files[0];if(!file)return;if(!file.type.startsWith('image/'))return;const blob=URL.createObjectURL(file);const image=new Image();image.onload=()=>{URL.revokeObjectURL(blob);mqStudioPhoto=image;update()};image.onerror=()=>{URL.revokeObjectURL(blob);mqShowToast('Could not read image','error')};image.src=blob});
+      field('remove-photo').addEventListener('click',()=>{mqStudioPhoto=null;field('photo').value='';update()});
+      field('back').addEventListener('click',()=>{workspace.style.display='none';root.scrollIntoView({behavior:'smooth',block:'start'})});
+      field('download').addEventListener('click',()=>{update();const a=document.createElement('a');a.href=field('canvas').toDataURL('image/png');a.download=(shopName+'-'+mqStudioSelected.id+'-'+field('size').value).toLowerCase().replace(/[^a-z0-9-]+/g,'-')+'.png';a.click()});
+      field('copy-caption').addEventListener('click',()=>{const caption=[field('headline').value,field('subline').value,field('cta').value+': '+quoteLink()].join('\n\n');if(navigator.clipboard?.writeText)navigator.clipboard.writeText(caption).then(()=>mqShowToast('Caption copied')).catch(()=>mqShowToast('Could not copy caption','error'));else mqShowToast('Clipboard not available','error')});
+    }
+    renderGallery(root.querySelector('[data-studio-filter].active')?.dataset.studioFilter||'all');if(mqStudioSelected)update();
+  }
+
   // ============================================================
   // MARKETING KIT
   // ============================================================
@@ -13147,6 +13311,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
 
     const quoteLink = _mqCustomPostLink || defaultQuoteLink;
     const socialPosts = buildSocialPosts(quoteLink);
+    mqInitMarketingStudio(shopRecord);
 
     const dmTemplate = `Hi [Name]! Just wanted to let you know ${shopName} now has an instant online quote tool if you ever want a quick ballpark on a future project — no need to wait for a callback. Here's the link if you ever want to check it out: ${quoteLink}`;
 
