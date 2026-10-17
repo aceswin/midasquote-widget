@@ -5608,14 +5608,14 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
 
   // ---- Proposal template editor helpers --------------------------------
   // Collapsible section inside a template card.
-  function mqPropSection(id, key, title, summary, bodyHtml, open) {
-    return `<div style="border:1px solid #e5e7eb;border-radius:10px;margin:12px 0;overflow:hidden">
-      <div onclick="mqToggleProposalSection('${id}','${key}')" style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:#f9fafb;cursor:pointer;flex-wrap:wrap">
+  function mqPropSection(id, key, title, summary, bodyHtml, open, maxWidth) {
+    return `<div style="border:1px solid #d1d5db;border-radius:8px;margin:12px 0;overflow:hidden${maxWidth ? ';max-width:' + maxWidth + 'px' : ''}">
+      <div onclick="mqToggleProposalSection('${id}','${key}')" style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:#f3f4f6;cursor:pointer;flex-wrap:wrap">
         <span id="mq-prop-sec-chev-${id}-${key}" style="font-size:11px;color:#6b7280;display:inline-block;transition:transform 0.15s;transform:rotate(${open ? 90 : 0}deg)">▶</span>
         <strong style="font-size:13.5px">${title}</strong>
         <span id="mq-prop-sec-sum-${id}-${key}" style="font-size:12px;color:#6b7280">${summary || ''}</span>
       </div>
-      <div id="mq-prop-sec-body-${id}-${key}" style="display:${open ? 'block' : 'none'};padding:12px 14px">${bodyHtml}</div>
+      <div id="mq-prop-sec-body-${id}-${key}" style="display:${open ? 'block' : 'none'};padding:12px 14px;border-top:1px solid #d1d5db">${bodyHtml}</div>
     </div>`;
   }
   window.mqToggleProposalSection = function(id, key) {
@@ -5660,14 +5660,15 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
 
   function mqPropEditorHTML(t) {
     const id = t.id;
-    const chip = c => `<button type="button" title="${c.tip.replace(/"/g, '&quot;')}" onclick="mqInsertProposalToken('${id}','${c.t}',${c.block ? 'true' : 'false'})" style="background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;border-radius:999px;padding:4px 11px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">${c.l}</button>`;
-    const palette = MQ_PROP_CHIPS.map(g => `<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px">
-        <span style="font-size:10.5px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em;width:92px;flex-shrink:0">${g.group}</span>${g.items.map(chip).join('')}</div>`).join('');
+    const chip = c => `<button type="button" title="${c.tip.replace(/"/g, '&quot;')}" onclick="mqInsertProposalToken('${id}','${c.t}',${c.block ? 'true' : 'false'})" style="background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;border-radius:5px;padding:4px 10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">${c.l}</button>`;
+    const palette = MQ_PROP_CHIPS.map(g => `<div style="display:flex;align-items:stretch;background:#fff;border:1px solid #d1d5db;border-radius:6px;margin-bottom:8px;overflow:hidden">
+        <div style="width:96px;flex-shrink:0;display:flex;align-items:center;padding:8px 10px;background:#f3f4f6;border-right:1px solid #d1d5db;font-size:10.5px;font-weight:700;color:#4b5563;text-transform:uppercase;letter-spacing:0.04em;line-height:1.3">${g.group}</div>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:8px 10px;flex:1;min-width:0">${g.items.map(chip).join('')}</div></div>`).join('');
     return `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px;align-items:start">
       <div style="min-width:0">
         <div style="font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px">Click to add to your proposal</div>
-        <div style="padding:10px 12px;background:#f9fafb;border-radius:8px;margin-bottom:10px">${palette}</div>
-        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:8px;padding:8px 10px;background:#f9fafb;border-radius:8px">
+        <div style="padding:10px 10px 2px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:10px">${palette}</div>
+        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:8px;padding:8px 10px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px">
           <button class="mq-btn mq-btn-sm" onclick="mqInsertProposalFormatting('${id}','bold')" title="Make the selected text bold"><strong>B</strong> Bold</button>
           <div style="display:flex;align-items:center;gap:5px">
             <input type="color" id="mq-prop-boxcolor-${id}" value="#eff6ff" title="Box background colour" style="width:30px;height:26px;padding:1px;border:1px solid #d1d5db;border-radius:4px;cursor:pointer"/>
@@ -5810,8 +5811,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           </div>
         </div>
 
-`,false)}
-        ${mqPropSection(t.id,'help','📖 Cheat sheet','What every tag does — you never need to type them, the buttons above the text box insert them for you.',`<div style="font-size:12px;color:#374151;line-height:1.7">${PROPOSAL_TOKENS_HELP}</div>`,false)}
+`,false,760)}
+        ${mqPropSection(t.id,'help','📖 Cheat sheet','What every tag does — you never need to type them, the buttons above the text box insert them for you.',`<div style="font-size:12px;color:#374151;line-height:1.7">${PROPOSAL_TOKENS_HELP}</div>`,false,860)}
 
         <div style="margin-top:14px;padding-top:12px;border-top:1px solid #e5e7eb">
           <button class="mq-btn mq-btn-sm" onclick="mqResetProposalTemplateDefaults('${t.id}')">↺ Reset to defaults</button>
