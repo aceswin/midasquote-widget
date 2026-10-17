@@ -5605,6 +5605,134 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     return { body: PROPOSAL_BODY_STANDARD, accent: '#1a3a6b', showPrices: true, depositType: 'Percent', depositValue: 25, taxPct: 13 };
   }
 
+
+  // ---- Proposal template editor helpers --------------------------------
+  // Collapsible section inside a template card.
+  function mqPropSection(id, key, title, summary, bodyHtml, open) {
+    return `<div style="border:1px solid #e5e7eb;border-radius:10px;margin:12px 0;overflow:hidden">
+      <div onclick="mqToggleProposalSection('${id}','${key}')" style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:#f9fafb;cursor:pointer;flex-wrap:wrap">
+        <span id="mq-prop-sec-chev-${id}-${key}" style="font-size:11px;color:#6b7280;display:inline-block;transition:transform 0.15s;transform:rotate(${open ? 90 : 0}deg)">▶</span>
+        <strong style="font-size:13.5px">${title}</strong>
+        <span id="mq-prop-sec-sum-${id}-${key}" style="font-size:12px;color:#6b7280">${summary || ''}</span>
+      </div>
+      <div id="mq-prop-sec-body-${id}-${key}" style="display:${open ? 'block' : 'none'};padding:12px 14px">${bodyHtml}</div>
+    </div>`;
+  }
+  window.mqToggleProposalSection = function(id, key) {
+    const body = document.getElementById(`mq-prop-sec-body-${id}-${key}`);
+    const chev = document.getElementById(`mq-prop-sec-chev-${id}-${key}`);
+    if (!body) return;
+    const open = body.style.display === 'none';
+    body.style.display = open ? 'block' : 'none';
+    if (chev) chev.style.transform = open ? 'rotate(90deg)' : 'rotate(0deg)';
+  };
+  function mqPropSettingsSummary(f) {
+    const dep = f['Deposit type'] === 'Flat amount' ? `${CUR()}${f['Deposit value'] || 0} deposit` : `${f['Deposit value'] || 0}% deposit`;
+    return `${f['Size category'] || 'Standard'} · ${dep} · ${f['Tax percent'] || 0}% tax · prices ${f['Show item prices'] === false ? 'hidden' : 'shown'}`;
+  }
+
+  // Click-to-insert tags. block:true tags need to sit on their own paragraph.
+  const MQ_PROP_CHIPS = [
+    { group: 'Customer & job', items: [
+      { t: '{customer_name}', l: 'Customer name', tip: 'The customer\'s name, filled in when the proposal is created.' },
+      { t: '{customer_address}', l: 'Address', tip: 'Customer address. If left blank on a proposal, the whole line disappears.' },
+      { t: '{customer_phone}', l: 'Phone', tip: 'Customer phone. If left blank, the whole line disappears.' },
+      { t: '{job_name}', l: 'Job name', tip: 'Job name. If left blank, the whole line disappears.' },
+      { t: '{description}', l: 'Description', tip: 'The job description typed in MidasQuote Pro. If blank, the whole line disappears.' },
+      { t: '{date}', l: 'Date', tip: 'Today\'s date when the proposal is created.' } ] },
+    { group: 'Items', items: [
+      { t: '{items}', l: 'Item list (coloured)', block: true, tip: 'Styled list: coloured header row, shaded rows.' },
+      { t: '{items_plain}', l: 'Item list (plain)', block: true, tip: 'Same list with no colours — bold item names, plain prices.' },
+      { t: '{items_plain_light}', l: 'Item list (light)', block: true, tip: 'Like plain, but item names aren\'t bold either.' },
+      { t: '{items_header}', l: 'Item / Price header', block: true, tip: 'Just the "Item / Price" header row — place above a plain list.' } ] },
+    { group: 'Totals', items: [
+      { t: '{totals_box}', l: 'Totals box', block: true, tip: 'Bold coloured summary box with the deposit called out.' },
+      { t: '{totals_plain}', l: 'Totals (plain)', block: true, tip: 'The same numbers as plain lines, no box.' },
+      { t: '{subtotal}', l: 'Subtotal', tip: 'Just the subtotal number.' },
+      { t: '{tax}', l: 'Tax', tip: 'Just the tax amount.' },
+      { t: '{total}', l: 'Total', tip: 'Just the total.' },
+      { t: '{deposit}', l: 'Deposit', tip: 'Just the deposit amount.' } ] },
+    { group: 'Layout', items: [
+      { t: '{hr}', l: 'Divider line', block: true, tip: 'A horizontal divider line.' },
+      { t: '{break}', l: 'Extra space', block: true, tip: 'Extra vertical space (blank lines alone only add one normal gap).' },
+      { t: '{signature_line}', l: 'Signature line', block: true, tip: 'A blank signature + date line.' } ] },
+  ];
+
+  function mqPropEditorHTML(t) {
+    const id = t.id;
+    const chip = c => `<button type="button" title="${c.tip.replace(/"/g, '&quot;')}" onclick="mqInsertProposalToken('${id}','${c.t}',${c.block ? 'true' : 'false'})" style="background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;border-radius:999px;padding:4px 11px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">${c.l}</button>`;
+    const palette = MQ_PROP_CHIPS.map(g => `<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px">
+        <span style="font-size:10.5px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em;width:92px;flex-shrink:0">${g.group}</span>${g.items.map(chip).join('')}</div>`).join('');
+    return `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px;align-items:start">
+      <div style="min-width:0">
+        <div style="font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px">Click to add to your proposal</div>
+        <div style="padding:10px 12px;background:#f9fafb;border-radius:8px;margin-bottom:10px">${palette}</div>
+        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:8px;padding:8px 10px;background:#f9fafb;border-radius:8px">
+          <button class="mq-btn mq-btn-sm" onclick="mqInsertProposalFormatting('${id}','bold')" title="Make the selected text bold"><strong>B</strong> Bold</button>
+          <div style="display:flex;align-items:center;gap:5px">
+            <input type="color" id="mq-prop-boxcolor-${id}" value="#eff6ff" title="Box background colour" style="width:30px;height:26px;padding:1px;border:1px solid #d1d5db;border-radius:4px;cursor:pointer"/>
+            <button class="mq-btn mq-btn-sm" onclick="mqInsertProposalFormatting('${id}','box')" title="Put the selected text in a coloured box">▭ Box</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:5px">
+            <input type="color" id="mq-prop-textcolor-${id}" value="#dc2626" title="Text colour" style="width:30px;height:26px;padding:1px;border:1px solid #d1d5db;border-radius:4px;cursor:pointer"/>
+            <button class="mq-btn mq-btn-sm" onclick="mqInsertProposalFormatting('${id}','color')" title="Colour the selected text">A Colour</button>
+          </div>
+          <span style="font-size:10.5px;color:#9ca3af">Select text in the box first (or click with nothing selected to add a placeholder).</span>
+        </div>
+        <textarea id="mq-prop-body-${id}" rows="18" style="width:100%;font-family:ui-monospace,monospace;font-size:12.5px;line-height:1.6" onfocus="this.dataset.touched='1'" oninput="mqProposalBodyInput('${id}')" onblur="mqSaveProposalField('${id}','Body',this.value)">${(t.fields['Body'] || '').replace(/</g, '&lt;')}</textarea>
+      </div>
+      <div style="min-width:0">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px">
+          <span style="font-size:11.5px;font-weight:700;color:#374151">Live preview <span style="font-weight:400;color:#9ca3af">(sample customer &amp; items)</span></span>
+          <button class="mq-btn mq-btn-sm" onclick="mqPreviewProposalTemplate('${id}')">👁 Full size</button>
+        </div>
+        <div id="mq-prop-preview-${id}" style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,0.06);padding:22px 20px;max-height:640px;overflow:auto;zoom:0.78;color:#111;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif">${mqPropPreviewInnerHTML(t, null)}</div>
+      </div>
+    </div>`;
+  }
+
+  var _mqPropPreviewTimers = {};
+  window.mqProposalBodyInput = function(id) {
+    clearTimeout(_mqPropPreviewTimers[id]);
+    _mqPropPreviewTimers[id] = setTimeout(() => window.mqRefreshProposalPreview(id), 250);
+  };
+  window.mqRefreshProposalPreview = function(id) {
+    const box = document.getElementById(`mq-prop-preview-${id}`);
+    const t = (window._mqProposalTemplatesCache || []).find(x => x.id === id);
+    if (!box || !t) return;
+    const ta = document.getElementById(`mq-prop-body-${id}`);
+    box.innerHTML = mqPropPreviewInnerHTML(t, ta ? ta.value : null);
+  };
+
+  // Inserts a {tag} where the caret is. Tags that are whole blocks (item list,
+  // totals, divider, signature…) are put on their own paragraph, because the
+  // proposal builder only treats them as blocks when they stand alone.
+  window.mqInsertProposalToken = function(id, token, block) {
+    const ta = document.getElementById(`mq-prop-body-${id}`);
+    if (!ta) return;
+    const val = ta.value;
+    let s0 = ta.dataset.touched ? ta.selectionStart : val.length;
+    let e0 = ta.dataset.touched ? ta.selectionEnd : val.length;
+    const before = val.slice(0, s0), after = val.slice(e0);
+    let pre = '', post = '';
+    // Nothing clicked into yet = we're appending to the end, so always start
+    // a fresh paragraph (otherwise a tag lands glued to a block tag above it).
+    if (!block && !ta.dataset.touched && before.length) pre = before.endsWith('\n\n') ? '' : (before.endsWith('\n') ? '\n' : '\n\n');
+    if (block) {
+      if (before.length && !before.endsWith('\n\n')) pre = before.endsWith('\n') ? '\n' : '\n\n';
+      if (after.length && !after.startsWith('\n\n')) post = after.startsWith('\n') ? '\n' : '\n\n';
+      else if (!after.length) post = '\n\n';
+    }
+    const insert = pre + token + post;
+    ta.value = before + insert + after;
+    const caret = before.length + insert.length;
+    ta.focus();
+    ta.selectionStart = ta.selectionEnd = caret;
+    ta.dataset.touched = '1';
+    mqSaveProposalField(id, 'Body', ta.value);
+    window.mqRefreshProposalPreview(id);
+  };
+
   function renderProposalTemplates(templates, shopRecord) {
     const container = document.getElementById('mq-prop-list');
     if (!container) return;
@@ -5643,7 +5771,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           <button class="mq-btn mq-btn-danger mq-btn-sm" onclick="event.stopPropagation();mqDeleteProposalTemplate('${t.id}','${(name||'this template').replace(/'/g,"\\'")}')" title="Delete template">✕</button>
         </div>
         <div id="mq-prop-card-body-${t.id}" style="display:none;padding:0 16px 16px 16px;border-top:1px solid #e5e7eb">
-        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start;margin:14px 0 12px">
+        ${mqPropSection(t.id,'text','✍️ Proposal text','The preview on the right updates as you type.',mqPropEditorHTML(t),true)}
+        ${mqPropSection(t.id,'settings','⚙️ Settings',mqPropSettingsSummary(f),`        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start;margin:14px 0 12px">
           <div style="flex:1;min-width:180px">
             <label class="mq-label">Template name</label>
             <input type="text" value="${(f['Template name']||'').replace(/"/g,'&quot;')}" onblur="mqSaveProposalField('${t.id}','Template name',this.value); const h=document.getElementById('mq-prop-header-name-${t.id}'); if(h) h.textContent=this.value||'Untitled';"/>
@@ -5681,20 +5810,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           </div>
         </div>
 
-        <label class="mq-label">Body — write the whole proposal yourself, place things wherever you want</label>
-        <div style="font-size:11.5px;color:#374151;line-height:1.7;margin-bottom:8px;background:#eff6ff;border:1px solid #93c5fd;border-radius:8px;padding:12px 14px">${PROPOSAL_TOKENS_HELP}</div>
-        <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:8px;padding:8px 10px;background:#f9fafb;border-radius:8px">
-          <div style="display:flex;align-items:center;gap:5px">
-            <input type="color" id="mq-prop-boxcolor-${t.id}" value="#eff6ff" title="Box background colour" style="width:30px;height:26px;padding:1px;border:1px solid #d1d5db;border-radius:4px;cursor:pointer"/>
-            <button class="mq-btn mq-btn-sm" onclick="mqInsertProposalFormatting('${t.id}','box')">▭ Box selected text</button>
-          </div>
-          <div style="display:flex;align-items:center;gap:5px">
-            <input type="color" id="mq-prop-textcolor-${t.id}" value="#dc2626" title="Text colour" style="width:30px;height:26px;padding:1px;border:1px solid #d1d5db;border-radius:4px;cursor:pointer"/>
-            <button class="mq-btn mq-btn-sm" onclick="mqInsertProposalFormatting('${t.id}','color')">A Colour selected text</button>
-          </div>
-          <span style="font-size:10.5px;color:#9ca3af">Select some text in the box below first, then click one of these.</span>
-        </div>
-        <textarea id="mq-prop-body-${t.id}" rows="14" style="width:100%;font-family:ui-monospace,monospace;font-size:12.5px;line-height:1.6" onblur="mqSaveProposalField('${t.id}','Body',this.value)">${(f['Body']||'').replace(/</g,'&lt;')}</textarea>
+`,false)}
+        ${mqPropSection(t.id,'help','📖 Cheat sheet','What every tag does — you never need to type them, the buttons above the text box insert them for you.',`<div style="font-size:12px;color:#374151;line-height:1.7">${PROPOSAL_TOKENS_HELP}</div>`,false)}
 
         <div style="margin-top:14px;padding-top:12px;border-top:1px solid #e5e7eb">
           <button class="mq-btn mq-btn-sm" onclick="mqResetProposalTemplateDefaults('${t.id}')">↺ Reset to defaults</button>
@@ -5721,23 +5838,29 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   window.mqInsertProposalFormatting = function(id, kind) {
     const textarea = document.getElementById(`mq-prop-body-${id}`);
     if (!textarea) return;
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    if (start === end) {
-      alert('Select some text in the Body box first, then click this button to wrap it.');
-      return;
+    let start = textarea.dataset.touched ? textarea.selectionStart : textarea.value.length;
+    let end = textarea.dataset.touched ? textarea.selectionEnd : textarea.value.length;
+    let selected = textarea.value.substring(start, end);
+    const placeholder = kind === 'bold' ? 'bold text' : 'your text here';
+    const usedPlaceholder = start === end;
+    if (usedPlaceholder) selected = placeholder;
+    let openTag, closeTag;
+    if (kind === 'bold') { openTag = '**'; closeTag = '**'; }
+    else {
+      const colorInput = document.getElementById(kind === 'box' ? `mq-prop-boxcolor-${id}` : `mq-prop-textcolor-${id}`);
+      const hex = colorInput ? colorInput.value : (kind === 'box' ? '#eff6ff' : '#dc2626');
+      openTag = kind === 'box' ? `{box:${hex}}` : `{color:${hex}}`;
+      closeTag = kind === 'box' ? `{/box}` : `{/color}`;
     }
-    const colorInput = document.getElementById(kind === 'box' ? `mq-prop-boxcolor-${id}` : `mq-prop-textcolor-${id}`);
-    const hex = colorInput ? colorInput.value : (kind === 'box' ? '#eff6ff' : '#dc2626');
-    const openTag = kind === 'box' ? `{box:${hex}}` : `{color:${hex}}`;
-    const closeTag = kind === 'box' ? `{/box}` : `{/color}`;
-    const selected = textarea.value.substring(start, end);
     const newValue = textarea.value.substring(0, start) + openTag + selected + closeTag + textarea.value.substring(end);
     textarea.value = newValue;
-    mqSaveProposalField(id, 'Body', newValue);
     textarea.focus();
-    textarea.selectionStart = start;
-    textarea.selectionEnd = start + openTag.length + selected.length + closeTag.length;
+    // Leave the wrapped text selected so a placeholder can be typed over straight away.
+    textarea.selectionStart = start + openTag.length;
+    textarea.selectionEnd = start + openTag.length + selected.length;
+    textarea.dataset.touched = '1';
+    mqSaveProposalField(id, 'Body', newValue);
+    window.mqRefreshProposalPreview(id);
   };
 
   // Restores everything about this template back to what a fresh starter
@@ -5771,6 +5894,11 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // you blur the field, regardless of network speed.
     const cached = (window._mqProposalTemplatesCache || []).find(t => t.id === id);
     if (cached) cached.fields[field] = value;
+    if (cached) {
+      const sumEl = document.getElementById(`mq-prop-sec-sum-${id}-settings`);
+      if (sumEl) sumEl.textContent = mqPropSettingsSummary(cached.fields);
+      if (field !== 'Body' && window.mqRefreshProposalPreview) window.mqRefreshProposalPreview(id);
+    }
     try {
       await atUpdate(CONFIG.PROPOSAL_TEMPLATES_TABLE, id, { [field]: value });
     }
@@ -5963,18 +6091,12 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     return html;
   }
 
-  // Shows exactly what this template will actually produce in MidasQuote
-  // Pro — same token-rendering, same layout, same visual polish — but
-  // filled with clearly-labeled sample data (not a real customer/estimate),
-  // so a shop owner can see how it looks without leaving the dashboard or
-  // running a real quote first.
-  window.mqPreviewProposalTemplate = function(id) {
-    const t = (window._mqProposalTemplatesCache || []).find(x => x.id === id);
-    if (!t) return;
-    const f = t.fields;
-    const shop = (window._mqShopRecord || {}).fields || {};
-    const accent = f['Accent colour'] || '#1a3a6b';
 
+  // Sample data + rendered body for a template — shared by the full-size
+  // preview window and the live preview inside the template card.
+  function mqPropSampleParts(t, bodyOverride) {
+    const f = t.fields;
+    const accent = f['Accent colour'] || '#1a3a6b';
     const sampleLines = [
       { label: 'Upper cabinets — Maple Shaker', cost: 1850 },
       { label: 'Base cabinets — Maple Shaker', cost: 2100 },
@@ -5996,13 +6118,42 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const totalsPlainHtml = mqPropBuildTotalsPlainHtml(subtotal, taxAmt, total, depositAmt);
     const dateStr = new Date().toLocaleDateString();
 
-    const renderedBodyHtml = mqPropRenderBodyTokens(f['Body'] || '', {
+    const renderedBodyHtml = mqPropRenderBodyTokens((bodyOverride != null ? bodyOverride : (f['Body'] || '')), {
       customerName: 'Jane Smith', customerAddress: '123 Main St, Anytown', customerPhone: '(555) 123-4567', jobName: 'Kitchen Reface',
       description: 'Full kitchen reface — new doors, drawer fronts, and hardware throughout, plus a new quartz countertop.',
       date: dateStr, subtotal, tax: taxAmt, total, deposit: depositAmt,
       itemsHtml, itemsPlainHtml, itemsPlainLightHtml, itemsHeaderHtml, signatureHtml, hrHtml, totalsBoxHtml, totalsPlainHtml,
     });
 
+
+    return { accent, dateStr, renderedBodyHtml };
+  }
+
+  function mqPropPreviewInnerHTML(t, bodyOverride) {
+    const shop = (window._mqShopRecord || {}).fields || {};
+    const P = mqPropSampleParts(t, bodyOverride);
+    const logo = shop['Logo URL'] ? `<img src="${shop['Logo URL']}" style="max-height:60px;max-width:220px;object-fit:contain"/>` : '';
+    return `<div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid ${P.accent};padding-bottom:16px;margin-bottom:24px">
+        <div>${logo}<div style="font-size:18px;font-weight:800;margin-top:6px">${mqPropEscapeHtml(shop['Shop name'])}</div>
+          <div style="font-size:12px;color:#6b7280">${mqPropEscapeHtml(shop['City'])}${shop['Phone'] ? (' · ' + mqPropEscapeHtml(shop['Phone'])) : ''}</div></div>
+        <div style="text-align:right"><div style="font-size:22px;font-weight:800;color:${P.accent}">Proposal</div><div style="font-size:12px;color:#6b7280">${P.dateStr}</div></div>
+      </div>${P.renderedBodyHtml}`;
+  }
+
+  // Shows exactly what this template will actually produce in MidasQuote
+  // Pro — same token-rendering, same layout, same visual polish — but
+  // filled with clearly-labeled sample data (not a real customer/estimate),
+  // so a shop owner can see how it looks without leaving the dashboard or
+  // running a real quote first.
+  window.mqPreviewProposalTemplate = function(id) {
+    const t = (window._mqProposalTemplatesCache || []).find(x => x.id === id);
+    if (!t) return;
+    const f = t.fields;
+    const shop = (window._mqShopRecord || {}).fields || {};
+    const accent = f['Accent colour'] || '#1a3a6b';
+
+    const P = mqPropSampleParts(t, null);
+    const { dateStr, renderedBodyHtml } = P;
     const logo = shop['Logo URL'] ? `<img src="${shop['Logo URL']}" style="max-height:60px;max-width:220px;object-fit:contain"/>` : '';
     const win = window.open('', '_blank');
     if (!win) { alert('Please allow pop-ups to see this preview.'); return; }
