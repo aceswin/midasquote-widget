@@ -2708,6 +2708,8 @@ window.logoutMember = async function () {
   #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-fields input[type=range]{accent-color:#693b53!important}
   #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-control-card input[type=file]{max-width:100%}
   @media(max-width:600px){#midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-hero{padding:24px!important}}
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-card-active{border-color:#b79869!important;box-shadow:0 0 0 3px rgba(183,152,105,.22)!important;transition:border-color .2s,box-shadow .2s}
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-preview-wrap{background:linear-gradient(140deg,#f7f3f7,#ede6ed)!important}
 </style>
           <!-- MARKETING KIT -->
           <div class="mq-page mq-sr-tab" id="mq-page-marketing">
@@ -2740,6 +2742,7 @@ window.logoutMember = async function () {
                       <label>Headline<input id="mq-studio-headline" type="text" maxlength="90"></label>
                       <label>Supporting line<input id="mq-studio-subline" type="text" maxlength="140"></label>
                       <label>Call to action<input id="mq-studio-cta" type="text" maxlength="48"></label>
+                      <label>Website text (shown on the graphic)<input id="mq-studio-url-text" type="text" maxlength="110" placeholder="Defaults to your quote link"></label>
                     </div>
                     <div class="mq-studio-control-card">
                       <div class="mq-studio-card-title">Brand signature</div>
@@ -2797,6 +2800,9 @@ window.logoutMember = async function () {
                       <label><div class="mq-studio-range-row"><span>Text up / down</span><output id="mq-studio-content-y-out">0</output></div><input id="mq-studio-content-y" type="range" min="-260" max="260" value="0"></label>
                       <label><div class="mq-studio-range-row"><span>Button left / right</span><output id="mq-studio-cta-x-out">0</output></div><input id="mq-studio-cta-x" type="range" min="-220" max="220" value="0"></label>
                       <label><div class="mq-studio-range-row"><span>Button up / down</span><output id="mq-studio-cta-y-out">0</output></div><input id="mq-studio-cta-y" type="range" min="-260" max="260" value="0"></label>
+                      <label><div class="mq-studio-range-row"><span>Website left / right</span><output id="mq-studio-url-x-out">0</output></div><input id="mq-studio-url-x" type="range" min="-420" max="420" value="0"></label>
+                      <label><div class="mq-studio-range-row"><span>Website up / down</span><output id="mq-studio-url-y-out">0</output></div><input id="mq-studio-url-y" type="range" min="-420" max="420" value="0"></label>
+                      <div class="mq-studio-two-col"><label>Website colour<input id="mq-studio-url-color" type="color" value="#e8d9dd"></label><label>Website size<input id="mq-studio-url-scale" type="range" min="65" max="220" value="100"></label></div>
                     </div>
                     <div class="mq-studio-control-card">
                       <div class="mq-studio-card-title">Photo & export</div>
@@ -13312,7 +13318,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const rangeOutputs={
       'headline-scale':v=>v+'%','sub-scale':v=>v+'%','cta-scale':v=>v+'%',
       'headline-spacing':v=>v+'px','sub-spacing':v=>v+'px',
-      'content-x':v=>String(v),'content-y':v=>String(v),'cta-x':v=>String(v),'cta-y':v=>String(v)
+      'content-x':v=>String(v),'content-y':v=>String(v),'cta-x':v=>String(v),'cta-y':v=>String(v),'url-x':v=>String(v),'url-y':v=>String(v)
     };
     function syncRangeLabels(){Object.keys(rangeOutputs).forEach(id=>{const input=field(id),out=field(id+'-out');if(input&&out)out.textContent=rangeOutputs[id](input.value)})}
     function currentOpts(){
@@ -13339,7 +13345,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         contentX:parseFloat(field('content-x').value)||0,
         contentY:parseFloat(field('content-y').value)||0,
         ctaX:parseFloat(field('cta-x').value)||0,
-        ctaY:parseFloat(field('cta-y').value)||0
+        ctaY:parseFloat(field('cta-y').value)||0, urlText:field('url-text').value,urlX:Number(field('url-x').value),urlY:Number(field('url-y').value),urlColor:field('url-color').value,urlScale:Number(field('url-scale').value)
       };
     }
     function drawSpacedText(ctx,text,x,y,spacing=0,align='left'){
@@ -13365,7 +13371,9 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         if(hasPhoto){cover(ctx,opts.photo,0,0,W,H)}
         else{const g=ctx.createLinearGradient(0,0,W,H);g.addColorStop(0,'#171921');g.addColorStop(1,'#4b3e42');fill(g,0,0,W,H)}
       }else if(t.mode==='minimal'){
-        fill('#f3ece3',0,0,W,H);fill(b,26*k,26*k,W-52*k,7*k);primary=safeColor(opts.headlineColor,'#382b36');secondary=safeColor(opts.subColor,'#685861');
+        fill('#f3ece3',0,0,W,H);
+        if(hasPhoto){cover(ctx,opts.photo,0,H*.42,W,H*.58);const grad=ctx.createLinearGradient(0,H*.39,0,H*.76);grad.addColorStop(0,'#f3ece3');grad.addColorStop(1,'rgba(243,236,227,0)');ctx.fillStyle=grad;ctx.fillRect(0,H*.39,W,H*.39)}
+        primary=safeColor(opts.headlineColor,'#382b36');secondary=safeColor(opts.subColor,'#685861');
       }else if(t.mode==='frame'){
         fill('#f4ece3',0,0,W,H);fill(b,30*k,30*k,W-60*k,H-60*k);
         if(hasPhoto){cover(ctx,opts.photo,W*.10,H*.09,W*.8,H*.40)}
@@ -13381,7 +13389,9 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         if(hasPhoto){cover(ctx,opts.photo,0,0,W,H)}
         else{ctx.fillStyle='#ffffff12';ctx.beginPath();ctx.arc(W*.85,H*.76,Math.min(W,H)*.34,0,2*Math.PI);ctx.fill()}
       }else{
-        fill(b,0,0,W,H);fill('#ffffff12',26*k,26*k,W-52*k,H-52*k);
+        fill(b,0,0,W,H);
+        if(t.mode==='qr'&&hasPhoto){cover(ctx,opts.photo,0,0,W,H);const grad=ctx.createLinearGradient(0,0,W,0);grad.addColorStop(0,'rgba(25,12,23,.92)');grad.addColorStop(.65,'rgba(25,12,23,.72)');grad.addColorStop(1,'rgba(25,12,23,.54)');ctx.fillStyle=grad;ctx.fillRect(0,0,W,H)}
+        else fill('#ffffff12',26*k,26*k,W-52*k,H-52*k);
       }
       // Professional art direction: photographic tonal treatment, architectural
       // framing and quiet editorial depth. Never place a bar behind a headline.
@@ -13471,14 +13481,25 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
 
       if(t.category==='qr'&&typeof MQ_QR_LIB_FACTORY==='function'){
         try{const qr=MQ_QR_LIB_FACTORY()(0,'M');qr.addData(quoteLink());qr.make();const n=qr.getModuleCount(),size=Math.min(208*k,W*.27),qx=W-size-pad,qy=H-size-62*k,step=size/n;
-        fill('#fff',qx-12*k,qy-12*k,size+24*k,size+24*k);
-        ctx.fillStyle='#171717';
-        for(let r=0;r<n;r++)for(let c=0;c<n;c++)if(qr.isDark(r,c))ctx.fillRect(qx+c*step,qy+r*step,Math.ceil(step),Math.ceil(step));}catch(e){}
-      }else{
-        let link=quoteLink().replace(/^https?:\/\//,'');
-        ctx.font=font(18*k,opts.subFont||'arial',400);ctx.fillStyle=secondary;
-        while(ctx.measureText(link).width>W-2*pad&&link.length>8)link=link.slice(0,-2)+'…';
-        drawSpacedText(ctx,link,anchorX,H-35*k,0,align);
+          ctx.fillStyle='#fff';rounded(ctx,qx-17*k,qy-17*k,size+34*k,size+34*k,13*k);ctx.fill();
+          ctx.fillStyle='#171717';for(let r=0;r<n;r++)for(let c=0;c<n;c++)if(qr.isDark(r,c))ctx.fillRect(qx+c*step,qy+r*step,Math.ceil(step),Math.ceil(step));
+        }catch(e){}
+      }
+      // URL is now an independent, editable layer, including on QR promotions.
+      let link=String(opts.urlText||quoteLink().replace(/^https?:\/\//,'')).trim();
+      const urlScale=(opts.urlScale||100)/100;
+      let urlSize=18*k*urlScale;
+      ctx.font=font(urlSize,opts.subFont||'arial',500);
+      const urlX=clamp(anchorX+(opts.urlX||0)*k,18*k,W-18*k);
+      const urlY=clamp(H-35*k+(opts.urlY||0)*k,24*k,H-18*k);
+      const urlMax=(t.category==='qr')?Math.max(145*k,W*.57):W-2*pad;
+      while(ctx.measureText(link).width>urlMax&&urlSize>10*k){urlSize-=k;ctx.font=font(urlSize,opts.subFont||'arial',500)}
+      ctx.fillStyle=safeColor(opts.urlColor,t.mode==='minimal'?'#45323e':'#e8d9dd');
+      drawSpacedText(ctx,link,urlX,urlY,0,align);
+      // Only show selection hints in live preview (never in exported PNG).
+      if(opts.highlight){
+        const regions={brand:[pad,Math.max(10*k,nameY-85*k),W-2*pad,105*k],headline:[pad,Math.max(15*k,baseTop-80*k),W-2*pad,Math.max(100*k,(lines.length+1)*lineHeight)],sub:[pad,subTop-38*k,W-2*pad,Math.max(70*k,(subLines.length+1)*subLH)],cta:[bx-10*k,by-10*k,bw+20*k,ctaH+20*k],url:[clamp(urlX-20*k,8*k,W-190*k),urlY-38*k,Math.min(360*k,W*.70),55*k],photo:[10*k,10*k,W-20*k,H-20*k]};
+        const r=regions[opts.highlight];if(r){ctx.save();ctx.strokeStyle='#38bdf8';ctx.lineWidth=4*k;ctx.setLineDash([14*k,8*k]);ctx.strokeRect(...r);ctx.restore()}
       }
     }
     function thumb(t){const canvas=document.createElement('canvas');canvas.width=360;canvas.height=360;paint(canvas,t,{color,photo:mqStudioPhoto,headlineFont:'georgia',subFont:'arial',ctaFont:'arial',align:'left',headlineColor:'#ffffff',subColor:'#f0e7ee',ctaBg:'#f2e1ca',ctaColor:'#2b2430',headlineScale:100,subScale:100,ctaScale:100,headlineSpacing:0,subSpacing:0,contentX:0,contentY:0,ctaX:0,ctaY:0});return canvas.toDataURL('image/png')}
@@ -13489,9 +13510,11 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         btn.addEventListener('click',()=>select(t));grid.appendChild(btn);
       });
     }
-    function update(){if(!mqStudioSelected)return;syncRangeLabels();const canvas=field('canvas');const sizes={square:[1080,1080],portrait:[1080,1350],story:[1080,1920],poster:[1080,1620],landscape:[1620,1080]};[canvas.width,canvas.height]=sizes[field('size').value]||sizes.square;paint(canvas,mqStudioSelected,currentOpts());queuePreviewFollow()}
+    let mqStudioFocus=null, mqStudioFocusTimer=null;
+    function update(forExport=false){if(!mqStudioSelected)return;syncRangeLabels();const canvas=field('canvas');const sizes={square:[1080,1080],portrait:[1080,1350],story:[1080,1920],poster:[1080,1620],landscape:[1620,1080]};[canvas.width,canvas.height]=sizes[field('size').value]||sizes.square;paint(canvas,mqStudioSelected,{...currentOpts(),highlight:forExport?null:mqStudioFocus});queuePreviewFollow()}
     function setDefaults(){
       field('shop-font').value='arial';field('shop-color').value=mqStudioSelected && mqStudioSelected.mode==='minimal'?'#382b36':'#ffffff';field('shop-scale').value='100';field('shop-spacing').value='2';field('shop-x').value='0';field('shop-y').value='0';field('logo-scale').value='100';field('finish').value='cinematic';field('overlay').value='46';field('accent').value='none';field('accent-color').value='#d9be97';
+      field('url-text').value='';field('url-x').value='0';field('url-y').value='0';field('url-color').value=mqStudioSelected?.mode==='minimal'?'#45323e':'#e8d9dd';field('url-scale').value='100';
       field('headline-font').value='georgia';field('sub-font').value='arial';field('cta-font').value='arial';field('align').value='left';
       field('headline-color').value='#ffffff';field('sub-color').value=mqStudioSelected && mqStudioSelected.mode==='minimal' ? '#685861' : '#f0e7ee';field('cta-bg').value='#f2e1ca';field('cta-color').value='#2b2430';
       field('headline-scale').value='100';field('sub-scale').value='100';field('cta-scale').value='100';field('headline-spacing').value='0';field('sub-spacing').value='0';field('content-x').value='0';field('content-y').value='0';field('cta-x').value='0';field('cta-y').value='0';
@@ -13501,16 +13524,34 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     if(!root.dataset.studioInitialized){
       root.dataset.studioInitialized='true';
       root.querySelectorAll('[data-studio-filter]').forEach(btn=>btn.addEventListener('click',()=>{root.querySelectorAll('[data-studio-filter]').forEach(b=>b.classList.toggle('active',b===btn));renderGallery(btn.dataset.studioFilter)}));
-      ['shop-name','shop-font','shop-color','shop-scale','shop-spacing','shop-x','shop-y','logo-scale','finish','overlay','accent','accent-color','headline','subline','cta','color','size','headline-font','sub-font','cta-font','align','headline-color','sub-color','cta-bg','cta-color','headline-scale','sub-scale','cta-scale','headline-spacing','sub-spacing','content-x','content-y','cta-x','cta-y'].forEach(id=>{
+      ['shop-name','shop-font','shop-color','shop-scale','shop-spacing','shop-x','shop-y','logo-scale','finish','overlay','accent','accent-color','headline','subline','cta','color','size','headline-font','sub-font','cta-font','align','headline-color','sub-color','cta-bg','cta-color','headline-scale','sub-scale','cta-scale','headline-spacing','sub-spacing','content-x','content-y','cta-x','cta-y','url-text','url-x','url-y','url-color','url-scale'].forEach(id=>{
         const evt = ['headline-scale','sub-scale','cta-scale','headline-spacing','sub-spacing','content-x','content-y','cta-x','cta-y','color','headline-color','sub-color','cta-bg','cta-color'].includes(id) ? 'input' : 'input';
         field(id).addEventListener(evt,update);
         if(field(id).tagName==='SELECT')field(id).addEventListener('change',update);
       });
+      const focusRegion=(id)=>{
+        if(id.startsWith('shop-')||id.startsWith('logo'))return 'brand';
+        if(id.startsWith('headline-')||id==='headline')return 'headline';
+        if(id.startsWith('sub-')||id==='subline')return 'sub';
+        if(id.startsWith('cta-')||id==='cta')return 'cta';
+        if(id.startsWith('url-'))return 'url';
+        if(id==='photo'||id==='remove-photo'||id==='overlay')return 'photo';
+        return null;
+      };
+      const markFocus=e=>{
+        const id=e.target?.id?.replace(/^mq-studio-/,'');if(!id)return;
+        mqStudioFocus=focusRegion(id);
+        root.querySelectorAll('.mq-studio-control-card').forEach(c=>c.classList.toggle('mq-studio-card-active',c.contains(e.target)));
+        clearTimeout(mqStudioFocusTimer);update();
+        mqStudioFocusTimer=setTimeout(()=>{mqStudioFocus=null;root.querySelectorAll('.mq-studio-card-active').forEach(c=>c.classList.remove('mq-studio-card-active'));update()},1600);
+      };
+      root.querySelector('.mq-studio-fields').addEventListener('focusin',markFocus);
+      root.querySelector('.mq-studio-fields').addEventListener('input',markFocus);
       field('logo').addEventListener('change',e=>{const file=e.target.files?.[0];if(!file)return;if(!file.type.startsWith('image/'))return;const url=URL.createObjectURL(file);const img=new Image();img.onload=()=>{URL.revokeObjectURL(url);mqStudioLogo=img;update()};img.onerror=()=>{URL.revokeObjectURL(url);mqShowToast('Could not load logo','error')};img.src=url});
       field('photo').addEventListener('change',e=>{const file=e.target.files&&e.target.files[0];if(!file)return;if(!file.type.startsWith('image/'))return;const blob=URL.createObjectURL(file);const image=new Image();image.onload=()=>{URL.revokeObjectURL(blob);mqStudioPhoto=image;update()};image.onerror=()=>{URL.revokeObjectURL(blob);mqShowToast('Could not read image','error')};image.src=blob});
       field('remove-photo').addEventListener('click',()=>{mqStudioPhoto=null;field('photo').value='';update()});
       field('back').addEventListener('click',()=>{workspace.style.display='none';previewShift=0;preview.style.transform='';root.scrollIntoView({behavior:'smooth',block:'start'})});
-      field('download').addEventListener('click',()=>{update();const a=document.createElement('a');a.href=field('canvas').toDataURL('image/png');a.download=(shopName+'-'+mqStudioSelected.id+'-'+field('size').value).toLowerCase().replace(/[^a-z0-9-]+/g,'-')+'.png';a.click()});
+      field('download').addEventListener('click',()=>{update(true);const a=document.createElement('a');a.href=field('canvas').toDataURL('image/png');a.download=(shopName+'-'+mqStudioSelected.id+'-'+field('size').value).toLowerCase().replace(/[^a-z0-9-]+/g,'-')+'.png';a.click();update()});
       field('copy-caption').addEventListener('click',()=>{const caption=[field('headline').value,field('subline').value,field('cta').value+': '+quoteLink()].join('\n\n');if(navigator.clipboard?.writeText)navigator.clipboard.writeText(caption).then(()=>mqShowToast('Caption copied')).catch(()=>mqShowToast('Could not copy caption','error'));else mqShowToast('Clipboard not available','error')});
     }
     renderGallery(root.querySelector('[data-studio-filter].active')?.dataset.studioFilter||'all');if(mqStudioSelected)update();
