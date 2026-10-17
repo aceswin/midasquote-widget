@@ -9727,8 +9727,15 @@
         #midasquote-widget.mq-fx-onres #mq-fx-side .mq-fx-side-foot{margin-top:auto}
       }
 
-      /* Chooser cards: white, with a brand-colour gradient border */
-      #mq-fx-chooser .mq-fx-cardwrap{background:linear-gradient(#fff,#fff) padding-box,linear-gradient(135deg,var(--mq-card-a,#1a1a1a),var(--mq-card-b,#888)) border-box;border:2px solid transparent;box-shadow:0 4px 14px rgba(0,0,0,.07)}
+      /* Chooser cards: filled with the shop's brand colour. Text, arrow chip and dividers
+         switch light/dark by the colour's lightness (set in JS as --mq-card-fg etc.). */
+      #mq-fx-chooser .mq-fx-cardwrap{background:linear-gradient(160deg,var(--mq-card-a,#1a1a1a),var(--mq-card-deep,#111));border:2px solid var(--mq-card-a,#1a1a1a);box-shadow:0 4px 14px rgba(0,0,0,.10)}
+      #mq-fx-chooser .mq-fx-card-title{color:var(--mq-card-fg,#fff)}
+      #mq-fx-chooser .mq-fx-card-sub{color:var(--mq-card-fg-soft,rgba(255,255,255,.78))}
+      #mq-fx-chooser .mq-fx-card-arrow{background:var(--mq-card-chip,rgba(255,255,255,.18));color:var(--mq-card-fg,#fff)}
+      #mq-fx-chooser .mq-fx-ptog{color:var(--mq-card-fg,#fff);border-top-color:var(--mq-card-line,rgba(255,255,255,.22))}
+      #mq-fx-chooser .mq-fx-ptog:focus-visible{background:var(--mq-card-chip,rgba(255,255,255,.18))}
+      @media (hover:hover){#mq-fx-chooser .mq-fx-ptog:hover{background:var(--mq-card-chip,rgba(255,255,255,.18))}}
       #mq-fx-chooser .mq-fx-card:hover,#mq-fx-chooser .mq-fx-card:focus-visible{transform:none;box-shadow:none;outline:none}
       #mq-fx-chooser .mq-fx-cardwrap:has(.mq-fx-card:hover),#mq-fx-chooser .mq-fx-cardwrap:has(.mq-fx-card:focus-visible){transform:translateY(-3px);box-shadow:0 14px 30px rgba(0,0,0,.16),0 0 0 4px var(--mq-card-tint,#e5e7eb)}
       #mq-fx-chooser .mq-fx-card-current{box-shadow:0 0 0 4px var(--mq-card-tint,#e5e7eb),0 4px 14px rgba(0,0,0,.07)}
@@ -10000,6 +10007,34 @@
       ch.style.setProperty('--mq-card-b', mix(bcRaw, 0.45, 255));
       ch.style.setProperty('--mq-card-tint', bcRaw + '1a');
       ch.style.setProperty('--mq-card-ink', lum > 0.42 ? mix(bcRaw, 0.5, 0) : bcRaw);
+      // Cards are filled with the brand colour, so their text follows its lightness:
+      // white on dark/medium colours, near-black on light ones (the switch point,
+      // lum ~0.2, is where black and white give equal contrast).
+      const darkText = lum > 0.2;
+      ch.style.setProperty('--mq-card-deep', mix(bcRaw, 0.22, 0));
+      ch.style.setProperty('--mq-card-fg', darkText ? '#111827' : '#ffffff');
+      ch.style.setProperty('--mq-card-fg-soft', darkText ? 'rgba(17,24,39,.72)' : 'rgba(255,255,255,.80)');
+      ch.style.setProperty('--mq-card-chip', darkText ? 'rgba(17,24,39,.12)' : 'rgba(255,255,255,.18)');
+      ch.style.setProperty('--mq-card-line', darkText ? 'rgba(17,24,39,.18)' : 'rgba(255,255,255,.22)');
+      // Give every card's coloured header the same height as the tallest one in its
+      // row (a long title like "Cabinets + countertops" wraps to two lines and would
+      // otherwise make its header taller than its neighbours').
+      const eqHeads = () => {
+        const bodies = [...ch.querySelectorAll('.mq-fx-card-body')];
+        bodies.forEach(b => { b.style.minHeight = ''; });
+        if (!ch.clientWidth) return; // hidden: measure when it's shown
+        const rows = new Map();
+        bodies.forEach(b => { const w = b.closest('.mq-fx-cardwrap'); const k = w ? Math.round(w.offsetTop) : 0; if (!rows.has(k)) rows.set(k, []); rows.get(k).push(b); });
+        rows.forEach(list => {
+          if (list.length < 2) return;
+          const h = Math.max(...list.map(b => b.getBoundingClientRect().height));
+          list.forEach(b => { b.style.minHeight = h + 'px'; });
+        });
+      };
+      let eqW = -1;
+      if (window.ResizeObserver) new ResizeObserver(() => { const w = ch.clientWidth; if (w === eqW) return; eqW = w; eqHeads(); }).observe(ch);
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { eqW = -1; eqHeads(); });
+      setTimeout(eqHeads, 400);
       const tabBar = container.querySelector('.mq-tab-bar');
       if (tabBar) tabBar.insertAdjacentElement('afterend', ch); else container.appendChild(ch);
     }
