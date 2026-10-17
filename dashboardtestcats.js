@@ -6361,8 +6361,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         <div style="width:96px;flex-shrink:0;display:flex;align-items:center;padding:8px 10px;background:#f3f4f6;border-right:1px solid #d1d5db;font-size:10.5px;font-weight:700;color:#4b5563;text-transform:uppercase;letter-spacing:0.04em;line-height:1.3">${g.group}</div>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:8px 10px;flex:1;min-width:0">${g.items.map(chip).join('')}</div></div>`).join('');
     const modeBtn = (m, label) => `<button type="button" id="mq-prop-modebtn-${m}-${id}" onclick="mqPropSetMode('${id}','${m}')" style="${mode === m ? 'background:#1a1a1a;color:#fff;border-color:#1a1a1a' : 'background:#fff;color:#374151;border-color:#d1d5db'};padding:5px 12px;font-size:12.5px;font-weight:600;border-width:1px;border-style:solid;border-radius:${m === 'blocks' ? '6px 0 0 6px' : '0 6px 6px 0'};cursor:pointer${m === 'raw' ? ';margin-left:-1px' : ''}">${label}</button>`;
-    return `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px;align-items:start">
-      <div style="min-width:0">
+    return `<div style="min-width:0">
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">
           <div style="display:flex">${modeBtn('blocks', '🧩 Blocks (drag &amp; drop)')}${modeBtn('raw', '&lt;/&gt; Text (advanced)')}</div>
         </div>
@@ -6395,15 +6394,21 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         </div>
         <textarea id="mq-prop-body-${id}" rows="18" style="width:100%;font-family:ui-monospace,monospace;font-size:12.5px;line-height:1.6" onfocus="this.dataset.touched='1'" oninput="mqProposalBodyInput('${id}')" onblur="mqSaveProposalField('${id}','Body',this.value)">${(t.fields['Body'] || '').replace(/</g, '&lt;')}</textarea>
         </div>
-      </div>
-      <div style="min-width:0;position:sticky;top:8px">
+      </div>`;
+  }
+
+  // The live preview lives in its own column NEXT TO all the sections (text,
+  // letterhead, settings, cheat sheet) so it stays in view while any of them
+  // is being edited.
+  function mqPropPreviewColHTML(t) {
+    const id = t.id;
+    return `      <div style="min-width:0;position:sticky;top:8px">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px">
           <span style="font-size:11.5px;font-weight:700;color:#374151">Live preview <span style="font-weight:400;color:#9ca3af">(sample customer &amp; items)</span></span>
           <button class="mq-btn mq-btn-sm" onclick="mqPreviewProposalTemplate('${id}')">👁 Full size</button>
         </div>
         <div id="mq-prop-preview-${id}" style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,0.06);padding:22px 20px;max-height:640px;overflow:auto;zoom:0.78;color:#111;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif">${mqPropPreviewInnerHTML(t, null)}</div>
-      </div>
-    </div>`;
+      </div>`;
   }
 
   var _mqPropPreviewTimers = {};
@@ -6551,8 +6556,10 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           <button class="mq-btn mq-btn-danger mq-btn-sm" onclick="event.stopPropagation();mqDeleteProposalTemplate('${t.id}','${(name||'this template').replace(/'/g,"\\'")}')" title="Delete template">✕</button>
         </div>
         <div id="mq-prop-card-body-${t.id}" style="display:none;padding:0 16px 16px 16px;border-top:1px solid #e5e7eb">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px;align-items:start">
+        <div style="min-width:0">
         ${mqPropSection(t.id,'text','✍️ Proposal text','The preview on the right updates as you type.',mqPropEditorHTML(t),true)}
-        ${mqPropSection(t.id,'lh','🏷 Letterhead &amp; footer',mqLhSummary(mqLhParse(f['Letterhead settings'])),mqPropLhHTML(t),false,860)}
+        ${mqPropSection(t.id,'lh','🏷 Letterhead &amp; footer',mqLhSummary(mqLhParse(f['Letterhead settings'])),mqPropLhHTML(t),false)}
         ${mqPropSection(t.id,'settings','⚙️ Settings',mqPropSettingsSummary(f),`        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start;margin:14px 0 12px">
           <div style="flex:1;min-width:180px">
             <label class="mq-label">Template name</label>
@@ -6591,8 +6598,11 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           </div>
         </div>
 
-`,false,760)}
-        ${mqPropSection(t.id,'help','📖 Cheat sheet','What every tag does — you never need to type them, the buttons above the text box insert them for you.',`<div style="font-size:12px;color:#374151;line-height:1.7">${PROPOSAL_TOKENS_HELP}</div>`,false,860)}
+`,false)}
+        ${mqPropSection(t.id,'help','📖 Cheat sheet','What every tag does — you never need to type them, the buttons above the text box insert them for you.',`<div style="font-size:12px;color:#374151;line-height:1.7">${PROPOSAL_TOKENS_HELP}</div>`,false)}
+        </div>
+        ${mqPropPreviewColHTML(t)}
+        </div>
 
         <div style="margin-top:14px;padding-top:12px;border-top:1px solid #e5e7eb">
           <button class="mq-btn mq-btn-sm" onclick="mqResetProposalTemplateDefaults('${t.id}')">↺ Reset to defaults</button>
