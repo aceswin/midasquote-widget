@@ -1281,7 +1281,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       #midasquote-dashboard .mq-help-badge{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:#2563eb;color:#fff;font-size:11px;font-weight:800;flex-shrink:0}
       /* Showroom tab — tighter, centered column with hairline cards (scoped, nothing else changes) */
       #midasquote-dashboard .mq-sr-tab{max-width:860px}
-      #midasquote-dashboard .mq-sr-tab .mq-page-sub{margin-bottom:1.25rem;line-height:1.55}
+      #midasquote-dashboard .mq-sr-tab .mq-page-sub{margin-bottom:1.25rem;line-height:1.55;max-width:640px}
       #midasquote-dashboard .mq-sr-card,#midasquote-dashboard .mq-sr-tab .mq-card{padding:0;margin-bottom:10px;overflow:hidden;overflow:clip;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 1px 2px rgba(16,24,40,0.04)}
       #midasquote-dashboard .mq-sr-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:.8rem 1.1rem;cursor:pointer;transition:background 0.12s}
       #midasquote-dashboard .mq-sr-head:hover{background:#fafafa}
@@ -2559,7 +2559,7 @@ window.logoutMember = async function () {
           </div>
 
           <!-- MARKETING KIT -->
-          <div class="mq-page" id="mq-page-marketing">
+          <div class="mq-page mq-sr-tab" id="mq-page-marketing">
             <button class="mq-help-btn" onclick="mqShowHelp('marketing')"><span class="mq-help-badge">?</span> Need help?</button>
             <div class="mq-page-title">Marketing Kit</div>
             <div class="mq-page-sub">Ready-made copy to help you promote your new quote widget — personalized with your shop's link</div>
@@ -2574,23 +2574,23 @@ window.logoutMember = async function () {
               <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 12px;margin-top:8px;font-size:12px;color:#166534">✅ Once applied, this link is automatically used across every marketing item on this page — posts, graphics, QR codes, and everything else.</div>
             </div>
 
-            <div class="mq-card" style="padding:0;overflow:hidden">
-              <div onclick="mqToggleMkSection('social')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
-                <div class="mq-card-title" style="margin:0">📱 Social media posts</div>
-                <span id="mq-mk-arrow-social" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
+            <div class="mq-card mq-sr-card">
+              <div onclick="mqToggleMkSection('social')" class="mq-sr-head">
+                <div class="mq-sr-title">📱 Social media posts</div>
+                <span id="mq-mk-arrow-social" class="mq-sr-chev">▼</span>
               </div>
-              <div id="mq-mk-body-social" style="display:none;padding:0 1.25rem 1.25rem">
+              <div id="mq-mk-body-social" class="mq-sr-body" style="display:none">
               <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Copy and paste these straight into Facebook or Instagram.</p>
               <div id="mq-mk-social"></div>
               </div>
             </div>
 
-            <div class="mq-card" style="padding:0;overflow:hidden">
-              <div onclick="mqToggleMkSection('graphic')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
-                <div class="mq-card-title" style="margin:0">🖼️ Social graphic — ready to post</div>
-                <span id="mq-mk-arrow-graphic" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
+            <div class="mq-card mq-sr-card">
+              <div onclick="mqToggleMkSection('graphic')" class="mq-sr-head">
+                <div class="mq-sr-title">🖼️ Social graphic — ready to post</div>
+                <span id="mq-mk-arrow-graphic" class="mq-sr-chev">▼</span>
               </div>
-              <div id="mq-mk-body-graphic" style="display:none;padding:0 1.25rem 1.25rem">
+              <div id="mq-mk-body-graphic" class="mq-sr-body" style="display:none">
               <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem">A square Instagram/Facebook-ready graphic with your shop name, brand colour, and quote link already on it. Download and post — no design needed.</p>
               <div style="display:flex;flex-direction:column;align-items:center;gap:1rem">
                 <canvas id="mq-mk-canvas" width="1080" height="1080" style="width:280px;height:280px;border-radius:14px;display:block"></canvas>
@@ -2616,12 +2616,12 @@ window.logoutMember = async function () {
               </div>
             </div>
 
-            <div class="mq-card" id="mq-pd-outer-card" style="padding:0;overflow:hidden">
-              <div onclick="mqToggleMkSection('poster')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
-                <div class="mq-card-title" style="margin:0">🎨 Custom Poster & Sign Designer</div>
-                <span id="mq-mk-arrow-poster" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
+            <div class="mq-card mq-sr-card" id="mq-pd-outer-card">
+              <div onclick="mqToggleMkSection('poster')" class="mq-sr-head">
+                <div class="mq-sr-title">🎨 Custom Poster & Sign Designer</div>
+                <span id="mq-mk-arrow-poster" class="mq-sr-chev">▼</span>
               </div>
-              <div id="mq-mk-body-poster" style="display:none;padding:0 1.25rem 1.25rem">
+              <div id="mq-mk-body-poster" class="mq-sr-body" style="display:none">
               <p style="font-size:13px;color:var(--text-mid);margin-bottom:1rem">Pick a style, add your own project photo, and download a print-ready poster or yard sign — pick "Landscape" below for a yard sign.</p>
 
               <div class="mq-field" style="margin-bottom:12px">
@@ -2841,23 +2841,23 @@ window.logoutMember = async function () {
 
             </div>
 
-            <div class="mq-card" style="padding:0;overflow:hidden">
-              <div onclick="mqToggleMkSection('dm')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
-                <div class="mq-card-title" style="margin:0">💬 Direct message template</div>
-                <span id="mq-mk-arrow-dm" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
+            <div class="mq-card mq-sr-card">
+              <div onclick="mqToggleMkSection('dm')" class="mq-sr-head">
+                <div class="mq-sr-title">💬 Direct message template</div>
+                <span id="mq-mk-arrow-dm" class="mq-sr-chev">▼</span>
               </div>
-              <div id="mq-mk-body-dm" style="display:none;padding:0 1.25rem 1.25rem">
+              <div id="mq-mk-body-dm" class="mq-sr-body" style="display:none">
               <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem">Send this to past customers or leads who might have a future project.</p>
               <div id="mq-mk-dm"></div>
               </div>
             </div>
 
-            <div class="mq-card" style="padding:0;overflow:hidden">
-              <div onclick="mqToggleMkSection('qrposter')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
-                <div class="mq-card-title" style="margin:0">🖨️ Printable QR poster</div>
-                <span id="mq-mk-arrow-qrposter" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
+            <div class="mq-card mq-sr-card">
+              <div onclick="mqToggleMkSection('qrposter')" class="mq-sr-head">
+                <div class="mq-sr-title">🖨️ Printable QR poster</div>
+                <span id="mq-mk-arrow-qrposter" class="mq-sr-chev">▼</span>
               </div>
-              <div id="mq-mk-body-qrposter" style="display:none;padding:0 1.25rem 1.25rem">
+              <div id="mq-mk-body-qrposter" class="mq-sr-body" style="display:none">
               <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem">A print-ready poster with a QR code linking straight to your quote page — perfect for a sandwich board, front desk, or restroom poster. Walk-in customers just scan and go.</p>
               <div style="display:flex;flex-direction:column;align-items:center;gap:1rem">
                 <canvas id="mq-mk-qr-canvas" width="1080" height="1620" style="width:200px;height:300px;border-radius:10px;display:block"></canvas>
@@ -2905,12 +2905,12 @@ window.logoutMember = async function () {
             </div>
 
 
-            <div class="mq-card" style="padding:0;overflow:hidden">
-              <div onclick="mqToggleMkSection('whereto')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
-                <div class="mq-card-title" style="margin:0">📍 Where to post</div>
-                <span id="mq-mk-arrow-whereto" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
+            <div class="mq-card mq-sr-card">
+              <div onclick="mqToggleMkSection('whereto')" class="mq-sr-head">
+                <div class="mq-sr-title">📍 Where to post</div>
+                <span id="mq-mk-arrow-whereto" class="mq-sr-chev">▼</span>
               </div>
-              <div id="mq-mk-body-whereto" style="display:none;padding:0 1.25rem 1.25rem">
+              <div id="mq-mk-body-whereto" class="mq-sr-body" style="display:none">
               <div style="font-size:13px;color:#374151;line-height:2">
                 ✓ Your website homepage or a dedicated "Get a Quote" page<br>
                 ✓ Pin a post to the top of your Facebook Business Page<br>
@@ -2923,12 +2923,12 @@ window.logoutMember = async function () {
               </div>
             </div>
 
-            <div class="mq-card" style="padding:0;overflow:hidden">
-              <div onclick="mqToggleMkSection('qrcode')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
-                <div class="mq-card-title" style="margin:0">QR code</div>
-                <span id="mq-mk-arrow-qrcode" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
+            <div class="mq-card mq-sr-card">
+              <div onclick="mqToggleMkSection('qrcode')" class="mq-sr-head">
+                <div class="mq-sr-title">QR code</div>
+                <span id="mq-mk-arrow-qrcode" class="mq-sr-chev">▼</span>
               </div>
-              <div id="mq-mk-body-qrcode" style="display:none;padding:0 1.25rem 1.25rem">
+              <div id="mq-mk-body-qrcode" class="mq-sr-body" style="display:none">
               <p style="font-size:13px;color:#6b7280;margin-bottom:1.25rem">Just the QR code by itself, no poster or headline — handy if you want to drop it into your own flyer, sign, or menu.</p>
               <div style="display:flex;flex-direction:column;align-items:center;gap:1rem">
                 <canvas id="mq-mk-qrcode-canvas" width="600" height="600" style="width:180px;height:180px;border-radius:10px;display:block;border:1px solid #e5e7eb"></canvas>
@@ -2938,12 +2938,12 @@ window.logoutMember = async function () {
               </div>
             </div>
 
-            <div class="mq-card" style="border-color:#86efac;background:#f0fdf4;padding:0;overflow:hidden">
-              <div onclick="mqToggleMkSection('checklist')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
-                <div class="mq-card-title" style="margin:0">✅ Pre-launch checklist</div>
-                <span id="mq-mk-arrow-checklist" style="font-size:13px;color:#166534;transition:transform 0.2s">▼</span>
+            <div class="mq-card mq-sr-card" style="border-color:#86efac;background:#f0fdf4">
+              <div onclick="mqToggleMkSection('checklist')" class="mq-sr-head">
+                <div class="mq-sr-title">✅ Pre-launch checklist</div>
+                <span id="mq-mk-arrow-checklist" class="mq-sr-chev" style="color:#166534">▼</span>
               </div>
-              <div id="mq-mk-body-checklist" style="display:none;padding:0 1.25rem 1.25rem">
+              <div id="mq-mk-body-checklist" class="mq-sr-body" style="display:none">
               <div style="font-size:13px;color:#166534;line-height:2">
                 ☐ Widget is embedded and tested on your site<br>
                 ☐ Link works on both desktop and mobile<br>
