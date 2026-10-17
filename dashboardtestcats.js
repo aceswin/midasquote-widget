@@ -5485,7 +5485,7 @@ window.logoutMember = async function () {
 {customer_address}
 {customer_phone}
 
-**Job:** {job_name}
+**Job name:** {job_name}
 
 {description}
 
@@ -5958,7 +5958,17 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     }
     const t = (window._mqProposalTemplatesCache || []).find(x => x.id === id);
     _mqPropBlocks[id] = mqPbParse(t ? t.fields['Body'] : '');
+    // Job name pills start with the label "Job name:" — fill it in where it was
+    // blank or the old "Job:" default, and save so the proposal matches.
+    let changed = false;
+    _mqPropBlocks[id].forEach(b => {
+      if (b.type === 'field' && b.tok === 'job_name' && (!(b.label || '').trim() || b.label.trim() === 'Job:')) {
+        if (!(b.label || '').trim()) b.bl = true;
+        b.label = 'Job name:'; changed = true;
+      }
+    });
     window.mqPbRender(id);
+    if (changed) mqPbCommit(id, true);
   };
 
   window.mqPbSet = function(id, i, key, val, rerender) {
