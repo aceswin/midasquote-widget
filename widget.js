@@ -9304,7 +9304,7 @@
     const isLast = index >= total - 1;
     const back = index > 0
       ? `<button type="button" class="mq-step-back-btn" onclick="event.stopPropagation();mqStepBack('${prefix}')">← Back</button>`
-      : `<button type="button" class="mq-step-back-btn" onclick="event.stopPropagation();mqFxToChooser()">← Exit</button>`;
+      : `<button type="button" class="mq-step-back-btn" onclick="event.stopPropagation();mqFxToChooser()">← Back</button>`;
     return `${back}<button type="button" class="mq-step-continue-btn" onclick="event.stopPropagation();mqStepContinue('${prefix}')">${isLast ? 'See my estimate ✨' : 'Continue →'}</button>`;
   };
 
@@ -9367,7 +9367,7 @@
   };
 
   // Leaving the full-screen view (✕ Exit, Esc, the side panel's "Exit quote",
-  // or "← Exit" on step 1) ends the quote: everything is wiped and the
+  // or "← Back" on step 1, which is labelled Back so people reach for it instead of the browser's Back button) ends the quote: everything is wiped and the
   // customer lands back on the chooser, so coming back never drops them in
   // the middle of an old quote at, say, step 9. It's the same full rebuild
   // as "Start new estimate" (mqStartNewEstimate), so every answer, result
