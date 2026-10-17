@@ -2558,16 +2558,17 @@ window.logoutMember = async function () {
             </div>
           </div>
 
-          <style>
-  /* MidasQuote Marketing Studio v2 — isolated styles */
-  #mq-page-marketing .mq-studio{--mqs-ink:#24212b;--mqs-sub:#716e79;margin:0 0 26px;color:var(--mqs-ink);font-family:inherit}
+          
+<style>
+  /* MidasQuote Marketing Studio v2.2 — enhanced editor */
+  #mq-page-marketing .mq-studio{--mqs-ink:#24212b;--mqs-sub:#716e79;--mqs-panel:#ffffff;--mqs-line:#e7e1e8;--mqs-soft:#f7f3f6;margin:0 0 26px;color:var(--mqs-ink);font-family:inherit}
   .mq-studio-hero{display:flex;justify-content:space-between;align-items:center;gap:20px;background:linear-gradient(115deg,#211c2c 0%,#46314c 64%,#7b5060 100%);color:white;padding:30px 34px;border-radius:18px;overflow:hidden;margin-bottom:22px}
   .mq-studio-kicker{display:block;font-size:10px;font-weight:800;letter-spacing:.16em;color:#c9aa81;margin-bottom:9px}
   .mq-studio-hero h2{font-size:clamp(22px,3vw,32px);line-height:1.16;margin:0 0 8px;color:white;font-family:Georgia,serif;font-weight:500}
   .mq-studio-hero p{font-size:13px;line-height:1.65;margin:0;color:#e3dce3;max-width:520px}
   .mq-studio-hero-star{font-size:74px;color:#d0aa76;opacity:.7;line-height:1}
   .mq-studio-nav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
-  .mq-studio-nav button,.mq-studio-muted-btn{cursor:pointer;border:1px solid #dfdce2;background:#fff;color:#494452;border-radius:9px;padding:9px 14px;font-size:12px;font-weight:700;transition:.15s}
+  .mq-studio-nav button,.mq-studio-muted-btn{cursor:pointer;border:1px solid #dfdce2;background:#fff;color:#494452;border-radius:10px;padding:9px 14px;font-size:12px;font-weight:700;transition:.15s}
   .mq-studio-nav button.active,.mq-studio-nav button:hover{background:#2c2436;border-color:#2c2436;color:white}
   .mq-studio-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;margin-bottom:20px}
   .mq-studio-tile{background:#fff;border:1px solid #e9e6e9;border-radius:13px;padding:9px;text-align:left;cursor:pointer;box-shadow:0 3px 18px rgba(32,26,41,.04);transition:transform .2s,border-color .2s,box-shadow .2s;color:inherit}
@@ -2576,42 +2577,50 @@ window.logoutMember = async function () {
   .mq-studio-tile-meta{display:flex;align-items:flex-start;justify-content:space-between;gap:6px;padding:11px 5px 4px}
   .mq-studio-tile strong{font-size:13px;display:block}.mq-studio-tile small{display:block;margin-top:4px;font-size:11px;color:#78727c}
   .mq-studio-tile-meta b{font-size:17px;color:#6f5368;font-weight:400}
-  .mq-studio-workspace{background:#fff;border:1px solid #e9e6e9;border-radius:16px;padding:21px;margin:12px 0 24px;box-shadow:0 9px 30px rgba(36,30,44,.06);scroll-margin-top:80px}
-  .mq-studio-editor-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:21px}.mq-studio-editor-top h3{font-size:21px;font-family:Georgia,serif;margin:0}
-  .mq-studio-editor-layout{display:grid;grid-template-columns:minmax(210px,.85fr) minmax(0,1.15fr);gap:27px}
-  .mq-studio-fields{display:flex;flex-direction:column;gap:12px}.mq-studio-fields label{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:700;color:#494451}
-  .mq-studio-fields input:not([type=file]),.mq-studio-fields select{box-sizing:border-box;width:100%;border:1px solid #ddd8df;border-radius:8px;background:white;padding:10px;color:#24212b;font-size:13px}
-  .mq-studio-fields input[type=color]{height:43px;padding:4px;cursor:pointer}.mq-studio-fields input[type=file]{width:100%;font-size:11px;padding:8px;border:1px dashed #d6d0d8;border-radius:8px}
-  .mq-studio-editor-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}.mq-studio-editor-actions button{flex:1;min-width:120px}
-  .mq-studio-tip{font-size:11px;color:#79727e;line-height:1.6;margin:3px 0}
-  .mq-studio-preview-wrap{background:#f5f2f4;border:1px solid #eae5e9;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:15px;min-width:0}
-  .mq-studio-preview-wrap canvas{width:auto;height:auto;max-width:100%;max-height:495px;border-radius:6px;box-shadow:0 10px 35px rgba(18,13,22,.17)}.mq-studio-preview-wrap p{font-size:10px;color:#8d8390;text-align:center;margin:12px 0 0}
+  .mq-studio-workspace{background:#fff;border:1px solid #e9e6e9;border-radius:18px;padding:22px;margin:12px 0 24px;box-shadow:0 9px 30px rgba(36,30,44,.06);scroll-margin-top:80px;max-width:100%;overflow:hidden}
+  .mq-studio-editor-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:18px}
+  .mq-studio-editor-top h3{font-size:21px;font-family:Georgia,serif;margin:0}
+  .mq-studio-editor-layout{display:grid;grid-template-columns:minmax(320px,.82fr) minmax(0,1.18fr);gap:26px;align-items:start}
+  .mq-studio-fields{display:flex;flex-direction:column;gap:14px}
+  .mq-studio-control-card{background:var(--mqs-soft);border:1px solid var(--mqs-line);border-radius:14px;padding:15px 15px 14px}
+  .mq-studio-card-title{font:700 13px/1.2 Arial,sans-serif;letter-spacing:.04em;color:#54455a;text-transform:uppercase;margin:0 0 11px}
+  .mq-studio-fields label{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:700;color:#494451;margin-bottom:10px}
+  .mq-studio-fields label:last-child{margin-bottom:0}
+  .mq-studio-fields input:not([type=file]):not([type=color]):not([type=range]),.mq-studio-fields select,.mq-studio-fields textarea{box-sizing:border-box;width:100%;border:1px solid #d8d1db;border-radius:10px;background:white;padding:10px 12px;color:#24212b;font-size:13px;min-height:42px}
+  .mq-studio-fields textarea{min-height:84px;resize:vertical}
+  .mq-studio-fields input[type=color]{width:100%;height:44px;padding:4px;cursor:pointer;border:1px solid #d8d1db;border-radius:10px;background:white}
+  .mq-studio-fields input[type=file]{width:100%;font-size:12px;padding:10px;border:1px dashed #cfc6d2;border-radius:10px;background:#fff}
+  .mq-studio-fields input[type=range]{width:100%}
+  .mq-studio-two-col{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+  .mq-studio-three-col{display:grid;grid-template-columns:repeat(3,1fr);gap:11px}
+  .mq-studio-range-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}
+  .mq-studio-range-row output{min-width:48px;text-align:right;font:700 12px/1 Arial,sans-serif;color:#6d596d}
+  .mq-studio-color-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+  .mq-studio-editor-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:0}.mq-studio-editor-actions button{flex:1;min-width:135px}
+  .mq-studio-tip{font-size:11px;color:#79727e;line-height:1.6;margin:4px 0 0}
+  .mq-studio-preview-wrap{background:#f5f2f4;border:1px solid #eae5e9;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;min-width:0;position:sticky;top:16px}
+  .mq-studio-preview-wrap canvas{display:block;width:auto;height:auto;max-width:100%;max-height:560px;border-radius:8px;box-shadow:0 10px 35px rgba(18,13,22,.17)}
+  .mq-studio-preview-wrap p{font-size:10px;color:#8d8390;text-align:center;margin:12px 0 0}
   .mq-studio-legacy{border-top:1px solid #e7e2e9;padding-top:17px;color:#716a76;font-size:12px}.mq-studio-legacy summary{cursor:pointer;color:#4d4152;font-weight:700}.mq-studio-legacy p{line-height:1.6}
-  @media(max-width:820px){.mq-studio-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.mq-studio-editor-layout{grid-template-columns:1fr}.mq-studio-preview-wrap canvas{max-height:420px}}
-  @media(max-width:480px){.mq-studio-hero{padding:23px}.mq-studio-hero-star{display:none}.mq-studio-grid{gap:9px}.mq-studio-thumb{height:135px}.mq-studio-workspace{padding:13px}.mq-studio-editor-top{flex-wrap:wrap}.mq-studio-nav button{padding:8px 10px;font-size:11px}}
-  /* v2.1: isolate buttons and gallery from legacy dashboard selectors */
-  #midasquote-dashboard #mq-page-marketing #mq-studio {box-sizing:border-box;width:100%;max-width:100%;font-family:Arial,Helvetica,sans-serif;line-height:1.45}
+  @media(max-width:1100px){.mq-studio-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.mq-studio-editor-layout{grid-template-columns:1fr}.mq-studio-preview-wrap{position:relative;top:auto}}
+  @media(max-width:560px){.mq-studio-hero{padding:22px}.mq-studio-hero-star{display:none}.mq-studio-grid{gap:10px}.mq-studio-thumb{height:135px}.mq-studio-workspace{padding:14px}.mq-studio-editor-top{flex-wrap:wrap}.mq-studio-two-col,.mq-studio-color-grid,.mq-studio-three-col{grid-template-columns:1fr}}
+  /* hard isolation against legacy dashboard styles */
+  #midasquote-dashboard #mq-page-marketing #mq-studio{box-sizing:border-box;width:100%;max-width:100%;font-family:Arial,Helvetica,sans-serif;line-height:1.45}
   #midasquote-dashboard #mq-page-marketing #mq-studio *,#midasquote-dashboard #mq-page-marketing #mq-studio *::before,#midasquote-dashboard #mq-page-marketing #mq-studio *::after{box-sizing:border-box}
-  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-hero {padding:27px 31px;margin-bottom:22px;min-height:145px;align-items:center}
-  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-hero h2{font:500 clamp(24px,3vw,34px)/1.15 Georgia,serif!important;margin:5px 0 8px!important;color:#fff!important;letter-spacing:-.015em}
-  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-hero p{font:400 13px/1.65 Arial,sans-serif!important;color:#f0e8f0!important;margin:0!important}
   #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-nav{display:flex!important;flex-wrap:wrap!important;gap:9px!important;margin:0 0 18px!important}
   #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-nav button,
-  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-muted-btn{display:inline-flex!important;align-items:center;justify-content:center;min-height:36px;padding:9px 15px!important;border:1px solid #dbd5de!important;border-radius:9px!important;background:#fff!important;color:#4e4050!important;font:700 12px/1.2 Arial,sans-serif!important;text-align:center!important;white-space:normal!important;width:auto!important;max-width:100%;box-shadow:none!important;cursor:pointer}
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-muted-btn{display:inline-flex!important;align-items:center;justify-content:center;min-height:38px;padding:9px 15px!important;border:1px solid #dbd5de!important;border-radius:10px!important;background:#fff!important;color:#4e4050!important;font:700 12px/1.2 Arial,sans-serif!important;text-align:center!important;white-space:normal!important;width:auto!important;max-width:100%;box-shadow:none!important;cursor:pointer}
   #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-nav button.active{background:#292234!important;border-color:#292234!important;color:#fff!important}
   #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-grid{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:16px!important;align-items:stretch}
   #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-tile{appearance:none;display:flex!important;flex-direction:column!important;padding:10px!important;width:100%!important;min-width:0!important;height:auto!important;background:#fff!important;border:1px solid #e9e4e9!important;border-radius:14px!important;text-align:left!important;overflow:hidden!important;color:#29232b!important;box-shadow:0 3px 12px #180e190d!important;white-space:normal!important}
-  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-tile:hover{transform:translateY(-2px);border-color:#ac8d9f!important;box-shadow:0 9px 24px #180e1920!important}
   #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-thumb-area{display:flex!important;align-items:center;justify-content:center;width:100%;height:226px;overflow:hidden;border-radius:9px;background:#ede7e7}
   #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-thumb{display:block!important;width:100%!important;height:100%!important;max-width:100%!important;object-fit:contain!important;object-position:center!important;border:0!important;border-radius:0!important}
   #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-tile-meta{display:flex!important;width:100%;min-height:53px;gap:8px;padding:11px 4px 1px!important;align-items:center!important;color:#28212e!important}
   #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-tile-meta strong{display:block!important;font:700 13px/1.35 Arial,sans-serif!important;color:#29232b!important}
   #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-tile-meta small{display:block!important;font:400 11px/1.3 Arial,sans-serif!important;color:#8b7b8b!important;margin-top:4px}
-  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-tile-meta b{margin-left:auto}
-  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-workspace{max-width:100%;overflow:hidden}
-  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-preview-wrap canvas{display:block!important;width:auto!important;height:auto!important;max-width:100%!important;max-height:520px!important;object-fit:contain!important}
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-preview-wrap canvas{display:block!important;width:auto!important;height:auto!important;max-width:100%!important;max-height:560px!important;object-fit:contain!important}
   @media(max-width:1100px){#midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
-  @media(max-width:560px){#midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-hero{padding:22px;min-height:unset}#midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-grid{gap:10px!important}#midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-thumb-area{height:160px}#midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-nav button{padding:8px 10px!important}}
+  @media(max-width:560px){#midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-grid{gap:10px!important}#midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-thumb-area{height:160px}}
 </style>
           <!-- MARKETING KIT -->
           <div class="mq-page mq-sr-tab" id="mq-page-marketing">
@@ -2629,24 +2638,68 @@ window.logoutMember = async function () {
               <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 12px;margin-top:8px;font-size:12px;color:#166534">✅ Once applied, this link is automatically used across every marketing item on this page — posts, graphics, QR codes, and everything else.</div>
             </div>
 
-            <!-- MARKETING STUDIO v2: Visual template gallery and canvas editor. Legacy tools preserved below. -->
+            <!-- MARKETING STUDIO v2.2: Visual template gallery and enhanced design editor. Legacy tools preserved below. -->
             <section id="mq-studio" class="mq-studio">
               <div class="mq-studio-hero"><div><span class="mq-studio-kicker">✦ YOUR CREATIVE WORKSPACE</span><h2>Make something worth sharing.</h2><p>Choose a design, add your latest project photo, and download a polished promotion in seconds.</p></div><span class="mq-studio-hero-star">✳</span></div>
               <div class="mq-studio-nav" role="group" aria-label="Filter templates"><button type="button" class="active" data-studio-filter="all">All designs</button><button type="button" data-studio-filter="social">Social posts</button><button type="button" data-studio-filter="print">Posters & signs</button><button type="button" data-studio-filter="qr">QR promotions</button></div>
               <div class="mq-studio-grid" id="mq-studio-grid"></div>
               <div id="mq-studio-workspace" class="mq-studio-workspace" style="display:none">
                 <div class="mq-studio-editor-top"><div><span class="mq-studio-kicker">CUSTOMIZE YOUR DESIGN</span><h3 id="mq-studio-edit-title">Edit template</h3></div><button type="button" class="mq-studio-muted-btn" id="mq-studio-back">← All templates</button></div>
-                <div class="mq-studio-editor-layout"><div class="mq-studio-fields">
-                  <label>Headline<input id="mq-studio-headline" type="text" maxlength="90"></label>
-                  <label>Supporting line<input id="mq-studio-subline" type="text" maxlength="140"></label>
-                  <label>Call to action<input id="mq-studio-cta" type="text" maxlength="48"></label>
-                  <label>Brand colour <input id="mq-studio-color" type="color" value="#56314b" aria-label="Brand colour"></label>
-                  <label>Project photo<input id="mq-studio-photo" type="file" accept="image/*"></label>
-                  <button type="button" class="mq-studio-muted-btn" id="mq-studio-remove-photo">Remove photo</button>
-                  <label>Export size<select id="mq-studio-size"><option value="square">Square · 1080 × 1080</option><option value="portrait">Feed portrait · 1080 × 1350</option><option value="story">Story / Reel · 1080 × 1920</option><option value="poster">Poster · 1080 × 1620</option><option value="landscape">Yard sign · 1620 × 1080</option></select></label>
-                  <div class="mq-studio-editor-actions"><button type="button" id="mq-studio-download" class="mq-btn mq-btn-primary">↓ Download PNG</button><button type="button" id="mq-studio-copy-caption" class="mq-studio-muted-btn">Copy caption</button></div>
-                  <p class="mq-studio-tip">Your shop name and marketing link are automatically added. Upload a project photo for the most effective result.</p>
-                </div><div class="mq-studio-preview-wrap"><canvas id="mq-studio-canvas" width="1080" height="1080" aria-label="Live marketing graphic preview"></canvas><p>Live preview · The downloaded image exports at full resolution</p></div></div>
+                <div class="mq-studio-editor-layout">
+                  <div class="mq-studio-fields">
+                    <div class="mq-studio-control-card">
+                      <div class="mq-studio-card-title">Copy</div>
+                      <label>Headline<input id="mq-studio-headline" type="text" maxlength="90"></label>
+                      <label>Supporting line<input id="mq-studio-subline" type="text" maxlength="140"></label>
+                      <label>Call to action<input id="mq-studio-cta" type="text" maxlength="48"></label>
+                    </div>
+                    <div class="mq-studio-control-card">
+                      <div class="mq-studio-card-title">Typography</div>
+                      <div class="mq-studio-two-col">
+                        <label>Headline font<select id="mq-studio-headline-font"><option value="georgia">Elegant serif</option><option value="arial">Clean sans</option><option value="trebuchet">Modern sans</option><option value="verdana">Readable sans</option><option value="times">Classic serif</option></select></label>
+                        <label>Supporting font<select id="mq-studio-sub-font"><option value="arial">Clean sans</option><option value="georgia">Elegant serif</option><option value="trebuchet">Modern sans</option><option value="verdana">Readable sans</option><option value="times">Classic serif</option></select></label>
+                      </div>
+                      <div class="mq-studio-two-col">
+                        <label>Button font<select id="mq-studio-cta-font"><option value="arial">Clean sans</option><option value="georgia">Elegant serif</option><option value="trebuchet">Modern sans</option><option value="verdana">Readable sans</option><option value="times">Classic serif</option></select></label>
+                        <label>Text alignment<select id="mq-studio-align"><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option></select></label>
+                      </div>
+                    </div>
+                    <div class="mq-studio-control-card">
+                      <div class="mq-studio-card-title">Colours</div>
+                      <div class="mq-studio-color-grid">
+                        <label>Brand colour<input id="mq-studio-color" type="color" value="#56314b" aria-label="Brand colour"></label>
+                        <label>Headline colour<input id="mq-studio-headline-color" type="color" value="#ffffff"></label>
+                        <label>Supporting colour<input id="mq-studio-sub-color" type="color" value="#f0e7ee"></label>
+                        <label>Button colour<input id="mq-studio-cta-bg" type="color" value="#f2e1ca"></label>
+                        <label>Button text colour<input id="mq-studio-cta-color" type="color" value="#2b2430"></label>
+                      </div>
+                    </div>
+                    <div class="mq-studio-control-card">
+                      <div class="mq-studio-card-title">Sizing & spacing</div>
+                      <label><div class="mq-studio-range-row"><span>Headline size</span><output id="mq-studio-headline-scale-out">100%</output></div><input id="mq-studio-headline-scale" type="range" min="70" max="145" value="100"></label>
+                      <label><div class="mq-studio-range-row"><span>Supporting size</span><output id="mq-studio-sub-scale-out">100%</output></div><input id="mq-studio-sub-scale" type="range" min="70" max="145" value="100"></label>
+                      <label><div class="mq-studio-range-row"><span>Button size</span><output id="mq-studio-cta-scale-out">100%</output></div><input id="mq-studio-cta-scale" type="range" min="70" max="145" value="100"></label>
+                      <label><div class="mq-studio-range-row"><span>Headline spacing</span><output id="mq-studio-headline-spacing-out">0px</output></div><input id="mq-studio-headline-spacing" type="range" min="0" max="12" value="0"></label>
+                      <label><div class="mq-studio-range-row"><span>Supporting spacing</span><output id="mq-studio-sub-spacing-out">0px</output></div><input id="mq-studio-sub-spacing" type="range" min="0" max="8" value="0"></label>
+                    </div>
+                    <div class="mq-studio-control-card">
+                      <div class="mq-studio-card-title">Placement</div>
+                      <label><div class="mq-studio-range-row"><span>Text left / right</span><output id="mq-studio-content-x-out">0</output></div><input id="mq-studio-content-x" type="range" min="-220" max="220" value="0"></label>
+                      <label><div class="mq-studio-range-row"><span>Text up / down</span><output id="mq-studio-content-y-out">0</output></div><input id="mq-studio-content-y" type="range" min="-260" max="260" value="0"></label>
+                      <label><div class="mq-studio-range-row"><span>Button left / right</span><output id="mq-studio-cta-x-out">0</output></div><input id="mq-studio-cta-x" type="range" min="-220" max="220" value="0"></label>
+                      <label><div class="mq-studio-range-row"><span>Button up / down</span><output id="mq-studio-cta-y-out">0</output></div><input id="mq-studio-cta-y" type="range" min="-260" max="260" value="0"></label>
+                    </div>
+                    <div class="mq-studio-control-card">
+                      <div class="mq-studio-card-title">Photo & export</div>
+                      <label>Project photo<input id="mq-studio-photo" type="file" accept="image/*"></label>
+                      <button type="button" class="mq-studio-muted-btn" id="mq-studio-remove-photo">Remove photo</button>
+                      <label>Export size<select id="mq-studio-size"><option value="square">Square · 1080 × 1080</option><option value="portrait">Feed portrait · 1080 × 1350</option><option value="story">Story / Reel · 1080 × 1920</option><option value="poster">Poster · 1080 × 1620</option><option value="landscape">Yard sign · 1620 × 1080</option></select></label>
+                      <div class="mq-studio-editor-actions"><button type="button" id="mq-studio-download" class="mq-btn mq-btn-primary">↓ Download PNG</button><button type="button" id="mq-studio-copy-caption" class="mq-studio-muted-btn">Copy caption</button></div>
+                      <p class="mq-studio-tip">Your shop name and marketing link are automatically added. Upload a project photo for the most effective result.</p>
+                    </div>
+                  </div>
+                  <div class="mq-studio-preview-wrap"><canvas id="mq-studio-canvas" width="1080" height="1080" aria-label="Live marketing graphic preview"></canvas><p>Live preview · The downloaded image exports at full resolution</p></div>
+                </div>
               </div>
               <details class="mq-studio-legacy"><summary>More marketing tools & advanced designers <span>⌄</span></summary><p>All your original marketing tools are still available below, including advanced poster controls, standalone QR codes, social captions, and printable materials.</p></details>
             </section>
@@ -13094,6 +13147,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     {id:'simple',title:'The Minimalist',category:'qr',tag:'QR / counter card',headline:'YOUR NEW KITCHEN IS CLOSER THAN YOU THINK',sub:'Scan to get a quick estimate from our team.',cta:'SCAN TO START',mode:'minimal'},
   ];
   let mqStudioPhoto=null, mqStudioSelected=null;
+  
   function mqInitMarketingStudio(shopRecord){
     const root=document.getElementById('mq-studio');
     if(!root)return;
@@ -13102,28 +13156,74 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const quoteLink=()=>(_mqCustomPostLink||shopRecord.fields['Marketing link']||`https://widget.midasquote.com/?shop=${shopRecord.fields['Shop token']||''}`);
     const grid=root.querySelector('#mq-studio-grid'), workspace=root.querySelector('#mq-studio-workspace');
     const field=id=>root.querySelector('#mq-studio-'+id);
-    const safeColor=(v)=>/^#[0-9a-f]{6}$/i.test(v||'')?v:'#56314b';
-    const font=(size,serif=false,weight=700)=>`${weight} ${Math.round(size)}px ${serif?'Georgia, serif':'Arial, sans-serif'}`;
-    const wrap=(ctx,txt,maxWidth,maxLines=5)=>{
-      const words=String(txt||'').split(/\s+/),lines=[];let current='';
-      for(const word of words){const next=current?current+' '+word:word;if(ctx.measureText(next).width>maxWidth&&current){lines.push(current);current=word}else current=next}
+    const safeColor=(v,fallback)=>/^#[0-9a-f]{6}$/i.test(v||'')?v:(fallback||'#56314b');
+    const fontFace=(key,fallbackSerif=false)=>({georgia:'Georgia, serif',arial:'Arial, sans-serif',trebuchet:'"Trebuchet MS", Arial, sans-serif',verdana:'Verdana, Arial, sans-serif',times:'"Times New Roman", Georgia, serif'}[key]||(fallbackSerif?'Georgia, serif':'Arial, sans-serif'));
+    const font=(size,fam,weight=700)=>`${weight} ${Math.round(size)}px ${fontFace(fam)}`;
+    const textWidthWithSpacing=(ctx,txt,spacing=0)=>{txt=String(txt||'');if(!txt)return 0;return ctx.measureText(txt).width+Math.max(0,txt.length-1)*spacing};
+    const wrap=(ctx,txt,maxWidth,maxLines=5,spacing=0)=>{
+      const words=String(txt||'').split(/\s+/).filter(Boolean),lines=[];let current='';
+      for(const word of words){const next=current?current+' '+word:word;if(textWidthWithSpacing(ctx,next,spacing)>maxWidth&&current){lines.push(current);current=word}else current=next}
       if(current)lines.push(current);return lines.slice(0,maxLines);
     };
     const rounded=(ctx,x,y,w,h,r)=>{ctx.beginPath();ctx.roundRect(x,y,w,h,r)};
     const cover=(ctx,img,x,y,w,h)=>{if(!img)return;const ratio=Math.max(w/img.width,h/img.height);const sw=w/ratio,sh=h/ratio;ctx.drawImage(img,(img.width-sw)/2,(img.height-sh)/2,sw,sh,x,y,w,h)};
+    const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
+    const rangeOutputs={
+      'headline-scale':v=>v+'%','sub-scale':v=>v+'%','cta-scale':v=>v+'%',
+      'headline-spacing':v=>v+'px','sub-spacing':v=>v+'px',
+      'content-x':v=>String(v),'content-y':v=>String(v),'cta-x':v=>String(v),'cta-y':v=>String(v)
+    };
+    function syncRangeLabels(){Object.keys(rangeOutputs).forEach(id=>{const input=field(id),out=field(id+'-out');if(input&&out)out.textContent=rangeOutputs[id](input.value)})}
+    function currentOpts(){
+      return {
+        headline:field('headline').value,
+        sub:field('subline').value,
+        cta:field('cta').value,
+        color:field('color').value,
+        photo:mqStudioPhoto,
+        headlineFont:field('headline-font').value,
+        subFont:field('sub-font').value,
+        ctaFont:field('cta-font').value,
+        align:field('align').value,
+        headlineColor:field('headline-color').value,
+        subColor:field('sub-color').value,
+        ctaBg:field('cta-bg').value,
+        ctaColor:field('cta-color').value,
+        headlineScale:parseFloat(field('headline-scale').value)||100,
+        subScale:parseFloat(field('sub-scale').value)||100,
+        ctaScale:parseFloat(field('cta-scale').value)||100,
+        headlineSpacing:parseFloat(field('headline-spacing').value)||0,
+        subSpacing:parseFloat(field('sub-spacing').value)||0,
+        contentX:parseFloat(field('content-x').value)||0,
+        contentY:parseFloat(field('content-y').value)||0,
+        ctaX:parseFloat(field('cta-x').value)||0,
+        ctaY:parseFloat(field('cta-y').value)||0
+      };
+    }
+    function drawSpacedText(ctx,text,x,y,spacing=0,align='left'){
+      text=String(text||'');
+      if(!text)return;
+      if(!spacing){ctx.textAlign=align;ctx.fillText(text,x,y);return;}
+      const w=textWidthWithSpacing(ctx,text,spacing);
+      let start=x;
+      if(align==='center')start=x-w/2; else if(align==='right')start=x-w;
+      const chars=[...text];
+      chars.forEach(ch=>{ctx.fillText(ch,start,y);start+=ctx.measureText(ch).width+spacing});
+    }
+    function drawWrappedLines(ctx,lines,x,startY,lineHeight,spacing,align){lines.forEach((line,i)=>drawSpacedText(ctx,line,x,startY+i*lineHeight,spacing,align));}
     function paint(canvas,t,opts={}){
       const W=canvas.width,H=canvas.height,ctx=canvas.getContext('2d');
       const k=Math.min(W/1080,H/1080), landscape=W>H, b=safeColor(opts.color||color), hasPhoto=!!opts.photo;
-      const pad=70*k, safeRight=W-pad;
+      const pad=70*k;
       ctx.clearRect(0,0,W,H);ctx.fillStyle='#eee5dd';ctx.fillRect(0,0,W,H);
       const fill=(c,x,y,w,h)=>{ctx.fillStyle=c;ctx.fillRect(x,y,w,h)};
-      let primary='#fff',secondary='#eee0e7';
+      let primary=safeColor(opts.headlineColor,'#ffffff'),secondary=safeColor(opts.subColor,'#eee0e7');
       if(t.mode==='luxury'){
         fill('#181922',0,0,W,H);
         if(hasPhoto){cover(ctx,opts.photo,0,0,W,H);fill('rgba(13,13,20,.65)',0,0,W,H)}
         else{const g=ctx.createLinearGradient(0,0,W,H);g.addColorStop(0,'#171921');g.addColorStop(1,'#4b3e42');fill(g,0,0,W,H)}
       }else if(t.mode==='minimal'){
-        fill('#f3ece3',0,0,W,H);fill(b,26*k,26*k,W-52*k,7*k);primary='#382b36';secondary='#685861';
+        fill('#f3ece3',0,0,W,H);fill(b,26*k,26*k,W-52*k,7*k);primary=safeColor(opts.headlineColor,'#382b36');secondary=safeColor(opts.subColor,'#685861');
       }else if(t.mode==='frame'){
         fill('#f4ece3',0,0,W,H);fill(b,30*k,30*k,W-60*k,H-60*k);
         if(hasPhoto){cover(ctx,opts.photo,W*.10,H*.09,W*.8,H*.40)}
@@ -13141,55 +13241,71 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       }else{
         fill(b,0,0,W,H);fill('#ffffff12',26*k,26*k,W-52*k,H-52*k);
       }
-      // Dedicated, non-overlapping areas for header, headline, supporting copy and CTA.
       const splitVertical=t.mode==='split'&&!landscape;
       const isFrame=t.mode==='frame';
-      const x=pad;
       const textWidth=(t.mode==='split'&&landscape)?W*.49-pad*1.3:W-2*pad;
-      const titleTop=isFrame?H*.54:splitVertical?H*.15:landscape?H*.22:H*.20;
-      const headingLimit=splitVertical?H*.27:(isFrame?H*.76:H*.59);
-      const textColor=primary;
-      ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.fillStyle=textColor;
-      ctx.font=font(22*k,false,700);
+      const contentShiftX=(opts.contentX||0)*k;
+      const contentShiftY=(opts.contentY||0)*k;
+      const baseTop=(isFrame?H*.54:splitVertical?H*.15:landscape?H*.22:H*.20)+contentShiftY;
+      const headingLimit=(splitVertical?H*.27:(isFrame?H*.76:H*.59))+contentShiftY;
+      const supportMax=(splitVertical?H*.42:(isFrame?H*.87:H*.79))+contentShiftY;
+      const align=opts.align||'left';
+      const anchorX=align==='left' ? pad+contentShiftX : align==='center' ? (W/2)+contentShiftX : (W-pad)+contentShiftX;
+      const ruleX=align==='left' ? clamp(anchorX,30*k,W-140*k) : align==='center' ? clamp(anchorX-33.5*k,20*k,W-90*k) : clamp(anchorX-67*k,20*k,W-90*k);
+
+      // shop name
+      ctx.textBaseline='alphabetic';ctx.fillStyle=primary;
       const shopDisplay=String(shopName).toUpperCase().slice(0,45);
       let shopFont=22*k;
-      while(shopFont>13*k){ctx.font=font(shopFont,false,700);if(ctx.measureText(shopDisplay).width<=textWidth)break;shopFont-=k}
-      ctx.fillText(shopDisplay,x,Math.max(55*k,titleTop-62*k));
-      fill('#dabb93',x,titleTop-35*k,67*k,4*k);
+      while(shopFont>13*k){ctx.font=font(shopFont,opts.subFont||'arial',700);if(textWidthWithSpacing(ctx,shopDisplay,0)<=textWidth)break;shopFont-=k}
+      drawSpacedText(ctx,shopDisplay,anchorX,Math.max(55*k,baseTop-62*k),0,align);
+      fill('#dabb93',ruleX,baseTop-35*k,67*k,4*k);
+
       const title=String(opts.headline||t.headline);
-      let lines=[],size=66*k,lineHeight;
-      for(;size>=27*k;size-=2*k){ctx.font=font(size,true,700);lines=wrap(ctx,title,textWidth,6);lineHeight=size*1.15;if(titleTop+(lines.length-1)*lineHeight<=headingLimit)break}
-      ctx.font=font(size,true,700);ctx.fillStyle=textColor;
-      lines.forEach((line,i)=>ctx.fillText(line,x,titleTop+i*lineHeight));
-      let subTop=titleTop+lines.length*lineHeight+13*k;
-      const supportMax=splitVertical?H*.42:(isFrame?H*.87:H*.79);
-      let subSize=27*k,subLines=[],subLH=36*k;
-      for(;subSize>=17*k;subSize-=k){ctx.font=font(subSize,false,400);subLines=wrap(ctx,String(opts.sub||t.sub),textWidth,4);subLH=subSize*1.35;if(subTop+(subLines.length-1)*subLH<=supportMax)break}
-      ctx.font=font(subSize,false,400);ctx.fillStyle=secondary;
-      subLines.forEach((line,i)=>ctx.fillText(line,x,subTop+i*subLH));
+      const titleScale=(opts.headlineScale||100)/100;
+      const titleSpacing=(opts.headlineSpacing||0)*k;
+      let lines=[],size=66*k*titleScale,lineHeight;
+      for(;size>=23*k;size-=2*k){ctx.font=font(size,opts.headlineFont||'georgia',700);lines=wrap(ctx,title,textWidth,6,titleSpacing);lineHeight=size*1.15;if(baseTop+(lines.length-1)*lineHeight<=headingLimit)break}
+      ctx.font=font(size,opts.headlineFont||'georgia',700);ctx.fillStyle=primary;
+      drawWrappedLines(ctx,lines,anchorX,baseTop,lineHeight,titleSpacing,align);
+
+      let subTop=baseTop+lines.length*lineHeight+13*k;
+      const subScale=(opts.subScale||100)/100;
+      const subSpacing=(opts.subSpacing||0)*k;
+      let subSize=27*k*subScale,subLines=[],subLH=36*k;
+      for(;subSize>=15*k;subSize-=k){ctx.font=font(subSize,opts.subFont||'arial',400);subLines=wrap(ctx,String(opts.sub||t.sub),textWidth,4,subSpacing);subLH=subSize*1.35;if(subTop+(subLines.length-1)*subLH<=supportMax)break}
+      ctx.font=font(subSize,opts.subFont||'arial',400);ctx.fillStyle=secondary;
+      drawWrappedLines(ctx,subLines,anchorX,subTop,subLH,subSpacing,align);
+
       const cta=String(opts.cta||t.cta).toUpperCase();
-      let by=H-157*k;
-      if(splitVertical)by=H-143*k;
-      const ctaH=64*k;
-      if(t.category==='qr')by=H-150*k;
+      let by=(splitVertical?H-143*k:H-157*k)+(opts.ctaY||0)*k;
+      const ctaScale=(opts.ctaScale||100)/100;
+      const ctaH=64*k*ctaScale;
+      if(t.category==='qr')by=(H-150*k)+(opts.ctaY||0)*k;
       const maxCtaWidth=t.category==='qr'?Math.max(190*k,W*.54):textWidth;
-      let ctaSize=21*k;ctx.font=font(ctaSize,false,700);
-      while(ctx.measureText(cta).width+52*k>maxCtaWidth&&ctaSize>12*k){ctaSize-=k;ctx.font=font(ctaSize,false,700)}
-      const bw=Math.min(maxCtaWidth,Math.max(192*k,ctx.measureText(cta).width+53*k));
-      ctx.fillStyle='#f2e1ca';rounded(ctx,x,by,bw,ctaH,9*k);ctx.fill();
-      ctx.fillStyle='#2b2430';ctx.textAlign='center';ctx.fillText(cta,x+bw/2,by+40*k);ctx.textAlign='left';
+      let ctaSize=21*k*ctaScale;ctx.font=font(ctaSize,opts.ctaFont||'arial',700);
+      while(textWidthWithSpacing(ctx,cta,0)+52*k>maxCtaWidth&&ctaSize>11*k){ctaSize-=k;ctx.font=font(ctaSize,opts.ctaFont||'arial',700)}
+      const bw=Math.min(maxCtaWidth,Math.max(192*k,textWidthWithSpacing(ctx,cta,0)+53*k));
+      let bx=align==='left' ? pad+contentShiftX+(opts.ctaX||0)*k : align==='center' ? (W-bw)/2+contentShiftX+(opts.ctaX||0)*k : (W-pad-bw)+contentShiftX+(opts.ctaX||0)*k;
+      bx=clamp(bx,20*k,W-bw-20*k);
+      by=clamp(by,20*k,H-ctaH-55*k);
+      ctx.fillStyle=safeColor(opts.ctaBg,'#f2e1ca');rounded(ctx,bx,by,bw,ctaH,9*k);ctx.fill();
+      ctx.fillStyle=safeColor(opts.ctaColor,'#2b2430');ctx.font=font(ctaSize,opts.ctaFont||'arial',700);ctx.textAlign='center';ctx.fillText(cta,bx+bw/2,by+(ctaH*.62));
+      ctx.textAlign='left';
+
       if(t.category==='qr'&&typeof MQ_QR_LIB_FACTORY==='function'){
         try{const qr=MQ_QR_LIB_FACTORY()(0,'M');qr.addData(quoteLink());qr.make();const n=qr.getModuleCount(),size=Math.min(208*k,W*.27),qx=W-size-pad,qy=H-size-62*k,step=size/n;
-        fill('#fff',qx-12*k,qy-12*k,size+24*k,size+24*k);fill('#171717',0,0,0,0);
+        fill('#fff',qx-12*k,qy-12*k,size+24*k,size+24*k);
+        ctx.fillStyle='#171717';
         for(let r=0;r<n;r++)for(let c=0;c<n;c++)if(qr.isDark(r,c))ctx.fillRect(qx+c*step,qy+r*step,Math.ceil(step),Math.ceil(step));}catch(e){}
       }else{
         let link=quoteLink().replace(/^https?:\/\//,'');
-        ctx.font=font(18*k,false,400);ctx.fillStyle=secondary;
+        ctx.font=font(18*k,opts.subFont||'arial',400);ctx.fillStyle=secondary;
         while(ctx.measureText(link).width>W-2*pad&&link.length>8)link=link.slice(0,-2)+'…';
-        ctx.fillText(link,x,H-35*k);
+        drawSpacedText(ctx,link,anchorX,H-35*k,0,align);
       }
     }
-    function thumb(t){const canvas=document.createElement('canvas');canvas.width=360;canvas.height=360;paint(canvas,t,{color,photo:mqStudioPhoto});return canvas.toDataURL('image/png')}
+    function thumb(t){const canvas=document.createElement('canvas');canvas.width=360;canvas.height=360;paint(canvas,t,{color,photo:mqStudioPhoto,headlineFont:'georgia',subFont:'arial',ctaFont:'arial',align:'left',headlineColor:'#ffffff',subColor:'#f0e7ee',ctaBg:'#f2e1ca',ctaColor:'#2b2430',headlineScale:100,subScale:100,ctaScale:100,headlineSpacing:0,subSpacing:0,contentX:0,contentY:0,ctaX:0,ctaY:0});return canvas.toDataURL('image/png')}
     function renderGallery(filter='all'){
       grid.innerHTML='';MQ_STUDIO_TEMPLATES.filter(t=>filter==='all'||t.category===filter).forEach(t=>{
         const btn=document.createElement('button');btn.type='button';btn.className='mq-studio-tile';btn.innerHTML=`<div class="mq-studio-thumb-area"><img class="mq-studio-thumb" alt=""/></div><div class="mq-studio-tile-meta"><span><strong></strong><small></small></span><b aria-hidden="true">↗</b></div>`;
@@ -13197,10 +13313,22 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         btn.addEventListener('click',()=>select(t));grid.appendChild(btn);
       });
     }
-    function update(){if(!mqStudioSelected)return;const canvas=field('canvas');const sizes={square:[1080,1080],portrait:[1080,1350],story:[1080,1920],poster:[1080,1620],landscape:[1620,1080]};[canvas.width,canvas.height]=sizes[field('size').value]||sizes.square;paint(canvas,mqStudioSelected,{headline:field('headline').value,sub:field('subline').value,cta:field('cta').value,color:field('color').value,photo:mqStudioPhoto})}
-    function select(t){mqStudioSelected=t;field('edit-title').textContent=t.title;field('headline').value=t.headline;field('subline').value=t.sub;field('cta').value=t.cta;field('color').value=safeColor(color);field('size').value=t.id==='yard'?'landscape':t.category==='print'?'poster':'square';workspace.style.display='block';update();workspace.scrollIntoView({behavior:'smooth',block:'start'});}
-    if(!root.dataset.studioInitialized){root.dataset.studioInitialized='true';root.querySelectorAll('[data-studio-filter]').forEach(btn=>btn.addEventListener('click',()=>{root.querySelectorAll('[data-studio-filter]').forEach(b=>b.classList.toggle('active',b===btn));renderGallery(btn.dataset.studioFilter)}));
-      ['headline','subline','cta','color','size'].forEach(id=>field(id).addEventListener('input',update));
+    function update(){if(!mqStudioSelected)return;syncRangeLabels();const canvas=field('canvas');const sizes={square:[1080,1080],portrait:[1080,1350],story:[1080,1920],poster:[1080,1620],landscape:[1620,1080]};[canvas.width,canvas.height]=sizes[field('size').value]||sizes.square;paint(canvas,mqStudioSelected,currentOpts())}
+    function setDefaults(){
+      field('headline-font').value='georgia';field('sub-font').value='arial';field('cta-font').value='arial';field('align').value='left';
+      field('headline-color').value='#ffffff';field('sub-color').value=mqStudioSelected && mqStudioSelected.mode==='minimal' ? '#685861' : '#f0e7ee';field('cta-bg').value='#f2e1ca';field('cta-color').value='#2b2430';
+      field('headline-scale').value='100';field('sub-scale').value='100';field('cta-scale').value='100';field('headline-spacing').value='0';field('sub-spacing').value='0';field('content-x').value='0';field('content-y').value='0';field('cta-x').value='0';field('cta-y').value='0';
+      syncRangeLabels();
+    }
+    function select(t){mqStudioSelected=t;field('edit-title').textContent=t.title;field('headline').value=t.headline;field('subline').value=t.sub;field('cta').value=t.cta;field('color').value=safeColor(color);field('size').value=t.id==='yard'?'landscape':t.category==='print'?'poster':'square';setDefaults();if(t.mode==='minimal'){field('headline-color').value='#382b36';field('sub-color').value='#685861'}workspace.style.display='block';update();workspace.scrollIntoView({behavior:'smooth',block:'start'});}
+    if(!root.dataset.studioInitialized){
+      root.dataset.studioInitialized='true';
+      root.querySelectorAll('[data-studio-filter]').forEach(btn=>btn.addEventListener('click',()=>{root.querySelectorAll('[data-studio-filter]').forEach(b=>b.classList.toggle('active',b===btn));renderGallery(btn.dataset.studioFilter)}));
+      ['headline','subline','cta','color','size','headline-font','sub-font','cta-font','align','headline-color','sub-color','cta-bg','cta-color','headline-scale','sub-scale','cta-scale','headline-spacing','sub-spacing','content-x','content-y','cta-x','cta-y'].forEach(id=>{
+        const evt = ['headline-scale','sub-scale','cta-scale','headline-spacing','sub-spacing','content-x','content-y','cta-x','cta-y','color','headline-color','sub-color','cta-bg','cta-color'].includes(id) ? 'input' : 'input';
+        field(id).addEventListener(evt,update);
+        if(field(id).tagName==='SELECT')field(id).addEventListener('change',update);
+      });
       field('photo').addEventListener('change',e=>{const file=e.target.files&&e.target.files[0];if(!file)return;if(!file.type.startsWith('image/'))return;const blob=URL.createObjectURL(file);const image=new Image();image.onload=()=>{URL.revokeObjectURL(blob);mqStudioPhoto=image;update()};image.onerror=()=>{URL.revokeObjectURL(blob);mqShowToast('Could not read image','error')};image.src=blob});
       field('remove-photo').addEventListener('click',()=>{mqStudioPhoto=null;field('photo').value='';update()});
       field('back').addEventListener('click',()=>{workspace.style.display='none';root.scrollIntoView({behavior:'smooth',block:'start'})});
