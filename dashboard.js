@@ -1279,6 +1279,32 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       /* Trial/Demo banner: 80% wide on desktop so the floating "Need help?" button (which pokes up into the banner's space) never sits on top of it. Full width on phones, where that button sits clear above it. */
       #midasquote-dashboard #mq-plan-banner > div{max-width:80%}
       #midasquote-dashboard .mq-help-badge{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:#2563eb;color:#fff;font-size:11px;font-weight:800;flex-shrink:0}
+      /* Showroom tab — tighter, centered column with hairline cards (scoped, nothing else changes) */
+      #midasquote-dashboard .mq-sr-tab{max-width:860px}
+      #midasquote-dashboard .mq-sr-tab .mq-page-sub{margin-bottom:1.25rem;line-height:1.55}
+      #midasquote-dashboard .mq-sr-card,#midasquote-dashboard .mq-sr-tab .mq-card{padding:0;margin-bottom:10px;overflow:hidden;overflow:clip;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 1px 2px rgba(16,24,40,0.04)}
+      #midasquote-dashboard .mq-sr-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:.8rem 1.1rem;cursor:pointer;transition:background 0.12s}
+      #midasquote-dashboard .mq-sr-head:hover{background:#fafafa}
+      #midasquote-dashboard .mq-sr-title{font-size:13px;font-weight:600;color:#111;letter-spacing:-0.005em}
+      #midasquote-dashboard .mq-sr-chev{font-size:10px;color:#9ca3af;transition:transform 0.2s}
+      #midasquote-dashboard .mq-sr-body{padding:.9rem 1.1rem 1.1rem;border-top:1px solid #f0f1f3}
+      #midasquote-dashboard .mq-sr-tab .mq-sr-body > p{font-size:12.5px !important;line-height:1.55;max-width:620px}
+      #midasquote-dashboard .mq-sr-pick{flex:1;min-width:200px;border:1px solid #e5e7eb;border-radius:8px;padding:.7rem .85rem;cursor:pointer;transition:border-color 0.12s,box-shadow 0.12s}
+      #midasquote-dashboard .mq-sr-pick:hover{border-color:#9ca3af}
+      #midasquote-dashboard .mq-sr-tab .mq-toggle-row{padding:7px 0;margin-bottom:0 !important;border-bottom:1px solid #f3f4f6}
+      #midasquote-dashboard .mq-sr-tab .mq-embed-box{padding:.7rem .85rem;margin-top:.5rem;font-size:11.5px;border-radius:8px}
+      #midasquote-dashboard .mq-sr-tab .mq-btn{padding:6px 12px;font-size:12px;border-radius:7px}
+      #midasquote-dashboard .mq-sr-cat{margin-bottom:8px}
+      #midasquote-dashboard .mq-sr-cathead{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:.6rem .9rem;flex-wrap:wrap}
+      #midasquote-dashboard .mq-sr-reorder{display:flex;flex-direction:column;gap:2px;flex-shrink:0}
+      #midasquote-dashboard .mq-sr-reorder .mq-btn{padding:0;width:22px;height:15px;font-size:8px;line-height:1;border-radius:4px}
+      #midasquote-dashboard .mq-sr-catbody{padding:.2rem .9rem .9rem}
+      #midasquote-dashboard .mq-sr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:8px}
+      #midasquote-dashboard .mq-sr-thumb{background:#fafafa;border:1px solid #eceef1;border-radius:8px;padding:.5rem}
+      #midasquote-dashboard .mq-sr-thumb img{width:100%;height:84px;object-fit:contain;background:#f3f2ee;border-radius:6px;margin-bottom:6px;display:block}
+      #midasquote-dashboard .mq-sr-thumb .mq-sr-name{font-size:12px;font-weight:600;color:#111;margin-bottom:6px;line-height:1.3}
+      #midasquote-dashboard .mq-sr-thumb .mq-btn{width:100%;font-size:10.5px;padding:4px 6px}
+      #midasquote-dashboard .mq-sr-note{font-size:11px;color:#9ca3af;margin-bottom:8px;line-height:1.5}
       #midasquote-dashboard .mq-page.active{display:block}
       #midasquote-dashboard .mq-page-title{font-size:22px;font-weight:700;color:#111;margin-bottom:6px}
       #midasquote-dashboard .mq-page-sub{font-size:13px;color:#6b7280;margin-bottom:2rem}
@@ -2269,30 +2295,30 @@ window.logoutMember = async function () {
           </div>
 
           <!-- SHOWROOM -->
-          <div class="mq-page" id="mq-page-showroom">
+          <div class="mq-page mq-sr-tab" id="mq-page-showroom">
             <button class="mq-help-btn" onclick="mqShowHelp('showroom')"><span class="mq-help-badge">?</span> Need help?</button>
             <div class="mq-page-title">🖼️ Showroom</div>
-            <div class="mq-page-sub">Manage everything that can appear on your showroom page — your real priced categories (materials, doors, specialty items, etc.) and any extra portfolio-style categories you add yourself. Reorder, rename (showroom display only — never touches your pricing or the widget), hide a whole category, or remove individual items. To add photos to a priced item so it starts showing up here, use the My Products tab.</div>
+            <div class="mq-page-sub" style="max-width:640px">Manage everything that can appear on your showroom page — your real priced categories (materials, doors, specialty items, etc.) and any extra portfolio-style categories you add yourself. Reorder, rename (showroom display only — never touches your pricing or the widget), hide a whole category, or remove individual items. To add photos to a priced item so it starts showing up here, use the My Products tab.</div>
             <div id="mq-showroom-msg"></div>
 
-            <div class="mq-card" style="margin-bottom:1.5rem;padding:0;overflow:hidden">
-              <div onclick="mqToggleShowroomSection('link')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
-                <div class="mq-card-title" style="margin:0">🔗 Your showroom link</div>
-                <span id="mq-sr-arrow-link" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
+            <div class="mq-card mq-sr-card">
+              <div onclick="mqToggleShowroomSection('link')" class="mq-sr-head">
+                <div class="mq-sr-title">🔗 Your showroom link</div>
+                <span id="mq-sr-arrow-link" class="mq-sr-chev">▼</span>
               </div>
-              <div id="mq-sr-body-link" style="display:none;padding:0 1.25rem 1.25rem">
+              <div id="mq-sr-body-link" class="mq-sr-body" style="display:none">
                 <p style="font-size:13px;color:#6b7280;margin-bottom:0.75rem">This is a standalone page with its own link — share it anywhere, including as a page in your own website's navigation. It works on its own, with or without the widget.</p>
                 <div class="mq-embed-box"><span id="mq-showroomtab-link-text"></span><button class="mq-copy-btn" id="mq-showroomtab-copy-btn">Copy</button></div>
                 <button class="mq-btn" style="margin-top:10px" id="mq-showroomtab-open-btn">Open showroom ↗</button>
               </div>
             </div>
 
-            <div class="mq-card" style="margin-bottom:1.5rem;padding:0;overflow:hidden">
-              <div onclick="mqToggleShowroomSection('embed')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
-                <div class="mq-card-title" style="margin:0">🧩 Embed on a page</div>
-                <span id="mq-sr-arrow-embed" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
+            <div class="mq-card mq-sr-card">
+              <div onclick="mqToggleShowroomSection('embed')" class="mq-sr-head">
+                <div class="mq-sr-title">🧩 Embed on a page</div>
+                <span id="mq-sr-arrow-embed" class="mq-sr-chev">▼</span>
               </div>
-              <div id="mq-sr-body-embed" style="display:none;padding:0 1.25rem 1.25rem">
+              <div id="mq-sr-body-embed" class="mq-sr-body" style="display:none">
               <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Prefer it to show up right inside a page on your own site instead of opening a new tab? Paste the code below where you want it to appear — no need to pick a size, it automatically sizes itself to fit its own content. These four switches only affect how it looks <strong>once embedded</strong> — your standalone showroom link/popup always shows everything, exactly as it does today.</p>
               <div class="mq-toggle-row" style="margin-bottom:1rem">
                 <div>
@@ -2329,20 +2355,20 @@ window.logoutMember = async function () {
               </div>
             </div>
 
-            <div class="mq-card" style="margin-bottom:1.5rem;padding:0;overflow:hidden">
-              <div onclick="mqToggleShowroomSection('button')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
-                <div class="mq-card-title" style="margin:0">🖱️ "See our showroom" button (on the widget)</div>
-                <span id="mq-sr-arrow-button" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
+            <div class="mq-card mq-sr-card">
+              <div onclick="mqToggleShowroomSection('button')" class="mq-sr-head">
+                <div class="mq-sr-title">🖱️ "See our showroom" button (on the widget)</div>
+                <span id="mq-sr-arrow-button" class="mq-sr-chev">▼</span>
               </div>
-              <div id="mq-sr-body-button" style="display:none;padding:0 1.25rem 1.25rem">
+              <div id="mq-sr-body-button" class="mq-sr-body" style="display:none">
               <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Your widget already has its own "🖼️ See our showroom" button for customers. If you've embedded the showroom on a page of your own (above), you can send that button there instead of popping open a new tab on widget.midasquote.com. You can always have both — this only changes where the widget's own button goes; it doesn't affect whether your embedded page exists.</p>
               <div style="display:flex;gap:12px;flex-wrap:wrap">
-                <div id="mq-showroom-target-popup" onclick="mqShowroomSetButtonTarget('popup')" style="flex:1;min-width:220px;border:2px solid #e5e7eb;border-radius:10px;padding:1rem;cursor:pointer">
-                  <div style="font-size:14px;font-weight:700;margin-bottom:4px">🪟 Popup (default)</div>
+                <div id="mq-showroom-target-popup" onclick="mqShowroomSetButtonTarget('popup')" class="mq-sr-pick">
+                  <div style="font-size:13px;font-weight:600;margin-bottom:3px">🪟 Popup (default)</div>
                   <div style="font-size:12px;color:#6b7280">Opens your standalone showroom link in a new tab — today's behavior. Works whether or not you've embedded the showroom anywhere.</div>
                 </div>
-                <div id="mq-showroom-target-page" onclick="mqShowroomSetButtonTarget('own_page')" style="flex:1;min-width:220px;border:2px solid #e5e7eb;border-radius:10px;padding:1rem;cursor:pointer">
-                  <div style="font-size:14px;font-weight:700;margin-bottom:4px">🔗 My own page</div>
+                <div id="mq-showroom-target-page" onclick="mqShowroomSetButtonTarget('own_page')" class="mq-sr-pick">
+                  <div style="font-size:13px;font-weight:600;margin-bottom:3px">🔗 My own page</div>
                   <div style="font-size:12px;color:#6b7280">Sends customers to a page on your own site instead — still opens in a new tab, so their quote stays open too. Needs the URL below.</div>
                 </div>
               </div>
@@ -2356,20 +2382,20 @@ window.logoutMember = async function () {
               </div>
             </div>
 
-            <div class="mq-card" style="margin-bottom:1.5rem;padding:0;overflow:hidden">
-              <div onclick="mqToggleShowroomSection('style')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
-                <div class="mq-card-title" style="margin:0">🎭 Showroom style</div>
-                <span id="mq-sr-arrow-style" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
+            <div class="mq-card mq-sr-card">
+              <div onclick="mqToggleShowroomSection('style')" class="mq-sr-head">
+                <div class="mq-sr-title">🎭 Showroom style</div>
+                <span id="mq-sr-arrow-style" class="mq-sr-chev">▼</span>
               </div>
-              <div id="mq-sr-body-style" style="display:none;padding:0 1.25rem 1.25rem">
+              <div id="mq-sr-body-style" class="mq-sr-body" style="display:none">
               <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Choose how your showroom page looks. Specialty Items show either way — everything else depends on which one's picked.</p>
               <div style="display:flex;gap:12px;flex-wrap:wrap">
-                <div id="mq-showroom-mode-default" onclick="mqShowroomSetMode('default')" style="flex:1;min-width:220px;border:2px solid #e5e7eb;border-radius:10px;padding:1rem;cursor:pointer">
-                  <div style="font-size:14px;font-weight:700;margin-bottom:4px">🏭 Default showroom</div>
+                <div id="mq-showroom-mode-default" onclick="mqShowroomSetMode('default')" class="mq-sr-pick">
+                  <div style="font-size:13px;font-weight:600;margin-bottom:3px">🏭 Default showroom</div>
                   <div style="font-size:12px;color:#6b7280">Your regular priced categories (Box Materials, Door Styles, etc.) plus Specialty Items — the classic MidasQuote showroom.</div>
                 </div>
-                <div id="mq-showroom-mode-custom" onclick="mqShowroomSetMode('custom')" style="flex:1;min-width:220px;border:2px solid #e5e7eb;border-radius:10px;padding:1rem;cursor:pointer">
-                  <div style="font-size:14px;font-weight:700;margin-bottom:4px">🎨 Build my own</div>
+                <div id="mq-showroom-mode-custom" onclick="mqShowroomSetMode('custom')" class="mq-sr-pick">
+                  <div style="font-size:13px;font-weight:600;margin-bottom:3px">🎨 Build my own</div>
                   <div style="font-size:12px;color:#6b7280">Only your custom categories below plus Specialty Items. Your regular priced categories are hidden from the showroom — and from this tab too, so it stays uncluttered — but nothing about them is deleted; pick Default above any time to bring them right back. The project-type filter at the top of your showroom is hidden too, since there'd be nothing left for it to filter.</div>
                 </div>
               </div>
@@ -2383,12 +2409,12 @@ window.logoutMember = async function () {
               </div>
             </div>
 
-            <div class="mq-card" style="margin-bottom:1.5rem;padding:0;overflow:hidden">
-              <div onclick="mqToggleShowroomSection('categories')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
-                <div class="mq-card-title" style="margin:0">📦 Your categories</div>
-                <span id="mq-sr-arrow-categories" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
+            <div class="mq-card mq-sr-card">
+              <div onclick="mqToggleShowroomSection('categories')" class="mq-sr-head">
+                <div class="mq-sr-title">📦 Your categories</div>
+                <span id="mq-sr-arrow-categories" class="mq-sr-chev">▼</span>
               </div>
-              <div id="mq-sr-body-categories" style="display:none;padding:0 1.25rem 1.25rem">
+              <div id="mq-sr-body-categories" class="mq-sr-body" style="display:none">
               <p id="mq-showroom-cats-intro" style="font-size:13px;color:#6b7280;margin-bottom:1rem">Use the ▲▼ arrows to reorder. Every change saves right away — no separate "Save" button on this tab.</p>
               <div id="mq-showroom-cats"><div class="mq-loading">Loading...</div></div>
               <div id="mq-showroom-addcat-note" style="font-size:12px;color:#6b7280;display:none"></div>
@@ -2396,17 +2422,17 @@ window.logoutMember = async function () {
               </div>
             </div>
 
-            <div class="mq-card" style="padding:0;overflow:hidden">
-              <div onclick="mqToggleShowroomSection('preview')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
-                <div class="mq-card-title" style="margin:0">👁️ Live preview</div>
-                <span id="mq-sr-arrow-preview" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
+            <div class="mq-card mq-sr-card">
+              <div onclick="mqToggleShowroomSection('preview')" class="mq-sr-head">
+                <div class="mq-sr-title">👁️ Live preview</div>
+                <span id="mq-sr-arrow-preview" class="mq-sr-chev">▼</span>
               </div>
               <div id="mq-sr-body-preview" style="display:none">
-                <div style="padding:0 1.25rem 1rem">
+                <div style="padding:0 1.1rem .75rem">
                   <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">This is your actual showroom page, loaded live — it updates automatically as you make changes above, or click refresh any time.</p>
                   <button class="mq-btn mq-btn-sm" style="margin-bottom:1rem" onclick="mqRefreshShowroomPreview()">🔄 Refresh preview</button>
                 </div>
-                <iframe id="mq-showroom-preview-frame" style="width:100%;height:800px;border:0;border-top:1px solid #e5e7eb;display:block"></iframe>
+                <iframe id="mq-showroom-preview-frame" style="width:100%;height:720px;border:0;border-top:1px solid #eceef1;display:block"></iframe>
               </div>
             </div>
           </div>
@@ -5570,6 +5596,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
 
   const PROPOSAL_TOKENS_HELP = `
     <div style="margin-bottom:10px"><strong>**text**</strong> — bold, same as anywhere else. &nbsp; <strong>{hr}</strong> — a horizontal divider line, place it anywhere. &nbsp; <strong>{break}</strong> — extra vertical space wherever you need it (hitting Return extra times alone won't add space beyond one normal paragraph gap — use {break} instead for more).</div>
+    <div style="margin-bottom:10px">Extra formatting tags (Text mode only — Blocks mode does all this with buttons): <code>{i}…{/i}</code> italic, <code>{u}…{/u}</code> underline, <code>{cols}left{|}right{/cols}</code> two columns, <code>{img:https://…|w=50|a=center}</code> an image, and <code>{box:align=center;size=24;list=bullets;bg=#hex;border=#hex}…{/box}</code> for alignment (left/center/right/justify), text size, bullet/numbered lists and box colours.</div>
     <div style="margin-bottom:10px">In <strong>Blocks</strong> mode you never need any of this — use a Text box block and its Bold / Text colour / Coloured background / Border options. In <strong>Text (advanced)</strong> mode: <code>{box:#bg}...{/box}</code> makes a coloured box, <code>{box:#bg|#border}...{/box}</code> adds a border, and <code>{color:#hex}...{/color}</code> colours text.</div>
 
     <div style="margin-bottom:6px"><strong>Customer &amp; job info</strong> <span style="font-weight:400">(filled in when the proposal is created in MidasQuote Pro)</span></div>
@@ -5662,12 +5689,16 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   function mqPbParse(body) {
     body = (body || '').replace(/\r\n/g, '\n').trim();
     if (!body) return [];
-    const boxes = [];
-    const masked = body.replace(/\{box:(#[0-9a-fA-F]{3,8})(?:\|(#[0-9a-fA-F]{3,8}))?\}([\s\S]*?)\{\/box\}/g, (m, hex, bd, inner) => {
-      boxes.push({ hex, bd: bd || null, inner: inner.trim(), raw: m });
-      return '\u0000BOX' + (boxes.length - 1) + '\u0000';
+    const masked_ = [];
+    let masked = body.replace(/\{box:([^}]*)\}([\s\S]*?)\{\/box\}/g, (m, attrs, inner) => {
+      masked_.push({ kind: 'box', attrs, inner: inner.trim(), raw: m });
+      return '\u0000BOX' + (masked_.length - 1) + '\u0000';
     });
-    const unmask = s => s.replace(/\u0000BOX(\d+)\u0000/g, (m, n) => boxes[+n].raw);
+    masked = masked.replace(/\{cols\}([\s\S]*?)\{\/cols\}/g, (m, inner) => {
+      masked_.push({ kind: 'cols', inner, raw: m });
+      return '\u0000BOX' + (masked_.length - 1) + '\u0000';
+    });
+    const unmask = s => s.replace(/\u0000BOX(\d+)\u0000/g, (m, n) => masked_[+n].raw);
     const names = Object.keys(MQ_PB_INLINE).join('|');
     const NC = '[^*{}\\u0000]';
     const reAllBold = new RegExp('^\\*\\*(' + NC + '*?)\\{(' + names + ')\\}(' + NC + '*?)\\*\\*$');
@@ -5688,9 +5719,23 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       if (!p) return;
       const bx = p.match(/^\u0000BOX(\d+)\u0000$/);
       if (bx) {
-        const b = boxes[+bx[1]];
-        const bd = b.bd, bg = (bd && b.hex.toLowerCase() === '#ffffff') ? null : b.hex;
-        blocks.push({ type: 'text', text: b.inner, bg, border: bd });
+        const it = masked_[+bx[1]];
+        if (it.kind === 'cols') {
+          const parts = it.inner.split('{|}');
+          blocks.push({ type: 'cols', l: (parts[0] || '').trim(), r: (parts[1] || '').trim() });
+        } else {
+          const o = mqFmtAttrs(it.attrs);
+          const legacyBorderOnly = it.attrs.trim().charAt(0) === '#' && o.border && (o.bg || '').toLowerCase() === '#ffffff';
+          blocks.push({ type: 'text', text: it.inner, bg: legacyBorderOnly ? null : (o.bg || null), border: o.border || null,
+            align: (o.align && o.align !== 'left') ? o.align : null, size: parseInt(o.size, 10) || null, list: (o.list === 'bullets' || o.list === 'numbers') ? o.list : null });
+        }
+        return;
+      }
+      const im = p.match(/^\{img:([^}]*)\}$/);
+      if (im) {
+        const parts = im[1].split('|'); const o = {};
+        parts.slice(1).forEach(kv => { const i = kv.indexOf('='); if (i > 0) o[kv.slice(0, i).trim()] = kv.slice(i + 1).trim(); });
+        blocks.push({ type: 'img', url: (parts[0] || '').trim(), w: parseInt(o.w, 10) || 50, a: /^(left|center|right)$/.test(o.a) ? o.a : 'center' });
         return;
       }
       const tokm = p.match(/^\{([a-z_]+)\}$/);
@@ -5714,7 +5759,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       };
       const parsed = lines.map(parseLine);
       if (parsed.some(Boolean)) {
-        // Lines that are fields become field pills; runs of other lines become text boxes.
+        // Lines that are fields / list / total / divider tokens become pills; runs of other lines become text boxes.
         let pending = [], first = true;
         const flush = () => { if (pending.length) { const tb = { type: 'text', text: unmask(pending.join('\n')), bg: null, border: null }; if (!first) tb.tight = true; blocks.push(tb); first = false; pending = []; } };
         parsed.forEach((f, i) => {
@@ -5729,12 +5774,31 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     return blocks;
   }
 
+  function mqPbHasFmt(b) { return !!(b.bg || b.border || (b.align && b.align !== 'left') || b.size || b.list); }
+  function mqPbEncUrl(u) { return String(u || '').trim().replace(/ /g, '%20').replace(/\{/g, '%7B').replace(/\}/g, '%7D').replace(/\|/g, '%7C').replace(/"/g, '%22').replace(/</g, '%3C').replace(/>/g, '%3E'); }
   function mqPbBlockText(b) {
     if (b.type === 'text') {
       const t = (b.text || '').trim();
       if (!t) return '';
+      if ((b.align && b.align !== 'left') || b.size || b.list) {
+        const a = [];
+        if (b.bg) a.push('bg=' + b.bg);
+        if (b.border) a.push('border=' + b.border);
+        if (b.align && b.align !== 'left') a.push('align=' + b.align);
+        if (b.size) a.push('size=' + b.size);
+        if (b.list) a.push('list=' + b.list);
+        return `{box:${a.join(';')}}${t}{/box}`;
+      }
       if (b.bg || b.border) return `{box:${b.bg || '#ffffff'}${b.border ? '|' + b.border : ''}}${t}{/box}`;
       return t;
+    }
+    if (b.type === 'cols') {
+      const l = (b.l || '').trim(), r = (b.r || '').trim();
+      return (l || r) ? `{cols}${l}{|}${r}{/cols}` : '';
+    }
+    if (b.type === 'img') {
+      if (!/^https?:\/\//i.test((b.url || '').trim())) return '';
+      return `{img:${mqPbEncUrl(b.url)}|w=${parseInt(b.w, 10) || 50}|a=${b.a || 'center'}}`;
     }
     if (b.type === 'field') {
       const L = (b.label || '').trim(), S = b.suffix || '', tok = `{${b.tok}}`;
@@ -5745,7 +5809,11 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     }
     return `{${b.tok}}`;
   }
-  function mqPbPlainLike(b) { return !(b.type === 'text' && (b.bg || b.border)); }
+  function mqPbPlainLike(b) {
+    if (b.type === 'cols' || b.type === 'img') return false;
+    if (b.type === 'text') return !mqPbHasFmt(b);
+    return true;
+  }
   function mqPbSerialize(blocks) {
     let out = '', prev = null;
     blocks.forEach(b => {
@@ -5760,6 +5828,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
 
   function mqPbNew(tok) {
     if (tok === '@text') return { type: 'text', text: '', bg: null, border: null };
+    if (tok === '@cols') return { type: 'cols', l: '', r: '' };
+    if (tok === '@img') return { type: 'img', url: '', w: 50, a: 'center' };
     const n = tok.replace(/[{}]/g, '');
     if (MQ_PB_INLINE[n]) return { type: 'field', tok: n, label: MQ_PB_INLINE[n].lab, suffix: '', bl: !!MQ_PB_INLINE[n].lab, bv: false };
     if (MQ_PB_ITEMS[n]) return { type: 'items', tok: n };
@@ -5767,7 +5837,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     return { type: 'simple', tok: n };
   }
 
-  // ---- rich text <-> the saved markup (**bold**, {color:#hex}…{/color}, {field}) ----
+  // ---- rich text <-> the saved markup (**bold**, {i}, {u}, {color:#hex}…{/color}, {field}) ----
   function mqPbEsc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
   function mqPbChipHTML(n) {
     return `<span class="mq-pb-chip" contenteditable="false" data-tok="${n}" style="background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;border-radius:5px;padding:0 6px;font-size:11.5px;font-weight:600;white-space:nowrap">${(MQ_PB_INLINE[n] || { l: n }).l}</span>`;
@@ -5777,6 +5847,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     let h = mqPbEsc(t).replace(/\n/g, '<br>');
     h = h.replace(new RegExp('\\{(' + names + ')\\}', 'g'), (m, n) => mqPbChipHTML(n));
     h = h.replace(/\{color:(#[0-9a-fA-F]{3,8})\}([\s\S]*?)\{\/color\}/g, '<span style="color:$1">$2</span>');
+    h = h.replace(/\{i\}([\s\S]*?)\{\/i\}/g, '<i>$1</i>').replace(/\{u\}([\s\S]*?)\{\/u\}/g, '<u>$1</u>');
     h = h.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
     return h;
   }
@@ -5793,35 +5864,44 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const runs = [];
     const lastIsNl = () => runs.length && runs[runs.length - 1].nl;
     const walk = (node, st) => {
-      if (node.nodeType === 3) { const t = node.nodeValue.replace(/ /g, ' '); if (t) runs.push({ t, b: st.b, c: st.c }); return; }
+      if (node.nodeType === 3) { const t = node.nodeValue.replace(/ /g, ' '); if (t) runs.push({ t, b: st.b, i: st.i, u: st.u, c: st.c }); return; }
       if (node.nodeType !== 1) return;
       const tag = node.tagName;
-      if (node.dataset && node.dataset.tok) { runs.push({ tok: node.dataset.tok, b: st.b, c: st.c }); return; }
+      if (node.dataset && node.dataset.tok) { runs.push({ tok: node.dataset.tok, b: st.b, i: st.i, u: st.u, c: st.c }); return; }
       if (tag === 'BR') { runs.push({ nl: true }); return; }
-      const s = { b: st.b, c: st.c };
+      const s = { b: st.b, i: st.i, u: st.u, c: st.c };
       if (tag === 'B' || tag === 'STRONG') s.b = true;
-      const fw = node.style && node.style.fontWeight;
+      if (tag === 'I' || tag === 'EM') s.i = true;
+      if (tag === 'U') s.u = true;
+      const st_ = node.style || {};
+      const fw = st_.fontWeight;
       if (fw) { if (fw === 'bold' || fw === 'bolder' || +fw >= 600) s.b = true; else if (fw === 'normal' || +fw < 600) s.b = false; }
-      const col = tag === 'FONT' ? node.getAttribute('color') : (node.style && node.style.color);
+      if (st_.fontStyle === 'italic') s.i = true; else if (st_.fontStyle === 'normal') s.i = false;
+      const td = st_.textDecorationLine || st_.textDecoration || '';
+      if (/underline/.test(td)) s.u = true; else if (/none/.test(td)) s.u = false;
+      const col = tag === 'FONT' ? node.getAttribute('color') : st_.color;
       if (col) s.c = mqPbToHex(col) || st.c;
       const block = tag === 'DIV' || tag === 'P';
       if (block && runs.length && !lastIsNl()) runs.push({ nl: true });
       node.childNodes.forEach(ch => walk(ch, s));
     };
-    root.childNodes.forEach(ch => walk(ch, { b: false, c: null }));
-    let out = '', i = 0;
-    while (i < runs.length) {
-      const r = runs[i];
-      if (r.nl) { out += '\n'; i++; continue; }
-      let text = r.tok ? `{${r.tok}}` : r.t, j = i + 1;
-      while (j < runs.length && !runs[j].nl && runs[j].b === r.b && runs[j].c === r.c) { text += runs[j].tok ? `{${runs[j].tok}}` : runs[j].t; j++; }
+    root.childNodes.forEach(ch => walk(ch, { b: false, i: false, u: false, c: null }));
+    const same = (a, b) => a.b === b.b && a.i === b.i && a.u === b.u && a.c === b.c;
+    let out = '', k = 0;
+    while (k < runs.length) {
+      const r = runs[k];
+      if (r.nl) { out += '\n'; k++; continue; }
+      let text = r.tok ? `{${r.tok}}` : r.t, j = k + 1;
+      while (j < runs.length && !runs[j].nl && same(runs[j], r)) { text += runs[j].tok ? `{${runs[j].tok}}` : runs[j].t; j++; }
       if (text.trim()) {
         let seg = text;
         if (r.c) seg = `{color:${r.c}}${seg}{/color}`;
+        if (r.u) seg = `{u}${seg}{/u}`;
+        if (r.i) seg = `{i}${seg}{/i}`;
         if (r.b) seg = `**${seg}**`;
         out += seg;
       } else out += text;
-      i = j;
+      k = j;
     }
     return out.replace(/[ \t]+\n/g, '\n').replace(/^\n+|\n+$/g, '');
   }
@@ -5846,25 +5926,46 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     mqSaveProposalField(id, 'Body', v);
   };
 
-  function mqPbRichToolbar(id, i) {
+  const MQ_PB_SIZES = { 0: 'Normal', 12: 'Small', 18: 'Large', 24: 'Heading', 32: 'Big title' };
+  const MQ_PB_ALIGNS = { left: 'Left', center: 'Centre', right: 'Right', justify: 'Justified' };
+  const MQ_PB_LISTS = { '': 'None', bullets: 'Bullet points', numbers: 'Numbered' };
+
+  function mqPbEdId(id, i, side) { return `mq-pb-ed-${id}-${i}${side ? '-' + side : ''}`; }
+  function mqPbRichToolbar(id, i, side) {
     const mdp = 'onmousedown="event.preventDefault()"';
+    const sd = side || '';
     return `<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px">
-      <button type="button" ${mdp} class="mq-btn mq-btn-sm" title="Bold — select some text first" onclick="mqPbFmt('${id}',${i},'bold')"><strong>B</strong></button>
-      <input type="color" id="mq-pb-tc-${id}-${i}" value="#dc2626" title="Text colour — pick a colour, then it's applied to the selected text" onmousedown="mqPbSaveSel('${id}',${i})" onchange="mqPbFmt('${id}',${i},'color')" style="width:26px;height:24px;padding:1px;border:1px solid #d1d5db;border-radius:4px;cursor:pointer"/>
-      <button type="button" ${mdp} class="mq-btn mq-btn-sm" title="Colour the selected text with this colour" onclick="mqPbFmt('${id}',${i},'color')"><span style="color:#dc2626;font-weight:700">A</span> Text colour</button>
+      <button type="button" ${mdp} class="mq-btn mq-btn-sm" title="Bold — select some text first" onclick="mqPbFmt('${id}',${i},'bold','${sd}')"><strong>B</strong></button>
+      <button type="button" ${mdp} class="mq-btn mq-btn-sm" title="Italic" onclick="mqPbFmt('${id}',${i},'italic','${sd}')"><em>I</em></button>
+      <button type="button" ${mdp} class="mq-btn mq-btn-sm" title="Underline" onclick="mqPbFmt('${id}',${i},'underline','${sd}')"><u>U</u></button>
+      <input type="color" id="mq-pb-tc-${id}-${i}${sd}" value="#dc2626" title="Text colour — pick a colour, then it's applied to the selected text" onmousedown="mqPbSaveSel('${id}',${i},'${sd}')" onchange="mqPbFmt('${id}',${i},'color','${sd}')" style="width:26px;height:24px;padding:1px;border:1px solid #d1d5db;border-radius:4px;cursor:pointer"/>
+      <button type="button" ${mdp} class="mq-btn mq-btn-sm" title="Colour the selected text with this colour" onclick="mqPbFmt('${id}',${i},'color','${sd}')"><span style="color:#dc2626;font-weight:700">A</span> Text colour</button>
     </div>`;
   }
+  function mqPbEditorHTML(id, i, side, markup, style, ph) {
+    const sd = side || '';
+    return `<div id="${mqPbEdId(id, i, sd)}" class="mq-pb-rich" contenteditable="true" data-ph="${ph || 'Type your text here…'}" onfocus="this.dataset.t='1'" oninput="mqPbRich('${id}',${i},'${sd}')" onkeyup="mqPbSaveSel('${id}',${i},'${sd}')" onmouseup="mqPbSaveSel('${id}',${i},'${sd}')" onblur="mqPbSaveSel('${id}',${i},'${sd}');mqPbFlush('${id}')" onpaste="mqPbPaste(event)" style="min-height:64px;padding:8px 10px;font-size:13px;line-height:1.5;outline:none;overflow-wrap:anywhere;border-radius:6px;${style || 'background:#fff;border:1px solid #d1d5db'}">${mqPbMarkupToHtml(markup || '')}</div>`;
+  }
   function mqPbPlain(s) {
-    return String(s || '').replace(/\{color:#[0-9a-fA-F]{3,8}\}|\{\/color\}|\*\*/g, '').replace(/\{([a-z_]+)\}/g, (m, n) => '‹' + ((MQ_PB_INLINE[n] || {}).l || n) + '›').replace(/\s+/g, ' ').trim();
+    return String(s || '').replace(/\{color:#[0-9a-fA-F]{3,8}\}|\{\/color\}|\{\/?[iu]\}|\*\*/g, '').replace(/\{([a-z_]+)\}/g, (m, n) => '‹' + ((MQ_PB_INLINE[n] || {}).l || n) + '›').replace(/\s+/g, ' ').trim();
   }
   // What a collapsed block shows: a pill (same style as the palette) + a short grey summary.
   function mqPbPill(b) {
     if (b.type === 'text') return { pill: '✏️ Text box', dark: true, bg: b.bg, bd: b.border, sum: mqPbPlain(b.text) || 'empty — click to type' };
+    if (b.type === 'cols') return { pill: '▥ Two columns', dark: true, sum: [mqPbPlain(b.l), mqPbPlain(b.r)].filter(Boolean).join('  |  ') || 'empty — click to type' };
+    if (b.type === 'img') return { pill: '🖼 Image', dark: true, sum: b.url ? decodeURIComponent((b.url.split('?')[0].split('/').pop() || '').replace(/%(?![0-9a-fA-F]{2})/g, '%25')) : 'no image yet — click to add one' };
     if (b.type === 'field') return { pill: (MQ_PB_INLINE[b.tok] || { l: b.tok }).l, sum: [(b.label || '').trim(), b.suffix ? '… ' + b.suffix.trim() : ''].join(' ').trim() || 'filled in automatically' };
     if (b.type === 'items') return { pill: 'Item list', sum: MQ_PB_ITEMS[b.tok] || '' };
     if (b.type === 'totals') return { pill: 'Totals', sum: MQ_PB_TOTALS[b.tok] || '' };
     const s = MQ_PB_SIMPLE[b.tok] || ['', b.tok, ''];
     return { pill: s[1], sum: '' };
+  }
+  function mqPbEditorStyle(b) {
+    const bg = b.bg ? mqPbEsc(b.bg) : '#fff';
+    const bd = b.border ? '2px solid ' + mqPbEsc(b.border) : '1px solid #d1d5db';
+    const al = (b.align && b.align !== 'left') ? `text-align:${b.align};` : '';
+    const sz = b.size ? `font-size:${Math.min(b.size, 28)}px;line-height:1.25;` : '';
+    return `background:${bg};border:${bd};${al}${sz}`;
   }
 
   function mqPbBlockHTML(id, b, i, blocks) {
@@ -5873,12 +5974,18 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const esc = mqPbEsc;
     const prev = blocks[i - 1];
     const lbl = 'font-size:12px;color:#4b5563;display:flex;align-items:center;gap:4px;cursor:pointer';
+    const small = 'font-size:12px;color:#4b5563';
+    const optSel = (key, map, cur) => `<select onchange="mqPbOpt('${id}',${i},'${key}',this.value)" style="width:auto;font-size:12.5px">${Object.keys(map).map(k => `<option value="${k}" ${String(k) === String(cur) ? 'selected' : ''}>${map[k]}</option>`).join('')}</select>`;
     const tightBox = (prev && mqPbPlainLike(prev) && mqPbPlainLike(b)) ? `<label style="${lbl}" title="No gap between this and the block above"><input type="checkbox" ${b.tight ? 'checked' : ''} onchange="mqPbSet('${id}',${i},'tight',this.checked)"/> Tight to the block above</label>` : '';
     let panel = '';
     if (b.type === 'text') {
       const hasBg = !!b.bg, hasBd = !!b.border;
-      panel = mqPbRichToolbar(id, i) +
-        `<div id="mq-pb-ed-${id}-${i}" class="mq-pb-rich" contenteditable="true" data-ph="Type your text here…" onfocus="this.dataset.t='1'" oninput="mqPbRich('${id}',${i})" onkeyup="mqPbSaveSel('${id}',${i})" onmouseup="mqPbSaveSel('${id}',${i})" onblur="mqPbSaveSel('${id}',${i});mqPbFlush('${id}')" onpaste="mqPbPaste(event)" style="min-height:64px;padding:8px 10px;font-size:13px;line-height:1.5;outline:none;overflow-wrap:anywhere;border-radius:6px;background:${hasBg ? esc(b.bg) : '#fff'};border:${hasBd ? '2px solid ' + esc(b.border) : '1px solid #d1d5db'}">${mqPbMarkupToHtml(b.text || '')}</div>
+      panel = mqPbRichToolbar(id, i, '') + mqPbEditorHTML(id, i, '', b.text, mqPbEditorStyle(b)) + `
+        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:8px">
+          <span style="${small}">Size ${optSel('size', MQ_PB_SIZES, b.size || 0)}</span>
+          <span style="${small}">Align ${optSel('align', MQ_PB_ALIGNS, b.align || 'left')}</span>
+          <span style="${small}">List ${optSel('list', MQ_PB_LISTS, b.list || '')}</span>
+        </div>
         <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:8px">
           <label style="${lbl}"><input type="checkbox" ${hasBg ? 'checked' : ''} onchange="mqPbBox('${id}',${i},'bg',this.checked)"/> Coloured background</label>
           <input type="color" id="mq-pb-bg-${id}-${i}" value="${esc(b.bg || '#eff6ff')}" title="Background colour" oninput="mqPbBox('${id}',${i},'bg',true)" style="width:28px;height:22px;padding:1px;border:1px solid #d1d5db;border-radius:4px;cursor:pointer"/>
@@ -5886,6 +5993,23 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           <input type="color" id="mq-pb-bd-${id}-${i}" value="${esc(b.border || '#1a3a6b')}" title="Border colour" oninput="mqPbBox('${id}',${i},'border',true)" style="width:28px;height:22px;padding:1px;border:1px solid #d1d5db;border-radius:4px;cursor:pointer"/>
           ${tightBox}
         </div>`;
+    } else if (b.type === 'cols') {
+      panel = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">
+          <div style="min-width:0"><div style="font-size:11px;font-weight:700;color:#6b7280;margin-bottom:4px">LEFT COLUMN</div>${mqPbRichToolbar(id, i, 'L')}${mqPbEditorHTML(id, i, 'L', b.l, '', 'Left column…')}</div>
+          <div style="min-width:0"><div style="font-size:11px;font-weight:700;color:#6b7280;margin-bottom:4px">RIGHT COLUMN</div>${mqPbRichToolbar(id, i, 'R')}${mqPbEditorHTML(id, i, 'R', b.r, '', 'Right column…')}</div>
+        </div>`;
+    } else if (b.type === 'img') {
+      panel = `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <label class="mq-btn mq-btn-sm" style="cursor:pointer;display:inline-block">📤 Upload an image<input type="file" accept="image/*" style="display:none" onchange="mqPbImgUpload('${id}',${i},this)"/></label>
+          <span id="mq-pb-imgstat-${id}-${i}" style="font-size:11.5px;color:#6b7280"></span>
+        </div>
+        <div style="margin-top:8px"><span style="${small}">or paste an image link:</span>
+          <input type="text" value="${esc(b.url || '')}" placeholder="https://…" oninput="mqPbImgSet('${id}',${i},'url',this.value)" onblur="mqPbFlush('${id}')" style="width:100%;font-size:12.5px;box-sizing:border-box;margin-top:3px"/></div>
+        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:8px">
+          <span style="${small}">Width <select onchange="mqPbImgSet('${id}',${i},'w',this.value)" style="width:auto;font-size:12.5px">${[25, 40, 50, 75, 100].map(w => `<option value="${w}" ${(+b.w || 50) === w ? 'selected' : ''}>${w}% of the page</option>`).join('')}</select></span>
+          <span style="${small}">Align <select onchange="mqPbImgSet('${id}',${i},'a',this.value)" style="width:auto;font-size:12.5px">${['left', 'center', 'right'].map(a => `<option value="${a}" ${(b.a || 'center') === a ? 'selected' : ''}>${a === 'center' ? 'Centre' : a[0].toUpperCase() + a.slice(1)}</option>`).join('')}</select></span>
+        </div>
+        <div id="mq-pb-imgprev-${id}-${i}" style="margin-top:8px;${/^https?:\/\//i.test(b.url || '') ? '' : 'display:none'}"><img src="${esc(b.url || '')}" style="max-width:100%;max-height:120px;border:1px solid #e5e7eb;border-radius:6px;background:#fff"/></div>`;
     } else if (b.type === 'field') {
       panel = `<div style="font-size:11.5px;color:#6b7280;margin-bottom:8px;line-height:1.4">${esc((MQ_PB_INLINE[b.tok] || {}).note || '')}</div>
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
@@ -5945,7 +6069,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       : `<div style="padding:26px 12px;text-align:center;color:#9ca3af;font-size:13px;border:2px dashed #d1d5db;border-radius:8px">Your proposal is empty.<br>Click or drag a block from above to start.</div>`;
     box.querySelectorAll('textarea').forEach(window.mqPbGrow);
     if (focusIdx != null) {
-      const ta = document.getElementById(`mq-pb-ed-${id}-${focusIdx}`);
+      const ta = document.getElementById(`mq-pb-ed-${id}-${focusIdx}`) || document.getElementById(`mq-pb-ed-${id}-${focusIdx}-L`);
       if (ta) ta.focus();
     }
   };
@@ -5994,26 +6118,27 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   window.mqPbAdd = function(id, tok, at) {
     const a = _mqPropBlocks[id] || (_mqPropBlocks[id] = []);
     const nb = mqPbNew(tok);
-    if (nb.type === 'text') nb.open = true;
+    if (nb.type === 'text' || nb.type === 'cols' || nb.type === 'img') nb.open = true;
     const idx = at == null ? a.length : at;
     a.splice(idx, 0, nb);
-    window.mqPbRender(id, nb.type === 'text' ? idx : null);
+    window.mqPbRender(id, (nb.type === 'text' || nb.type === 'cols') ? idx : null);
     mqPbCommit(id, true);
     if (at == null) { const box = document.getElementById(`mq-prop-canvas-${id}`); const last = box && box.lastElementChild; if (last && last.scrollIntoView) last.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
   };
 
-  // ---- rich text editing inside a Text box block ----
+  // ---- rich text editing inside a Text box / column ----
   var _mqPbSel = {};
-  window.mqPbSaveSel = function(id, i) {
-    const ed = document.getElementById(`mq-pb-ed-${id}-${i}`);
+  window.mqPbSaveSel = function(id, i, side) {
+    const ed = document.getElementById(mqPbEdId(id, i, side));
     const s = window.getSelection();
-    if (ed && s && s.rangeCount && ed.contains(s.anchorNode)) _mqPbSel[id + '-' + i] = s.getRangeAt(0).cloneRange();
+    if (ed && s && s.rangeCount && ed.contains(s.anchorNode)) _mqPbSel[id + '-' + i + '-' + (side || '')] = s.getRangeAt(0).cloneRange();
   };
-  window.mqPbRich = function(id, i) {
-    const ed = document.getElementById(`mq-pb-ed-${id}-${i}`);
+  window.mqPbRich = function(id, i, side) {
+    const ed = document.getElementById(mqPbEdId(id, i, side));
     const b = (_mqPropBlocks[id] || [])[i];
     if (!ed || !b) return;
-    b.text = mqPbHtmlToMarkup(ed);
+    const md = mqPbHtmlToMarkup(ed);
+    if (side === 'L') b.l = md; else if (side === 'R') b.r = md; else b.text = md;
     const se = document.getElementById(`mq-pb-sum-${id}-${i}`);
     if (se) se.textContent = mqPbPill(b).sum;
     mqPbCommit(id, false);
@@ -6023,20 +6148,27 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const t = (ev.clipboardData || window.clipboardData).getData('text/plain');
     document.execCommand('insertText', false, t);
   };
-  window.mqPbFmt = function(id, i, kind) {
-    const ed = document.getElementById(`mq-pb-ed-${id}-${i}`);
+  window.mqPbFmt = function(id, i, kind, side) {
+    const ed = document.getElementById(mqPbEdId(id, i, side));
     if (!ed) return;
+    // Only put the saved selection back if it was lost (e.g. the colour picker
+    // took focus) — restoring it when it's still there would wipe the
+    // "next typed text is bold/italic/…" state the browser is holding.
+    const sel0 = window.getSelection();
+    const stillIn = sel0 && sel0.rangeCount && ed.contains(sel0.anchorNode);
     ed.focus();
-    const r = _mqPbSel[id + '-' + i];
-    if (r) { const s = window.getSelection(); s.removeAllRanges(); s.addRange(r); }
+    const r = _mqPbSel[id + '-' + i + '-' + (side || '')];
+    if (!stillIn && r) { const s = window.getSelection(); s.removeAllRanges(); s.addRange(r); }
     try { document.execCommand('styleWithCSS', false, true); } catch (e) {}
     if (kind === 'bold') document.execCommand('bold');
+    else if (kind === 'italic') document.execCommand('italic');
+    else if (kind === 'underline') document.execCommand('underline');
     else if (kind === 'color') {
-      const ci = document.getElementById(`mq-pb-tc-${id}-${i}`);
+      const ci = document.getElementById(`mq-pb-tc-${id}-${i}${side || ''}`);
       document.execCommand('foreColor', false, ci ? ci.value : '#dc2626');
     }
-    window.mqPbSaveSel(id, i);
-    window.mqPbRich(id, i);
+    window.mqPbSaveSel(id, i, side);
+    window.mqPbRich(id, i, side);
   };
   // Background / border options of a Text box.
   window.mqPbBox = function(id, i, which, on) {
@@ -6044,21 +6176,75 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     if (!b) return;
     const ci = document.getElementById(which === 'bg' ? `mq-pb-bg-${id}-${i}` : `mq-pb-bd-${id}-${i}`);
     b[which] = on ? (ci ? ci.value : '#eff6ff') : null;
-    // keep the checkbox in step when the colour picker was used
     const panel = document.getElementById(`mq-pb-panel-${id}-${i}`);
     if (panel) {
       const cbs = panel.querySelectorAll('input[type=checkbox]');
       if (cbs[0]) cbs[0].checked = !!b.bg;
       if (cbs[1]) cbs[1].checked = !!b.border;
     }
-    const ed = document.getElementById(`mq-pb-ed-${id}-${i}`);
-    if (ed) { ed.style.background = b.bg || '#fff'; ed.style.border = b.border ? '2px solid ' + b.border : '1px solid #d1d5db'; }
+    window.mqPbRefreshText(id, i);
+    mqPbCommit(id, false);
+  };
+  // Size / alignment / list options of a Text box.
+  window.mqPbOpt = function(id, i, key, val) {
+    const b = (_mqPropBlocks[id] || [])[i];
+    if (!b) return;
+    if (key === 'size') b.size = (+val) || null;
+    else if (key === 'align') b.align = val === 'left' ? null : val;
+    else if (key === 'list') b.list = val || null;
+    window.mqPbRefreshText(id, i);
+    mqPbCommit(id, true);
+  };
+  window.mqPbRefreshText = function(id, i) {
+    const b = (_mqPropBlocks[id] || [])[i];
+    const ed = document.getElementById(mqPbEdId(id, i, ''));
+    if (ed && b) {
+      ed.style.background = b.bg || '#fff';
+      ed.style.border = b.border ? '2px solid ' + b.border : '1px solid #d1d5db';
+      ed.style.textAlign = (b.align && b.align !== 'left') ? b.align : '';
+      ed.style.fontSize = b.size ? Math.min(b.size, 28) + 'px' : '13px';
+      ed.style.lineHeight = b.size ? '1.25' : '1.5';
+    }
     const sw = document.getElementById(`mq-pb-sw-${id}-${i}`);
-    if (sw) {
-      if (b.bg || b.border) { sw.style.display = 'inline-block'; sw.style.background = b.bg || '#ffffff'; sw.style.borderColor = b.border || 'rgba(255,255,255,0.7)'; sw.style.cssText += ';width:11px;height:11px;border-radius:3px;border-width:2px;border-style:solid;box-sizing:border-box;margin-right:6px;vertical-align:-1px'; sw.style.background = b.bg || '#ffffff'; sw.style.borderColor = b.border || 'rgba(255,255,255,0.7)'; }
+    if (sw && b) {
+      if (b.bg || b.border) { sw.style.cssText = `display:inline-block;width:11px;height:11px;border-radius:3px;border:2px solid ${b.border || 'rgba(255,255,255,0.7)'};box-sizing:border-box;background:${b.bg || '#ffffff'};margin-right:6px;vertical-align:-1px`; }
       else sw.style.display = 'none';
     }
-    mqPbCommit(id, false);
+  };
+  // Image block.
+  window.mqPbImgSet = function(id, i, key, val) {
+    const b = (_mqPropBlocks[id] || [])[i];
+    if (!b) return;
+    if (key === 'w') val = parseInt(val, 10) || 50;
+    b[key] = val;
+    if (key === 'url') {
+      const pv = document.getElementById(`mq-pb-imgprev-${id}-${i}`);
+      if (pv) {
+        const ok = /^https?:\/\//i.test(val || '');
+        pv.style.display = ok ? '' : 'none';
+        const im = pv.querySelector('img'); if (im && ok) im.src = val;
+      }
+      const se = document.getElementById(`mq-pb-sum-${id}-${i}`);
+      if (se) se.textContent = mqPbPill(b).sum;
+    }
+    mqPbCommit(id, key !== 'url');
+  };
+  window.mqPbImgUpload = async function(id, i, input) {
+    const b = (_mqPropBlocks[id] || [])[i];
+    const file = input.files && input.files[0];
+    if (!b || !file) return;
+    const st = document.getElementById(`mq-pb-imgstat-${id}-${i}`);
+    if (st) { st.textContent = 'Uploading…'; st.style.color = '#6b7280'; }
+    try {
+      const tok = (window._mqShopRecord && window._mqShopRecord.fields && window._mqShopRecord.fields['Shop token']) || 'unknown-shop';
+      const url = await mqUploadImage(file, tok, 'general');
+      b.url = url; b.open = true;
+      mqPbCommit(id, true);
+      window.mqPbRender(id);
+    } catch (e) {
+      if (st) { st.textContent = 'Upload failed — try again, or paste an image link'; st.style.color = '#dc2626'; }
+    }
+    input.value = '';
   };
 
   // ---- drag & drop ----
@@ -6161,7 +6347,9 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // Click-to-insert tags. block:true tags need to sit on their own paragraph.
   const MQ_PROP_CHIPS = [
     { group: 'Add your own', blocksOnly: true, items: [
-      { t: '@text', l: '＋ Text box', tip: 'Your own words. Make it bold or coloured, give it a coloured background and/or a border.' } ] },
+      { t: '@text', l: '＋ Text box', tip: 'Your own words. Bold, italic, underline, colours, size, alignment, bullet points, a coloured background and/or a border.' },
+      { t: '@cols', l: '＋ Two columns', tip: 'Two blocks of text side by side.' },
+      { t: '@img', l: '＋ Image', tip: 'Upload a picture — a certification badge, a past project, a signature…' } ] },
     { group: 'Customer & job', items: [
       { t: '{customer_name}', l: 'Customer name', tip: 'The customer\'s name, filled in when the proposal is created.' },
       { t: '{customer_address}', l: 'Address', tip: 'Customer address. If left blank on a proposal, the whole line disappears.' },
@@ -6199,8 +6387,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         <div style="width:96px;flex-shrink:0;display:flex;align-items:center;padding:8px 10px;background:#f3f4f6;border-right:1px solid #d1d5db;font-size:10.5px;font-weight:700;color:#4b5563;text-transform:uppercase;letter-spacing:0.04em;line-height:1.3">${g.group}</div>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:8px 10px;flex:1;min-width:0">${g.items.map(chip).join('')}</div></div>`).join('');
     const modeBtn = (m, label) => `<button type="button" id="mq-prop-modebtn-${m}-${id}" onclick="mqPropSetMode('${id}','${m}')" style="${mode === m ? 'background:#1a1a1a;color:#fff;border-color:#1a1a1a' : 'background:#fff;color:#374151;border-color:#d1d5db'};padding:5px 12px;font-size:12.5px;font-weight:600;border-width:1px;border-style:solid;border-radius:${m === 'blocks' ? '6px 0 0 6px' : '0 6px 6px 0'};cursor:pointer${m === 'raw' ? ';margin-left:-1px' : ''}">${label}</button>`;
-    return `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px;align-items:start">
-      <div style="min-width:0">
+    return `<div style="min-width:0">
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">
           <div style="display:flex">${modeBtn('blocks', '🧩 Blocks (drag &amp; drop)')}${modeBtn('raw', '&lt;/&gt; Text (advanced)')}</div>
         </div>
@@ -6233,15 +6420,21 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         </div>
         <textarea id="mq-prop-body-${id}" rows="18" style="width:100%;font-family:ui-monospace,monospace;font-size:12.5px;line-height:1.6" onfocus="this.dataset.touched='1'" oninput="mqProposalBodyInput('${id}')" onblur="mqSaveProposalField('${id}','Body',this.value)">${(t.fields['Body'] || '').replace(/</g, '&lt;')}</textarea>
         </div>
-      </div>
-      <div style="min-width:0;position:sticky;top:8px">
+      </div>`;
+  }
+
+  // The live preview lives in its own column NEXT TO all the sections (text,
+  // letterhead, settings, cheat sheet) so it stays in view while any of them
+  // is being edited.
+  function mqPropPreviewColHTML(t) {
+    const id = t.id;
+    return `      <div style="min-width:0;position:sticky;top:8px">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px">
           <span style="font-size:11.5px;font-weight:700;color:#374151">Live preview <span style="font-weight:400;color:#9ca3af">(sample customer &amp; items)</span></span>
           <button class="mq-btn mq-btn-sm" onclick="mqPreviewProposalTemplate('${id}')">👁 Full size</button>
         </div>
         <div id="mq-prop-preview-${id}" style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,0.06);padding:22px 20px;max-height:640px;overflow:auto;zoom:0.78;color:#111;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif">${mqPropPreviewInnerHTML(t, null)}</div>
-      </div>
-    </div>`;
+      </div>`;
   }
 
   var _mqPropPreviewTimers = {};
@@ -6286,6 +6479,71 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     window.mqRefreshProposalPreview(id);
   };
 
+  // ---- Letterhead & footer settings UI ----
+  const MQ_LH_LOGO_SIZES = { 40: 'Small', 60: 'Medium', 90: 'Large', 120: 'Extra large' };
+  const MQ_LH_LAYOUTS = { split: 'Classic — shop details left, title right', center: 'Centered — everything in the middle', left: 'Left-aligned — everything stacked on the left' };
+  function mqLhSummary(lh) {
+    return `${(MQ_LH_LAYOUTS[lh.layout] || '').split(' —')[0]} · logo ${lh.logo ? (MQ_LH_LOGO_SIZES[lh.logoSize] || lh.logoSize + 'px').toLowerCase() : 'off'} · title ${lh.title && lh.title.trim() ? '“' + lh.title.trim() + '”' : 'off'}${String(lh.footer || '').trim() ? ' · footer' : ''}`;
+  }
+  function mqPropLhHTML(t) {
+    const id = t.id, lh = mqLhParse(t.fields['Letterhead settings']);
+    const e = mqPropEscapeHtml;
+    const sel = (key, map, cur, bool) => `<select onchange="mqLhSet('${id}','${key}',this.value,true)" style="width:100%">${Object.keys(map).map(k => `<option value="${k}" ${String(k) === String(cur) ? 'selected' : ''}>${map[k]}</option>`).join('')}</select>`;
+    const chk = (key, on, label) => `<label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#374151;cursor:pointer;margin:2px 0"><input type="checkbox" ${on ? 'checked' : ''} onchange="mqLhSet('${id}','${key}',this.checked,true)" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> ${label}</label>`;
+    const field = (label, inner) => `<div><label class="mq-label">${label}</label>${inner}</div>`;
+    const grid = 'display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px 18px;align-items:start';
+    const card = (title, inner) => `<div style="border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin-bottom:12px"><div style="font-size:11px;font-weight:700;color:#4b5563;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:8px">${title}</div>${inner}</div>`;
+    return `<div style="font-size:12px;color:#6b7280;margin-bottom:10px;line-height:1.45">The top of every proposal. Your logo, shop name, city and phone come from your shop info — this controls how they're laid out and what extra details appear. The preview beside your proposal text updates as you change things.</div>
+      ${card('Layout', `<div style="${grid}">
+        ${field('Style', sel('layout', MQ_LH_LAYOUTS, lh.layout))}
+        ${field('Line under the header', sel('rule', { 0: 'None', 1: 'Thin', 3: 'Normal', 5: 'Thick' }, lh.rule))}
+      </div>`)}
+      ${card('Logo & shop name', `<div style="${grid}">
+        <div>${chk('logo', lh.logo, 'Show my logo')}${chk('nameOn', lh.nameOn, 'Show shop name')}${chk('cityPhone', lh.cityPhone, 'Show “city · phone” line')}</div>
+        ${field('Logo size', sel('logoSize', MQ_LH_LOGO_SIZES, lh.logoSize))}
+        ${field('Logo position', sel('logoBeside', { false: 'Above the shop name', true: 'Beside the shop name' }, String(!!lh.logoBeside)))}
+        ${field('Shop name size', sel('nameSize', { 14: 'Small', 18: 'Medium', 24: 'Large', 30: 'Extra large' }, lh.nameSize))}
+      </div>
+      <div style="margin-top:12px"><label class="mq-label">Extra lines under the shop name <span style="font-weight:400;color:#9ca3af">(one per line — address, email, website, licence #…)</span></label>
+        <textarea rows="3" placeholder="123 Main Street, Regina SK&#10;info@yourshop.com&#10;Licence #12345" oninput="mqLhSet('${id}','lines',this.value)" onblur="mqLhFlush('${id}')" style="width:100%;font-size:13px;box-sizing:border-box">${e(lh.lines)}</textarea></div>`)}
+      ${card('Title & date', `<div style="${grid}">
+        ${field('Title (top right)', `<input type="text" maxlength="40" value="${e(lh.title)}" placeholder="Proposal — leave empty to hide" oninput="mqLhSet('${id}','title',this.value)" onblur="mqLhFlush('${id}')" style="width:100%;box-sizing:border-box"/>`)}
+        <div style="padding-top:20px">${chk('date', lh.date, 'Show the date')}</div>
+      </div>`)}
+      ${card('Footer', `<div><label class="mq-label">Footer text <span style="font-weight:400;color:#9ca3af">(printed at the very end of the proposal — one line per row)</span></label>
+        <textarea rows="3" placeholder="Thank you for choosing us!&#10;Licensed &amp; insured · www.yourshop.com" oninput="mqLhSet('${id}','footer',this.value)" onblur="mqLhFlush('${id}')" style="width:100%;font-size:13px;box-sizing:border-box">${e(lh.footer)}</textarea></div>
+        <div style="${grid};margin-top:10px">
+          ${field('Footer alignment', sel('footerAlign', { center: 'Centered', left: 'Left' }, lh.footerAlign))}
+          <div style="padding-top:20px">${chk('footerRule', lh.footerRule, 'Thin line above the footer')}</div>
+        </div>`)}
+      <div style="font-size:11px;color:#9ca3af">Proposals already created keep the letterhead they were made with — changes here apply to new proposals.</div>`;
+  }
+  var _mqLhTimers = {};
+  window.mqLhSet = function(id, key, val, immediate) {
+    const t = (window._mqProposalTemplatesCache || []).find(x => x.id === id);
+    if (!t) return;
+    const lh = mqLhParse(t.fields['Letterhead settings']);
+    if (['logoSize', 'nameSize', 'rule'].includes(key)) val = +val;
+    if (key === 'logoBeside') val = (val === true || val === 'true');
+    lh[key] = val;
+    const json = JSON.stringify(lh);
+    t.fields['Letterhead settings'] = json;
+    const sum = document.getElementById(`mq-prop-sec-sum-${id}-lh`);
+    if (sum) sum.textContent = mqLhSummary(lh);
+    if (window.mqRefreshProposalPreview) window.mqRefreshProposalPreview(id);
+    clearTimeout(_mqLhTimers[id]);
+    if (immediate) window.mqLhFlush(id);
+    else _mqLhTimers[id] = setTimeout(() => window.mqLhFlush(id), 700);
+    _mqLhTimers[id + ':pending'] = true;
+  };
+  window.mqLhFlush = function(id) {
+    clearTimeout(_mqLhTimers[id]);
+    if (!_mqLhTimers[id + ':pending']) return;
+    _mqLhTimers[id + ':pending'] = false;
+    const t = (window._mqProposalTemplatesCache || []).find(x => x.id === id);
+    if (t) mqSaveProposalField(id, 'Letterhead settings', t.fields['Letterhead settings'] || '');
+  };
+
   function renderProposalTemplates(templates, shopRecord) {
     const container = document.getElementById('mq-prop-list');
     if (!container) return;
@@ -6324,7 +6582,10 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           <button class="mq-btn mq-btn-danger mq-btn-sm" onclick="event.stopPropagation();mqDeleteProposalTemplate('${t.id}','${(name||'this template').replace(/'/g,"\\'")}')" title="Delete template">✕</button>
         </div>
         <div id="mq-prop-card-body-${t.id}" style="display:none;padding:0 16px 16px 16px;border-top:1px solid #e5e7eb">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px;align-items:start">
+        <div style="min-width:0">
         ${mqPropSection(t.id,'text','✍️ Proposal text','The preview on the right updates as you type.',mqPropEditorHTML(t),true)}
+        ${mqPropSection(t.id,'lh','🏷 Letterhead &amp; footer',mqLhSummary(mqLhParse(f['Letterhead settings'])),mqPropLhHTML(t),false)}
         ${mqPropSection(t.id,'settings','⚙️ Settings',mqPropSettingsSummary(f),`        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start;margin:14px 0 12px">
           <div style="flex:1;min-width:180px">
             <label class="mq-label">Template name</label>
@@ -6363,8 +6624,11 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           </div>
         </div>
 
-`,false,760)}
-        ${mqPropSection(t.id,'help','📖 Cheat sheet','What every tag does — you never need to type them, the buttons above the text box insert them for you.',`<div style="font-size:12px;color:#374151;line-height:1.7">${PROPOSAL_TOKENS_HELP}</div>`,false,860)}
+`,false)}
+        ${mqPropSection(t.id,'help','📖 Cheat sheet','What every tag does — you never need to type them, the buttons above the text box insert them for you.',`<div style="font-size:12px;color:#374151;line-height:1.7">${PROPOSAL_TOKENS_HELP}</div>`,false)}
+        </div>
+        ${mqPropPreviewColHTML(t)}
+        </div>
 
         <div style="margin-top:14px;padding-top:12px;border-top:1px solid #e5e7eb">
           <button class="mq-btn mq-btn-sm" onclick="mqResetProposalTemplateDefaults('${t.id}')">↺ Reset to defaults</button>
@@ -6435,6 +6699,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       mqSaveProposalField(id, 'Deposit type', defaults.depositType),
       mqSaveProposalField(id, 'Deposit value', defaults.depositValue),
       mqSaveProposalField(id, 'Tax percent', defaults.taxPct),
+      mqSaveProposalField(id, 'Letterhead settings', ''),
     ]);
     renderProposalTemplates(window._mqProposalTemplatesCache, window._mqShopRecord);
     showMsg('mq-prop-msg', `✓ "${name}" reset to defaults.`);
@@ -6456,7 +6721,10 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     try {
       await atUpdate(CONFIG.PROPOSAL_TEMPLATES_TABLE, id, { [field]: value });
     }
-    catch(e) { console.error('Failed to save proposal template field', e); }
+    catch(e) {
+      console.error('Failed to save proposal template field', e);
+      if (field === 'Letterhead settings' && value) showMsg('mq-prop-msg', '⚠ Couldn\'t save the letterhead — add a Long text field named exactly "Letterhead settings" to your Proposal templates table in Airtable.', 'error');
+    }
   };
 
   window.mqAddProposalTemplate = async function() {
@@ -6576,10 +6844,65 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     </div>`;
   }
 
+  // ---- Extended block formatting for proposal bodies (keep IDENTICAL in widgetpro.js and dashboard.js) ----
+  // {box:#bg|#border}…{/box}                  legacy coloured box
+  // {box:bg=#hex;border=#hex;align=center;size=24;list=bullets}…{/box}   any mix of options
+  // {cols}left text{|}right text{/cols}       two columns
+  // {img:https://…|w=50|a=center}             image (w = % of page width, a = left/center/right)
+  function mqFmtAttrs(str) {
+    str = String(str || '').trim();
+    const o = {};
+    if (str.charAt(0) === '#') {
+      const p = str.split('|');
+      if (/^#[0-9a-fA-F]{3,8}$/.test(p[0])) o.bg = p[0];
+      if (p[1] && /^#[0-9a-fA-F]{3,8}$/.test(p[1])) o.border = p[1];
+    } else {
+      str.split(';').forEach(kv => { const i = kv.indexOf('='); if (i > 0) o[kv.slice(0, i).trim()] = kv.slice(i + 1).trim(); });
+      if (o.bg && !/^#[0-9a-fA-F]{3,8}$/.test(o.bg)) delete o.bg;
+      if (o.border && !/^#[0-9a-fA-F]{3,8}$/.test(o.border)) delete o.border;
+    }
+    return o;
+  }
+  function mqFmtBlock(o, inner, fmt) {
+    const text = String(inner || '').trim();
+    let body;
+    if (o.list === 'bullets' || o.list === 'numbers') {
+      const items = text.split('\n').map(l => l.trim()).filter(Boolean).map(l => `<li style="margin:0 0 4px">${fmt(l)}</li>`).join('');
+      const tag = o.list === 'numbers' ? 'ol' : 'ul';
+      body = `<${tag} style="margin:0;padding-left:22px">${items}</${tag}>`;
+    } else {
+      body = text.split(/\n{2,}/).map(p => fmt(p)).join('<div style="height:12px"></div>');
+    }
+    let extra = '';
+    if (o.align && /^(left|center|right|justify)$/.test(o.align)) extra += `text-align:${o.align};`;
+    const sz = parseInt(o.size, 10);
+    if (sz >= 8 && sz <= 60) extra += `font-size:${sz}px;line-height:1.25;`;
+    if (o.bg || o.border) {
+      return `<div style="${o.bg ? 'background:' + o.bg + ';' : ''}${o.border ? 'border:2px solid ' + o.border + ';' : ''}${extra}border-radius:10px;padding:14px 16px;margin:16px 0">${body}</div>`;
+    }
+    return `<div style="${extra}margin-bottom:16px">${body}</div>`;
+  }
+  function mqFmtCols(inner, fmt) {
+    const parts = String(inner || '').split('{|}');
+    const col = t => `<div style="flex:1;min-width:0">${String(t || '').trim().split(/\n{2,}/).map(p => fmt(p)).join('<div style="height:12px"></div>')}</div>`;
+    return `<div style="display:flex;gap:28px;align-items:flex-start;margin:0 0 16px">${col(parts[0])}${col(parts[1])}</div>`;
+  }
+  function mqFmtImg(str) {
+    const p = String(str || '').split('|');
+    const url = (p[0] || '').trim().replace(/"/g, '%22').replace(/</g, '%3C').replace(/>/g, '%3E');
+    if (!/^https?:\/\//i.test(url)) return '';
+    const o = {};
+    p.slice(1).forEach(kv => { const i = kv.indexOf('='); if (i > 0) o[kv.slice(0, i).trim()] = kv.slice(i + 1).trim(); });
+    const w = Math.min(100, Math.max(5, parseInt(o.w, 10) || 50));
+    const a = /^(left|center|right)$/.test(o.a) ? o.a : 'center';
+    return `<div style="text-align:${a};margin:0 0 16px"><img src="${url}" crossorigin="anonymous" style="width:${w}%;max-width:100%;height:auto"/></div>`;
+  }
+
   function mqPropFormatTextChunk(text) {
     let html = mqPropEscapeHtml(text).replace(/\n/g, '<br>');
     html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
     html = html.replace(/\{color:(#[0-9a-fA-F]{3,8})\}([\s\S]*?)\{\/color\}/g, (m, hex, inner) => `<span style="color:${hex}">${inner}</span>`);
+    html = html.replace(/\{i\}([\s\S]*?)\{\/i\}/g, '<em>$1</em>').replace(/\{u\}([\s\S]*?)\{\/u\}/g, '<span style="text-decoration:underline">$1</span>');
     return html;
   }
 
@@ -6600,12 +6923,22 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
 
     const customBlocks = {};
     let blockIndex = 0;
-    const textWithPlaceholders = filteredText.replace(/\{box:(#[0-9a-fA-F]{3,8})(?:\|(#[0-9a-fA-F]{3,8}))?\}([\s\S]*?)\{\/box\}/g, (match, hex, bd, inner) => {
-      const key = `\u0000BOX${blockIndex++}\u0000`;
-      const innerParas = inner.trim().split(/\n{2,}/).map(p => `<div style="page-break-inside:avoid;break-inside:avoid">${mqPropFormatTextChunk(p)}</div>`).join('<div style="height:12px"></div>');
-      customBlocks[key] = `<div style="background:${hex};${bd ? 'border:2px solid ' + bd + ';' : ''}border-radius:10px;padding:14px 16px;margin:16px 0">${innerParas}</div>`;
-      return key;
-    });
+    const textWithPlaceholders = filteredText
+      .replace(/\{box:([^}]*)\}([\s\S]*?)\{\/box\}/g, (match, attrs, inner) => {
+        const key = `\u0000BOX${blockIndex++}\u0000`;
+        customBlocks[key] = mqFmtBlock(mqFmtAttrs(attrs), inner, mqPropFormatTextChunk);
+        return key;
+      })
+      .replace(/\{cols\}([\s\S]*?)\{\/cols\}/g, (match, inner) => {
+        const key = `\u0000BOX${blockIndex++}\u0000`;
+        customBlocks[key] = mqFmtCols(inner, mqPropFormatTextChunk);
+        return key;
+      })
+      .replace(/\{img:([^}]*)\}/g, (match, a) => {
+        const key = `\u0000BOX${blockIndex++}\u0000`;
+        customBlocks[key] = mqFmtImg(a);
+        return key;
+      });
 
     const paragraphs = textWithPlaceholders.split(/\n{2,}/);
     const selfContainedTokens = new Set(['{items}', '{items_plain}', '{items_plain_light}', '{items_header}', '{totals_box}', '{totals_plain}', '{signature_line}', '{hr}']);
@@ -6648,6 +6981,48 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
 
   // Sample data + rendered body for a template — shared by the full-size
   // preview window and the live preview inside the template card.
+  // ---- Letterhead & footer (shared logic: keep IDENTICAL in widgetpro.js and dashboard.js) ----
+  // Defaults reproduce the original fixed header exactly, so templates that have
+  // never touched the new settings render exactly as before.
+  function mqLhDefaults() {
+    return { layout: 'split', logo: true, logoSize: 60, logoBeside: false, nameOn: true, nameSize: 18, cityPhone: true, lines: '', title: 'Proposal', date: true, rule: 3, footer: '', footerAlign: 'center', footerRule: true };
+  }
+  function mqLhParse(raw) {
+    let o = {};
+    try { o = (typeof raw === 'string' ? JSON.parse(raw || '{}') : (raw || {})) || {}; } catch (e) { o = {}; }
+    return Object.assign(mqLhDefaults(), o);
+  }
+  function mqLhHeaderHtml(shop, accent, lh, dateStr, esc, cors) {
+    shop = shop || {};
+    const grey = 'font-size:12px;color:#6b7280';
+    const imgTag = (shop['Logo URL'] && lh.logo)
+      ? `<img src="${shop['Logo URL']}" ${cors ? 'crossorigin="anonymous" ' : ''}style="max-height:${+lh.logoSize || 60}px;max-width:${Math.round((+lh.logoSize || 60) * 3.667)}px;object-fit:contain"/>` : '';
+    const name = lh.nameOn ? `<div style="font-size:${+lh.nameSize || 18}px;font-weight:800;margin-top:6px">${esc(shop['Shop name'])}</div>` : '';
+    const cp = lh.cityPhone ? `<div style="${grey}">${esc(shop['City'])}${shop['Phone'] ? (' · ' + esc(shop['Phone'])) : ''}</div>` : '';
+    const extra = String(lh.lines || '').split('\n').map(l => l.trim()).filter(Boolean).map(l => `<div style="${grey}">${esc(l)}</div>`).join('');
+    const titleBlock = (lh.title && String(lh.title).trim() ? `<div style="font-size:22px;font-weight:800;color:${accent}">${esc(lh.title)}</div>` : '') + (lh.date ? `<div style="${grey}">${dateStr}</div>` : '');
+    const rule = (+lh.rule > 0) ? `border-bottom:${+lh.rule}px solid ${accent};` : '';
+    const wrap = (inner) => `<div style="${rule}padding-bottom:16px;margin-bottom:24px">${inner}</div>`;
+    const textCol = `${name}${cp}${extra}`;
+    if (lh.layout === 'center' || lh.layout === 'left') {
+      const al = lh.layout === 'center' ? 'center' : 'left';
+      const jc = al === 'center' ? 'center' : 'flex-start';
+      const top = (lh.logoBeside && imgTag)
+        ? `<div style="display:flex;align-items:center;justify-content:${jc};gap:14px">${imgTag}<div style="text-align:${al}">${textCol}</div></div>`
+        : `${imgTag}${textCol}`;
+      return wrap(`<div style="text-align:${al}">${top}${titleBlock ? `<div style="margin-top:12px">${titleBlock}</div>` : ''}</div>`);
+    }
+    const left = (lh.logoBeside && imgTag)
+      ? `<div style="display:flex;align-items:center;gap:14px">${imgTag}<div>${textCol}</div></div>`
+      : `<div>${imgTag}${textCol}</div>`;
+    return `<div style="display:flex;justify-content:space-between;align-items:flex-start;${rule}padding-bottom:16px;margin-bottom:24px">${left}<div style="text-align:right">${titleBlock}</div></div>`;
+  }
+  function mqLhFooterHtml(lh, esc) {
+    const t = String(lh.footer || '').split('\n').map(l => l.trim()).filter(Boolean);
+    if (!t.length) return '';
+    return `<div style="margin-top:28px;padding-top:12px;${lh.footerRule ? 'border-top:1px solid #d1d5db;' : ''}text-align:${lh.footerAlign === 'left' ? 'left' : 'center'};font-size:11.5px;color:#6b7280;line-height:1.5">${t.map(esc).join('<br>')}</div>`;
+  }
+
   function mqPropSampleParts(t, bodyOverride) {
     const f = t.fields;
     const accent = f['Accent colour'] || '#1a3a6b';
@@ -6686,12 +7061,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   function mqPropPreviewInnerHTML(t, bodyOverride) {
     const shop = (window._mqShopRecord || {}).fields || {};
     const P = mqPropSampleParts(t, bodyOverride);
-    const logo = shop['Logo URL'] ? `<img src="${shop['Logo URL']}" style="max-height:60px;max-width:220px;object-fit:contain"/>` : '';
-    return `<div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid ${P.accent};padding-bottom:16px;margin-bottom:24px">
-        <div>${logo}<div style="font-size:18px;font-weight:800;margin-top:6px">${mqPropEscapeHtml(shop['Shop name'])}</div>
-          <div style="font-size:12px;color:#6b7280">${mqPropEscapeHtml(shop['City'])}${shop['Phone'] ? (' · ' + mqPropEscapeHtml(shop['Phone'])) : ''}</div></div>
-        <div style="text-align:right"><div style="font-size:22px;font-weight:800;color:${P.accent}">Proposal</div><div style="font-size:12px;color:#6b7280">${P.dateStr}</div></div>
-      </div>${P.renderedBodyHtml}`;
+    const lh = mqLhParse(t.fields['Letterhead settings']);
+    return mqLhHeaderHtml(shop, P.accent, lh, P.dateStr, mqPropEscapeHtml, false) + P.renderedBodyHtml + mqLhFooterHtml(lh, mqPropEscapeHtml);
   }
 
   // Shows exactly what this template will actually produce in MidasQuote
@@ -6722,18 +7093,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   <div class="mq-proposal-wrap">
   <div style="background:#eff6ff;border:1px solid #93c5fd;color:#1e3a8a;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:16px">👁 <strong>Preview only</strong> — sample customer and sample line items, so you can see exactly how "${mqPropEscapeHtml(f['Template name'])}" looks. Nothing here is saved or real.</div>
   <div id="mq-proposal-content">
-  <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid ${accent};padding-bottom:16px;margin-bottom:24px">
-    <div>
-      ${logo}
-      <div style="font-size:18px;font-weight:800;margin-top:6px">${mqPropEscapeHtml(shop['Shop name'])}</div>
-      <div style="font-size:12px;color:#6b7280">${mqPropEscapeHtml(shop['City'])}${shop['Phone']?(' · '+mqPropEscapeHtml(shop['Phone'])):''}</div>
-    </div>
-    <div style="text-align:right">
-      <div style="font-size:22px;font-weight:800;color:${accent}">Proposal</div>
-      <div style="font-size:12px;color:#6b7280">${dateStr}</div>
-    </div>
-  </div>
-  ${renderedBodyHtml}
+  ${mqPropPreviewInnerHTML(t, null)}
   </div>
   </div>
 </body></html>`);
@@ -9443,8 +9803,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const mode = (window._mqShowroomSettings && window._mqShowroomSettings.mode === 'custom') ? 'custom' : 'default';
     const defCard = el('mq-showroom-mode-default');
     const curCard = el('mq-showroom-mode-custom');
-    if (defCard) { defCard.style.borderColor = mode === 'default' ? '#1a1a1a' : '#e5e7eb'; defCard.style.background = mode === 'default' ? '#f9fafb' : '#fff'; }
-    if (curCard) { curCard.style.borderColor = mode === 'custom'  ? '#1a1a1a' : '#e5e7eb'; curCard.style.background = mode === 'custom'  ? '#f9fafb' : '#fff'; }
+    if (defCard) { defCard.style.borderColor = mode === 'default' ? '#1a1a1a' : '#e5e7eb'; defCard.style.background = mode === 'default' ? '#f9fafb' : '#fff'; defCard.style.boxShadow = mode === 'default' ? '0 0 0 1px #1a1a1a' : 'none'; }
+    if (curCard) { curCard.style.borderColor = mode === 'custom'  ? '#1a1a1a' : '#e5e7eb'; curCard.style.background = mode === 'custom'  ? '#f9fafb' : '#fff'; curCard.style.boxShadow = mode === 'custom' ? '0 0 0 1px #1a1a1a' : 'none'; }
     const note = el('mq-showroom-mode-note');
     if (note) note.textContent = mode === 'custom'
       ? '🎨 Build My Own is active — your priced categories are tucked out of sight below (nothing about them is deleted). Pick Default above any time to bring them back.'
@@ -9494,8 +9854,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const target = settings.buttonTarget === 'own_page' ? 'own_page' : 'popup';
     const popupCard = el('mq-showroom-target-popup');
     const pageCard  = el('mq-showroom-target-page');
-    if (popupCard) { popupCard.style.borderColor = target === 'popup'    ? '#1a1a1a' : '#e5e7eb'; popupCard.style.background = target === 'popup'    ? '#f9fafb' : '#fff'; }
-    if (pageCard)  { pageCard.style.borderColor  = target === 'own_page' ? '#1a1a1a' : '#e5e7eb'; pageCard.style.background  = target === 'own_page' ? '#f9fafb' : '#fff'; }
+    if (popupCard) { popupCard.style.borderColor = target === 'popup'    ? '#1a1a1a' : '#e5e7eb'; popupCard.style.background = target === 'popup'    ? '#f9fafb' : '#fff'; popupCard.style.boxShadow = target === 'popup' ? '0 0 0 1px #1a1a1a' : 'none'; }
+    if (pageCard)  { pageCard.style.borderColor  = target === 'own_page' ? '#1a1a1a' : '#e5e7eb'; pageCard.style.background  = target === 'own_page' ? '#f9fafb' : '#fff'; pageCard.style.boxShadow = target === 'own_page' ? '0 0 0 1px #1a1a1a' : 'none'; }
     const urlWrap = el('mq-showroom-target-url-wrap');
     if (urlWrap) urlWrap.style.display = target === 'own_page' ? 'block' : 'none';
     const urlInput = el('mq-showroom-target-url-input');
@@ -9734,16 +10094,16 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const visibleOrder = order.filter(isRelevantNow);
 
     wrap.innerHTML = visibleOrder.map((catKey, idx) => {
-      const upBtn   = `<button class="mq-btn mq-btn-sm" ${idx===0?'disabled':''} onclick="mqShowroomMoveCat('${catKey}',-1)" title="Move up">▲</button>`;
-      const downBtn = `<button class="mq-btn mq-btn-sm" ${idx===visibleOrder.length-1?'disabled':''} onclick="mqShowroomMoveCat('${catKey}',1)" title="Move down">▼</button>`;
+      const upBtn   = `<button class="mq-btn" ${idx===0?'disabled':''} onclick="mqShowroomMoveCat('${catKey}',-1)" title="Move up">▲</button>`;
+      const downBtn = `<button class="mq-btn" ${idx===visibleOrder.length-1?'disabled':''} onclick="mqShowroomMoveCat('${catKey}',1)" title="Move down">▼</button>`;
 
       const cat = customById[catKey];
       if (cat) {
         const collapsed = mqShowroomIsCollapsed(catKey, false);
-        return `<div class="mq-card" style="padding:0;overflow:hidden;margin-bottom:12px">
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;gap:10px;flex-wrap:wrap">
+        return `<div class="mq-card mq-sr-cat">
+          <div class="mq-sr-cathead">
             <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:120px">
-              <div style="display:flex;gap:4px;flex-shrink:0">${upBtn}${downBtn}</div>
+              <div class="mq-sr-reorder">${upBtn}${downBtn}</div>
               <div style="display:flex;align-items:center;gap:8px;cursor:pointer;min-width:0" onclick="mqShowroomToggleCat('${catKey}')">
                 <span id="mq-showroom-cat-arrow-${catKey}" style="display:inline-block;flex-shrink:0;transition:transform 0.2s;font-size:12px;color:#9ca3af;transform:rotate(${collapsed?0:90}deg)">▶</span>
                 <span style="font-size:14px;font-weight:600;color:#111">${(cat.name||'Untitled').replace(/</g,'&lt;')} <span style="font-size:12px;font-weight:400;color:#9ca3af">(${(cat.items||[]).length})</span></span>
@@ -9754,11 +10114,11 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
               <button class="mq-btn mq-btn-sm" style="color:#dc2626" onclick="mqDeleteShowroomCategory('${cat.id}')">🗑️ Delete category</button>
             </div>
           </div>
-          <div id="mq-showroom-cat-body-${catKey}" style="display:${collapsed?'none':'block'};padding:0 1.25rem 1.25rem">
-            <div id="mq-showroom-grid-${cat.id}" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px;margin-bottom:12px">
-              ${(cat.items||[]).map(item => mqShowroomItemCardHTML(cat.id, item)).join('') || '<div style="font-size:12px;color:#9ca3af">No items in this category yet.</div>'}
+          <div id="mq-showroom-cat-body-${catKey}" class="mq-sr-catbody" style="display:${collapsed?'none':'block'}">
+            <div id="mq-showroom-grid-${cat.id}" class="mq-sr-grid" style="margin-bottom:10px">
+              ${(cat.items||[]).map(item => mqShowroomItemCardHTML(cat.id, item)).join('') || '<div style="grid-column:1/-1;font-size:12px;color:#9ca3af">No items in this category yet.</div>'}
             </div>
-            ${(cat.items||[]).length > 1 ? '<p style="font-size:11px;color:#9ca3af;margin-bottom:10px">Drag any photo\'s ⠿ handle to reorder it.</p>' : ''}
+            ${(cat.items||[]).length > 1 ? '<p class="mq-sr-note">Drag any photo\'s ⠿ handle to reorder it.</p>' : ''}
             <label class="mq-btn mq-btn-sm mq-btn-primary" style="cursor:pointer;display:inline-block">
               📤 Add photos
               <input type="file" accept="image/*" multiple style="display:none" onchange="mqBulkAddShowroomItems('${cat.id}', this.files); this.value=''"/>
@@ -9771,11 +10131,11 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const isHidden = !!settings.hidden[catKey];
       const displayName = settings.names[catKey] || mqShowroomDefaultCatName(catKey);
       const items = mqShowroomVisibleItemsFor(catKey);
-      const collapsed = mqShowroomIsCollapsed(catKey, isHidden);
-      return `<div class="mq-card" style="padding:0;overflow:hidden;margin-bottom:12px;${isHidden?'opacity:0.55':''}">
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;gap:10px;flex-wrap:wrap">
+      const collapsed = mqShowroomIsCollapsed(catKey, isHidden || !items.length); // empty categories start tucked away too
+      return `<div class="mq-card mq-sr-cat" style="${isHidden?'opacity:0.55':''}">
+        <div class="mq-sr-cathead">
           <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:120px">
-            <div style="display:flex;gap:4px;flex-shrink:0">${upBtn}${downBtn}</div>
+            <div class="mq-sr-reorder">${upBtn}${downBtn}</div>
             <div style="display:flex;align-items:center;gap:8px;cursor:pointer;min-width:0" onclick="mqShowroomToggleCat('${catKey}')">
               <span id="mq-showroom-cat-arrow-${catKey}" style="display:inline-block;flex-shrink:0;transition:transform 0.2s;font-size:12px;color:#9ca3af;transform:rotate(${collapsed?0:90}deg)">▶</span>
               <span style="font-size:14px;font-weight:600;color:#111">${displayName.replace(/</g,'&lt;')} <span style="font-size:12px;font-weight:400;color:#9ca3af">(${items.length}${isHidden?' — hidden':''})</span></span>
@@ -9787,15 +10147,15 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
             <button class="mq-btn mq-btn-sm" style="${isHidden?'':'color:#dc2626'}" onclick="mqShowroomToggleHideCat('${catKey}')">${isHidden ? '👁️ Show category' : '🚫 Hide category'}</button>
           </div>
         </div>
-        <div id="mq-showroom-cat-body-${catKey}" style="display:${collapsed?'none':'block'};padding:0 1.25rem 1.25rem">
-          <p style="font-size:11px;color:#9ca3af;margin-bottom:10px">Renaming or hiding this only changes your showroom page — your pricing and widget are never affected. Add photos (so more items show up here) or brand new priced items from the My Products tab.</p>
-          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px">
+        <div id="mq-showroom-cat-body-${catKey}" class="mq-sr-catbody" style="display:${collapsed?'none':'block'}">
+          <p class="mq-sr-note">Renaming or hiding this only changes your showroom page — your pricing and widget are never affected. Add photos (so more items show up here) or brand new priced items from the My Products tab.</p>
+          <div class="mq-sr-grid">
             ${items.length ? items.map(it => `
-              <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:1rem">
-                <img src="${it.photo}" style="width:100%;height:120px;object-fit:contain;background:#f0efeb;border-radius:8px;margin-bottom:10px" onerror="this.style.display='none'"/>
-                <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:8px">${(it.name||'').replace(/</g,'&lt;')}</div>
-                <button class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;color:#dc2626" onclick="mqShowroomHideItem('${it.itemKey.replace(/'/g,"\\'")}')">🚫 Remove from showroom</button>
-              </div>`).join('') : '<div style="font-size:12px;color:#9ca3af">Nothing showing here yet — add photos on the My Products tab.</div>'}
+              <div class="mq-sr-thumb">
+                <img src="${it.photo}" onerror="this.style.display='none'"/>
+                <div class="mq-sr-name">${(it.name||'').replace(/</g,'&lt;')}</div>
+                <button class="mq-btn mq-btn-sm" style="color:#dc2626" onclick="mqShowroomHideItem('${it.itemKey.replace(/'/g,"\\'")}')">🚫 Remove from showroom</button>
+              </div>`).join('') : '<div style="grid-column:1/-1;font-size:12px;color:#9ca3af">Nothing showing here yet — add photos on the My Products tab.</div>'}
           </div>
         </div>
       </div>`;
@@ -9960,23 +10320,25 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const photo = item.photo || '';
     const hasName = !!(item.name||'').trim();
     const preview = photo
-      ? `<img src="${photo}" style="width:100%;height:120px;object-fit:contain;background:#f0efeb;border-radius:8px;margin-bottom:10px" onerror="this.style.display='none'"/>`
-      : `<div style="width:100%;height:120px;background:#f0efeb;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px">🖼️</div>`;
-    return `<div class="mq-showroom-item-card" data-item-id="${item.id}" style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:1rem;transition:opacity 0.15s">
-      <div class="mq-showroom-drag-handle" title="Drag to reorder" style="cursor:grab;text-align:center;color:#b0b0b0;font-size:14px;line-height:1;margin:-4px 0 8px;user-select:none">⠿</div>
+      ? `<img src="${photo}" style="width:100%;height:84px;object-fit:contain;background:#f3f2ee;border-radius:6px;margin-bottom:6px;display:block" onerror="this.style.display='none'"/>`
+      : `<div style="width:100%;height:84px;background:#f3f2ee;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:6px">🖼️</div>`;
+    return `<div class="mq-showroom-item-card" data-item-id="${item.id}" style="background:#fafafa;border:1px solid #eceef1;border-radius:8px;padding:.5rem;transition:opacity 0.15s">
+      <div class="mq-showroom-drag-handle" title="Drag to reorder" style="cursor:grab;text-align:center;color:#b0b0b0;font-size:13px;line-height:1;margin:-2px 0 4px;user-select:none">⠿</div>
       ${preview}
-      <div style="font-size:13px;font-weight:${hasName?600:400};font-style:${hasName?'normal':'italic'};color:${hasName?'#111':'#9ca3af'};margin-bottom:8px">${hasName ? (item.name||'').replace(/</g,'&lt;') : 'Untitled item'}</div>
+      <div style="font-size:12px;font-weight:${hasName?600:400};font-style:${hasName?'normal':'italic'};color:${hasName?'#111':'#9ca3af'};margin-bottom:6px;line-height:1.3">${hasName ? (item.name||'').replace(/</g,'&lt;') : 'Untitled item'}</div>
       <label class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;margin-bottom:6px;text-align:center;cursor:pointer;display:block;box-sizing:border-box">
         📤 ${photo ? 'Replace photo' : 'Upload a photo'}
         <input type="file" id="mq-showroom-upload-${key}" accept="image/*" style="display:none"/>
       </label>
       <div id="mq-showroom-upload-status-${key}" style="font-size:11px;text-align:center;margin-bottom:6px;min-height:14px"></div>
-      <div style="font-size:11px;color:#9ca3af;margin-bottom:4px">Or paste a photo URL</div>
+      <div style="font-size:10.5px;color:#9ca3af;margin-bottom:3px">Or paste a photo URL</div>
       <input type="text" id="mq-showroom-url-${key}" value="${photo.replace(/"/g,'&quot;')}" placeholder="https://your-site.com/photo.jpg"
-        style="font-size:12px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:6px"/>
-      <button class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;margin-bottom:4px" onclick="mqSaveShowroomItemPhoto('${key}', document.getElementById('mq-showroom-url-${key}').value.trim())">Save photo URL</button>
-      <button class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;margin-bottom:4px" onclick="mqRenameShowroomItem('${catId}','${item.id}')">${hasName ? '✏️ Rename' : '✏️ Add name'}</button>
-      <button class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;color:#dc2626" onclick="mqDeleteShowroomItem('${catId}','${item.id}')">Delete item</button>
+        style="font-size:11.5px;padding:5px 7px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:5px"/>
+      <button class="mq-btn mq-btn-sm" style="width:100%;font-size:10.5px;margin-bottom:5px" onclick="mqSaveShowroomItemPhoto('${key}', document.getElementById('mq-showroom-url-${key}').value.trim())">Save photo URL</button>
+      <div style="display:flex;gap:4px">
+        <button class="mq-btn mq-btn-sm" style="flex:1;white-space:nowrap;font-size:10.5px;padding:4px 2px" onclick="mqRenameShowroomItem('${catId}','${item.id}')">${hasName ? '✏️ Rename' : '✏️ Name'}</button>
+        <button class="mq-btn mq-btn-sm" style="flex:1;white-space:nowrap;font-size:10.5px;padding:4px 2px;color:#dc2626" onclick="mqDeleteShowroomItem('${catId}','${item.id}')">Delete</button>
+      </div>
     </div>`;
   }
 
