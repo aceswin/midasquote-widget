@@ -67,7 +67,10 @@
     /* Photo-led cards: no box — the photo IS the card, caption underneath */
     .sr-grid, .sr-spec-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(196px, 1fr)); gap: 26px 18px; }
     .sr-card, .sr-spec-card { background: none; border: 0; border-radius: 0; overflow: visible; }
-    .sr-card-img { position: relative; width: 100%; aspect-ratio: 4 / 5; border-radius: 10px; overflow: hidden; background: var(--gray-100); display: flex; align-items: center; justify-content: center; font-size: 22px; color: var(--gray-300); }
+    .sr-card-img { position: relative; width: 100%; aspect-ratio: 4 / 5; border-radius: 10px; overflow: hidden;
+      /* layered drop shadow: a tight contact shadow + a long soft one, so the photo floats off the page */
+      box-shadow: 0 2px 4px rgba(24,20,10,0.10), 0 10px 20px -6px rgba(24,20,10,0.24), 0 26px 46px -16px rgba(24,20,10,0.32);
+      transition: transform 0.35s cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 0.35s ease; background: var(--gray-100); display: flex; align-items: center; justify-content: center; font-size: 22px; color: var(--gray-300); }
     /* soft shimmer until the photo has loaded, then it fades in over it */
     .sr-card-img.sr-ph { background: linear-gradient(100deg, var(--gray-100) 30%, #f7f6f2 50%, var(--gray-100) 70%); background-size: 220% 100%; animation: srShimmer 1.4s linear infinite; }
     @keyframes srShimmer { from { background-position: 120% 0; } to { background-position: -120% 0; } }
@@ -75,6 +78,7 @@
     .sr-card-img img.sr-in { opacity: 1; }
     .sr-card-img::after { content: ''; position: absolute; inset: 0; border-radius: 10px; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05); pointer-events: none; }
     @media (hover: hover) {
+      .sr-card:hover .sr-card-img { transform: translateY(-4px); box-shadow: 0 3px 6px rgba(24,20,10,0.10), 0 18px 30px -8px rgba(24,20,10,0.28), 0 40px 70px -20px rgba(24,20,10,0.42); }
       .sr-card:hover .sr-card-img img.sr-in { transform: scale(1.045); }
       .sr-card:hover .sr-card-name { color: #000; }
     }
@@ -126,7 +130,15 @@
     #sr-lb-prev, #sr-lb-next { position: absolute; top: 50%; }
     #sr-lb-prev { right: 50%; left: auto; transform: translate(calc(-1 * min(37.5vw + 30px, 50vw - 30px)), -50%); }
     #sr-lb-next { left: 50%; right: auto; transform: translate(min(37.5vw + 30px, 50vw - 30px), -50%); }
+    /* STANDALONE arrows (children of the veil itself): pinned to the screen's
+       vertical centre and a fixed distance from each edge — identical for every
+       photo shape. (Embedded keeps the rules above, inside a fixed-height stage.) */
+    #sr-lightbox > #sr-lb-prev { left: 22px; right: auto; top: 50%; transform: translateY(-50%); }
+    #sr-lightbox > #sr-lb-next { right: 22px; left: auto; top: 50%; transform: translateY(-50%); }
+    #sr-lightbox > #sr-lb-prev:hover, #sr-lightbox > #sr-lb-next:hover { transform: translateY(-50%) scale(1.06); }
     @media (max-width: 700px) {
+      #sr-lightbox > #sr-lb-prev { left: 10px; }
+      #sr-lightbox > #sr-lb-next { right: 10px; }
       .sr-header { flex-wrap: wrap; gap: 0 12px; padding-top: 10px; padding-bottom: 0; }
       .sr-shop-info { order: 1; }
       .sr-back { order: 2; margin-left: auto; }
@@ -137,7 +149,7 @@
       .sr-grid, .sr-spec-grid { grid-template-columns: repeat(2, 1fr); gap: 20px 12px; }
     }
     @media (prefers-reduced-motion: reduce) {
-      .sr-card-img img, #sr-lightbox, #sr-lb-img { transition: none; }
+      .sr-card-img, .sr-card-img img, #sr-lightbox, #sr-lb-img { transition: none; }
       .sr-card-img.sr-ph { animation: none; }
     }
   </style>
@@ -360,6 +372,19 @@
       lb._hideTimer = setTimeout(() => { lb.style.display = 'none'; }, 230);
     }
     window.mqLightboxClose = mqLightboxClose;
+    // Moves the two arrow buttons to whichever parent suits the current mode:
+    // the lightbox veil itself (standalone — pinned to the real screen) or the
+    // photo stage (embedded — see the fixed-height stage note in mqLightbox).
+    function mqLbPlaceArrows(toScreen) {
+      const lb = document.getElementById('sr-lightbox');
+      const stage = document.getElementById('sr-lb-photowrap');
+      const host = toScreen ? lb : stage;
+      if (!host) return;
+      ['sr-lb-prev', 'sr-lb-next'].forEach(id => {
+        const b = document.getElementById(id);
+        if (b && b.parentNode !== host) host.appendChild(b);
+      });
+    }
     // Keyboard: Esc closes, ← / → browse — only while the lightbox is actually open.
     document.addEventListener('keydown', e => {
       const lb = document.getElementById('sr-lightbox');
@@ -386,9 +411,11 @@
         lb.onclick = () => mqLightboxClose();
         lb.innerHTML = `
           <div id="sr-lb-inner" style="display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1rem;padding:1.5rem">
-            <div id="sr-lb-photowrap" style="position:relative;max-width:100%;display:inline-block">
-              <img id="sr-lb-img" style="display:block;max-width:75vw;max-height:60vh;object-fit:contain;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,0.5)"/>
-              <button type="button" aria-label="Close" onclick="event.stopPropagation();mqLightboxClose()" style="position:absolute;top:-14px;right:-14px;width:30px;height:30px;border-radius:50%;background:#fff;border:none;box-shadow:0 2px 10px rgba(0,0,0,0.35);font-size:18px;line-height:1;color:#111;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">×</button>
+            <div id="sr-lb-photowrap" style="position:relative;max-width:100%;display:flex;align-items:center;justify-content:center">
+              <div id="sr-lb-imgwrap" style="position:relative;max-width:100%;display:inline-block">
+                <img id="sr-lb-img" style="display:block;max-width:75vw;max-height:60vh;object-fit:contain;border-radius:10px;box-shadow:0 0 0 1px rgba(255,255,255,0.08), 0 30px 80px -10px rgba(0,0,0,0.7), 0 10px 30px rgba(0,0,0,0.45)"/>
+                <button type="button" aria-label="Close" onclick="event.stopPropagation();mqLightboxClose()" style="position:absolute;top:-14px;right:-14px;width:30px;height:30px;border-radius:50%;background:#fff;border:none;box-shadow:0 2px 10px rgba(0,0,0,0.35);font-size:18px;line-height:1;color:#111;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">×</button>
+              </div>
               <button type="button" id="sr-lb-prev" aria-label="Previous photo" onclick="event.stopPropagation();mqLightboxNav(-1)" style="display:none;width:36px;height:36px;border-radius:50%;background:#fff;border:none;box-shadow:0 2px 10px rgba(0,0,0,0.35);font-size:20px;line-height:1;color:#111;cursor:pointer;align-items:center;justify-content:center;padding:0">‹</button>
               <button type="button" id="sr-lb-next" aria-label="Next photo" onclick="event.stopPropagation();mqLightboxNav(1)" style="display:none;width:36px;height:36px;border-radius:50%;background:#fff;border:none;box-shadow:0 2px 10px rgba(0,0,0,0.35);font-size:20px;line-height:1;color:#111;cursor:pointer;align-items:center;justify-content:center;padding:0">›</button>
             </div>
@@ -477,6 +504,14 @@
         const screenH = (window.screen && window.screen.height) || 900;
         const capPx = Math.max(280, Math.round(screenH * 0.5));
         img.style.maxHeight = capPx + 'px';
+        // EMBEDDED: the arrows stay inside the photo "stage", and the stage is a
+        // FIXED height (the same cap every photo is limited to) with the photo
+        // centred in it — so the arrows' vertical centre is the same for a
+        // tall portrait photo as for a wide landscape one, instead of riding
+        // up and down with each photo's own height.
+        mqLbPlaceArrows(false);
+        const stage = document.getElementById('sr-lb-photowrap');
+        if (stage) stage.style.height = capPx + 'px';
         const rect = evt.currentTarget.getBoundingClientRect();
         const scrollY = window.pageYOffset || document.documentElement.scrollTop || 0;
         // Center the zoom on the clicked photo's own vertical midpoint
@@ -503,6 +538,12 @@
         }
       } else {
         img.style.maxHeight = '';
+        // STANDALONE: the arrows are pinned to the screen itself (vertical centre,
+        // fixed distance from the left/right edge) — nothing about the current
+        // photo's size or shape can move them.
+        mqLbPlaceArrows(true);
+        const stage = document.getElementById('sr-lb-photowrap');
+        if (stage) stage.style.height = '';
         lb.style.position = 'fixed';
         lb.style.top = '0';
         lb.style.left = '0';
