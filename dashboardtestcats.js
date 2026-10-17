@@ -2788,6 +2788,36 @@ window.logoutMember = async function () {
                       </div>
                     </div>
                     <div class="mq-studio-control-card">
+                      <div class="mq-studio-card-title">Font effects</div>
+                      <div class="mq-studio-two-col">
+                        <label>Headline effect<select id="mq-studio-headline-fx"><option value="none">None</option><option value="soft">Soft shadow</option><option value="strong">Strong shadow</option><option value="glow">Glow</option><option value="outline">Outline</option></select></label>
+                        <label>Supporting effect<select id="mq-studio-sub-fx"><option value="none">None</option><option value="soft">Soft shadow</option><option value="strong">Strong shadow</option><option value="glow">Glow</option><option value="outline">Outline</option></select></label>
+                      </div>
+                      <div class="mq-studio-two-col">
+                        <label>Shop name effect<select id="mq-studio-brand-fx"><option value="none">None</option><option value="soft">Soft shadow</option><option value="strong">Strong shadow</option><option value="glow">Glow</option><option value="outline">Outline</option></select></label>
+                        <label>Button text effect<select id="mq-studio-cta-fx"><option value="none">None</option><option value="soft">Soft shadow</option><option value="strong">Strong shadow</option><option value="glow">Glow</option><option value="outline">Outline</option></select></label>
+                      </div>
+                      <div class="mq-studio-two-col">
+                        <label>Website effect<select id="mq-studio-url-fx"><option value="none">None</option><option value="soft">Soft shadow</option><option value="strong">Strong shadow</option><option value="glow">Glow</option><option value="outline">Outline</option></select></label>
+                        <label>Effect colour<input id="mq-studio-fx-color" type="color" value="#000000"></label>
+                      </div>
+                      <div class="mq-studio-two-col">
+                        <label>Shadow blur <input id="mq-studio-fx-blur" type="range" min="0" max="35" value="8"></label>
+                        <label>Shadow distance <input id="mq-studio-fx-distance" type="range" min="0" max="25" value="4"></label>
+                        <label>Shadow direction <input id="mq-studio-fx-angle" type="range" min="0" max="360" value="90"></label>
+                        <label>Outline thickness <input id="mq-studio-fx-outline" type="range" min="1" max="12" value="3"></label>
+                      </div>
+                      <div class="mq-studio-two-col">
+                        <label>Headline fill<select id="mq-studio-headline-fill"><option value="solid">Solid colour</option><option value="gradient">Two-colour gradient</option></select></label>
+                        <label>Gradient end colour<input id="mq-studio-gradient-end" type="color" value="#d7b783"></label>
+                      </div>
+                      <div class="mq-studio-two-col">
+                        <label>Headline background<select id="mq-studio-headline-back"><option value="none">None</option><option value="band">Translucent band</option><option value="box">Solid panel</option><option value="stroke">Outlined panel</option></select></label>
+                        <label>Background colour<input id="mq-studio-back-color" type="color" value="#221623"></label>
+                      </div>
+                      <label>Background opacity <input id="mq-studio-back-opacity" type="range" min="0" max="100" value="70"></label>
+                    </div>
+                    <div class="mq-studio-control-card">
                       <div class="mq-studio-card-title">Sizing & spacing</div>
                       <label><div class="mq-studio-range-row"><span>Headline size</span><output id="mq-studio-headline-scale-out">100%</output></div><input id="mq-studio-headline-scale" type="range" min="70" max="145" value="100"></label>
                       <label><div class="mq-studio-range-row"><span>Supporting size</span><output id="mq-studio-sub-scale-out">100%</output></div><input id="mq-studio-sub-scale" type="range" min="70" max="145" value="100"></label>
@@ -13338,6 +13368,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         subColor:field('sub-color').value,
         ctaBg:field('cta-bg').value,
         ctaColor:field('cta-color').value,
+        headlineFx:field('headline-fx').value,subFx:field('sub-fx').value,brandFx:field('brand-fx').value,ctaFx:field('cta-fx').value,urlFx:field('url-fx').value,fxColor:field('fx-color').value,fxBlur:Number(field('fx-blur').value),fxDistance:Number(field('fx-distance').value),fxAngle:Number(field('fx-angle').value),fxOutline:Number(field('fx-outline').value),headlineFill:field('headline-fill').value,gradientEnd:field('gradient-end').value,headlineBack:field('headline-back').value,backColor:field('back-color').value,backOpacity:Number(field('back-opacity').value),
         headlineScale:parseFloat(field('headline-scale').value)||100,
         subScale:parseFloat(field('sub-scale').value)||100,
         ctaScale:parseFloat(field('cta-scale').value)||100,
@@ -13360,8 +13391,32 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       chars.forEach(ch=>{ctx.fillText(ch,start,y);start+=ctx.measureText(ch).width+spacing});
     }
     function drawWrappedLines(ctx,lines,x,startY,lineHeight,spacing,align){lines.forEach((line,i)=>drawSpacedText(ctx,line,x,startY+i*lineHeight,spacing,align));}
+    function strokeSpacedText(ctx,text,x,y,spacing=0,align='left'){
+      text=String(text||'');
+      if(!text)return;
+      if(!spacing){ctx.textAlign=align;ctx.strokeText(text,x,y);return;}
+      const w=textWidthWithSpacing(ctx,text,spacing);
+      let start=x;
+      if(align==='center')start=x-w/2; else if(align==='right')start=x-w;
+      const chars=[...text];
+      chars.forEach(ch=>{ctx.strokeText(ch,start,y);start+=ctx.measureText(ch).width+spacing});
+    }
+    function applyTextFx(ctx,effect,color,k){
+      ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetX=0;ctx.shadowOffsetY=0;ctx.lineWidth=0;
+      const options=ctx._mqFxOpts||{}, blur=Math.max(0,Number(options.fxBlur??8))*k, distance=Math.max(0,Number(options.fxDistance??4))*k, angle=(Number(options.fxAngle??90)*Math.PI/180);
+      if(effect==='soft'||effect==='strong'){ctx.shadowColor=color||'#000000';ctx.shadowBlur=blur*(effect==='strong'?1.7:1);ctx.shadowOffsetX=Math.cos(angle)*distance;ctx.shadowOffsetY=Math.sin(angle)*distance;}
+      else if(effect==='glow'){ctx.shadowColor=color||'#000000';ctx.shadowBlur=blur*2;ctx.shadowOffsetY=0;}
+      else if(effect==='outline'){ctx.strokeStyle=color||'#000000';ctx.lineWidth=Math.max(1,Number(options.fxOutline??3))*k;ctx.lineJoin='round';ctx.miterLimit=2;}
+    }
+    function clearTextFx(ctx){ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetX=0;ctx.shadowOffsetY=0;ctx.lineWidth=0;}
+    function drawSpacedTextFx(ctx,text,x,y,spacing,align,effect,color,k){
+      if(effect==='outline'){applyTextFx(ctx,effect,color,k);strokeSpacedText(ctx,text,x,y,spacing,align);clearTextFx(ctx);drawSpacedText(ctx,text,x,y,spacing,align);return;}
+      applyTextFx(ctx,effect,color,k);drawSpacedText(ctx,text,x,y,spacing,align);clearTextFx(ctx);
+    }
+    function drawWrappedLinesFx(ctx,lines,x,startY,lineHeight,spacing,align,effect,color,k){lines.forEach((line,i)=>drawSpacedTextFx(ctx,line,x,startY+i*lineHeight,spacing,align,effect,color,k));}
     function paint(canvas,t,opts={}){
       const W=canvas.width,H=canvas.height,ctx=canvas.getContext('2d');
+      ctx._mqFxOpts=opts;
       const k=Math.min(W/1080,H/1080), landscape=W>H, b=safeColor(opts.color||color), hasPhoto=!!opts.photo;
       const pad=70*k;
       ctx.clearRect(0,0,W,H);ctx.fillStyle='#eee5dd';ctx.fillRect(0,0,W,H);
@@ -13475,7 +13530,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         const iw=opts.logo.width*ratio,ih=opts.logo.height*ratio;
         const lx=align==='center'?nameX-iw/2:align==='right'?nameX-iw:nameX;
         ctx.drawImage(opts.logo,clamp(lx,10*k,W-iw-10*k),clamp(nameY-ih,10*k,H-ih-10*k),iw,ih);
-      } else if(shopDisplay)drawSpacedText(ctx,shopDisplay,nameX,nameY,nameSpace,align);
+      } else if(shopDisplay)drawSpacedTextFx(ctx,shopDisplay,nameX,nameY,nameSpace,align,opts.brandFx||'none',opts.fxColor||'rgba(0,0,0,.7)',k);
 
       const title=String(opts.headline||t.headline);
       const titleScale=(opts.headlineScale||100)/100;
@@ -13483,7 +13538,18 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       let lines=[],size=(composition==='magazine'?48:composition==='window'?50:composition==='split'?55:66)*k*titleScale,lineHeight;
       for(;size>=23*k;size-=2*k){ctx.font=font(size,opts.headlineFont||'georgia',700);lines=wrap(ctx,title,textWidth,6,titleSpacing);lineHeight=size*1.15;if(baseTop+(lines.length-1)*lineHeight<=headingLimit)break}
       ctx.font=font(size,opts.headlineFont||'georgia',700);ctx.fillStyle=primary;
-      drawWrappedLines(ctx,lines,anchorX,baseTop,lineHeight,titleSpacing,align);
+      if(opts.headlineBack && opts.headlineBack!=='none'){
+        const panelTop=baseTop-size*.89-22*k, panelHeight=(lines.length-1)*lineHeight+size*1.30+44*k;
+        const panelX=composition==='split'?35*k:35*k, panelW=composition==='split'?Math.max(160*k,columnWidth-50*k):W-70*k;
+        ctx.save();ctx.globalAlpha=Math.max(0,Math.min(1,Number(opts.backOpacity??70)/100));
+        if(opts.headlineBack==='stroke'){ctx.strokeStyle=safeColor(opts.backColor,'#221623');ctx.lineWidth=4*k;ctx.strokeRect(panelX,panelTop,panelW,panelHeight)}
+        else{ctx.fillStyle=safeColor(opts.backColor,'#221623');if(opts.headlineBack==='band')ctx.fillRect(panelX,panelTop,panelW,panelHeight);else{rounded(ctx,panelX,panelTop,panelW,panelHeight,18*k);ctx.fill()}}
+        ctx.restore();
+      }
+      if(opts.headlineFill==='gradient'){
+        const grd=ctx.createLinearGradient(0,baseTop-size,W,baseTop+lines.length*lineHeight);grd.addColorStop(0,primary);grd.addColorStop(1,safeColor(opts.gradientEnd,'#d7b783'));ctx.fillStyle=grd;
+      }
+      drawWrappedLinesFx(ctx,lines,anchorX,baseTop,lineHeight,titleSpacing,align,opts.headlineFx||'none',opts.fxColor||'rgba(0,0,0,.75)',k);
 
       let subTop=baseTop+lines.length*lineHeight+13*k;
       const subScale=(opts.subScale||100)/100;
@@ -13491,7 +13557,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       let subSize=27*k*subScale,subLines=[],subLH=36*k;
       for(;subSize>=15*k;subSize-=k){ctx.font=font(subSize,opts.subFont||'arial',400);subLines=wrap(ctx,String(opts.sub||t.sub),textWidth,4,subSpacing);subLH=subSize*1.35;if(subTop+(subLines.length-1)*subLH<=supportMax)break}
       ctx.font=font(subSize,opts.subFont||'arial',400);ctx.fillStyle=secondary;
-      drawWrappedLines(ctx,subLines,anchorX,subTop,subLH,subSpacing,align);
+      drawWrappedLinesFx(ctx,subLines,anchorX,subTop,subLH,subSpacing,align,opts.subFx||'none',opts.fxColor||'rgba(0,0,0,.65)',k);
 
       const cta=String(opts.cta||t.cta).toUpperCase();
       let by=(splitVertical?H-143*k:H-157*k)+(opts.ctaY||0)*k;
@@ -13506,7 +13572,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       bx=clamp(bx,20*k,W-bw-20*k);
       by=clamp(by,20*k,H-ctaH-55*k);
       ctx.fillStyle=safeColor(opts.ctaBg,'#f2e1ca');rounded(ctx,bx,by,bw,ctaH,9*k);ctx.fill();
-      ctx.fillStyle=safeColor(opts.ctaColor,'#2b2430');ctx.font=font(ctaSize,opts.ctaFont||'arial',700);ctx.textAlign='center';ctx.fillText(cta,bx+bw/2,by+(ctaH*.62));
+      ctx.fillStyle=safeColor(opts.ctaColor,'#2b2430');ctx.font=font(ctaSize,opts.ctaFont||'arial',700);drawSpacedTextFx(ctx,cta,bx+bw/2,by+(ctaH*.62),0,'center',opts.ctaFx||'none',opts.fxColor||'rgba(0,0,0,.65)',k);
       ctx.textAlign='left';
 
       if(t.category==='qr'&&typeof MQ_QR_LIB_FACTORY==='function'){
@@ -13525,7 +13591,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const urlMax=(t.category==='qr')?Math.max(145*k,W*.57):W-2*pad;
       while(ctx.measureText(link).width>urlMax&&urlSize>10*k){urlSize-=k;ctx.font=font(urlSize,opts.subFont||'arial',500)}
       ctx.fillStyle=safeColor(opts.urlColor,t.mode==='minimal'?'#45323e':'#e8d9dd');
-      drawSpacedText(ctx,link,urlX,urlY,0,align);
+      drawSpacedTextFx(ctx,link,urlX,urlY,0,align,opts.urlFx||'none',opts.fxColor||'rgba(0,0,0,.65)',k);
       const brandW=Math.min(W-2*pad, Math.max(220*k, textWidthWithSpacing(ctx,String(shopDisplay||''),nameSpace)+40*k));
       const brandX=align==='left'?clamp(nameX-10*k,8*k,W-brandW-8*k):align==='center'?clamp(nameX-brandW/2,8*k,W-brandW-8*k):clamp(nameX-brandW+10*k,8*k,W-brandW-8*k);
       const regions={brand:[brandX,Math.max(8*k,nameY-58*k),brandW,72*k],headline:[pad,Math.max(15*k,baseTop-80*k),W-2*pad,Math.max(100*k,(lines.length+1)*lineHeight)],sub:[pad,subTop-38*k,W-2*pad,Math.max(70*k,(subLines.length+1)*subLH)],cta:[bx-10*k,by-10*k,bw+20*k,ctaH+20*k],url:[clamp(urlX-20*k,8*k,W-220*k),urlY-38*k,Math.min(420*k,W*.76),55*k],photo:[10*k,10*k,W-20*k,H-20*k]};
@@ -13535,7 +13601,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         const r=regions[opts.highlight];if(r){ctx.save();ctx.strokeStyle='#38bdf8';ctx.lineWidth=4*k;ctx.setLineDash([14*k,8*k]);ctx.strokeRect(...r);ctx.restore()}
       }
     }
-    function thumb(t){const canvas=document.createElement('canvas');canvas.width=360;canvas.height=360;paint(canvas,t,{color,photo:mqStudioPhoto,headlineFont:'georgia',subFont:'arial',ctaFont:'arial',align:'left',headlineColor:'#ffffff',subColor:'#f0e7ee',ctaBg:'#f2e1ca',ctaColor:'#2b2430',headlineScale:100,subScale:100,ctaScale:100,headlineSpacing:0,subSpacing:0,contentX:0,contentY:0,ctaX:0,ctaY:0});return canvas.toDataURL('image/png')}
+    function thumb(t){const canvas=document.createElement('canvas');canvas.width=360;canvas.height=360;paint(canvas,t,{color,photo:mqStudioPhoto,headlineFont:'playfair',subFont:'montserrat',ctaFont:'montserrat',align:'left',headlineColor:'#ffffff',subColor:'#f0e7ee',ctaBg:'#f2e1ca',ctaColor:'#2b2430',headlineFx:'soft',subFx:'soft',brandFx:'soft',ctaFx:'none',urlFx:'soft',fxColor:'#000000',headlineScale:100,subScale:100,ctaScale:100,headlineSpacing:0,subSpacing:0,contentX:0,contentY:0,ctaX:0,ctaY:0});return canvas.toDataURL('image/png')}
     function renderGallery(filter='all'){
       grid.innerHTML='';MQ_STUDIO_TEMPLATES.filter(t=>filter==='all'||t.category===filter).forEach(t=>{
         const btn=document.createElement('button');btn.type='button';btn.className='mq-studio-tile';btn.innerHTML=`<div class="mq-studio-thumb-area"><img class="mq-studio-thumb" alt=""/></div><div class="mq-studio-tile-meta"><span><strong></strong><small></small></span><b aria-hidden="true">↗</b></div>`;
@@ -13549,7 +13615,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       field('shop-font').value='playfair';field('shop-color').value=mqStudioSelected && mqStudioSelected.mode==='minimal'?'#382b36':'#ffffff';field('shop-scale').value='100';field('shop-spacing').value='2';field('shop-x').value='0';field('shop-y').value='0';field('logo-scale').value='100';field('composition').value='original';field('focal').value='50';field('finish').value='cinematic';field('overlay').value='46';field('accent').value='none';field('accent-color').value='#d9be97';
       field('url-text').value='';field('url-x').value='0';field('url-y').value='0';field('url-color').value=mqStudioSelected?.mode==='minimal'?'#45323e':'#e8d9dd';field('url-scale').value='100';
       field('headline-font').value='playfair';field('sub-font').value='montserrat';field('cta-font').value='montserrat';field('align').value='left';
-      field('headline-color').value='#ffffff';field('sub-color').value=mqStudioSelected && mqStudioSelected.mode==='minimal' ? '#685861' : '#f0e7ee';field('cta-bg').value='#f2e1ca';field('cta-color').value='#2b2430';
+      field('headline-color').value='#ffffff';field('sub-color').value=mqStudioSelected && mqStudioSelected.mode==='minimal' ? '#685861' : '#f0e7ee';field('cta-bg').value='#f2e1ca';field('cta-color').value='#2b2430';field('headline-fx').value='soft';field('sub-fx').value='soft';field('brand-fx').value='soft';field('cta-fx').value='none';field('url-fx').value='soft';field('fx-color').value='#000000';field('fx-blur').value='8';field('fx-distance').value='4';field('fx-angle').value='90';field('fx-outline').value='3';field('headline-fill').value='solid';field('gradient-end').value='#d7b783';field('headline-back').value='none';field('back-color').value='#221623';field('back-opacity').value='70';
       field('headline-scale').value='100';field('sub-scale').value='100';field('cta-scale').value='100';field('headline-spacing').value='0';field('sub-spacing').value='0';field('content-x').value='0';field('content-y').value='0';field('cta-x').value='0';field('cta-y').value='0';
       syncRangeLabels();
     }
@@ -13557,7 +13623,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     if(!root.dataset.studioInitialized){
       root.dataset.studioInitialized='true';
       root.querySelectorAll('[data-studio-filter]').forEach(btn=>btn.addEventListener('click',()=>{root.querySelectorAll('[data-studio-filter]').forEach(b=>b.classList.toggle('active',b===btn));renderGallery(btn.dataset.studioFilter)}));
-      ['shop-name','shop-font','shop-color','shop-scale','shop-spacing','shop-x','shop-y','logo-scale','composition','focal','finish','overlay','accent','accent-color','headline','subline','cta','color','size','headline-font','sub-font','cta-font','align','headline-color','sub-color','cta-bg','cta-color','headline-scale','sub-scale','cta-scale','headline-spacing','sub-spacing','content-x','content-y','cta-x','cta-y','url-text','url-x','url-y','url-color','url-scale'].forEach(id=>{
+      ['shop-name','shop-font','shop-color','shop-scale','shop-spacing','shop-x','shop-y','logo-scale','composition','focal','finish','overlay','accent','accent-color','headline','subline','cta','color','size','headline-font','sub-font','cta-font','align','headline-color','sub-color','cta-bg','cta-color','headline-fx','sub-fx','brand-fx','cta-fx','url-fx','fx-color','fx-blur','fx-distance','fx-angle','fx-outline','headline-fill','gradient-end','headline-back','back-color','back-opacity','headline-scale','sub-scale','cta-scale','headline-spacing','sub-spacing','content-x','content-y','cta-x','cta-y','url-text','url-x','url-y','url-color','url-scale'].forEach(id=>{
         const evt = ['headline-scale','sub-scale','cta-scale','headline-spacing','sub-spacing','content-x','content-y','cta-x','cta-y','color','headline-color','sub-color','cta-bg','cta-color'].includes(id) ? 'input' : 'input';
         field(id).addEventListener(evt,update);
         if(field(id).tagName==='SELECT')field(id).addEventListener('change',update);
