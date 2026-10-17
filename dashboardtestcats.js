@@ -2729,7 +2729,7 @@ window.logoutMember = async function () {
 
             <!-- MARKETING STUDIO v2.2: Visual template gallery and enhanced design editor. Legacy tools preserved below. -->
             <section id="mq-studio" class="mq-studio">
-              <div class="mq-studio-hero"><div><span class="mq-studio-kicker">✦ YOUR CREATIVE WORKSPACE</span><h2>Make something worth sharing.</h2><p>Choose a design, add your latest project photo, and download a polished promotion in seconds.</p></div><span class="mq-studio-hero-star">✳</span></div>
+              <div class="mq-studio-hero"><div><span class="mq-studio-kicker">✦ YOUR CREATIVE WORKSPACE</span><h2>Design work worth showing off.</h2><p>Art-directed ads for cabinet shops. Choose a composition, fine-tune your branding, and export beautifully.</p></div><span class="mq-studio-hero-star">✳</span></div>
               <div class="mq-studio-nav" role="group" aria-label="Filter templates"><button type="button" class="active" data-studio-filter="all">All designs</button><button type="button" data-studio-filter="social">Social posts</button><button type="button" data-studio-filter="print">Posters & signs</button><button type="button" data-studio-filter="qr">QR promotions</button></div>
               <div class="mq-studio-grid" id="mq-studio-grid"></div>
               <div id="mq-studio-workspace" class="mq-studio-workspace" style="display:none">
@@ -2773,7 +2773,7 @@ window.logoutMember = async function () {
                     </div>
                     <div class="mq-studio-control-card">
                       <div class="mq-studio-card-title">Creative direction</div>
-                      <label>Designer finish<select id="mq-studio-finish"><option value="cinematic">Cinematic · rich shadows</option><option value="editorial">Editorial · airy & refined</option><option value="architect">Architectural · crisp lines</option><option value="bold">Statement · dramatic contrast</option></select></label>
+                      <label>Composition<select id="mq-studio-composition"><option value="original">Original template</option><option value="cinema">Cinematic full photo</option><option value="split">Luxury split · photo right</option><option value="magazine">Magazine · photo above</option><option value="window">Architectural inset photo</option></select></label><label>Photo focal point <input type="range" min="0" max="100" value="50" id="mq-studio-focal"></label><label>Designer finish<select id="mq-studio-finish"><option value="cinematic">Cinematic · rich shadows</option><option value="editorial">Editorial · airy & refined</option><option value="architect">Architectural · crisp lines</option><option value="bold">Statement · dramatic contrast</option></select></label>
                       <div class="mq-studio-two-col"><label>Photo darkness <input id="mq-studio-overlay" type="range" min="0" max="85" value="46"></label><label>Accent detail<select id="mq-studio-accent"><option value="none">None</option><option value="corner">Corner marks</option><option value="frame">Fine border</option><option value="stripe">Side stripe</option></select></label></div>
                       <label>Accent colour<input id="mq-studio-accent-color" type="color" value="#d9be97"></label>
                     </div><div class="mq-studio-control-card">
@@ -13313,7 +13313,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       if(current)lines.push(current);return lines.slice(0,maxLines);
     };
     const rounded=(ctx,x,y,w,h,r)=>{ctx.beginPath();ctx.roundRect(x,y,w,h,r)};
-    const cover=(ctx,img,x,y,w,h)=>{if(!img)return;const ratio=Math.max(w/img.width,h/img.height);const sw=w/ratio,sh=h/ratio;ctx.drawImage(img,(img.width-sw)/2,(img.height-sh)/2,sw,sh,x,y,w,h)};
+    const cover=(ctx,img,x,y,w,h,focal=50)=>{if(!img)return;const ratio=Math.max(w/img.width,h/img.height);const sw=w/ratio,sh=h/ratio;const fx=Math.max(0,Math.min(1,focal/100));ctx.drawImage(img,(img.width-sw)*fx,(img.height-sh)*fx,sw,sh,x,y,w,h)};
     const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
     const rangeOutputs={
       'headline-scale':v=>v+'%','sub-scale':v=>v+'%','cta-scale':v=>v+'%',
@@ -13323,7 +13323,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     function syncRangeLabels(){Object.keys(rangeOutputs).forEach(id=>{const input=field(id),out=field(id+'-out');if(input&&out)out.textContent=rangeOutputs[id](input.value)})}
     function currentOpts(){
       return {
-        shopName:field('shop-name').value,shopFont:field('shop-font').value,shopColor:field('shop-color').value,shopScale:Number(field('shop-scale').value),shopSpacing:Number(field('shop-spacing').value),shopX:Number(field('shop-x').value),shopY:Number(field('shop-y').value),logo:mqStudioLogo,logoScale:Number(field('logo-scale').value),finish:field('finish').value,overlay:Number(field('overlay').value),accent:field('accent').value,accentColor:field('accent-color').value,
+        shopName:field('shop-name').value,shopFont:field('shop-font').value,shopColor:field('shop-color').value,shopScale:Number(field('shop-scale').value),shopSpacing:Number(field('shop-spacing').value),shopX:Number(field('shop-x').value),shopY:Number(field('shop-y').value),logo:mqStudioLogo,logoScale:Number(field('logo-scale').value),composition:field('composition').value,focal:Number(field('focal').value),finish:field('finish').value,overlay:Number(field('overlay').value),accent:field('accent').value,accentColor:field('accent-color').value,
         headline:field('headline').value,
         sub:field('subline').value,
         cta:field('cta').value,
@@ -13393,11 +13393,40 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         if(t.mode==='qr'&&hasPhoto){cover(ctx,opts.photo,0,0,W,H);const grad=ctx.createLinearGradient(0,0,W,0);grad.addColorStop(0,'rgba(25,12,23,.92)');grad.addColorStop(.65,'rgba(25,12,23,.72)');grad.addColorStop(1,'rgba(25,12,23,.54)');ctx.fillStyle=grad;ctx.fillRect(0,0,W,H)}
         else fill('#ffffff12',26*k,26*k,W-52*k,H-52*k);
       }
+      // V2.7: genuinely different art-directed layouts, all local Canvas rendering.
+      const composition=opts.composition||'original';
+      const focal=Number.isFinite(opts.focal)?opts.focal:50;
+      if(composition==='cinema'){
+        fill('#171116',0,0,W,H);
+        if(hasPhoto){cover(ctx,opts.photo,0,0,W,H,focal);const shade=ctx.createLinearGradient(0,0,W*.87,H*.7);shade.addColorStop(0,'rgba(15,10,18,.75)');shade.addColorStop(.55,'rgba(15,10,18,.46)');shade.addColorStop(1,'rgba(15,10,18,.15)');ctx.fillStyle=shade;ctx.fillRect(0,0,W,H)}
+        else fill('#2d1a26',0,0,W,H);
+      }else if(composition==='split'){
+        fill('#221b25',0,0,W,H);
+        const photoX=W*.54;
+        if(hasPhoto)cover(ctx,opts.photo,photoX,0,W-photoX,H,focal);
+        else fill('#b7a397',photoX,0,W-photoX,H);
+        fill('rgba(32,20,31,.22)',photoX,0,W-photoX,H);
+        fill(b,0,0,photoX, H);
+        fill('#ffffff0d',photoX-5*k,0,5*k,H);
+      }else if(composition==='magazine'){
+        fill('#f6eee6',0,0,W,H);
+        if(hasPhoto)cover(ctx,opts.photo,0,0,W,H*.54,focal);
+        else fill('#c8b6a7',0,0,W,H*.54);
+        fill(b,0,H*.54,W,H*.46);
+        fill('rgba(255,255,255,.07)',0,H*.54,W,2*k);
+      }else if(composition==='window'){
+        fill('#f5eee8',0,0,W,H);
+        fill(b,0,0,W,H);
+        const inset=48*k, imgTop=H*.39, imgH=H*.49;
+        fill('#eadbd0',inset,imgTop,W-2*inset,imgH);
+        if(hasPhoto)cover(ctx,opts.photo,inset,imgTop,W-2*inset,imgH,focal);
+        ctx.strokeStyle='#ffffff75';ctx.lineWidth=3*k;ctx.strokeRect(inset-10*k,imgTop-10*k,W-2*inset+20*k,imgH+20*k);
+      }
       // Professional art direction: photographic tonal treatment, architectural
       // framing and quiet editorial depth. Never place a bar behind a headline.
       const finish=opts.finish||'cinematic';
       const accent=safeColor(opts.accentColor,'#d9be97');
-      if(hasPhoto && (t.mode==='luxury'||t.mode==='editorial')){
+      if(composition==='original' && hasPhoto && (t.mode==='luxury'||t.mode==='editorial')){
         const alpha=clamp(Number(opts.overlay ?? 46)/100,0,.85);
         if(finish==='editorial')fill(`rgba(10,13,22,${alpha*.58})`,0,0,W,H);
         else if(finish==='bold')fill(`rgba(6,5,11,${Math.min(.89,alpha+.25)})`,0,0,W,H);
@@ -13418,14 +13447,14 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       }
       const splitVertical=t.mode==='split'&&!landscape;
       const isFrame=t.mode==='frame';
-      const textWidth=(t.mode==='split'&&landscape)?W*.49-pad*1.3:W-2*pad;
+      const textWidth=composition==='split'?W*.50-pad*1.3:composition==='window'?W-2*pad:(t.mode==='split'&&landscape)?W*.49-pad*1.3:W-2*pad;
       const contentShiftX=(opts.contentX||0)*k;
       const contentShiftY=(opts.contentY||0)*k;
-      const baseTop=(isFrame?H*.54:splitVertical?H*.15:landscape?H*.22:H*.20)+contentShiftY;
-      const headingLimit=(splitVertical?H*.27:(isFrame?H*.76:H*.59))+contentShiftY;
-      const supportMax=(splitVertical?H*.42:(isFrame?H*.87:H*.79))+contentShiftY;
+      const baseTop=(composition==='magazine'?H*.66:composition==='window'?H*.18:composition==='split'?H*.28:(isFrame?H*.54:splitVertical?H*.15:landscape?H*.22:H*.20))+contentShiftY;
+      const headingLimit=(composition==='magazine'?H*.80:composition==='window'?H*.34:composition==='split'?H*.67:splitVertical?H*.27:(isFrame?H*.76:H*.59))+contentShiftY;
+      const supportMax=(composition==='magazine'?H*.89:composition==='window'?H*.37:composition==='split'?H*.81:splitVertical?H*.42:(isFrame?H*.87:H*.79))+contentShiftY;
       const align=opts.align||'left';
-      const anchorX=align==='left' ? pad+contentShiftX : align==='center' ? (W/2)+contentShiftX : (W-pad)+contentShiftX;
+      const columnWidth=composition==='split'?W*.52:W;const anchorX=align==='left'?pad+contentShiftX:align==='center'?(columnWidth/2)+contentShiftX:(columnWidth-pad)+contentShiftX;
       const ruleX=align==='left' ? clamp(anchorX,30*k,W-140*k) : align==='center' ? clamp(anchorX-33.5*k,20*k,W-90*k) : clamp(anchorX-67*k,20*k,W-90*k);
 
       // Independently controllable shop name / logo branding.
@@ -13450,7 +13479,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const title=String(opts.headline||t.headline);
       const titleScale=(opts.headlineScale||100)/100;
       const titleSpacing=(opts.headlineSpacing||0)*k;
-      let lines=[],size=66*k*titleScale,lineHeight;
+      let lines=[],size=(composition==='magazine'?48:composition==='window'?50:composition==='split'?55:66)*k*titleScale,lineHeight;
       for(;size>=23*k;size-=2*k){ctx.font=font(size,opts.headlineFont||'georgia',700);lines=wrap(ctx,title,textWidth,6,titleSpacing);lineHeight=size*1.15;if(baseTop+(lines.length-1)*lineHeight<=headingLimit)break}
       ctx.font=font(size,opts.headlineFont||'georgia',700);ctx.fillStyle=primary;
       drawWrappedLines(ctx,lines,anchorX,baseTop,lineHeight,titleSpacing,align);
@@ -13467,7 +13496,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       let by=(splitVertical?H-143*k:H-157*k)+(opts.ctaY||0)*k;
       const ctaScale=(opts.ctaScale||100)/100;
       const ctaH=64*k*ctaScale;
-      if(t.category==='qr')by=(H-150*k)+(opts.ctaY||0)*k;
+      if(t.category==='qr')by=(H-150*k)+(opts.ctaY||0)*k; if(composition==='magazine')by=H-96*k+(opts.ctaY||0)*k; if(composition==='window')by=H-108*k+(opts.ctaY||0)*k;
       const maxCtaWidth=t.category==='qr'?Math.max(190*k,W*.54):textWidth;
       let ctaSize=21*k*ctaScale;ctx.font=font(ctaSize,opts.ctaFont||'arial',700);
       while(textWidthWithSpacing(ctx,cta,0)+52*k>maxCtaWidth&&ctaSize>11*k){ctaSize-=k;ctx.font=font(ctaSize,opts.ctaFont||'arial',700)}
@@ -13513,18 +13542,18 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     let mqStudioFocus=null, mqStudioFocusTimer=null;
     function update(forExport=false){if(!mqStudioSelected)return;syncRangeLabels();const canvas=field('canvas');const sizes={square:[1080,1080],portrait:[1080,1350],story:[1080,1920],poster:[1080,1620],landscape:[1620,1080]};[canvas.width,canvas.height]=sizes[field('size').value]||sizes.square;paint(canvas,mqStudioSelected,{...currentOpts(),highlight:forExport?null:mqStudioFocus});queuePreviewFollow()}
     function setDefaults(){
-      field('shop-font').value='arial';field('shop-color').value=mqStudioSelected && mqStudioSelected.mode==='minimal'?'#382b36':'#ffffff';field('shop-scale').value='100';field('shop-spacing').value='2';field('shop-x').value='0';field('shop-y').value='0';field('logo-scale').value='100';field('finish').value='cinematic';field('overlay').value='46';field('accent').value='none';field('accent-color').value='#d9be97';
+      field('shop-font').value='arial';field('shop-color').value=mqStudioSelected && mqStudioSelected.mode==='minimal'?'#382b36':'#ffffff';field('shop-scale').value='100';field('shop-spacing').value='2';field('shop-x').value='0';field('shop-y').value='0';field('logo-scale').value='100';field('composition').value='original';field('focal').value='50';field('finish').value='cinematic';field('overlay').value='46';field('accent').value='none';field('accent-color').value='#d9be97';
       field('url-text').value='';field('url-x').value='0';field('url-y').value='0';field('url-color').value=mqStudioSelected?.mode==='minimal'?'#45323e':'#e8d9dd';field('url-scale').value='100';
       field('headline-font').value='georgia';field('sub-font').value='arial';field('cta-font').value='arial';field('align').value='left';
       field('headline-color').value='#ffffff';field('sub-color').value=mqStudioSelected && mqStudioSelected.mode==='minimal' ? '#685861' : '#f0e7ee';field('cta-bg').value='#f2e1ca';field('cta-color').value='#2b2430';
       field('headline-scale').value='100';field('sub-scale').value='100';field('cta-scale').value='100';field('headline-spacing').value='0';field('sub-spacing').value='0';field('content-x').value='0';field('content-y').value='0';field('cta-x').value='0';field('cta-y').value='0';
       syncRangeLabels();
     }
-    function select(t){mqStudioSelected=t;field('edit-title').textContent=t.title;field('shop-name').value=shopName;field('headline').value=t.headline;field('subline').value=t.sub;field('cta').value=t.cta;field('color').value=safeColor(color);field('size').value=t.id==='yard'?'landscape':t.category==='print'?'poster':'square';setDefaults();field('finish').value=t.mode==='luxury'?'bold':t.mode==='frame'?'editorial':t.category==='print'?'architect':'cinematic';field('accent').value=t.mode==='frame'?'frame':t.mode==='luxury'?'corner':t.id==='yard'?'stripe':'none';if(t.mode==='minimal'){field('headline-color').value='#382b36';field('sub-color').value='#685861'}workspace.style.display='block';previewShift=0;preview.style.transform='';update();workspace.scrollIntoView({behavior:'smooth',block:'start'});}
+    function select(t){mqStudioSelected=t;field('edit-title').textContent=t.title;field('shop-name').value=shopName;field('headline').value=t.headline;field('subline').value=t.sub;field('cta').value=t.cta;field('color').value=safeColor(color);field('size').value=t.id==='yard'?'landscape':t.category==='print'?'poster':'square';setDefaults();field('composition').value=t.id==='premium'?'cinema':t.id==='yard'?'split':t.id==='before'?'magazine':t.id==='poster'?'window':'original';field('finish').value=t.mode==='luxury'?'bold':t.mode==='frame'?'editorial':t.category==='print'?'architect':'cinematic';field('accent').value=t.mode==='frame'?'frame':t.mode==='luxury'?'corner':t.id==='yard'?'stripe':'none';if(t.mode==='minimal'){field('headline-color').value='#382b36';field('sub-color').value='#685861'}workspace.style.display='block';previewShift=0;preview.style.transform='';update();workspace.scrollIntoView({behavior:'smooth',block:'start'});}
     if(!root.dataset.studioInitialized){
       root.dataset.studioInitialized='true';
       root.querySelectorAll('[data-studio-filter]').forEach(btn=>btn.addEventListener('click',()=>{root.querySelectorAll('[data-studio-filter]').forEach(b=>b.classList.toggle('active',b===btn));renderGallery(btn.dataset.studioFilter)}));
-      ['shop-name','shop-font','shop-color','shop-scale','shop-spacing','shop-x','shop-y','logo-scale','finish','overlay','accent','accent-color','headline','subline','cta','color','size','headline-font','sub-font','cta-font','align','headline-color','sub-color','cta-bg','cta-color','headline-scale','sub-scale','cta-scale','headline-spacing','sub-spacing','content-x','content-y','cta-x','cta-y','url-text','url-x','url-y','url-color','url-scale'].forEach(id=>{
+      ['shop-name','shop-font','shop-color','shop-scale','shop-spacing','shop-x','shop-y','logo-scale','composition','focal','finish','overlay','accent','accent-color','headline','subline','cta','color','size','headline-font','sub-font','cta-font','align','headline-color','sub-color','cta-bg','cta-color','headline-scale','sub-scale','cta-scale','headline-spacing','sub-spacing','content-x','content-y','cta-x','cta-y','url-text','url-x','url-y','url-color','url-scale'].forEach(id=>{
         const evt = ['headline-scale','sub-scale','cta-scale','headline-spacing','sub-spacing','content-x','content-y','cta-x','cta-y','color','headline-color','sub-color','cta-bg','cta-color'].includes(id) ? 'input' : 'input';
         field(id).addEventListener(evt,update);
         if(field(id).tagName==='SELECT')field(id).addEventListener('change',update);
