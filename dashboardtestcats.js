@@ -5809,11 +5809,11 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const swatch = P.swatch ? `<span id="mq-pb-sw-${id}-${i}" style="display:inline-block;width:11px;height:11px;border-radius:3px;border:1px solid rgba(255,255,255,0.7);background:${esc(P.swatch)};margin-right:6px;vertical-align:-1px"></span>` : '';
     return `<div class="mq-pb" data-i="${i}" style="background:#fff;border:1px solid #d1d5db;border-radius:6px;margin-bottom:5px">
       <div class="mq-pb-head" draggable="true" ondragstart="mqPbBlockDragStart(event,'${id}',${i})" ondragend="mqPbBlockDragEnd(event,'${id}')" ${panel ? `onclick="mqPbToggle('${id}',${i})"` : ''} style="display:flex;align-items:center;gap:8px;padding:4px 6px 4px 4px;cursor:${panel ? 'pointer' : 'grab'}">
-        <span title="Drag to reorder" style="width:18px;text-align:center;color:#9ca3af;font-size:15px;cursor:grab;user-select:none;flex-shrink:0">⠿</span>
+        <span title="Drag this row up or down to reorder" style="width:18px;text-align:center;color:#6b7280;font-size:16px;cursor:grab;user-select:none;flex-shrink:0">⠿</span>
         <span style="${pillStyle};border-radius:5px;padding:4px 10px;font-size:12px;font-weight:600;white-space:nowrap;flex-shrink:0">${swatch}${P.pill}</span>
         <span id="mq-pb-sum-${id}-${i}" style="flex:1;min-width:0;font-size:12px;color:#9ca3af;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(P.sum)}</span>
         <span style="display:flex;align-items:center;flex-shrink:0">
-          ${ctl('▲', 'Move up', `mqPbMove('${id}',${i},-1)`, i === 0)}${ctl('▼', 'Move down', `mqPbMove('${id}',${i},1)`, i === blocks.length - 1)}${ctl('✕', 'Delete this block', `mqPbDel('${id}',${i})`, false)}
+          ${ctl('✕', 'Delete this block', `mqPbDel('${id}',${i})`, false)}
           ${panel ? `<span id="mq-pb-chev-${id}-${i}" style="font-size:10px;color:#6b7280;padding:2px 4px 2px 6px;display:inline-block;transition:transform 0.15s;transform:rotate(${open ? 90 : 0}deg)">▶</span>` : '<span style="width:20px"></span>'}
         </span>
       </div>
@@ -6069,7 +6069,10 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         <div style="padding:10px 10px 2px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:10px">${palette}</div>
 
         <div id="mq-prop-blocks-${id}" style="display:${mode === 'blocks' ? 'block' : 'none'}">
-          <div style="font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px">Your proposal, top to bottom <span style="font-weight:400;color:#9ca3af">— drag ⠿ to reorder</span></div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+            <span style="font-size:11.5px;font-weight:700;color:#374151">Your proposal, top to bottom</span>
+            <span style="font-size:11.5px;color:#1e40af;background:#eff6ff;border:1px solid #bfdbfe;border-radius:5px;padding:2px 8px">↕ Drag any row up or down to reorder · click a row to edit it</span>
+          </div>
           <div id="mq-prop-canvas-${id}" ondragover="mqPbDragOver(event,'${id}')" ondragleave="mqPbDragLeave(event,'${id}')" ondrop="mqPbDrop(event,'${id}')" style="min-height:50px;border-radius:8px"></div>
         </div>
 
