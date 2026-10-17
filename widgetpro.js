@@ -8920,13 +8920,13 @@
       // in once the surrounding paragraph HTML is built.
       const customBlocks = {};
       let blockIndex = 0;
-      const textWithPlaceholders = filteredText.replace(/\{box:(#[0-9a-fA-F]{3,8})\}([\s\S]*?)\{\/box\}/g, (match, hex, inner) => {
+      const textWithPlaceholders = filteredText.replace(/\{box:(#[0-9a-fA-F]{3,8})(?:\|(#[0-9a-fA-F]{3,8}))?\}([\s\S]*?)\{\/box\}/g, (match, hex, bd, inner) => {
         const key = `\u0000BOX${blockIndex++}\u0000`;
         // Split into paragraphs so line breaks render correctly; the box
         // itself and its paragraphs are plain flowing content — no
         // page-break-avoid marking anywhere (see note below on why).
         const innerParas = inner.trim().split(/\n{2,}/).map(p => mqFormatProposalTextChunk(p)).join('<div style="height:12px"></div>');
-        customBlocks[key] = `<div style="background:${hex};border-radius:10px;padding:14px 16px;margin:16px 0">${innerParas}</div>`;
+        customBlocks[key] = `<div style="background:${hex};${bd ? 'border:2px solid ' + bd + ';' : ''}border-radius:10px;padding:14px 16px;margin:16px 0">${innerParas}</div>`;
         return key;
       });
 
@@ -9047,7 +9047,7 @@
       // every future reprint, so a reprint months from now is guaranteed
       // identical to what was actually handed to the customer, even if the
       // template itself gets edited or deleted afterward.
-      const renderedBodyHtml = mqRenderProposalBodyTokens(bodyText, {
+      const bodyOnlyHtml = mqRenderProposalBodyTokens(bodyText, {
         customerName: state.customerName.trim(),
         customerAddress: state.customerAddress || '',
         customerPhone: state.customerPhone || '',
@@ -9057,6 +9057,18 @@
         subtotal, tax: taxAmt, total, deposit: depositAmt,
         itemsHtml, itemsPlainHtml, itemsPlainLightHtml, itemsHeaderHtml, signatureHtml, hrHtml, totalsBoxHtml, totalsPlainHtml,
       });
+
+      // The letterhead (top) and footer (bottom) are part of the frozen
+      // snapshot too, so a reprint shows exactly what the customer got even
+      // if the shop later changes its logo/address or this template's
+      // letterhead settings. The marker tells buildProposalPrintHTML that
+      // this snapshot already includes its own header (older snapshots,
+      // made before this existed, don't — those still get the built-in one).
+      const lh = mqLhParse(f['Letterhead settings']);
+      const renderedBodyHtml = '<!--mq-lh1-->'
+        + mqLhHeaderHtml(window._mqShopData || {}, accent, lh, dateStr, mqEscapeHtml, true)
+        + bodyOnlyHtml
+        + mqLhFooterHtml(lh, mqEscapeHtml);
 
       const payload = {
         shopToken,
@@ -9119,10 +9131,53 @@
     // there's a real, direct "Download PDF" button that works the same way
     // on a phone as it does on desktop — window.print()'s "save as PDF"
     // option is unreliable on mobile browsers, so this skips that entirely.
+    // ---- Letterhead & footer (shared logic: keep IDENTICAL in widgetpro.js and dashboard.js) ----
+    // Defaults reproduce the original fixed header exactly, so templates that have
+    // never touched the new settings render exactly as before.
+    function mqLhDefaults() {
+      return { layout: 'split', logo: true, logoSize: 60, logoBeside: false, nameOn: true, nameSize: 18, cityPhone: true, lines: '', title: 'Proposal', date: true, rule: 3, footer: '', footerAlign: 'center', footerRule: true };
+    }
+    function mqLhParse(raw) {
+      let o = {};
+      try { o = (typeof raw === 'string' ? JSON.parse(raw || '{}') : (raw || {})) || {}; } catch (e) { o = {}; }
+      return Object.assign(mqLhDefaults(), o);
+    }
+    function mqLhHeaderHtml(shop, accent, lh, dateStr, esc, cors) {
+      shop = shop || {};
+      const grey = 'font-size:12px;color:#6b7280';
+      const imgTag = (shop['Logo URL'] && lh.logo)
+        ? `<img src="${shop['Logo URL']}" ${cors ? 'crossorigin="anonymous" ' : ''}style="max-height:${+lh.logoSize || 60}px;max-width:${Math.round((+lh.logoSize || 60) * 3.667)}px;object-fit:contain"/>` : '';
+      const name = lh.nameOn ? `<div style="font-size:${+lh.nameSize || 18}px;font-weight:800;margin-top:6px">${esc(shop['Shop name'])}</div>` : '';
+      const cp = lh.cityPhone ? `<div style="${grey}">${esc(shop['City'])}${shop['Phone'] ? (' · ' + esc(shop['Phone'])) : ''}</div>` : '';
+      const extra = String(lh.lines || '').split('\n').map(l => l.trim()).filter(Boolean).map(l => `<div style="${grey}">${esc(l)}</div>`).join('');
+      const titleBlock = (lh.title && String(lh.title).trim() ? `<div style="font-size:22px;font-weight:800;color:${accent}">${esc(lh.title)}</div>` : '') + (lh.date ? `<div style="${grey}">${dateStr}</div>` : '');
+      const rule = (+lh.rule > 0) ? `border-bottom:${+lh.rule}px solid ${accent};` : '';
+      const wrap = (inner) => `<div style="${rule}padding-bottom:16px;margin-bottom:24px">${inner}</div>`;
+      const textCol = `${name}${cp}${extra}`;
+      if (lh.layout === 'center' || lh.layout === 'left') {
+        const al = lh.layout === 'center' ? 'center' : 'left';
+        const jc = al === 'center' ? 'center' : 'flex-start';
+        const top = (lh.logoBeside && imgTag)
+          ? `<div style="display:flex;align-items:center;justify-content:${jc};gap:14px">${imgTag}<div style="text-align:${al}">${textCol}</div></div>`
+          : `${imgTag}${textCol}`;
+        return wrap(`<div style="text-align:${al}">${top}${titleBlock ? `<div style="margin-top:12px">${titleBlock}</div>` : ''}</div>`);
+      }
+      const left = (lh.logoBeside && imgTag)
+        ? `<div style="display:flex;align-items:center;gap:14px">${imgTag}<div>${textCol}</div></div>`
+        : `<div>${imgTag}${textCol}</div>`;
+      return `<div style="display:flex;justify-content:space-between;align-items:flex-start;${rule}padding-bottom:16px;margin-bottom:24px">${left}<div style="text-align:right">${titleBlock}</div></div>`;
+    }
+    function mqLhFooterHtml(lh, esc) {
+      const t = String(lh.footer || '').split('\n').map(l => l.trim()).filter(Boolean);
+      if (!t.length) return '';
+      return `<div style="margin-top:28px;padding-top:12px;${lh.footerRule ? 'border-top:1px solid #d1d5db;' : ''}text-align:${lh.footerAlign === 'left' ? 'left' : 'center'};font-size:11.5px;color:#6b7280;line-height:1.5">${t.map(esc).join('<br>')}</div>`;
+    }
+
     function buildProposalPrintHTML(opts) {
       const shop = opts.shop || {};
       const accent = opts.accent || '#1a3a6b';
       const logo = shop['Logo URL'] ? `<img src="${shop['Logo URL']}" crossorigin="anonymous" style="max-height:60px;max-width:220px;object-fit:contain"/>` : '';
+      const hasOwnHeader = String(opts.renderedBodyHtml || '').indexOf('<!--mq-lh1-->') === 0;
       const pdfFilename = 'proposal-' + (opts.customerName||'proposal').replace(/[^a-z0-9]/gi,'-').toLowerCase() + '.pdf';
 
       return `<!DOCTYPE html>
@@ -9146,7 +9201,7 @@
     <button id="mq-pdf-btn" onclick="mqDownloadProposalPdf()" style="width:100%;padding:12px;background:${accent};color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">⬇ Download PDF</button>
   </div>
   <div id="mq-proposal-content">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid ${accent};padding-bottom:16px;margin-bottom:24px">
+    ${hasOwnHeader ? '' : `    <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid ${accent};padding-bottom:16px;margin-bottom:24px">
       <div>
         ${logo}
         <div style="font-size:18px;font-weight:800;margin-top:6px">${mqEscapeHtml(shop['Shop name'])}</div>
@@ -9156,7 +9211,7 @@
         <div style="font-size:22px;font-weight:800;color:${accent}">Proposal</div>
         <div style="font-size:12px;color:#6b7280">${new Date().toLocaleDateString()}</div>
       </div>
-    </div>
+    </div>`}
     ${opts.renderedBodyHtml || ''}
   </div>
   </div>
