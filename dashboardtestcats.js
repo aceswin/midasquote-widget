@@ -2699,6 +2699,15 @@ window.logoutMember = async function () {
     #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-two-col,
     #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-color-grid{grid-template-columns:1fr!important}
   }
+  /* v2.5: premium art direction and branded controls */
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-control-card{box-sizing:border-box!important;padding:20px!important;border:1px solid #e7dfe8!important;background:#faf8fa!important;border-radius:17px!important;margin-bottom:3px!important}
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-editor-top{padding:10px 12px 20px!important}
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-hero{padding:34px 38px!important}
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-hero h2{padding:0!important;margin:0 0 10px!important}
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-preview-wrap{padding:22px!important;background:#f4eff2!important}
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-fields input[type=range]{accent-color:#693b53!important}
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-control-card input[type=file]{max-width:100%}
+  @media(max-width:600px){#midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-hero{padding:24px!important}}
 </style>
           <!-- MARKETING KIT -->
           <div class="mq-page mq-sr-tab" id="mq-page-marketing">
@@ -2727,11 +2736,28 @@ window.logoutMember = async function () {
                   <div class="mq-studio-fields">
                     <div class="mq-studio-control-card">
                       <div class="mq-studio-card-title">Copy</div>
+                      <label>Shop name (edit for this graphic)<input id="mq-studio-shop-name" type="text" maxlength="80" placeholder="Your shop name"></label>
                       <label>Headline<input id="mq-studio-headline" type="text" maxlength="90"></label>
                       <label>Supporting line<input id="mq-studio-subline" type="text" maxlength="140"></label>
                       <label>Call to action<input id="mq-studio-cta" type="text" maxlength="48"></label>
                     </div>
                     <div class="mq-studio-control-card">
+                      <div class="mq-studio-card-title">Brand signature</div>
+                      <div class="mq-studio-two-col">
+                        <label>Shop name font<select id="mq-studio-shop-font"><option value="arial">Modern sans</option><option value="georgia">Elegant serif</option><option value="trebuchet">Contemporary</option><option value="times">Classic</option></select></label>
+                        <label>Shop name colour<input type="color" id="mq-studio-shop-color" value="#ffffff"></label>
+                      </div>
+                      <div class="mq-studio-two-col">
+                        <label>Shop name size <input type="range" id="mq-studio-shop-scale" min="50" max="240" value="100"></label>
+                        <label>Shop name spacing <input type="range" id="mq-studio-shop-spacing" min="0" max="12" value="2"></label>
+                      </div>
+                      <div class="mq-studio-two-col">
+                        <label>Name horizontal <input type="range" id="mq-studio-shop-x" min="-320" max="320" value="0"></label>
+                        <label>Name vertical <input type="range" id="mq-studio-shop-y" min="-320" max="320" value="0"></label>
+                      </div>
+                      <label>Shop logo (optional)<input id="mq-studio-logo" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml"></label>
+                      <label>Logo size<input id="mq-studio-logo-scale" type="range" min="30" max="230" value="100"></label>
+                    </div><div class="mq-studio-control-card">
                       <div class="mq-studio-card-title">Typography</div>
                       <div class="mq-studio-two-col">
                         <label>Headline font<select id="mq-studio-headline-font"><option value="georgia">Elegant serif</option><option value="arial">Clean sans</option><option value="trebuchet">Modern sans</option><option value="verdana">Readable sans</option><option value="times">Classic serif</option></select></label>
@@ -2743,6 +2769,11 @@ window.logoutMember = async function () {
                       </div>
                     </div>
                     <div class="mq-studio-control-card">
+                      <div class="mq-studio-card-title">Creative direction</div>
+                      <label>Designer finish<select id="mq-studio-finish"><option value="cinematic">Cinematic · rich shadows</option><option value="editorial">Editorial · airy & refined</option><option value="architect">Architectural · crisp lines</option><option value="bold">Statement · dramatic contrast</option></select></label>
+                      <div class="mq-studio-two-col"><label>Photo darkness <input id="mq-studio-overlay" type="range" min="0" max="85" value="46"></label><label>Accent detail<select id="mq-studio-accent"><option value="none">None</option><option value="corner">Corner marks</option><option value="frame">Fine border</option><option value="stripe">Side stripe</option></select></label></div>
+                      <label>Accent colour<input id="mq-studio-accent-color" type="color" value="#d9be97"></label>
+                    </div><div class="mq-studio-control-card">
                       <div class="mq-studio-card-title">Colours</div>
                       <div class="mq-studio-color-grid">
                         <label>Brand colour<input id="mq-studio-color" type="color" value="#56314b" aria-label="Brand colour"></label>
@@ -13224,7 +13255,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     {id:'scan',title:'Scan & Estimate',category:'qr',tag:'QR promotion',headline:'SCAN. PLAN. GET INSPIRED.',sub:'Scan the code to explore your next cabinet project.',cta:'INSTANT BALLPARK ESTIMATE',mode:'qr'},
     {id:'simple',title:'The Minimalist',category:'qr',tag:'QR / counter card',headline:'YOUR NEW KITCHEN IS CLOSER THAN YOU THINK',sub:'Scan to get a quick estimate from our team.',cta:'SCAN TO START',mode:'minimal'},
   ];
-  let mqStudioPhoto=null, mqStudioSelected=null;
+  let mqStudioPhoto=null, mqStudioLogo=null, mqStudioSelected=null;
   
   function mqInitMarketingStudio(shopRecord){
     const root=document.getElementById('mq-studio');
@@ -13286,6 +13317,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     function syncRangeLabels(){Object.keys(rangeOutputs).forEach(id=>{const input=field(id),out=field(id+'-out');if(input&&out)out.textContent=rangeOutputs[id](input.value)})}
     function currentOpts(){
       return {
+        shopName:field('shop-name').value,shopFont:field('shop-font').value,shopColor:field('shop-color').value,shopScale:Number(field('shop-scale').value),shopSpacing:Number(field('shop-spacing').value),shopX:Number(field('shop-x').value),shopY:Number(field('shop-y').value),logo:mqStudioLogo,logoScale:Number(field('logo-scale').value),finish:field('finish').value,overlay:Number(field('overlay').value),accent:field('accent').value,accentColor:field('accent-color').value,
         headline:field('headline').value,
         sub:field('subline').value,
         cta:field('cta').value,
@@ -13330,7 +13362,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       let primary=safeColor(opts.headlineColor,'#ffffff'),secondary=safeColor(opts.subColor,'#eee0e7');
       if(t.mode==='luxury'){
         fill('#181922',0,0,W,H);
-        if(hasPhoto){cover(ctx,opts.photo,0,0,W,H);fill('rgba(13,13,20,.65)',0,0,W,H)}
+        if(hasPhoto){cover(ctx,opts.photo,0,0,W,H)}
         else{const g=ctx.createLinearGradient(0,0,W,H);g.addColorStop(0,'#171921');g.addColorStop(1,'#4b3e42');fill(g,0,0,W,H)}
       }else if(t.mode==='minimal'){
         fill('#f3ece3',0,0,W,H);fill(b,26*k,26*k,W-52*k,7*k);primary=safeColor(opts.headlineColor,'#382b36');secondary=safeColor(opts.subColor,'#685861');
@@ -13346,10 +13378,33 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         else {fill('#c2aaa3',x+w*.10,y+h*.15,w*.8,h*.64)}
       }else if(t.mode==='editorial'){
         fill(b,0,0,W,H);
-        if(hasPhoto){cover(ctx,opts.photo,0,0,W,H);fill('rgba(27,16,25,.55)',0,0,W,H)}
+        if(hasPhoto){cover(ctx,opts.photo,0,0,W,H)}
         else{ctx.fillStyle='#ffffff12';ctx.beginPath();ctx.arc(W*.85,H*.76,Math.min(W,H)*.34,0,2*Math.PI);ctx.fill()}
       }else{
         fill(b,0,0,W,H);fill('#ffffff12',26*k,26*k,W-52*k,H-52*k);
+      }
+      // Professional art direction: photographic tonal treatment, architectural
+      // framing and quiet editorial depth. Never place a bar behind a headline.
+      const finish=opts.finish||'cinematic';
+      const accent=safeColor(opts.accentColor,'#d9be97');
+      if(hasPhoto && (t.mode==='luxury'||t.mode==='editorial')){
+        const alpha=clamp(Number(opts.overlay ?? 46)/100,0,.85);
+        if(finish==='editorial')fill(`rgba(10,13,22,${alpha*.58})`,0,0,W,H);
+        else if(finish==='bold')fill(`rgba(6,5,11,${Math.min(.89,alpha+.25)})`,0,0,W,H);
+        else fill(`rgba(9,8,14,${alpha})`,0,0,W,H);
+      }
+      if(finish==='cinematic'){
+        const shadow=ctx.createLinearGradient(0,0,0,H);
+        shadow.addColorStop(0,'rgba(0,0,0,.20)');shadow.addColorStop(.4,'rgba(0,0,0,0)');shadow.addColorStop(1,'rgba(0,0,0,.37)');
+        if(t.mode!=='minimal'&&t.mode!=='frame'){ctx.fillStyle=shadow;ctx.fillRect(0,0,W,H)}
+      }
+      if(finish==='architect' && !hasPhoto){fill('#ffffff0a',W*.64,0,W*.36,H)}
+      const detail=opts.accent||'none';ctx.strokeStyle=accent;ctx.lineWidth=Math.max(2,2.2*k);
+      if(detail==='frame')ctx.strokeRect(34*k,34*k,W-68*k,H-68*k);
+      else if(detail==='stripe')fill(accent,0,0,8*k,H);
+      else if(detail==='corner'){
+        const q=41*k,l=64*k;
+        [[q,q,1,1],[W-q,q,-1,1],[q,H-q,1,-1],[W-q,H-q,-1,-1]].forEach(([xx,yy,dx,dy])=>{ctx.beginPath();ctx.moveTo(xx+dx*l,yy);ctx.lineTo(xx,yy);ctx.lineTo(xx,yy+dy*l);ctx.stroke()});
       }
       const splitVertical=t.mode==='split'&&!landscape;
       const isFrame=t.mode==='frame';
@@ -13363,13 +13418,24 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const anchorX=align==='left' ? pad+contentShiftX : align==='center' ? (W/2)+contentShiftX : (W-pad)+contentShiftX;
       const ruleX=align==='left' ? clamp(anchorX,30*k,W-140*k) : align==='center' ? clamp(anchorX-33.5*k,20*k,W-90*k) : clamp(anchorX-67*k,20*k,W-90*k);
 
-      // shop name
-      ctx.textBaseline='alphabetic';ctx.fillStyle=primary;
-      const shopDisplay=String(shopName).toUpperCase().slice(0,45);
-      let shopFont=22*k;
-      while(shopFont>13*k){ctx.font=font(shopFont,opts.subFont||'arial',700);if(textWidthWithSpacing(ctx,shopDisplay,0)<=textWidth)break;shopFont-=k}
-      drawSpacedText(ctx,shopDisplay,anchorX,Math.max(55*k,baseTop-62*k),0,align);
-      fill('#dabb93',ruleX,baseTop-35*k,67*k,4*k);
+      // Independently controllable shop name / logo branding.
+      ctx.textBaseline='alphabetic';
+      const shopDisplay=String(opts.shopName ?? shopName).trim().slice(0,80);
+      const nameScale=(opts.shopScale||100)/100;
+      const nameSpace=(opts.shopSpacing||0)*k;
+      const nameX=anchorX+(opts.shopX||0)*k, nameY=Math.max(50*k,baseTop-64*k)+(opts.shopY||0)*k;
+      let shopFont=22*k*nameScale;
+      ctx.font=font(shopFont,opts.shopFont||'arial',700);
+      const usable=Math.max(110*k,W-2*pad);
+      while(shopFont>11*k && textWidthWithSpacing(ctx,shopDisplay,nameSpace)>usable){shopFont-=k;ctx.font=font(shopFont,opts.shopFont||'arial',700)}
+      ctx.fillStyle=safeColor(opts.shopColor,primary);
+      if(opts.logo){
+        const maxW=220*k*(opts.logoScale||100)/100,maxH=100*k*(opts.logoScale||100)/100;
+        const ratio=Math.min(maxW/opts.logo.width,maxH/opts.logo.height);
+        const iw=opts.logo.width*ratio,ih=opts.logo.height*ratio;
+        const lx=align==='center'?nameX-iw/2:align==='right'?nameX-iw:nameX;
+        ctx.drawImage(opts.logo,clamp(lx,10*k,W-iw-10*k),clamp(nameY-ih,10*k,H-ih-10*k),iw,ih);
+      } else if(shopDisplay)drawSpacedText(ctx,shopDisplay,nameX,nameY,nameSpace,align);
 
       const title=String(opts.headline||t.headline);
       const titleScale=(opts.headlineScale||100)/100;
@@ -13425,20 +13491,22 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     }
     function update(){if(!mqStudioSelected)return;syncRangeLabels();const canvas=field('canvas');const sizes={square:[1080,1080],portrait:[1080,1350],story:[1080,1920],poster:[1080,1620],landscape:[1620,1080]};[canvas.width,canvas.height]=sizes[field('size').value]||sizes.square;paint(canvas,mqStudioSelected,currentOpts());queuePreviewFollow()}
     function setDefaults(){
+      field('shop-font').value='arial';field('shop-color').value=mqStudioSelected && mqStudioSelected.mode==='minimal'?'#382b36':'#ffffff';field('shop-scale').value='100';field('shop-spacing').value='2';field('shop-x').value='0';field('shop-y').value='0';field('logo-scale').value='100';field('finish').value='cinematic';field('overlay').value='46';field('accent').value='none';field('accent-color').value='#d9be97';
       field('headline-font').value='georgia';field('sub-font').value='arial';field('cta-font').value='arial';field('align').value='left';
       field('headline-color').value='#ffffff';field('sub-color').value=mqStudioSelected && mqStudioSelected.mode==='minimal' ? '#685861' : '#f0e7ee';field('cta-bg').value='#f2e1ca';field('cta-color').value='#2b2430';
       field('headline-scale').value='100';field('sub-scale').value='100';field('cta-scale').value='100';field('headline-spacing').value='0';field('sub-spacing').value='0';field('content-x').value='0';field('content-y').value='0';field('cta-x').value='0';field('cta-y').value='0';
       syncRangeLabels();
     }
-    function select(t){mqStudioSelected=t;field('edit-title').textContent=t.title;field('headline').value=t.headline;field('subline').value=t.sub;field('cta').value=t.cta;field('color').value=safeColor(color);field('size').value=t.id==='yard'?'landscape':t.category==='print'?'poster':'square';setDefaults();if(t.mode==='minimal'){field('headline-color').value='#382b36';field('sub-color').value='#685861'}workspace.style.display='block';previewShift=0;preview.style.transform='';update();workspace.scrollIntoView({behavior:'smooth',block:'start'});}
+    function select(t){mqStudioSelected=t;field('edit-title').textContent=t.title;field('shop-name').value=shopName;field('headline').value=t.headline;field('subline').value=t.sub;field('cta').value=t.cta;field('color').value=safeColor(color);field('size').value=t.id==='yard'?'landscape':t.category==='print'?'poster':'square';setDefaults();field('finish').value=t.mode==='luxury'?'bold':t.mode==='frame'?'editorial':t.category==='print'?'architect':'cinematic';field('accent').value=t.mode==='frame'?'frame':t.mode==='luxury'?'corner':t.id==='yard'?'stripe':'none';if(t.mode==='minimal'){field('headline-color').value='#382b36';field('sub-color').value='#685861'}workspace.style.display='block';previewShift=0;preview.style.transform='';update();workspace.scrollIntoView({behavior:'smooth',block:'start'});}
     if(!root.dataset.studioInitialized){
       root.dataset.studioInitialized='true';
       root.querySelectorAll('[data-studio-filter]').forEach(btn=>btn.addEventListener('click',()=>{root.querySelectorAll('[data-studio-filter]').forEach(b=>b.classList.toggle('active',b===btn));renderGallery(btn.dataset.studioFilter)}));
-      ['headline','subline','cta','color','size','headline-font','sub-font','cta-font','align','headline-color','sub-color','cta-bg','cta-color','headline-scale','sub-scale','cta-scale','headline-spacing','sub-spacing','content-x','content-y','cta-x','cta-y'].forEach(id=>{
+      ['shop-name','shop-font','shop-color','shop-scale','shop-spacing','shop-x','shop-y','logo-scale','finish','overlay','accent','accent-color','headline','subline','cta','color','size','headline-font','sub-font','cta-font','align','headline-color','sub-color','cta-bg','cta-color','headline-scale','sub-scale','cta-scale','headline-spacing','sub-spacing','content-x','content-y','cta-x','cta-y'].forEach(id=>{
         const evt = ['headline-scale','sub-scale','cta-scale','headline-spacing','sub-spacing','content-x','content-y','cta-x','cta-y','color','headline-color','sub-color','cta-bg','cta-color'].includes(id) ? 'input' : 'input';
         field(id).addEventListener(evt,update);
         if(field(id).tagName==='SELECT')field(id).addEventListener('change',update);
       });
+      field('logo').addEventListener('change',e=>{const file=e.target.files?.[0];if(!file)return;if(!file.type.startsWith('image/'))return;const url=URL.createObjectURL(file);const img=new Image();img.onload=()=>{URL.revokeObjectURL(url);mqStudioLogo=img;update()};img.onerror=()=>{URL.revokeObjectURL(url);mqShowToast('Could not load logo','error')};img.src=url});
       field('photo').addEventListener('change',e=>{const file=e.target.files&&e.target.files[0];if(!file)return;if(!file.type.startsWith('image/'))return;const blob=URL.createObjectURL(file);const image=new Image();image.onload=()=>{URL.revokeObjectURL(blob);mqStudioPhoto=image;update()};image.onerror=()=>{URL.revokeObjectURL(blob);mqShowToast('Could not read image','error')};image.src=blob});
       field('remove-photo').addEventListener('click',()=>{mqStudioPhoto=null;field('photo').value='';update()});
       field('back').addEventListener('click',()=>{workspace.style.display='none';previewShift=0;preview.style.transform='';root.scrollIntoView({behavior:'smooth',block:'start'})});
