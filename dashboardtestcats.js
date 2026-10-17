@@ -2621,6 +2621,71 @@ window.logoutMember = async function () {
   #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-preview-wrap canvas{display:block!important;width:auto!important;height:auto!important;max-width:100%!important;max-height:560px!important;object-fit:contain!important}
   @media(max-width:1100px){#midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
   @media(max-width:560px){#midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-grid{gap:10px!important}#midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-thumb-area{height:160px}}
+
+  /* v2.3 — force actual spacing inside the host dashboard. */
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-hero{
+    padding:30px 36px!important; margin:0 0 22px!important; gap:22px!important;
+    min-height:150px!important;
+  }
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-hero > div:first-child{
+    padding:0!important; margin:0!important; min-width:0!important; flex:1 1 auto!important;
+  }
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-hero .mq-studio-kicker{
+    display:block!important; margin:0 0 9px!important; padding:0!important;
+  }
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-hero h2{
+    margin:0 0 11px!important; padding:0!important;
+    color:#fff!important; font:500 clamp(25px,3vw,35px)/1.16 Georgia,serif!important;
+  }
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-hero p{
+    margin:0!important; padding:0!important; color:#f2e9ef!important;
+    font:400 13px/1.6 Arial,sans-serif!important;
+  }
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-workspace{
+    padding:26px 28px 30px!important; margin:18px 0 28px!important;
+  }
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-editor-top{
+    padding:0 0 18px!important; margin:0 0 20px!important;
+    border-bottom:1px solid #eee7ed!important;
+  }
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-editor-layout{
+    column-gap:26px!important; row-gap:20px!important;
+  }
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-fields{
+    gap:14px!important; padding:0!important;
+  }
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-control-card{
+    padding:20px 20px 18px!important; margin:0!important;
+    border:1px solid #e7dfe8!important; border-radius:15px!important;
+    background:#f8f5f8!important;
+  }
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-card-title{
+    display:block!important; padding:0!important; margin:0 0 16px!important;
+    font:700 12px/1.3 Arial,sans-serif!important; letter-spacing:.11em!important;
+  }
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-fields label{
+    display:flex!important; flex-direction:column!important; gap:7px!important;
+    margin:0 0 15px!important; padding:0!important;
+  }
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-fields label:last-child{margin-bottom:0!important}
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-two-col,
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-color-grid{
+    gap:15px!important;
+  }
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-fields input:not([type=range]):not([type=file]):not([type=color]),
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-fields select{
+    padding:11px 13px!important; width:100%!important; min-width:0!important;
+  }
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-preview-wrap{
+    padding:20px!important; overflow:hidden!important;
+  }
+  @media(max-width:650px){
+    #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-hero{padding:24px!important;min-height:0!important}
+    #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-workspace{padding:16px!important}
+    #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-control-card{padding:16px!important}
+    #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-two-col,
+    #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-color-grid{grid-template-columns:1fr!important}
+  }
 </style>
           <!-- MARKETING KIT -->
           <div class="mq-page mq-sr-tab" id="mq-page-marketing">
