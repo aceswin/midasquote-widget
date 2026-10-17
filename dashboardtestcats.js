@@ -6151,7 +6151,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     show(`mq-prop-raw-${id}`, mode === 'raw');
     show(`mq-prop-basics-${id}`, mode === 'blocks', 'flex');
     const hint = document.getElementById(`mq-prop-hint-${id}`);
-    if (hint) hint.textContent = mode === 'blocks' ? 'Click a block to add it — or drag it into your proposal' : 'Click to insert a tag into the text below';
+    if (hint) hint.textContent = mode === 'blocks' ? '➕ Add blocks — click one, or drag it down into your proposal' : 'Click to insert a tag into the text below';
     const on = 'background:#1a1a1a;color:#fff;border-color:#1a1a1a', off = 'background:#fff;color:#374151;border-color:#d1d5db';
     const bb = document.getElementById(`mq-prop-modebtn-blocks-${id}`), rb = document.getElementById(`mq-prop-modebtn-raw-${id}`);
     if (bb) bb.style.cssText = (mode === 'blocks' ? on : off) + ';padding:5px 12px;font-size:12.5px;font-weight:600;border-width:1px;border-style:solid;border-radius:6px 0 0 6px;cursor:pointer';
@@ -6204,15 +6204,18 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">
           <div style="display:flex">${modeBtn('blocks', '🧩 Blocks (drag &amp; drop)')}${modeBtn('raw', '&lt;/&gt; Text (advanced)')}</div>
         </div>
-        <div style="font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px"><span id="mq-prop-hint-${id}">Click a block to add it — or drag it into your proposal</span></div>
+        <div style="font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px"><span id="mq-prop-hint-${id}">➕ Add blocks — click one, or drag it down into your proposal</span></div>
         <div style="padding:10px 10px 2px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:10px">${palette}</div>
 
-        <div id="mq-prop-blocks-${id}" style="display:${mode === 'blocks' ? 'block' : 'none'}">
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">
-            <span style="font-size:11.5px;font-weight:700;color:#374151">Your proposal, top to bottom</span>
-            <span style="font-size:11.5px;color:#1e40af;background:#eff6ff;border:1px solid #bfdbfe;border-radius:5px;padding:2px 8px">↕ Drag any row up or down to reorder · click a row to edit it</span>
+        <div id="mq-prop-blocks-${id}" style="display:${mode === 'blocks' ? 'block' : 'none'};border:2px solid #1a1a1a;border-radius:10px;overflow:hidden;overflow:clip;background:#fff">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#1a1a1a;color:#fff;padding:9px 14px">
+            <span style="font-size:14px;font-weight:800;letter-spacing:0.01em">📄 YOUR PROPOSAL</span>
+            <span style="font-size:12px;color:#d1d5db">Top to bottom — this is the order it prints in</span>
           </div>
-          <div id="mq-prop-canvas-${id}" ondragover="mqPbDragOver(event,'${id}')" ondragleave="mqPbDragLeave(event,'${id}')" ondrop="mqPbDrop(event,'${id}')" style="min-height:50px;border-radius:8px"></div>
+          <div style="background:#eff6ff;border-bottom:1px solid #bfdbfe;color:#1e40af;font-size:12px;padding:6px 14px">↕ Drag any row up or down to reorder · click a row to edit it · ✕ removes it</div>
+          <div style="background:#f3f4f6;padding:10px 10px 5px">
+            <div id="mq-prop-canvas-${id}" ondragover="mqPbDragOver(event,'${id}')" ondragleave="mqPbDragLeave(event,'${id}')" ondrop="mqPbDrop(event,'${id}')" style="min-height:50px;border-radius:8px"></div>
+          </div>
         </div>
 
         <div id="mq-prop-raw-${id}" style="display:${mode === 'raw' ? 'block' : 'none'}">
