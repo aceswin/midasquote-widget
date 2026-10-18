@@ -2720,7 +2720,7 @@ window.logoutMember = async function () {
 #mq-page-marketing #mq-studio-workspace.mq-studio-property-mode #mq-studio-add-image-layer-btn,
 #mq-page-marketing #mq-studio-workspace.mq-studio-property-mode #mq-studio-add-frame-layer,
 #mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-layer-intro {display:none!important}
-#mq-page-marketing #mq-studio-workspace.mq-studio-property-mode.mq-studio-show-layers #mq-studio-layer-list{display:flex!important}
+#mq-page-marketing #mq-studio-workspace.mq-studio-property-mode.mq-studio-show-layers #mq-studio-layer-list{display:flex!important;overflow-anchor:none}
 #mq-page-marketing #mq-studio-workspace.mq-studio-property-mode #mq-studio-layer-list{max-height:280px;overflow-y:auto;margin:10px 0 16px}
 #mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-fields>.mq-studio-control-card:has(#mq-studio-layer-list){padding:20px!important}
 #mq-page-marketing #mq-studio-workspace .mq-studio-context-top{display:flex;align-items:center;gap:8px;justify-content:space-between;margin-bottom:14px}
@@ -2738,7 +2738,7 @@ window.logoutMember = async function () {
 #mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-fields{display:flex!important}
 #mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-fields>.mq-studio-control-card{display:none!important}
 #mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-fields>.mq-studio-control-card:has(#mq-studio-layer-list){display:block!important}
-#mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-preview-wrap{position:relative!important;transform:none!important}
+#mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-preview-wrap{position:relative!important;will-change:transform}
 #mq-page-marketing #mq-studio-workspace .mq-studio-canvas-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:8px 0 12px}
 #mq-page-marketing #mq-studio-workspace .mq-studio-canvas-actions button{border:1px solid #d9cfda;border-radius:9px;padding:9px 13px;background:#fff;color:#30253a;font-size:12px;font-weight:700;cursor:pointer}
 #mq-page-marketing #mq-studio-workspace .mq-studio-canvas-actions button:hover{background:#f5eef6}
@@ -13439,7 +13439,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       if(!preview||!controls||workspace.style.display==='none'||!mqStudioSelected)return;
       // A narrow window has stacked controls: don't pin the artwork over them.
       const editor=workspace.querySelector('.mq-studio-editor-layout');
-      if(!editor || window.innerWidth<=1100 || getComputedStyle(editor).gridTemplateColumns.split(' ').length<2){
+      if(!editor || getComputedStyle(editor).gridTemplateColumns.trim().split(/\s+/).length<2){
         previewShift=0;preview.style.transform='';return;
       }
       // Determine the preview's natural position by subtracting our own translation.
@@ -13448,7 +13448,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const rect=preview.getBoundingClientRect();
       const editorRect=editor.getBoundingClientRect();
       const naturalTop=rect.top-previewShift;
-      const available=Math.max(0,editorRect.bottom-naturalTop-preview.offsetHeight);
+      const available=Math.max(0,editor.offsetHeight-preview.offsetHeight);
       const next=Math.max(0,Math.min(available,88-naturalTop));
       if(Math.abs(next-previewShift)>0.5){
         previewShift=next;
@@ -13959,12 +13959,21 @@ field('layer-forward').addEventListener('click',()=>{const idx=mqStudioCustomLay
         editor.addEventListener('keydown',e=>{if(e.key==='Escape'){e.stopPropagation();closeInlineEditor(false);}else if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();closeInlineEditor(true);}});
         editor.addEventListener('blur',()=>{if(inlineEditor===editor)closeInlineEditor(true)});
       }
-      const showPropertyMode=()=>{workspace.classList.remove('mq-studio-canvas-first');workspace.classList.add('mq-studio-property-mode');preview.style.transform='';};
+      const showPropertyMode=()=>{workspace.classList.remove('mq-studio-canvas-first');workspace.classList.add('mq-studio-property-mode');previewShift=0;preview.style.transform='';requestAnimationFrame(queuePreviewFollow);};
       field('quick-text').addEventListener('click',()=>{addLayer(defaultTextLayer());showPropertyMode();editLayerInline(currentLayer());});
       field('quick-shape').addEventListener('click',()=>{addLayer(defaultShapeLayer());showPropertyMode();});
-      field('layers-toggle').addEventListener('click',()=>{workspace.classList.toggle('mq-studio-show-layers');field('layers-toggle').textContent=workspace.classList.contains('mq-studio-show-layers')?'✕ Hide layers':'☷ All layers';});
-      field('properties-toggle').addEventListener('click',()=>{if(workspace.classList.contains('mq-studio-property-mode')){workspace.classList.remove('mq-studio-property-mode');workspace.classList.add('mq-studio-canvas-first');}else showPropertyMode();});
-      field('settings-toggle').addEventListener('click',()=>{workspace.classList.toggle('mq-studio-canvas-first');workspace.classList.remove('mq-studio-property-mode');preview.style.transform='';});
+      field('layers-toggle').addEventListener('click',()=>{
+        const beforeRotation=new Map(mqStudioCustomLayers.map(layer=>[layer.id,Number(layer.rotation)||0]));
+        workspace.classList.toggle('mq-studio-show-layers');
+        field('layers-toggle').textContent=workspace.classList.contains('mq-studio-show-layers')?'✕ Hide layers':'☷ All layers';
+        // Showing/hiding the list is a UI-only action: it must never alter artwork.
+        mqStudioCustomLayers.forEach(layer=>{if(beforeRotation.has(layer.id))layer.rotation=beforeRotation.get(layer.id)});
+        syncLayerControls();
+        update();
+        requestAnimationFrame(queuePreviewFollow);
+      });
+      field('properties-toggle').addEventListener('click',()=>{if(workspace.classList.contains('mq-studio-property-mode')){workspace.classList.remove('mq-studio-property-mode');workspace.classList.add('mq-studio-canvas-first');}else showPropertyMode();requestAnimationFrame(queuePreviewFollow);});
+      field('settings-toggle').addEventListener('click',()=>{workspace.classList.toggle('mq-studio-canvas-first');workspace.classList.remove('mq-studio-property-mode');previewShift=0;preview.style.transform='';requestAnimationFrame(queuePreviewFollow);});
       canvas.addEventListener('dblclick',e=>{const hit=regionAt(canvasPoint(e));if(!hit?.startsWith('layer:'))return;const layer=mqStudioCustomLayers.find(l=>l.id===hit.slice(6));if(layer?.type==='text'||layer?.type==='button'){hideHover();editLayerInline(layer);}});
       const clampField=(id,val)=>{const el=field(id);if(!el)return;const min=Number(el.min||-9999),max=Number(el.max||9999);el.value=String(Math.round(clamp(val,min,max)));};
       const canvasPoint=e=>{const rect=canvas.getBoundingClientRect();return {x:(e.clientX-rect.left)*(canvas.width/rect.width),y:(e.clientY-rect.top)*(canvas.height/rect.height)}};
