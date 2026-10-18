@@ -2652,7 +2652,7 @@ window.logoutMember = async function () {
   #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-preview-wrap canvas{
     max-height:min(560px, 65vh)!important;
   }
-  @media(max-width:1100px){
+  @media(max-width:980px){
     #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-preview-wrap{transform:none!important;will-change:auto}
   }
 
@@ -2750,6 +2750,29 @@ window.logoutMember = async function () {
 #mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-layer-toolbar{display:none!important}
 #mq-page-marketing #mq-studio-workspace.mq-studio-property-mode #mq-studio-layer-controls{border-top:0!important;padding-top:0!important;margin-top:0!important}
 
+/* v6.3: keep preview visible beside selected-object settings. */
+#mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-preview-wrap{
+  max-height:calc(100vh - 84px)!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  align-self:start!important;
+  position:relative!important;
+  transform:translate3d(0,0,0);
+  scrollbar-width:thin;
+}
+#mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-preview-wrap canvas{
+  max-height:min(440px,43vh)!important;
+}
+@media(max-width:980px){
+ #mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-preview-wrap{
+   max-height:none!important;overflow-y:visible!important;transform:none!important;
+ }
+}
+@media(min-width:981px){
+ #midasquote-dashboard #mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-preview-wrap{
+   will-change:transform!important;
+ }
+}
 /* v4.9 canvas-first editing */
 #mq-page-marketing #mq-studio-workspace.mq-studio-canvas-first .mq-studio-editor-layout{grid-template-columns:1fr!important}
 #mq-page-marketing #mq-studio-workspace.mq-studio-canvas-first .mq-studio-fields{display:none!important}
@@ -13469,7 +13492,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const rect=preview.getBoundingClientRect();
       const editorRect=editor.getBoundingClientRect();
       const naturalTop=rect.top-previewShift;
-      const available=Math.max(0,editor.offsetHeight-preview.offsetHeight);
+      const visiblePreviewHeight=Math.min(preview.offsetHeight, Math.max(220,window.innerHeight-84));
+      const available=Math.max(0,editor.offsetHeight-visiblePreviewHeight);
       const next=Math.max(0,Math.min(available,88-naturalTop));
       if(Math.abs(next-previewShift)>0.5){
         previewShift=next;
