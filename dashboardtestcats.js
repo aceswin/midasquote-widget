@@ -14318,15 +14318,16 @@ field('layer-forward').addEventListener('click',()=>{const idx=mqStudioCustomLay
       }
       function positionHover(e){
         if(drag||!mqStudioSelected)return;
-        // Once visible, don't move/re-anchor as the pointer explores the object.
-        if(hoverLocked){
-          const hit=regionAt(canvasPoint(e));
-          if(hit && (hit==='layer:'+hoveredId || hit.startsWith('resize:'+hoveredId+':'))){clearTimeout(hoverHide);return;}
-          scheduleHoverHide();return;
-        }
+        // Stay still on the SAME object, but immediately re-anchor to a NEW object.
+        // Previously hoverLocked kept the toolbar at the old object's position.
         const hit=regionAt(canvasPoint(e));
-        if(!hit||!hit.startsWith('layer:'))return;
-        const id=hit.slice(6),layer=mqStudioCustomLayers.find(l=>l.id===id);
+        const id=hit?.startsWith('layer:')?hit.slice(6):hit?.startsWith('resize:')?hit.split(':')[1]:null;
+        if(!id){if(hoverLocked)scheduleHoverHide();return;}
+        if(hoverLocked && hoveredId===id){clearTimeout(hoverHide);return;}
+        // Different object: discard stale anchor, keep the toolbar visible.
+        clearTimeout(hoverHide);
+        hoverLocked=false;
+        const layer=mqStudioCustomLayers.find(l=>l.id===id);
         if(!layer||layer.hidden)return;
         const box=(canvas._mqCustomLayerRegions||[]).find(x=>x.id===id)?.rect;
         if(!box)return;
