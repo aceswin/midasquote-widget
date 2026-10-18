@@ -13806,7 +13806,36 @@ function addLayer(layer){mqStudioCustomLayers.push(layer);mqStudioSelectedLayerI
 function applyRawShadow(ctx,color,blur,dx,dy,k){ctx.shadowColor=color||'rgba(0,0,0,.3)';ctx.shadowBlur=(blur||0)*k;ctx.shadowOffsetX=(dx||0)*k;ctx.shadowOffsetY=(dy||0)*k;}
 function clearRawShadow(ctx){ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetX=0;ctx.shadowOffsetY=0;}
 function drawImageFit(ctx,img,x,y,w,h,fit){if(!img)return;if(fit==='stretch'){ctx.drawImage(img,x,y,w,h);return;}if(fit==='contain'){const ratio=Math.min(w/img.width,h/img.height),iw=img.width*ratio,ih=img.height*ratio;ctx.drawImage(img,x+(w-iw)/2,y+(h-ih)/2,iw,ih);return;}cover(ctx,img,x,y,w,h);}
-function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y=(layer.y||0)*k,w=Math.max(1,(layer.w||1)*k),h=Math.max(1,(layer.h||1)*k),rot=(layer.rotation||0)*Math.PI/180;ctx.save();ctx.globalAlpha=Math.max(0,Math.min(1,(layer.opacity==null?100:layer.opacity)/100));ctx.translate(x+w/2,y+h/2);ctx.rotate(rot);ctx.translate(-(x+w/2),-(y+h/2));applyRawShadow(ctx,layer.shadowColor,layer.shadowBlur,layer.shadowX,layer.shadowY,k);let region=[x,y,w,h];if(layer.type==='shape'){ctx.fillStyle=layer.fill||'#ffffff';ctx.strokeStyle=layer.stroke||'#ffffff';ctx.lineWidth=(layer.strokeWidth||0)*k;if(layer.shape==='circle'){ctx.beginPath();ctx.ellipse(x+w/2,y+h/2,w/2,h/2,0,0,Math.PI*2);if((layer.fillOpacity||100)!==0)ctx.fill();if(ctx.lineWidth>0)ctx.stroke();}else if(layer.shape==='line'){ctx.beginPath();ctx.moveTo(x,y+h);ctx.lineTo(x+w,y);if(ctx.lineWidth===0)ctx.lineWidth=4*k;ctx.stroke();}else{ctx.beginPath();ctx.roundRect(x,y,w,h,(layer.radius||0)*k);if((layer.fillOpacity||100)!==0)ctx.fill();if(ctx.lineWidth>0)ctx.stroke();}}else if(layer.type==='image'){ctx.beginPath();ctx.roundRect(x,y,w,h,(layer.radius||0)*k);ctx.clip();if(layer.image && layer.image.complete && layer.image.naturalWidth){drawImageFit(ctx,layer.image,x,y,w,h,layer.fit||'cover');}else if(layer.projectPhoto){ctx.fillStyle=layer.fill||'#e9d9c8';ctx.fillRect(x,y,w,h);ctx.fillStyle='rgba(255,255,255,.16)';ctx.fillRect(x+w*.12,y+h*.14,w*.76,h*.72);}ctx.restore();ctx.save();ctx.globalAlpha=Math.max(0,Math.min(1,(layer.opacity==null?100:layer.opacity)/100));ctx.translate(x+w/2,y+h/2);ctx.rotate(rot);ctx.translate(-(x+w/2),-(y+h/2));if((layer.strokeWidth||0)>0){ctx.strokeStyle=layer.stroke||'#ffffff';ctx.lineWidth=(layer.strokeWidth||0)*k;ctx.beginPath();ctx.roundRect(x,y,w,h,(layer.radius||0)*k);ctx.stroke();}}else if(layer.type==='button'){ctx.fillStyle=layer.fill||'#f2e1ca';ctx.beginPath();ctx.roundRect(x,y,w,h,Math.min(w/2,h/2,(layer.radius??12)*k));ctx.fill();if((layer.strokeWidth||0)>0){ctx.strokeStyle=layer.stroke||'#ffffff';ctx.lineWidth=layer.strokeWidth*k;ctx.stroke();}clearRawShadow(ctx);ctx.fillStyle=layer.color||'#292234';let size=Math.max(8,(layer.size||24))*k;const space=(layer.spacing||0)*k;const label=String(layer.text||'');ctx.font=font(size,layer.font||'montserrat',700);while(size>9*k && textWidthWithSpacing(ctx,label,space)>w-18*k){size-=k;ctx.font=font(size,layer.font||'montserrat',700);}drawSpacedTextFx(ctx,label,x+w/2,y+h/2+size*.35,space,'center',layer.fx||'none',layer.shadowColor||'#000000',k);}else if(layer.type==='text'){const size=Math.max(8,(layer.size||56))*k;ctx.font=font(size,layer.font||'playfair',700);ctx.fillStyle=layer.color||'#ffffff';const lines=wrap(ctx,String(layer.text||''),w,10,(layer.spacing||0)*k);const lineHeight=size*1.18;const align=layer.align||'left';const tx=align==='left'?x:align==='center'?x+w/2:x+w;drawWrappedLinesFx(ctx,lines,tx,y+size,lineHeight,(layer.spacing||0)*k,align,layer.fx||'none',layer.shadowColor||'#000000',k);region=[x,y,w,Math.max(h,lines.length*lineHeight+size*.2)];}
+function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y=(layer.y||0)*k,w=Math.max(1,(layer.w||1)*k),h=Math.max(1,(layer.h||1)*k),rot=(layer.rotation||0)*Math.PI/180;ctx.save();ctx.globalAlpha=Math.max(0,Math.min(1,(layer.opacity==null?100:layer.opacity)/100));ctx.translate(x+w/2,y+h/2);ctx.rotate(rot);ctx.translate(-(x+w/2),-(y+h/2));applyRawShadow(ctx,layer.shadowColor,layer.shadowBlur,layer.shadowX,layer.shadowY,k);let region=[x,y,w,h];if(layer.type==='shape'){
+  // Draw the shadow from the filled geometry ONLY, never from the outline.
+  // Keep a subtle soft falloff rather than a second hard-edged silhouette.
+  const blur=Math.max(0,Number(layer.shadowBlur)||0);
+  const dx=Number(layer.shadowX)||0,dy=Number(layer.shadowY)||0;
+  clearRawShadow(ctx);
+  ctx.fillStyle=layer.fill||'#ffffff';ctx.strokeStyle=layer.stroke||'#ffffff';
+  ctx.lineWidth=(layer.strokeWidth||0)*k;
+  ctx.beginPath();
+  if(layer.shape==='circle')ctx.ellipse(x+w/2,y+h/2,w/2,h/2,0,0,Math.PI*2);
+  else if(layer.shape==='line'){ctx.moveTo(x,y+h);ctx.lineTo(x+w,y);}
+  else ctx.roundRect(x,y,w,h,(layer.radius||0)*k);
+  if(blur>0 || dx!==0 || dy!==0){
+    // Draw a translucent, blurred copy behind the shape instead of a hard duplicate.
+    ctx.save();
+    ctx.translate(dx*k,dy*k);
+    ctx.filter=`blur(${Math.max(6,blur)*k}px)`;
+    ctx.fillStyle=layer.shadowColor||'#000000';
+    ctx.globalAlpha*=0.26;
+    if(layer.shape==='line'){
+      ctx.strokeStyle=layer.shadowColor||'#000000';
+      ctx.lineWidth=Math.max(4,(layer.strokeWidth||4))*k;
+      ctx.stroke();
+    }else ctx.fill();
+    ctx.restore();
+  }
+  clearRawShadow(ctx);
+  if(layer.shape!=='line' && (layer.fillOpacity??100)!==0){ctx.fillStyle=layer.fill||'#ffffff';ctx.fill();}
+  if(layer.shape==='line' || ctx.lineWidth>0){ctx.strokeStyle=layer.stroke||'#ffffff';ctx.lineWidth=Math.max(layer.shape==='line'?4:0,Number(layer.strokeWidth)||0)*k;ctx.stroke();}
+}else if(layer.type==='image'){ctx.beginPath();ctx.roundRect(x,y,w,h,(layer.radius||0)*k);ctx.clip();if(layer.image && layer.image.complete && layer.image.naturalWidth){drawImageFit(ctx,layer.image,x,y,w,h,layer.fit||'cover');}else if(layer.projectPhoto){ctx.fillStyle=layer.fill||'#e9d9c8';ctx.fillRect(x,y,w,h);ctx.fillStyle='rgba(255,255,255,.16)';ctx.fillRect(x+w*.12,y+h*.14,w*.76,h*.72);}ctx.restore();ctx.save();ctx.globalAlpha=Math.max(0,Math.min(1,(layer.opacity==null?100:layer.opacity)/100));ctx.translate(x+w/2,y+h/2);ctx.rotate(rot);ctx.translate(-(x+w/2),-(y+h/2));if((layer.strokeWidth||0)>0){ctx.strokeStyle=layer.stroke||'#ffffff';ctx.lineWidth=(layer.strokeWidth||0)*k;ctx.beginPath();ctx.roundRect(x,y,w,h,(layer.radius||0)*k);ctx.stroke();}}else if(layer.type==='button'){ctx.fillStyle=layer.fill||'#f2e1ca';ctx.beginPath();ctx.roundRect(x,y,w,h,Math.min(w/2,h/2,(layer.radius??12)*k));ctx.fill();if((layer.strokeWidth||0)>0){ctx.strokeStyle=layer.stroke||'#ffffff';ctx.lineWidth=layer.strokeWidth*k;ctx.stroke();}clearRawShadow(ctx);ctx.fillStyle=layer.color||'#292234';let size=Math.max(8,(layer.size||24))*k;const space=(layer.spacing||0)*k;const label=String(layer.text||'');ctx.font=font(size,layer.font||'montserrat',700);while(size>9*k && textWidthWithSpacing(ctx,label,space)>w-18*k){size-=k;ctx.font=font(size,layer.font||'montserrat',700);}drawSpacedTextFx(ctx,label,x+w/2,y+h/2+size*.35,space,'center',layer.fx||'none',layer.shadowColor||'#000000',k);}else if(layer.type==='text'){const size=Math.max(8,(layer.size||56))*k;ctx.font=font(size,layer.font||'playfair',700);ctx.fillStyle=layer.color||'#ffffff';const lines=wrap(ctx,String(layer.text||''),w,10,(layer.spacing||0)*k);const lineHeight=size*1.18;const align=layer.align||'left';const tx=align==='left'?x:align==='center'?x+w/2:x+w;drawWrappedLinesFx(ctx,lines,tx,y+size,lineHeight,(layer.spacing||0)*k,align,layer.fx||'none',layer.shadowColor||'#000000',k);region=[x,y,w,Math.max(h,lines.length*lineHeight+size*.2)];}
   clearRawShadow(ctx);ctx.restore();regions.push({id:layer.id,rect:region});if(highlight){ctx.save();ctx.strokeStyle='#38bdf8';ctx.lineWidth=3*k;ctx.setLineDash([12*k,7*k]);ctx.strokeRect(region[0],region[1],region[2],region[3]);ctx.setLineDash([]);[[region[0],region[1]],[region[0]+region[2],region[1]],[region[0],region[1]+region[3]],[region[0]+region[2],region[1]+region[3]]].forEach(([hx,hy])=>{ctx.fillStyle='#fff';ctx.fillRect(hx-9*k,hy-9*k,18*k,18*k);ctx.strokeRect(hx-9*k,hy-9*k,18*k,18*k)});ctx.restore();}}
     function drawHeadlineWithEmphasis(ctx,lines,x,y,lineHeight,spacing,align,effect,effectColor,k,phrase,phraseColor){
       phrase=String(phrase||'').trim();
@@ -14280,16 +14309,22 @@ field('layer-forward').addEventListener('click',()=>{const idx=mqStudioCustomLay
         hoveredId=id;
         hoverbar.querySelector('[data-action=replace]').style.display=layer.type==='image'?'':'none';
         hoverbar.style.display='flex';
+        // Anchor to the object's top-right corner, NOT its centre or the cursor.
+        // One consistent 10px vertical gap and a 14px offset to the right.
         const cv=canvas.getBoundingClientRect(),wrap=preview.getBoundingClientRect();
         const scaleX=cv.width/canvas.width,scaleY=cv.height/canvas.height;
-        const centerX=cv.left-wrap.left+(box[0]+box[2]/2)*scaleX;
+        const objectRight=cv.left-wrap.left+(box[0]+box[2])*scaleX;
         const objectTop=cv.top-wrap.top+box[1]*scaleY;
+        const objectBottom=objectTop+box[3]*scaleY;
         const barWidth=hoverbar.offsetWidth||240,barHeight=hoverbar.offsetHeight||42;
-        hoverbar.style.left=Math.max(barWidth/2+9,Math.min(wrap.width-barWidth/2-9,centerX))+'px';
-        const preferred=objectTop-9;
-        const above=preferred-barHeight>=8;
-        hoverbar.style.top=(above?preferred:Math.min(wrap.height-12,objectTop+Math.max(40,box[3]*scaleY)+barHeight+8))+'px';
-        hoverbar.style.transform='translate(-50%,-100%)';
+        const gap=10,rightOffset=14,margin=8;
+        // Prefer right-aligned, slightly offset from the object's right edge.
+        // Only clamp horizontally if the toolbar would leave the workspace.
+        const rightEdge=Math.max(barWidth+margin,Math.min(wrap.width-margin,objectRight+rightOffset));
+        const fitsAbove=objectTop-gap-barHeight>=margin;
+        hoverbar.style.left=rightEdge+'px';
+        hoverbar.style.top=(fitsAbove?objectTop-gap:objectBottom+gap)+'px';
+        hoverbar.style.transform=fitsAbove?'translate(-100%,-100%)':'translate(-100%,0)';
         hoverLocked=true;
       }
       hoverbar.addEventListener('pointerenter',()=>clearTimeout(hoverHide));
