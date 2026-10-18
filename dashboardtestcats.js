@@ -2964,7 +2964,7 @@ window.logoutMember = async function () {
               <div class="mq-studio-nav" role="group" aria-label="Filter templates"><button type="button" class="active" data-studio-filter="all">All designs</button><button type="button" data-studio-filter="social">Social posts</button><button type="button" data-studio-filter="print">Posters & signs</button><button type="button" data-studio-filter="qr">QR promotions</button></div>
               <div class="mq-studio-grid" id="mq-studio-grid"></div>
               <div id="mq-studio-workspace" class="mq-studio-workspace" style="display:none">
-                <div class="mq-studio-editor-top"><div><span class="mq-studio-kicker">DESIGN STUDIO</span><h3 id="mq-studio-edit-title">Edit template</h3></div><div class="mq-studio-template-switch"><label for="mq-studio-template-select">Switch design</label><select id="mq-studio-template-select" aria-label="Switch design template"></select><button type="button" class="mq-studio-muted-btn" id="mq-studio-back">← All templates</button></div></div><div class="mq-studio-canvas-actions"><button type="button" id="mq-studio-quick-text">+ Add text</button><button type="button" id="mq-studio-quick-shape">+ Add shape</button><button type="button" id="mq-studio-quick-arrow">+ Add arrow</button><button type="button" id="mq-studio-quick-doodle">+ Add doodle</button><button type="button" id="mq-studio-properties-toggle">Selected object options</button><button type="button" id="mq-studio-settings-toggle">All design settings</button></div>
+                <div class="mq-studio-editor-top"><div><span class="mq-studio-kicker">DESIGN STUDIO</span><h3 id="mq-studio-edit-title">Edit template</h3></div><div class="mq-studio-template-switch"><label for="mq-studio-template-select">Switch design</label><select id="mq-studio-template-select" aria-label="Switch design template"></select><button type="button" class="mq-studio-muted-btn" id="mq-studio-back">← All templates</button></div></div><div class="mq-studio-canvas-actions"><button type="button" id="mq-studio-quick-text">+ Add text</button><button type="button" id="mq-studio-quick-shape">+ Add shape</button><button type="button" id="mq-studio-quick-arrow">+ Add arrow</button><button type="button" id="mq-studio-quick-doodle">+ Add doodle</button><button type="button" id="mq-studio-quick-bubble">+ Add bubble</button><button type="button" id="mq-studio-quick-sticker">+ Add sticker</button><button type="button" id="mq-studio-properties-toggle">Selected object options</button><button type="button" id="mq-studio-settings-toggle">All design settings</button></div>
                 <div class="mq-studio-editor-layout">
                   <div class="mq-studio-fields">
                     <div class="mq-studio-control-card">
@@ -3077,10 +3077,12 @@ window.logoutMember = async function () {
     <button type="button" class="mq-studio-muted-btn" id="mq-studio-add-arrow-layer">+ Arrow</button>
     <button type="button" class="mq-studio-muted-btn" id="mq-studio-add-doodle-layer">+ Doodle</button>
     <button type="button" class="mq-studio-muted-btn" id="mq-studio-add-swipe-layer">+ Brush swipe</button>
+    <button type="button" class="mq-studio-muted-btn" id="mq-studio-add-bubble-layer">+ Bubble</button>
+    <button type="button" class="mq-studio-muted-btn" id="mq-studio-add-sticker-layer">+ Sticker</button>
     <button type="button" class="mq-studio-muted-btn" id="mq-studio-add-image-layer-btn">+ Image</button>
     <button type="button" class="mq-studio-muted-btn" id="mq-studio-add-frame-layer">+ Border</button>
   </div>
-  <span class="mq-font-preview-note">Font menus now include a live-style preview label such as “Abc 123”. Combine brush swipes, arrows, and doodles for social-style ads.</span>
+  <span class="mq-font-preview-note">Font menus now include a live-style preview label such as “Abc 123”. Combine brush swipes, arrows, doodles, speech bubbles, and stickers for social-style ads.</span>
   <input id="mq-studio-add-image-layer-input" type="file" accept="image/*" style="display:none">
   <div id="mq-studio-layer-list" class="mq-studio-layer-list"></div>
   <div id="mq-studio-layer-controls" class="mq-studio-layer-controls">
@@ -3118,7 +3120,7 @@ window.logoutMember = async function () {
           <label>Align<select id="mq-studio-layer-align"><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option></select></label>
         </div>
         <div class="mq-studio-two-col">
-          <label>Text style<select id="mq-studio-layer-style"><option value="custom">Custom</option><option value="luxury">Luxury serif</option><option value="bold">Bold poster</option><option value="marker">Marker note</option><option value="story">Social story hook</option><option value="caption">Clean caption</option></select></label>
+          <label>Text style<select id="mq-studio-layer-style"><option value="custom">Custom</option><option value="luxury">Luxury serif</option><option value="bold">Bold poster</option><option value="marker">Marker note</option><option value="story">Social story hook</option><option value="caption">Clean caption</option><option value="sticker">Sticker headline</option><option value="handwritten">Handwritten note</option></select></label>
           <label>Effect<select id="mq-studio-layer-fx"><option value="none">None</option><option value="soft">Soft shadow</option><option value="strong">Strong shadow</option><option value="glow">Glow</option><option value="outline">Outline</option></select></label>
         </div>
         <div class="mq-studio-two-col">
@@ -3133,7 +3135,7 @@ window.logoutMember = async function () {
 
       <div id="mq-studio-layer-shape-fields" class="mq-studio-layer-section">
         <div class="mq-studio-two-col">
-          <label>Shape<select id="mq-studio-layer-shape"><option value="rect">Rectangle</option><option value="circle">Circle / ellipse</option><option value="line">Line</option><option value="arrow">Arrow</option><option value="curve">Curved arrow</option><option value="burst">Burst / rays</option><option value="brush">Brush swipe</option><option value="underline">Doodle underline</option></select></label>
+          <label>Shape<select id="mq-studio-layer-shape"><option value="rect">Rectangle</option><option value="circle">Circle / ellipse</option><option value="line">Line</option><option value="arrow">Arrow</option><option value="curve">Curved arrow</option><option value="burst">Burst / rays</option><option value="brush">Brush swipe</option><option value="underline">Doodle underline</option><option value="bubble">Speech bubble</option><option value="starburst">Sticker burst</option><option value="sparkle">Sparkle</option><option value="check">Checkmark</option><option value="heart">Heart</option></select></label>
           <label>Corner radius<input id="mq-studio-layer-radius" type="range" min="0" max="120" value="16"></label>
         </div>
         <div class="mq-studio-two-col">
@@ -13771,6 +13773,8 @@ function defaultShapeLayer(){return {id:layerUid(),type:'shape',name:`Shape ${mq
 function defaultArrowLayer(kind='arrow'){return {id:layerUid(),type:'shape',name:kind==='curve'?'Curved arrow':'Arrow',place:'front',x:170,y:240,w:260,h:180,rotation:0,opacity:100,shadowColor:'#000000',shadowBlur:12,shadowX:0,shadowY:6,shape:kind,radius:20,fill:'#ffffff',stroke:'#ffffff',strokeWidth:12}}
 function defaultDoodleLayer(kind='burst'){return {id:layerUid(),type:'shape',name:kind==='underline'?'Underline doodle':'Doodle',place:'front',x:200,y:160,w:240,h:140,rotation:0,opacity:100,shadowColor:'#000000',shadowBlur:0,shadowX:0,shadowY:0,shape:kind,radius:20,fill:'#ffffff',stroke:'#ffffff',strokeWidth:10}}
 function defaultBrushSwipeLayer(){return {id:layerUid(),type:'shape',name:'Brush swipe',place:'front',x:180,y:160,w:420,h:120,rotation:-4,opacity:100,shadowColor:'#000000',shadowBlur:0,shadowX:0,shadowY:0,shape:'brush',radius:24,fill:'#f5d94a',stroke:'#f5d94a',strokeWidth:0}}
+function defaultBubbleLayer(){return {id:layerUid(),type:'shape',name:'Speech bubble',place:'front',x:180,y:180,w:360,h:220,rotation:0,opacity:100,shadowColor:'#000000',shadowBlur:10,shadowX:0,shadowY:6,shape:'bubble',radius:28,fill:'#ffffff',stroke:'#ffffff',strokeWidth:0}}
+function defaultStickerLayer(){return {id:layerUid(),type:'shape',name:'Sticker burst',place:'front',x:180,y:180,w:260,h:260,rotation:-6,opacity:100,shadowColor:'#000000',shadowBlur:12,shadowX:0,shadowY:7,shape:'starburst',radius:20,fill:'#f4d84d',stroke:'#ffffff',strokeWidth:0}}
 function defaultProjectPhotoLayer(t,composition){
   const landscape=field('size').value==='landscape',portrait=field('size').value==='portrait'||field('size').value==='poster',story=field('size').value==='story';
   const W=landscape?1620:1080,H=story?1920:portrait?field('size').value==='poster'?1620:1350:1080;
@@ -13999,12 +14003,23 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
     if(shape==='arrow'){
       const shaft=Math.max(h*0.20,sw*1.6),mid=y+h*0.56,head=w*0.24;ctx.moveTo(x,mid-shaft/2);ctx.lineTo(x+w-head,mid-shaft/2);ctx.lineTo(x+w-head,mid-h*0.18);ctx.lineTo(x+w,mid);ctx.lineTo(x+w-head,mid+h*0.18);ctx.lineTo(x+w-head,mid+shaft/2);ctx.lineTo(x,mid+shaft/2);ctx.closePath();return 'fill';}
     if(shape==='curve'){
-      // Large sweeping J-shaped arrow, with head drawn at the exact endpoint.
+      // Sweeping curved arrow with a slightly shorter neck so the arrowhead has
+      // breathing room and doesn't feel cramped against the curve.
       ctx.moveTo(x+w*0.12,y+h*0.88);
-      ctx.bezierCurveTo(x+w*0.05,y+h*0.18,x+w*0.74,y+h*0.08,x+w*0.88,y+h*0.30);
+      ctx.bezierCurveTo(x+w*0.04,y+h*0.20,x+w*0.60,y+h*0.06,x+w*0.78,y+h*0.26);
       return 'curve';}
     if(shape==='underline'){
       ctx.moveTo(x+w*0.04,y+h*0.65);ctx.quadraticCurveTo(x+w*0.30,y+h*0.94,x+w*0.52,y+h*0.70);ctx.quadraticCurveTo(x+w*0.72,y+h*0.48,x+w*0.96,y+h*0.62);return 'stroke';}
+    if(shape==='bubble'){
+      const r=Math.min((layer.radius||0)*k,w*0.18,h*0.18);ctx.roundRect(x,y,w,h-r*0.65,r);ctx.moveTo(x+w*0.20,y+h-r*0.20);ctx.lineTo(x+w*0.12,y+h+r*0.22);ctx.lineTo(x+w*0.31,y+h-r*0.08);ctx.closePath();return 'fill';}
+    if(shape==='starburst'){
+      const cx=x+w/2,cy=y+h/2,outer=Math.min(w,h)*0.50,inner=outer*0.68,points=18;for(let i=0;i<points*2;i++){const a=-Math.PI/2+i*Math.PI/points;const rad=i%2===0?outer:inner;const px=cx+Math.cos(a)*rad,py=cy+Math.sin(a)*rad;if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);}ctx.closePath();return 'fill';}
+    if(shape==='sparkle'){
+      const cx=x+w/2,cy=y+h/2,rx=w*0.38,ry=h*0.38;ctx.moveTo(cx,cy-ry);ctx.lineTo(cx,cy+ry);ctx.moveTo(cx-rx,cy);ctx.lineTo(cx+rx,cy);ctx.moveTo(cx-rx*0.65,cy-ry*0.65);ctx.lineTo(cx+rx*0.65,cy+ry*0.65);ctx.moveTo(cx+rx*0.65,cy-ry*0.65);ctx.lineTo(cx-rx*0.65,cy+ry*0.65);return 'stroke';}
+    if(shape==='check'){
+      ctx.moveTo(x+w*0.12,y+h*0.56);ctx.lineTo(x+w*0.38,y+h*0.82);ctx.lineTo(x+w*0.88,y+h*0.20);return 'stroke';}
+    if(shape==='heart'){
+      const cx=x+w/2,cy=y+h*0.38;ctx.moveTo(cx,y+h*0.92);ctx.bezierCurveTo(x+w*0.08,y+h*0.64,x+w*0.02,y+h*0.26,x+w*0.26,y+h*0.20);ctx.bezierCurveTo(x+w*0.40,y+h*0.16,cx,y+h*0.30,cx,y+h*0.42);ctx.bezierCurveTo(cx,y+h*0.30,x+w*0.60,y+h*0.16,x+w*0.74,y+h*0.20);ctx.bezierCurveTo(x+w*0.98,y+h*0.26,x+w*0.92,y+h*0.64,cx,y+h*0.92);ctx.closePath();return 'fill';}
     if(shape==='burst'){
       const cx=x+w/2,cy=y+h/2,inner=Math.min(w,h)*0.10,outer=Math.min(w,h)*0.48;for(let i=0;i<10;i++){const a=(Math.PI*2/10)*i-Math.PI/2;ctx.moveTo(cx+Math.cos(a)*inner,cy+Math.sin(a)*inner);ctx.lineTo(cx+Math.cos(a)*outer,cy+Math.sin(a)*outer);}return 'stroke';}
     ctx.roundRect(x,y,w,h,(layer.radius||0)*k);return 'fill';
@@ -14012,15 +14027,21 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
   const mode=buildPath();
   if(blur>0||dx!==0||dy!==0){ctx.shadowColor=layer.shadowColor||'#000000';ctx.shadowBlur=Math.max(8,blur)*k;ctx.shadowOffsetX=dx*k;ctx.shadowOffsetY=dy*k;}
   if(mode==='fill'){ctx.fillStyle=layer.fill||'#ffffff';ctx.fill();}
-  else {ctx.strokeStyle=layer.stroke||layer.fill||'#ffffff';ctx.lineWidth=Math.max(shape==='burst'||shape==='underline'||shape==='curve'?6:4,Number(layer.strokeWidth)||0)*k;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke();if(shape==='curve'){
-      // Cubic final tangent from final control point toward endpoint.
-      const tipX=x+w*.88,tipY=y+h*.30;
-      const tangent=Math.atan2(h*.22,w*.14),len=Math.min(w,h)*.20,spread=.58;
+  else {ctx.strokeStyle=layer.stroke||layer.fill||'#ffffff';ctx.lineWidth=Math.max(shape==='burst'||shape==='underline'||shape==='curve'||shape==='sparkle'||shape==='check'?6:4,Number(layer.strokeWidth)||0)*k;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke();if(shape==='curve'){
+      // Draw a separate arrowhead just beyond the end of the curve so the inner
+      // corner has more open space and reads more clearly as an arrow.
+      const neckX=x+w*.78, neckY=y+h*.26;
+      const tipX=x+w*.91, tipY=y+h*.21;
+      const wingLen=Math.min(w,h)*.18;
+      const tangent=Math.atan2(tipY-neckY, tipX-neckX);
+      const spread=.78;
       clearRawShadow(ctx);ctx.beginPath();
-      ctx.moveTo(tipX-len*Math.cos(tangent-spread),tipY-len*Math.sin(tangent-spread));
+      ctx.moveTo(tipX-wingLen*Math.cos(tangent-spread),tipY-wingLen*Math.sin(tangent-spread));
       ctx.lineTo(tipX,tipY);
-      ctx.lineTo(tipX-len*Math.cos(tangent+spread),tipY-len*Math.sin(tangent+spread));
+      ctx.lineTo(tipX-wingLen*Math.cos(tangent+spread),tipY-wingLen*Math.sin(tangent+spread));
       ctx.lineWidth=Math.max(7,Number(layer.strokeWidth)||0)*k;
+      ctx.lineCap='round';
+      ctx.lineJoin='round';
       ctx.stroke();
     }}
   clearRawShadow(ctx);
@@ -14452,9 +14473,11 @@ field('add-shape-layer').addEventListener('click',()=>addLayer(defaultShapeLayer
 if(field('add-arrow-layer'))field('add-arrow-layer').addEventListener('click',()=>addLayer(defaultArrowLayer('arrow')));
 if(field('add-doodle-layer'))field('add-doodle-layer').addEventListener('click',()=>addLayer(defaultDoodleLayer('burst')));
 if(field('add-swipe-layer'))field('add-swipe-layer').addEventListener('click',()=>addLayer(defaultBrushSwipeLayer()));
+if(field('add-bubble-layer'))field('add-bubble-layer').addEventListener('click',()=>addLayer(defaultBubbleLayer()));
+if(field('add-sticker-layer'))field('add-sticker-layer').addEventListener('click',()=>addLayer(defaultStickerLayer()));
 field('add-frame-layer').addEventListener('click',()=>addLayer(defaultFrameLayer()));
 field('add-image-layer-btn').addEventListener('click',()=>field('add-image-layer-input').click());
-if(field('layer-style'))field('layer-style').addEventListener('change',()=>{const layer=currentLayer();if(!layer||!(layer.type==='text'||layer.type==='button'))return;const preset=field('layer-style').value;const presets={custom:null,luxury:{font:'abril',size:64,spacing:0,fx:'soft',textStrokeWidth:0,color:'#fff8ef'},bold:{font:'anton',size:74,spacing:1,fx:'strong',textStrokeWidth:0,color:'#ffffff'},marker:{font:'marker',size:54,spacing:0,fx:'none',textStrokeWidth:0,color:'#111111'},story:{font:'spartan',size:68,spacing:1,fx:'strong',textStrokeWidth:0,color:'#ffffff'},caption:{font:'manrope',size:34,spacing:0,fx:'soft',textStrokeWidth:0,color:'#ffffff'}};const cfg=presets[preset];if(!cfg)return;Object.assign(layer,cfg);syncLayerControls();update();});
+if(field('layer-style'))field('layer-style').addEventListener('change',()=>{const layer=currentLayer();if(!layer||!(layer.type==='text'||layer.type==='button'))return;const preset=field('layer-style').value;const presets={custom:null,luxury:{font:'abril',size:64,spacing:0,fx:'soft',textStrokeWidth:0,color:'#fff8ef'},bold:{font:'anton',size:74,spacing:1,fx:'strong',textStrokeWidth:0,color:'#ffffff'},marker:{font:'marker',size:54,spacing:0,fx:'none',textStrokeWidth:0,color:'#111111'},story:{font:'spartan',size:68,spacing:1,fx:'strong',textStrokeWidth:0,color:'#ffffff'},caption:{font:'manrope',size:34,spacing:0,fx:'soft',textStrokeWidth:0,color:'#ffffff'},sticker:{font:'anton',size:82,spacing:1,fx:'none',textStrokeWidth:6,color:'#111111'},handwritten:{font:'caveat',size:66,spacing:0,fx:'soft',textStrokeWidth:0,color:'#ffffff'}};const cfg=presets[preset];if(!cfg)return;Object.assign(layer,cfg);syncLayerControls();update();});
       if(field('direct-image-btn'))field('direct-image-btn').addEventListener('click',()=>field('direct-image-input').click());
       field('photo-quick').addEventListener('click',()=>field('photo').click());
       
@@ -14506,6 +14529,8 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
       field('quick-shape').addEventListener('click',()=>{addLayer(defaultShapeLayer());showPropertyMode();});
       if(field('quick-arrow'))field('quick-arrow').addEventListener('click',()=>{addLayer(defaultArrowLayer('arrow'));showPropertyMode();});
       if(field('quick-doodle'))field('quick-doodle').addEventListener('click',()=>{addLayer(defaultBrushSwipeLayer());showPropertyMode();});
+      if(field('quick-bubble'))field('quick-bubble').addEventListener('click',()=>{addLayer(defaultBubbleLayer());showPropertyMode();});
+      if(field('quick-sticker'))field('quick-sticker').addEventListener('click',()=>{addLayer(defaultStickerLayer());showPropertyMode();});
       field('layers-toggle').addEventListener('click',()=>{
         const beforeRotation=new Map(mqStudioCustomLayers.map(layer=>[layer.id,Number(layer.rotation)||0]));
         workspace.classList.toggle('mq-studio-show-layers');
