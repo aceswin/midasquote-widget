@@ -13936,22 +13936,33 @@ field('layer-forward').addEventListener('click',()=>{const idx=mqStudioCustomLay
       const canvasPoint=e=>{const rect=canvas.getBoundingClientRect();return {x:(e.clientX-rect.left)*(canvas.width/rect.width),y:(e.clientY-rect.top)*(canvas.height/rect.height)}};
       const regionAt=pt=>{const custom=(canvas._mqCustomLayerRegions||[]).slice().reverse();for(const item of custom){const layer=mqStudioCustomLayers.find(l=>l.id===item.id);if(!layer||layer.hidden||layer.locked)continue;const r=item.rect;const radius=18*(canvas._mqUnit||1);if(layer.id===mqStudioSelectedLayerId){const corners=[['nw',r[0],r[1]],['ne',r[0]+r[2],r[1]],['sw',r[0],r[1]+r[3]],['se',r[0]+r[2],r[1]+r[3]]];for(const [side,x,y] of corners){if(Math.abs(pt.x-x)<radius&&Math.abs(pt.y-y)<radius)return 'resize:'+item.id+':'+side}}if(pt.x>=r[0]&&pt.x<=r[0]+r[2]&&pt.y>=r[1]&&pt.y<=r[1]+r[3])return 'layer:'+item.id;}if(mqStudioDetached)return null;const regions=canvas._mqRegions||{};const order=['cta','url','headline','sub','brand'];for(const key of order){const r=regions[key];if(!r)continue; if(pt.x>=r[0]&&pt.x<=r[0]+r[2]&&pt.y>=r[1]&&pt.y<=r[1]+r[3])return key;}return null;};
       const hoverbar=field('hoverbar');let hoveredId=null;let hoverHide=null;
-      const hideHover=()=>{if(hoverbar){hoverbar.style.display='none'}hoveredId=null};
+      // Lock the toolbar at its first position until explicitly dismissed.
+      // Prevent oscillation when the pointer crosses the action buttons or resize handles.
+      let hoverLocked=false;
+      const hideHover=()=>{clearTimeout(hoverHide);if(hoverbar){hoverbar.style.display='none'}hoveredId=null;hoverLocked=false};
+      function scheduleHoverHide(){
+        clearTimeout(hoverHide);
+        hoverHide=setTimeout(()=>{
+          if(!hoverbar.matches(':hover'))hideHover();
+        },600);
+      }
       function positionHover(e){
         if(drag||!mqStudioSelected)return;
+        // Once visible, don't move/re-anchor as the pointer explores the object.
+        if(hoverLocked){
+          const hit=regionAt(canvasPoint(e));
+          if(hit && (hit==='layer:'+hoveredId || hit.startsWith('resize:'+hoveredId+':'))){clearTimeout(hoverHide);return;}
+          scheduleHoverHide();return;
+        }
         const hit=regionAt(canvasPoint(e));
-        if(!hit||!hit.startsWith('layer:')){if(!hoverbar.matches(':hover')){clearTimeout(hoverHide);hoverHide=setTimeout(()=>{if(!hoverbar.matches(':hover'))hideHover()},350);}return;}
+        if(!hit||!hit.startsWith('layer:'))return;
         const id=hit.slice(6),layer=mqStudioCustomLayers.find(l=>l.id===id);
-        if(!layer||layer.hidden){hideHover();return;}
-        clearTimeout(hoverHide);
-        // Stable anchor: only reposition when a DIFFERENT object is hovered.
-        // Never chase the pointer; otherwise the buttons move before they can be clicked.
-        if(hoveredId===id&&hoverbar.style.display==='flex')return;
+        if(!layer||layer.hidden)return;
+        const box=(canvas._mqCustomLayerRegions||[]).find(x=>x.id===id)?.rect;
+        if(!box)return;
         hoveredId=id;
         hoverbar.querySelector('[data-action=replace]').style.display=layer.type==='image'?'':'none';
         hoverbar.style.display='flex';
-        const box=(canvas._mqCustomLayerRegions||[]).find(x=>x.id===id)?.rect;
-        if(!box)return;
         const cv=canvas.getBoundingClientRect(),wrap=preview.getBoundingClientRect();
         const scaleX=cv.width/canvas.width,scaleY=cv.height/canvas.height;
         const centerX=cv.left-wrap.left+(box[0]+box[2]/2)*scaleX;
@@ -13960,17 +13971,19 @@ field('layer-forward').addEventListener('click',()=>{const idx=mqStudioCustomLay
         hoverbar.style.left=Math.max(barWidth/2+9,Math.min(wrap.width-barWidth/2-9,centerX))+'px';
         const preferred=objectTop-9;
         const above=preferred-barHeight>=8;
-        hoverbar.style.top=(above?preferred:Math.min(wrap.height-barHeight-12,objectTop+Math.max(40,box[3]*scaleY)+barHeight+8))+'px';
-        hoverbar.style.transform=above?'translate(-50%,-100%)':'translate(-50%,-100%)';
+        hoverbar.style.top=(above?preferred:Math.min(wrap.height-12,objectTop+Math.max(40,box[3]*scaleY)+barHeight+8))+'px';
+        hoverbar.style.transform='translate(-50%,-100%)';
+        hoverLocked=true;
       }
-      hoverbar.addEventListener('pointerenter',()=>clearTimeout(hoverHide));hoverbar.addEventListener('pointerleave',()=>{hoverHide=setTimeout(hideHover,300)});
+      hoverbar.addEventListener('pointerenter',()=>clearTimeout(hoverHide));
+      hoverbar.addEventListener('pointerleave',scheduleHoverHide);
       const duplicateLayer=id=>{const layer=mqStudioCustomLayers.find(l=>l.id===id);if(!layer)return;const copy=hydrateLayer({...cloneObj(layer),id:layerUid(),name:(layer.name||layer.type)+' copy',x:(layer.x||0)+24,y:(layer.y||0)+24});mqStudioCustomLayers.push(copy);mqStudioSelectedLayerId=copy.id;syncLayerControls();update();};
       hoverbar.addEventListener('click',e=>{const button=e.target.closest('button[data-action]');if(!button||!hoveredId)return;const id=hoveredId,layer=mqStudioCustomLayers.find(l=>l.id===id);if(!layer)return;mqStudioSelectedLayerId=id;const action=button.dataset.action;if(action==='delete'){deleteStudioLayer(id);hideHover()}else if(action==='duplicate'){duplicateLayer(id);hideHover()}else if(action==='replace'&&layer.type==='image'){field('layer-image-file').click();hideHover()}else if(action==='edit'){showPropertyMode();syncLayerControls();if(layer.type==='text'||layer.type==='button'){editLayerInline(layer)}else if(layer.type==='image')field('layer-image-file').click();else field('layer-fill').focus();hideHover()}update()});
       canvas.addEventListener('pointermove',e=>{if(!drag)positionHover(e)});
-      canvas.addEventListener('pointerleave',()=>{clearTimeout(hoverHide);hoverHide=setTimeout(()=>{if(!hoverbar.matches(':hover'))hideHover()},400)});
+      canvas.addEventListener('pointerleave',scheduleHoverHide);
       let drag=null;
       canvas.style.cursor='grab';
-      canvas.addEventListener('pointerdown',e=>{if(!mqStudioSelected)return;const part=regionAt(canvasPoint(e));if(!part)return;const pt=canvasPoint(e);if(part.startsWith('resize:')){const [,layerId,corner]=part.split(':');const layer=mqStudioCustomLayers.find(l=>l.id===layerId);if(!layer)return;drag={part,kind:'resize',layerId,corner,start:pt,vals:{x:layer.x,y:layer.y,w:layer.w,h:layer.h}};canvas.setPointerCapture(e.pointerId);e.preventDefault();return;}if(String(part).startsWith('layer:')){const layer=currentLayer()&&('layer:'+currentLayer().id)===part?currentLayer():mqStudioCustomLayers.find(l=>'layer:'+l.id===part);if(!layer)return;mqStudioSelectedLayerId=layer.id;syncLayerControls();showPropertyMode();drag={part,start:pt,layerId:layer.id,vals:{x:Number(layer.x)||0,y:Number(layer.y)||0}};mqStudioFocus=part;}else{drag={part,start:pt,unit:canvas._mqUnit||1,vals:{shopX:Number(field('shop-x').value)||0,shopY:Number(field('shop-y').value)||0,contentX:Number(field('content-x').value)||0,contentY:Number(field('content-y').value)||0,ctaX:Number(field('cta-x').value)||0,ctaY:Number(field('cta-y').value)||0,urlX:Number(field('url-x').value)||0,urlY:Number(field('url-y').value)||0}}; mqStudioFocus=part;} update(); canvas.setPointerCapture(e.pointerId); canvas.style.cursor='grabbing'; e.preventDefault();});
+      canvas.addEventListener('pointerdown',e=>{if(!mqStudioSelected)return;hideHover();const part=regionAt(canvasPoint(e));if(!part)return;const pt=canvasPoint(e);if(part.startsWith('resize:')){const [,layerId,corner]=part.split(':');const layer=mqStudioCustomLayers.find(l=>l.id===layerId);if(!layer)return;drag={part,kind:'resize',layerId,corner,start:pt,vals:{x:layer.x,y:layer.y,w:layer.w,h:layer.h}};canvas.setPointerCapture(e.pointerId);e.preventDefault();return;}if(String(part).startsWith('layer:')){const layer=currentLayer()&&('layer:'+currentLayer().id)===part?currentLayer():mqStudioCustomLayers.find(l=>'layer:'+l.id===part);if(!layer)return;mqStudioSelectedLayerId=layer.id;syncLayerControls();showPropertyMode();drag={part,start:pt,layerId:layer.id,vals:{x:Number(layer.x)||0,y:Number(layer.y)||0}};mqStudioFocus=part;}else{drag={part,start:pt,unit:canvas._mqUnit||1,vals:{shopX:Number(field('shop-x').value)||0,shopY:Number(field('shop-y').value)||0,contentX:Number(field('content-x').value)||0,contentY:Number(field('content-y').value)||0,ctaX:Number(field('cta-x').value)||0,ctaY:Number(field('cta-y').value)||0,urlX:Number(field('url-x').value)||0,urlY:Number(field('url-y').value)||0}}; mqStudioFocus=part;} update(); canvas.setPointerCapture(e.pointerId); canvas.style.cursor='grabbing'; e.preventDefault();});
       canvas.addEventListener('pointermove',e=>{const pt=canvasPoint(e);const hover=regionAt(pt);canvas.style.cursor=drag?'grabbing':hover?.startsWith('resize:')?'nwse-resize':(hover?'grab':'default');if(!drag)return;
         if(drag.kind==='resize'){const layer=mqStudioCustomLayers.find(l=>l.id===drag.layerId);if(!layer)return;const dx=pt.x-drag.start.x,dy=pt.y-drag.start.y;const w=drag.corner.includes('w')?drag.vals.w-dx:drag.vals.w+dx;const h=drag.corner.includes('n')?drag.vals.h-dy:drag.vals.h+dy;layer.w=Math.round(Math.max(25,w));layer.h=Math.round(Math.max(25,h));layer.x=Math.round(drag.corner.includes('w')?drag.vals.x+drag.vals.w-layer.w:drag.vals.x);layer.y=Math.round(drag.corner.includes('n')?drag.vals.y+drag.vals.h-layer.h:drag.vals.y);syncLayerControls();update();return;}
         if(String(drag.part).startsWith('layer:')){const layer=mqStudioCustomLayers.find(l=>l.id===drag.layerId);if(!layer)return;
