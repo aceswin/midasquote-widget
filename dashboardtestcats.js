@@ -2622,6 +2622,18 @@ window.logoutMember = async function () {
   .mq-studio-preview-wrap{background:#f5f2f4;border:1px solid #eae5e9;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;min-width:0;position:sticky;top:16px}
   .mq-studio-preview-wrap canvas{display:block;width:auto;height:auto;max-width:100%;max-height:560px;border-radius:8px;box-shadow:0 10px 35px rgba(18,13,22,.17)}
   .mq-studio-preview-wrap p{font-size:10px;color:#8d8390;text-align:center;margin:12px 0 0}.mq-studio-preview-tip{font-size:11px;color:#6b6371;background:#fff;border:1px dashed #d8cfda;border-radius:10px;padding:8px 10px;margin:0 0 12px;text-align:center}
+
+/* v8.1.1 native-select replacement: font samples are styled DOM nodes. */
+#mq-studio .mq-font-native{position:absolute!important;width:1px!important;height:1px!important;opacity:0!important;pointer-events:none!important}
+#mq-studio .mq-rich-font-picker{position:relative;width:100%;min-width:0}
+#mq-studio .mq-rich-font-trigger{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;min-height:50px;padding:10px 12px;border:1px solid #d8d1db;border-radius:10px;background:#fff;color:#2b2230;font:700 13px Arial,sans-serif;cursor:pointer;text-align:left}
+#mq-studio .mq-rich-font-trigger-sample{font-size:25px;font-weight:700;white-space:nowrap;color:#74465b}
+#mq-studio .mq-rich-font-menu{position:absolute;left:0;top:calc(100% + 4px);width:max(270px,100%);max-width:min(350px,calc(100vw - 30px));max-height:340px;overflow:auto;background:white;z-index:999999;border:1px solid #d9d0db;border-radius:12px;box-shadow:0 16px 40px #0004;padding:5px}
+#mq-studio .mq-rich-font-menu[hidden]{display:none!important}
+#mq-studio .mq-rich-font-option{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:9px 12px;border:none;border-radius:8px;background:white;color:#2b2230;text-align:left;cursor:pointer}
+#mq-studio .mq-rich-font-option:hover,#mq-studio .mq-rich-font-option[aria-selected="true"]{background:#f3e8ee}
+#mq-studio .mq-rich-font-name{font:600 12px Arial,sans-serif;white-space:nowrap}
+#mq-studio .mq-rich-font-sample{font-size:25px;font-weight:700;white-space:nowrap;line-height:1.25}
   .mq-studio-preview-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-self:stretch;margin-bottom:9px}.mq-studio-preview-toolbar button{flex:1;min-width:140px}.mq-studio-preview-wrap canvas{touch-action:none}.mq-studio-layer-list{display:flex;flex-direction:column;gap:8px;margin:10px 0}.mq-studio-layer-item{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;padding:9px 11px;border:1px solid #d9d2dc;border-radius:10px;background:#fff;color:#322938;font:700 12px/1.3 Arial,sans-serif;cursor:pointer}.mq-studio-layer-item.active{background:#2d2436;color:#fff;border-color:#2d2436}.mq-studio-layer-item small{font-weight:400;opacity:.75}.mq-studio-layer-toolbar{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.mq-font-preview-note{display:block;font-size:11px;color:#7a6f80;margin-top:4px}.mq-studio-layer-item{min-height:52px!important;padding:9px 10px!important;gap:10px!important;flex-wrap:nowrap!important;overflow:hidden!important}.mq-studio-layer-item>button:first-child{min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;padding:6px 2px!important;font-size:12px!important}.mq-studio-layer-item>button:not(:first-child){width:33px!important;height:32px!important;min-width:33px!important;flex:0 0 33px!important;padding:5px!important;display:grid!important;place-items:center!important}.mq-studio-preview-wrap{position:relative}.mq-studio-hoverbar{position:absolute;display:none;align-items:center;gap:8px;background:#211a29f5;border:1px solid #ffffff2b;border-radius:10px;padding:6px;z-index:10;box-shadow:0 8px 25px #0005;transform:translate(-50%,-100%);white-space:nowrap;max-width:95%}.mq-studio-hoverbar button{cursor:pointer;border:0;border-radius:8px;background:#fff;color:#291d31;font:700 12px/1.25 Arial,sans-serif!important;padding:10px 14px!important;min-height:36px!important;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center}.mq-studio-hoverbar button:hover{background:#e5cbaa}.mq-studio-layer-controls{margin-top:10px;padding-top:10px;border-top:1px solid #e6dfe7}.mq-studio-layer-section{display:none}.mq-studio-layer-section.show{display:block}.mq-studio-legacy{border-top:1px solid #e7e2e9;padding-top:17px;color:#716a76;font-size:12px}.mq-studio-legacy summary{cursor:pointer;color:#4d4152;font-weight:700}.mq-studio-legacy p{line-height:1.6}
   @media(max-width:1100px){.mq-studio-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.mq-studio-editor-layout{grid-template-columns:1fr}.mq-studio-preview-wrap{position:relative;top:auto}}
   @media(max-width:560px){.mq-studio-hero{padding:22px}.mq-studio-hero-star{display:none}.mq-studio-grid{gap:10px}.mq-studio-thumb{height:135px}.mq-studio-workspace{padding:14px}.mq-studio-editor-top{flex-wrap:wrap}.mq-studio-two-col,.mq-studio-color-grid,.mq-studio-three-col{grid-template-columns:1fr}}
@@ -13665,14 +13677,57 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const font=(size,fam,weight=700)=>`${weight} ${Math.round(size)}px ${fontFace(fam)}`;
     function populateStudioFontSelects(){
       const selectors=['shop-font','headline-font','sub-font','cta-font','layer-font'];
-      const preferred={
-        'shop-font':'playfair','headline-font':'playfair','sub-font':'montserrat','cta-font':'montserrat','layer-font':'playfair'
-      };
+      const preferred={'shop-font':'playfair','headline-font':'playfair','sub-font':'montserrat','cta-font':'montserrat','layer-font':'playfair'};
+      let activePicker=null;
+      const closePicker=()=>{if(activePicker){activePicker.menu.hidden=true;activePicker.button.setAttribute('aria-expanded','false');activePicker=null;}};
       selectors.forEach(id=>{
-        const select=field(id);if(!select)return;const current=select.value||preferred[id]||'playfair';
-        select.innerHTML=FONT_OPTIONS.map(([value,label])=>`<option value="${value}">${label} · Abc 123</option>`).join('');
-        select.value=current;
+        const select=field(id);if(!select||select.dataset.richFontInstalled)return;
+        const current=select.value||preferred[id]||'playfair';
+        select.innerHTML=FONT_OPTIONS.map(([value,label])=>`<option value="${value}">${label}</option>`).join('');
+        select.value=current;select.dataset.richFontInstalled='true';
+        // Keep the original select as the authoritative value for the canvas renderer.
+        // Native option menus cannot consistently style individual fonts across browsers.
+        select.classList.add('mq-font-native');
+        const holder=document.createElement('div');holder.className='mq-rich-font-picker';
+        const button=document.createElement('button');button.type='button';button.className='mq-rich-font-trigger';
+        button.setAttribute('aria-haspopup','listbox');button.setAttribute('aria-expanded','false');
+        const menu=document.createElement('div');menu.className='mq-rich-font-menu';menu.hidden=true;menu.setAttribute('role','listbox');
+        FONT_OPTIONS.forEach(([key,label])=>{
+          const item=document.createElement('button');item.type='button';item.className='mq-rich-font-option';item.dataset.font=key;item.setAttribute('role','option');
+          item.innerHTML=`<span class="mq-rich-font-name"></span><span class="mq-rich-font-sample">Aa Bb Cc 123</span>`;
+          item.querySelector('.mq-rich-font-name').textContent=label;
+          item.querySelector('.mq-rich-font-sample').style.fontFamily=fontFace(key);
+          item.addEventListener('click',ev=>{
+            ev.preventDefault();ev.stopPropagation();select.value=key;
+            select.dispatchEvent(new Event('input',{bubbles:true}));
+            select.dispatchEvent(new Event('change',{bubbles:true}));
+            refresh();closePicker();
+            if(document.fonts?.load)document.fonts.load(`700 28px ${fontFace(key)}`).then(()=>update()).catch(()=>{});
+          });menu.appendChild(item);
+        });
+        const refresh=()=>{
+          const key=select.value;const label=FONT_OPTIONS.find(([k])=>k===key)?.[1]||key;
+          button.innerHTML='';const name=document.createElement('span');name.textContent=label;
+          const sample=document.createElement('span');sample.className='mq-rich-font-trigger-sample';sample.textContent='Abc';sample.style.fontFamily=fontFace(key);
+          button.append(name,sample);
+          menu.querySelectorAll('.mq-rich-font-option').forEach(item=>{item.setAttribute('aria-selected',String(item.dataset.font===key));});
+        };
+        button.addEventListener('click',ev=>{
+          ev.preventDefault();ev.stopPropagation();if(activePicker?.button===button){closePicker();return;}closePicker();refresh();
+          menu.hidden=false;button.setAttribute('aria-expanded','true');activePicker={menu,button};
+        });
+        select.after(holder);holder.append(button,menu);
+        // When the template or layer changes, reflect the newly selected font.
+        select.addEventListener('change',refresh);
+        select.addEventListener('input',refresh);
+        button.addEventListener('focus',refresh);
+        refresh();
       });
+      if(!root.dataset.fontPickerOutsideInstalled){
+        root.dataset.fontPickerOutsideInstalled='true';
+        document.addEventListener('pointerdown',ev=>{if(activePicker&&!activePicker.button.parentElement.contains(ev.target))closePicker();});
+        document.addEventListener('keydown',ev=>{if(ev.key==='Escape')closePicker();});
+      }
     }
     const textWidthWithSpacing=(ctx,txt,spacing=0)=>{txt=String(txt||'');if(!txt)return 0;return ctx.measureText(txt).width+Math.max(0,txt.length-1)*spacing};
     const wrap=(ctx,txt,maxWidth,maxLines=5,spacing=0)=>{
@@ -13867,7 +13922,10 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
     if(shape==='arrow'){
       const shaft=Math.max(h*0.20,sw*1.6),mid=y+h*0.56,head=w*0.24;ctx.moveTo(x,mid-shaft/2);ctx.lineTo(x+w-head,mid-shaft/2);ctx.lineTo(x+w-head,mid-h*0.18);ctx.lineTo(x+w,mid);ctx.lineTo(x+w-head,mid+h*0.18);ctx.lineTo(x+w-head,mid+shaft/2);ctx.lineTo(x,mid+shaft/2);ctx.closePath();return 'fill';}
     if(shape==='curve'){
-      ctx.moveTo(x+w*0.15,y+h*0.85);ctx.quadraticCurveTo(x+w*0.20,y+h*0.10,x+w*0.72,y+h*0.18);return 'curve';}
+      // Large sweeping J-shaped arrow, with head drawn at the exact endpoint.
+      ctx.moveTo(x+w*0.12,y+h*0.88);
+      ctx.bezierCurveTo(x+w*0.05,y+h*0.18,x+w*0.74,y+h*0.08,x+w*0.88,y+h*0.30);
+      return 'curve';}
     if(shape==='underline'){
       ctx.moveTo(x+w*0.04,y+h*0.65);ctx.quadraticCurveTo(x+w*0.30,y+h*0.94,x+w*0.52,y+h*0.70);ctx.quadraticCurveTo(x+w*0.72,y+h*0.48,x+w*0.96,y+h*0.62);return 'stroke';}
     if(shape==='burst'){
@@ -13877,7 +13935,17 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
   const mode=buildPath();
   if(blur>0||dx!==0||dy!==0){ctx.shadowColor=layer.shadowColor||'#000000';ctx.shadowBlur=Math.max(8,blur)*k;ctx.shadowOffsetX=dx*k;ctx.shadowOffsetY=dy*k;}
   if(mode==='fill'){ctx.fillStyle=layer.fill||'#ffffff';ctx.fill();}
-  else {ctx.strokeStyle=layer.stroke||layer.fill||'#ffffff';ctx.lineWidth=Math.max(shape==='burst'||shape==='underline'||shape==='curve'?6:4,Number(layer.strokeWidth)||0)*k;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke();if(shape==='curve'){const tipX=x+w*0.72,tipY=y+h*0.18;clearRawShadow(ctx);ctx.beginPath();ctx.moveTo(tipX,tipY);ctx.lineTo(tipX-w*0.08,tipY+h*0.01);ctx.lineTo(tipX-w*0.02,tipY+h*0.10);ctx.stroke();}}
+  else {ctx.strokeStyle=layer.stroke||layer.fill||'#ffffff';ctx.lineWidth=Math.max(shape==='burst'||shape==='underline'||shape==='curve'?6:4,Number(layer.strokeWidth)||0)*k;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke();if(shape==='curve'){
+      // Cubic final tangent from final control point toward endpoint.
+      const tipX=x+w*.88,tipY=y+h*.30;
+      const tangent=Math.atan2(h*.22,w*.14),len=Math.min(w,h)*.20,spread=.58;
+      clearRawShadow(ctx);ctx.beginPath();
+      ctx.moveTo(tipX-len*Math.cos(tangent-spread),tipY-len*Math.sin(tangent-spread));
+      ctx.lineTo(tipX,tipY);
+      ctx.lineTo(tipX-len*Math.cos(tangent+spread),tipY-len*Math.sin(tangent+spread));
+      ctx.lineWidth=Math.max(7,Number(layer.strokeWidth)||0)*k;
+      ctx.stroke();
+    }}
   clearRawShadow(ctx);
   if(mode==='fill' && (Number(layer.strokeWidth)||0)>0){buildPath();ctx.strokeStyle=layer.stroke||'#ffffff';ctx.lineWidth=sw;ctx.lineJoin='round';ctx.lineCap='round';ctx.stroke();}
 }else if(layer.type==='image'){
@@ -14326,7 +14394,7 @@ field('layer-forward').addEventListener('click',()=>{const idx=mqStudioCustomLay
       function closeInlineEditor(commit=true){
         if(!inlineEditor)return;
         const editor=inlineEditor,layer=mqStudioCustomLayers.find(l=>l.id===editor.dataset.layerId);
-        if(commit&&layer){layer.text=editor.value;mqStudioSelectedLayerId=layer.id;syncLayerControls();update();}
+        if(layer){layer.text=commit?editor.value:editor.dataset.originalText;mqStudioSelectedLayerId=layer.id;syncLayerControls();update();}
         editor.remove();inlineEditor=null;
       }
       function editLayerInline(layer){
@@ -14337,18 +14405,27 @@ field('layer-forward').addEventListener('click',()=>{const idx=mqStudioCustomLay
         mqStudioSelectedLayerId=layer.id;
         const r=canvas.getBoundingClientRect(),wr=preview.getBoundingClientRect();
         const sx=r.width/canvas.width,sy=r.height/canvas.height;
-        const editor=document.createElement('textarea');editor.className='mq-studio-inline-editor';editor.dataset.layerId=layer.id;
+        const editor=document.createElement('textarea');editor.className='mq-studio-inline-editor';editor.dataset.layerId=layer.id;editor.dataset.originalText=layer.text||'';
         editor.value=layer.text||'';
-        editor.style.left=(r.left-wr.left+region[0]*sx)+'px';
-        editor.style.top=(r.top-wr.top+region[1]*sy)+'px';
-        editor.style.width=Math.max(135,region[2]*sx)+'px';editor.style.height=Math.max(62,region[3]*sy)+'px';
-        editor.style.fontFamily=fontFace(layer.font||'arial');editor.style.fontSize=Math.max(15,Math.min(42,(layer.size||45)*sy))+'px';
-        preview.appendChild(editor);inlineEditor=editor;editor.focus();editor.select();
+        // Keep editing beside the actual canvas, never beside the controls at
+        // the top of the fullscreen studio. Use viewport-fixed positioning.
+        const vw=document.documentElement.clientWidth,vh=document.documentElement.clientHeight;
+        const editorW=Math.min(330,Math.max(210,vw*.28));
+        const editorH=92;
+        editor.style.position='fixed';
+        editor.style.left=Math.max(8,Math.min(vw-editorW-12,r.right+14))+'px';
+        if(r.right+editorW+20>vw){editor.style.left=Math.max(8,r.left-editorW-14)+'px';}
+        editor.style.top=Math.max(10,Math.min(vh-editorH-12,r.top+Math.min(region[1]*sy,Math.max(0,r.height-100))))+'px';
+        editor.style.width=editorW+'px';editor.style.height=editorH+'px';
+        editor.style.fontFamily=fontFace(layer.font||'arial');editor.style.fontSize='20px';
+        document.body.appendChild(editor);inlineEditor=editor;editor.focus();editor.select();
+        // Redraw on every keystroke, not only after Enter.
+        editor.addEventListener('input',()=>{const selected=mqStudioCustomLayers.find(l=>l.id===editor.dataset.layerId);if(selected){selected.text=editor.value;update();}});
         editor.addEventListener('keydown',e=>{if(e.key==='Escape'){e.stopPropagation();closeInlineEditor(false);}else if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();closeInlineEditor(true);}});
         editor.addEventListener('blur',()=>{if(inlineEditor===editor)closeInlineEditor(true)});
       }
       const showPropertyMode=()=>{workspace.classList.remove('mq-studio-canvas-first');workspace.classList.add('mq-studio-property-mode');previewShift=0;preview.style.transform='';requestAnimationFrame(queuePreviewFollow);};
-      field('quick-text').addEventListener('click',()=>{addLayer(defaultTextLayer());showPropertyMode();editLayerInline(currentLayer());});
+      field('quick-text').addEventListener('click',()=>{const layer=defaultTextLayer();const cv=field('canvas'),unit=cv._mqUnit||1;layer.x=Math.round(Math.max(20,(cv.width/unit-layer.w)/2));layer.y=Math.round(Math.max(20,(cv.height/unit-layer.h)/2));addLayer(layer);editLayerInline(layer);});
       field('quick-shape').addEventListener('click',()=>{addLayer(defaultShapeLayer());showPropertyMode();});
       if(field('quick-arrow'))field('quick-arrow').addEventListener('click',()=>{addLayer(defaultArrowLayer('arrow'));showPropertyMode();});
       if(field('quick-doodle'))field('quick-doodle').addEventListener('click',()=>{addLayer(defaultBrushSwipeLayer());showPropertyMode();});
