@@ -13635,6 +13635,37 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const quoteLink=()=>(_mqCustomPostLink||shopRecord.fields['Marketing link']||`https://widget.midasquote.com/?shop=${shopRecord.fields['Shop token']||''}`);
     const grid=root.querySelector('#mq-studio-grid'), workspace=root.querySelector('#mq-studio-workspace');
     const field=id=>root.querySelector('#mq-studio-'+id);
+    // Fullscreen scroll safety: preserve the artwork and prevent background scroll.
+    let mqScrollLock=null;
+    let mqRescueButton=null;
+    function resetStudioScroll(){
+      [workspace,workspace.querySelector('.mq-studio-editor-layout'),workspace.querySelector('.mq-studio-fields'),workspace.querySelector('.mq-studio-preview-wrap')].filter(Boolean).forEach(el=>{el.scrollTop=0;el.scrollLeft=0;});
+      // Scroll scrollable ancestors too; otherwise a scrolled dashboard wrapper
+      // can leave the editor invisible behind a fullscreen-positioned ancestor.
+      for(let el=workspace.parentElement;el;el=el.parentElement){if(el.scrollTop)el.scrollTop=0;}
+      window.scrollTo(0,0);
+    }
+    function lockStudioScroll(){
+      if(mqScrollLock)return;
+      const html=document.documentElement,body=document.body;
+      mqScrollLock={html:html.style.overflow,body:body.style.overflow};
+      html.style.overflow='hidden';body.style.overflow='hidden';
+      if(!mqRescueButton){
+        mqRescueButton=document.createElement('button');
+        mqRescueButton.type='button';
+        mqRescueButton.textContent='↑ Studio top';
+        mqRescueButton.setAttribute('aria-label','Return to the top of the design studio without changing the design');
+        Object.assign(mqRescueButton.style,{position:'fixed',right:'16px',bottom:'16px',zIndex:'2147483647',padding:'12px 17px',borderRadius:'11px',border:'1px solid #cebfcf',background:'#231d27',color:'#fff',font:'700 13px Arial,sans-serif',boxShadow:'0 8px 30px #0004',cursor:'pointer'});
+        mqRescueButton.addEventListener('click',resetStudioScroll);
+        document.body.appendChild(mqRescueButton);
+      }
+      resetStudioScroll();
+    }
+    function unlockStudioScroll(){
+      if(mqScrollLock){document.documentElement.style.overflow=mqScrollLock.html;document.body.style.overflow=mqScrollLock.body;mqScrollLock=null;}
+      if(mqRescueButton){mqRescueButton.remove();mqRescueButton=null;}
+    }
+
     // Keep the design visible while the owner edits long settings panels.
     // Dashboard ancestors use overflow rules that break position:sticky;
     // moving the preview within its own grid row avoids that limitation.
@@ -14386,7 +14417,7 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
       if(mqStudioSelected && mqStudioSelected.category==='qr'){additions.push(defaultQrLayer());}
       mqStudioDetached=true;mqStudioCustomLayers.push(...additions);mqStudioSelectedLayerId=null;renderLayerList();syncLayerControls();update();if(!silent)mqShowToast('Everything is freely movable');
     }
-    function select(t){mqStudioSelected=t;field('edit-title').textContent=t.title;if(field('template-select'))field('template-select').value=t.id;field('shop-name').value=shopName;field('headline').value=t.headline;field('subline').value=t.sub;field('cta').value=t.cta;field('color').value=safeColor(color);field('quick-brand').value=safeColor(color);field('quick-surface').value='#e9d9c8';field('quick-accent').value='#d9be97';field('size').value=t.id==='yard'?'landscape':t.category==='print'?'poster':'square';setDefaults();field('composition').value=t.id==='premium'?'cinema':t.id==='yard'?'split':t.id==='before'?'original':t.id==='poster'?'window':'original';field('finish').value=t.mode==='luxury'?'bold':t.mode==='frame'?'editorial':t.category==='print'?'architect':'cinematic';field('accent').value=t.mode==='frame'?'frame':t.mode==='luxury'?'corner':t.id==='yard'?'stripe':'none';if(t.mode==='minimal'){field('headline-color').value='#382b36';field('sub-color').value='#685861'}workspace.style.display='flex';workspace.classList.add('mq-studio-fullscreen','mq-studio-canvas-first');workspace.classList.remove('mq-studio-property-mode','mq-studio-show-layers');if(field('layers-toggle'))field('layers-toggle').textContent='☷ All layers';previewShift=0;preview.style.transform='';update(true);detachBuiltIns(true);const photoArea=defaultProjectPhotoLayer(t,field('composition').value);if(photoArea){mqStudioCustomLayers.unshift(photoArea);renderLayerList();update();}resetStudioHistory();requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    function select(t){mqStudioSelected=t;field('edit-title').textContent=t.title;if(field('template-select'))field('template-select').value=t.id;field('shop-name').value=shopName;field('headline').value=t.headline;field('subline').value=t.sub;field('cta').value=t.cta;field('color').value=safeColor(color);field('quick-brand').value=safeColor(color);field('quick-surface').value='#e9d9c8';field('quick-accent').value='#d9be97';field('size').value=t.id==='yard'?'landscape':t.category==='print'?'poster':'square';setDefaults();field('composition').value=t.id==='premium'?'cinema':t.id==='yard'?'split':t.id==='before'?'original':t.id==='poster'?'window':'original';field('finish').value=t.mode==='luxury'?'bold':t.mode==='frame'?'editorial':t.category==='print'?'architect':'cinematic';field('accent').value=t.mode==='frame'?'frame':t.mode==='luxury'?'corner':t.id==='yard'?'stripe':'none';if(t.mode==='minimal'){field('headline-color').value='#382b36';field('sub-color').value='#685861'}workspace.style.display='flex';workspace.classList.add('mq-studio-fullscreen','mq-studio-canvas-first');lockStudioScroll();workspace.classList.remove('mq-studio-property-mode','mq-studio-show-layers');if(field('layers-toggle'))field('layers-toggle').textContent='☷ All layers';previewShift=0;preview.style.transform='';update(true);detachBuiltIns(true);const photoArea=defaultProjectPhotoLayer(t,field('composition').value);if(photoArea){mqStudioCustomLayers.unshift(photoArea);renderLayerList();update();}resetStudioHistory();requestAnimationFrame(()=>requestAnimationFrame(()=>{
       // Browser chooses the actual scrollable ancestor (in Webflow .mq-content has overflow:visible).
       // scrollIntoView works on the document and nested scrollers, unlike manually altering .mq-content.
       if(workspace.classList.contains('mq-studio-fullscreen'))return;
@@ -14445,7 +14476,7 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
       const removeProjectPhoto=()=>{mqStudioPhoto=null;const photoArea=projectPhotoLayer();if(photoArea){photoArea.image=null;delete photoArea.dataUrl;}field('photo').value='';update();mqShowToast('Project photo removed');};
       field('remove-photo').addEventListener('click',removeProjectPhoto);
       field('photo-remove-quick').addEventListener('click',removeProjectPhoto);
-      field('back').addEventListener('click',()=>{workspace.style.display='none';workspace.classList.remove('mq-studio-fullscreen');previewShift=0;preview.style.transform='';root.scrollIntoView({behavior:'smooth',block:'start'})});
+      field('back').addEventListener('click',()=>{unlockStudioScroll();workspace.style.display='none';workspace.classList.remove('mq-studio-fullscreen');previewShift=0;preview.style.transform='';root.scrollIntoView({behavior:'smooth',block:'start'})});
       field('quick-download').addEventListener('click',()=>field('download').click());
       field('download').addEventListener('click',()=>{update(true);const a=document.createElement('a');a.href=field('canvas').toDataURL('image/png');a.download=(shopName+'-'+mqStudioSelected.id+'-'+field('size').value).toLowerCase().replace(/[^a-z0-9-]+/g,'-')+'.png';a.click();update()});
       const stylePacks={
