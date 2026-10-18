@@ -2561,6 +2561,13 @@ window.logoutMember = async function () {
           
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700;900&family=Cinzel:wght@500;700;800&family=Cormorant+Garamond:wght@500;700&family=Montserrat:wght@400;600;700;800&family=Poppins:wght@400;600;700;800&family=Oswald:wght@500;600;700&family=Bebas+Neue&family=Libre+Baskerville:wght@400;700&family=DM+Serif+Display&display=swap');
+
+  #mq-page-marketing #mq-studio .mq-studio-quick-colors{width:100%;display:flex;align-items:center;gap:11px;flex-wrap:wrap;background:#fff;border:1px solid #e5dce6;border-radius:12px;padding:11px 14px;margin-bottom:12px;color:#46374b}
+  #mq-page-marketing #mq-studio .mq-studio-quick-colors>span{font:800 10px/1.3 Arial,sans-serif;letter-spacing:.1em;margin-right:auto}
+  #mq-page-marketing #mq-studio .mq-studio-quick-colors label{display:flex;align-items:center;gap:7px;font:700 11px/1.3 Arial,sans-serif;margin:0!important}
+  #mq-page-marketing #mq-studio .mq-studio-quick-colors input[type=color]{width:38px!important;height:32px!important;min-height:32px!important;padding:2px!important;border-radius:8px!important;border:1px solid #d9cdd9!important;cursor:pointer}
+  #mq-page-marketing #mq-studio .mq-studio-quick-colors button{min-height:32px!important;padding:7px 10px!important;font-size:11px!important}
+  @media(max-width:700px){#mq-page-marketing #mq-studio .mq-studio-quick-colors>span{width:100%}}
   /* MidasQuote Marketing Studio v3.0 — enhanced editor */
   #mq-page-marketing .mq-studio{--mqs-ink:#24212b;--mqs-sub:#716e79;--mqs-panel:#ffffff;--mqs-line:#e7e1e8;--mqs-soft:#f7f3f6;margin:0 0 26px;color:var(--mqs-ink);font-family:inherit}
   .mq-studio-hero{display:flex;justify-content:space-between;align-items:center;gap:20px;background:linear-gradient(115deg,#211c2c 0%,#46314c 64%,#7b5060 100%);color:white;padding:30px 34px;border-radius:18px;overflow:hidden;margin-bottom:22px}
@@ -2970,7 +2977,7 @@ window.logoutMember = async function () {
                       <p class="mq-studio-tip">Your shop name and marketing link are automatically added. Upload a project photo for the most effective result.</p>
                     </div>
                   </div>
-                  <div class="mq-studio-preview-wrap"><div class="mq-studio-preview-toolbar"><button type="button" id="mq-studio-photo-quick" class="mq-studio-muted-btn">📷 Add / replace project photo</button><button type="button" id="mq-studio-photo-remove-quick" class="mq-studio-muted-btn" title="Remove the template project photo">✕ Remove project photo</button><button type="button" id="mq-studio-direct-image-btn" class="mq-studio-muted-btn">＋ Add movable image</button><button type="button" id="mq-studio-delete-selected" class="mq-studio-muted-btn" title="Delete selected text, button, shape, or image">✕ Delete selected</button><input id="mq-studio-direct-image-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none"><input id="mq-studio-auto-photo-target" type="file" accept="image/png,image/jpeg,image/webp,image/gif" style="display:none"></div><div class="mq-studio-preview-tip">Tip: drag the shop name, headline, supporting text, button, website, or your custom layers directly on the preview.</div><div id="mq-studio-hoverbar" class="mq-studio-hoverbar"><button type="button" data-action="edit">✎ Edit</button><button type="button" data-action="duplicate">⧉ Duplicate</button><button type="button" data-action="replace">▧ Replace</button><button type="button" data-action="delete">✕ Delete</button></div><canvas id="mq-studio-canvas" width="1080" height="1080" aria-label="Live marketing graphic preview"></canvas><p>Live preview · The downloaded image exports at full resolution</p></div>
+                  <div class="mq-studio-preview-wrap"><div class="mq-studio-quick-colors" aria-label="Design colours"><span>DESIGN COLOURS</span><label>Background <input type="color" id="mq-studio-quick-brand" value="#56314b" title="Main design colour"></label><label>Photo frame <input type="color" id="mq-studio-quick-surface" value="#e9d9c8" title="Secondary panels and photo framing"></label><label>Accent <input type="color" id="mq-studio-quick-accent" value="#d9be97" title="Accent detail"></label><button type="button" id="mq-studio-reset-colors" class="mq-studio-muted-btn" title="Restore the shop's starting colours">Reset colours</button></div><div class="mq-studio-preview-toolbar"><button type="button" id="mq-studio-photo-quick" class="mq-studio-muted-btn">📷 Add / replace project photo</button><button type="button" id="mq-studio-photo-remove-quick" class="mq-studio-muted-btn" title="Remove the template project photo">✕ Remove project photo</button><button type="button" id="mq-studio-direct-image-btn" class="mq-studio-muted-btn">＋ Add movable image</button><button type="button" id="mq-studio-delete-selected" class="mq-studio-muted-btn" title="Delete selected text, button, shape, or image">✕ Delete selected</button><input id="mq-studio-direct-image-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none"><input id="mq-studio-auto-photo-target" type="file" accept="image/png,image/jpeg,image/webp,image/gif" style="display:none"></div><div class="mq-studio-preview-tip">Tip: drag the shop name, headline, supporting text, button, website, or your custom layers directly on the preview.</div><div id="mq-studio-hoverbar" class="mq-studio-hoverbar"><button type="button" data-action="edit">✎ Edit</button><button type="button" data-action="duplicate">⧉ Duplicate</button><button type="button" data-action="replace">▧ Replace</button><button type="button" data-action="delete">✕ Delete</button></div><canvas id="mq-studio-canvas" width="1080" height="1080" aria-label="Live marketing graphic preview"></canvas><p>Live preview · The downloaded image exports at full resolution</p></div>
                 </div>
               </div>
               <details class="mq-studio-legacy"><summary>More marketing tools & advanced designers <span>⌄</span></summary><p>All your original marketing tools are still available below, including advanced poster controls, standalone QR codes, social captions, and printable materials.</p></details>
@@ -13534,7 +13541,7 @@ function addLayer(layer){mqStudioCustomLayers.push(layer);mqStudioSelectedLayerI
         headline:field('headline').value,
         sub:field('subline').value,
         cta:field('cta').value,
-        color:field('color').value,
+        color:field('color').value, surface:field('quick-surface').value,
         photo:mqStudioPhoto,
         headlineFont:field('headline-font').value,
         subFont:field('sub-font').value,
@@ -13620,6 +13627,7 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
       ctx._mqFxOpts=opts;
       const k=Math.min(W/1080,H/1080), landscape=W>H, b=safeColor(opts.color||color), hasPhoto=!!opts.photo;
       const pad=70*k;
+      const surface=safeColor(opts.surface,'#e9d9c8');
       const customRegions=[];
       ctx.clearRect(0,0,W,H);ctx.fillStyle='#eee5dd';ctx.fillRect(0,0,W,H);
       const fill=(c,x,y,w,h)=>{ctx.fillStyle=c;ctx.fillRect(x,y,w,h)};
@@ -13629,19 +13637,19 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
         if(hasPhoto){cover(ctx,opts.photo,0,0,W,H)}
         else{const g=ctx.createLinearGradient(0,0,W,H);g.addColorStop(0,'#171921');g.addColorStop(1,'#4b3e42');fill(g,0,0,W,H)}
       }else if(t.mode==='minimal'){
-        fill('#f3ece3',0,0,W,H);
-        if(hasPhoto){cover(ctx,opts.photo,0,H*.42,W,H*.58);const grad=ctx.createLinearGradient(0,H*.39,0,H*.76);grad.addColorStop(0,'#f3ece3');grad.addColorStop(1,'rgba(243,236,227,0)');ctx.fillStyle=grad;ctx.fillRect(0,H*.39,W,H*.39)}
+        fill(surface,0,0,W,H);
+        if(hasPhoto){cover(ctx,opts.photo,0,H*.42,W,H*.58);const grad=ctx.createLinearGradient(0,H*.39,0,H*.76);grad.addColorStop(0,surface);grad.addColorStop(1,'rgba(243,236,227,0)');ctx.fillStyle=grad;ctx.fillRect(0,H*.39,W,H*.39)}
         primary=safeColor(opts.headlineColor,'#382b36');secondary=safeColor(opts.subColor,'#685861');
       }else if(t.mode==='frame'){
-        fill('#f4ece3',0,0,W,H);fill(b,30*k,30*k,W-60*k,H-60*k);
-        if(hasPhoto){cover(ctx,opts.photo,W*.10,H*.09,W*.8,H*.40)}
-        else {fill('#d4bbaa',W*.10,H*.09,W*.8,H*.40);fill('#b59683',W*.16,H*.16,W*.68,H*.27)}
+        fill(surface,0,0,W,H);fill(b,30*k,30*k,W-60*k,H-60*k);
+        if(hasPhoto){cover(ctx,opts.photo,W*.07,H*.07,W*.86,H*.42);ctx.strokeStyle=surface;ctx.lineWidth=9*k;ctx.strokeRect(W*.07,H*.07,W*.86,H*.42)}
+        else {const sheen=ctx.createLinearGradient(0,0,W,H);sheen.addColorStop(0,'rgba(255,255,255,.12)');sheen.addColorStop(1,'rgba(255,255,255,0)');ctx.fillStyle=sheen;ctx.fillRect(35*k,35*k,W-70*k,H-70*k);ctx.strokeStyle=surface;ctx.lineWidth=3*k;ctx.strokeRect(52*k,52*k,W-104*k,H-104*k)}
       }else if(t.mode==='split'){
         fill(b,0,0,W,H);
         const x=landscape?W*.57:W*.13,y=landscape?H*.13:H*.48,w=landscape?W*.37:W*.74,h=landscape?H*.71:H*.32;
-        fill('#e9d9c8',x,y,w,h);
+        fill(surface,x,y,w,h);
         if(hasPhoto)cover(ctx,opts.photo,x,y,w,h);
-        else {fill('#c2aaa3',x+w*.10,y+h*.15,w*.8,h*.64)}
+        else {fill('rgba(255,255,255,.16)',x+w*.10,y+h*.15,w*.8,h*.64)}
       }else if(t.mode==='editorial'){
         fill(b,0,0,W,H);
         if(hasPhoto){cover(ctx,opts.photo,0,0,W,H)}
@@ -13662,21 +13670,21 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
         fill('#221b25',0,0,W,H);
         const photoX=W*.54;
         if(hasPhoto)cover(ctx,opts.photo,photoX,0,W-photoX,H,focal);
-        else fill('#b7a397',photoX,0,W-photoX,H);
+        else fill(surface,photoX,0,W-photoX,H);
         fill('rgba(32,20,31,.22)',photoX,0,W-photoX,H);
         fill(b,0,0,photoX, H);
         fill('#ffffff0d',photoX-5*k,0,5*k,H);
       }else if(composition==='magazine'){
-        fill('#f6eee6',0,0,W,H);
+        fill(surface,0,0,W,H);
         if(hasPhoto)cover(ctx,opts.photo,0,0,W,H*.54,focal);
-        else fill('#c8b6a7',0,0,W,H*.54);
+        else fill(b,0,0,W,H*.54);
         fill(b,0,H*.54,W,H*.46);
         fill('rgba(255,255,255,.07)',0,H*.54,W,2*k);
       }else if(composition==='window'){
-        fill('#f5eee8',0,0,W,H);
+        fill(surface,0,0,W,H);
         fill(b,0,0,W,H);
         const inset=48*k, imgTop=H*.39, imgH=H*.49;
-        fill('#eadbd0',inset,imgTop,W-2*inset,imgH);
+        fill(surface,inset,imgTop,W-2*inset,imgH);
         if(hasPhoto)cover(ctx,opts.photo,inset,imgTop,W-2*inset,imgH,focal);
         ctx.strokeStyle='#ffffff75';ctx.lineWidth=3*k;ctx.strokeRect(inset-10*k,imgTop-10*k,W-2*inset+20*k,imgH+20*k);
       }
@@ -13709,7 +13717,7 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
       const textWidth=composition==='split'?W*.50-pad*1.3:composition==='window'?W-2*pad:(t.mode==='split'&&landscape)?W*.49-pad*1.3:W-2*pad;
       const contentShiftX=(opts.contentX||0)*k;
       const contentShiftY=(opts.contentY||0)*k;
-      const baseTop=(composition==='magazine'?H*.66:composition==='window'?H*.18:composition==='split'?H*.28:(isFrame?H*.54:splitVertical?H*.15:landscape?H*.22:H*.20))+contentShiftY;
+      const baseTop=(composition==='magazine'?H*.66:composition==='window'?H*.18:composition==='split'?H*.28:(isFrame?(hasPhoto?H*.54:H*.25):splitVertical?H*.15:landscape?H*.22:H*.20))+contentShiftY;
       const headingLimit=(composition==='magazine'?H*.80:composition==='window'?H*.34:composition==='split'?H*.67:splitVertical?H*.27:(isFrame?H*.76:H*.59))+contentShiftY;
       const supportMax=(composition==='magazine'?H*.89:composition==='window'?H*.37:composition==='split'?H*.81:splitVertical?H*.42:(isFrame?H*.87:H*.79))+contentShiftY;
       const align=opts.align||'left';
@@ -13806,7 +13814,7 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
         const r=regions[opts.highlight];if(r){ctx.save();ctx.strokeStyle='#38bdf8';ctx.lineWidth=4*k;ctx.setLineDash([14*k,8*k]);ctx.strokeRect(...r);ctx.restore()}
       }
     }
-    function thumb(t){const canvas=document.createElement('canvas');canvas.width=360;canvas.height=360;paint(canvas,t,{color,photo:mqStudioPhoto,headlineFont:'playfair',subFont:'montserrat',ctaFont:'montserrat',align:'left',headlineColor:'#ffffff',subColor:'#f0e7ee',ctaBg:'#f2e1ca',ctaColor:'#2b2430',headlineFx:'soft',subFx:'soft',brandFx:'soft',ctaFx:'none',urlFx:'soft',fxColor:'#000000',headlineScale:100,subScale:100,ctaScale:100,headlineSpacing:0,subSpacing:0,contentX:0,contentY:0,ctaX:0,ctaY:0});return canvas.toDataURL('image/png')}
+    function thumb(t){const canvas=document.createElement('canvas');canvas.width=360;canvas.height=360;paint(canvas,t,{color,surface:'#e9d9c8',photo:mqStudioPhoto,headlineFont:'playfair',subFont:'montserrat',ctaFont:'montserrat',align:'left',headlineColor:'#ffffff',subColor:'#f0e7ee',ctaBg:'#f2e1ca',ctaColor:'#2b2430',headlineFx:'soft',subFx:'soft',brandFx:'soft',ctaFx:'none',urlFx:'soft',fxColor:'#000000',headlineScale:100,subScale:100,ctaScale:100,headlineSpacing:0,subSpacing:0,contentX:0,contentY:0,ctaX:0,ctaY:0});return canvas.toDataURL('image/png')}
     function renderGallery(filter='all'){
       grid.innerHTML='';MQ_STUDIO_TEMPLATES.filter(t=>filter==='all'||t.category===filter).forEach(t=>{
         const btn=document.createElement('button');btn.type='button';btn.className='mq-studio-tile';btn.innerHTML=`<div class="mq-studio-thumb-area"><img class="mq-studio-thumb" alt=""/></div><div class="mq-studio-tile-meta"><span><strong></strong><small></small></span><b aria-hidden="true">↗</b></div>`;
@@ -13815,7 +13823,7 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
       });
     }
     let mqStudioFocus=null, mqStudioFocusTimer=null, mqStudioGuide=null;
-    function update(forExport=false){if(!mqStudioSelected)return;const quickRemove=field('photo-remove-quick');if(quickRemove){quickRemove.disabled=!mqStudioPhoto;quickRemove.style.opacity=mqStudioPhoto?'1':'.45';quickRemove.title=mqStudioPhoto?'Remove the template project photo':'No project photo to remove';}syncRangeLabels();const canvas=field('canvas');const sizes={square:[1080,1080],portrait:[1080,1350],story:[1080,1920],poster:[1080,1620],landscape:[1620,1080]};[canvas.width,canvas.height]=sizes[field('size').value]||sizes.square;paint(canvas,mqStudioSelected,{...currentOpts(),highlight:forExport?null:mqStudioFocus});queuePreviewFollow()}
+    function update(forExport=false){if(!mqStudioSelected)return;if(field('quick-brand'))field('quick-brand').value=field('color').value;if(field('quick-accent'))field('quick-accent').value=field('accent-color').value;const quickRemove=field('photo-remove-quick');if(quickRemove){quickRemove.disabled=!mqStudioPhoto;quickRemove.style.opacity=mqStudioPhoto?'1':'.45';quickRemove.title=mqStudioPhoto?'Remove the template project photo':'No project photo to remove';}syncRangeLabels();const canvas=field('canvas');const sizes={square:[1080,1080],portrait:[1080,1350],story:[1080,1920],poster:[1080,1620],landscape:[1620,1080]};[canvas.width,canvas.height]=sizes[field('size').value]||sizes.square;paint(canvas,mqStudioSelected,{...currentOpts(),highlight:forExport?null:mqStudioFocus});queuePreviewFollow()}
     function setDefaults(){
       field('shop-font').value='playfair';field('shop-color').value=mqStudioSelected && mqStudioSelected.mode==='minimal'?'#382b36':'#ffffff';field('shop-scale').value='100';field('shop-spacing').value='2';field('shop-x').value='0';field('shop-y').value='0';field('logo-scale').value='100';field('composition').value='original';field('focal').value='50';field('finish').value='cinematic';field('overlay').value='46';field('accent').value='none';field('accent-color').value='#d9be97';
       field('url-text').value='';field('url-x').value='0';field('url-y').value='0';field('url-color').value=mqStudioSelected?.mode==='minimal'?'#45323e':'#e8d9dd';field('url-scale').value='100';
@@ -13841,7 +13849,7 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
       if(mqStudioLogo){const layer={id:layerUid(),type:'image',name:'Shop logo',place:'front',x:80,y:70,w:240,h:100,rotation:0,opacity:100,shadowColor:'#000000',shadowBlur:0,shadowX:0,shadowY:0,fit:'contain',radius:0,stroke:'#ffffff',strokeWidth:0,image:mqStudioLogo,dataUrl:mqStudioLogo.src};additions.push(layer);}
       mqStudioDetached=true;mqStudioCustomLayers.push(...additions);mqStudioSelectedLayerId=null;renderLayerList();syncLayerControls();update();if(!silent)mqShowToast('Everything is freely movable');
     }
-    function select(t){mqStudioSelected=t;field('edit-title').textContent=t.title;field('shop-name').value=shopName;field('headline').value=t.headline;field('subline').value=t.sub;field('cta').value=t.cta;field('color').value=safeColor(color);field('size').value=t.id==='yard'?'landscape':t.category==='print'?'poster':'square';setDefaults();field('composition').value=t.id==='premium'?'cinema':t.id==='yard'?'split':t.id==='before'?'magazine':t.id==='poster'?'window':'original';field('finish').value=t.mode==='luxury'?'bold':t.mode==='frame'?'editorial':t.category==='print'?'architect':'cinematic';field('accent').value=t.mode==='frame'?'frame':t.mode==='luxury'?'corner':t.id==='yard'?'stripe':'none';if(t.mode==='minimal'){field('headline-color').value='#382b36';field('sub-color').value='#685861'}workspace.style.display='block';workspace.classList.add('mq-studio-canvas-first');workspace.classList.remove('mq-studio-property-mode','mq-studio-show-layers');if(field('layers-toggle'))field('layers-toggle').textContent='☷ All layers';previewShift=0;preview.style.transform='';update(true);detachBuiltIns(true);requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    function select(t){mqStudioSelected=t;field('edit-title').textContent=t.title;field('shop-name').value=shopName;field('headline').value=t.headline;field('subline').value=t.sub;field('cta').value=t.cta;field('color').value=safeColor(color);field('quick-brand').value=safeColor(color);field('quick-surface').value='#e9d9c8';field('quick-accent').value='#d9be97';field('size').value=t.id==='yard'?'landscape':t.category==='print'?'poster':'square';setDefaults();field('composition').value=t.id==='premium'?'cinema':t.id==='yard'?'split':t.id==='before'?'original':t.id==='poster'?'window':'original';field('finish').value=t.mode==='luxury'?'bold':t.mode==='frame'?'editorial':t.category==='print'?'architect':'cinematic';field('accent').value=t.mode==='frame'?'frame':t.mode==='luxury'?'corner':t.id==='yard'?'stripe':'none';if(t.mode==='minimal'){field('headline-color').value='#382b36';field('sub-color').value='#685861'}workspace.style.display='block';workspace.classList.add('mq-studio-canvas-first');workspace.classList.remove('mq-studio-property-mode','mq-studio-show-layers');if(field('layers-toggle'))field('layers-toggle').textContent='☷ All layers';previewShift=0;preview.style.transform='';update(true);detachBuiltIns(true);requestAnimationFrame(()=>requestAnimationFrame(()=>{
       // Browser chooses the actual scrollable ancestor (in Webflow .mq-content has overflow:visible).
       // scrollIntoView works on the document and nested scrollers, unlike manually altering .mq-content.
       workspace.scrollIntoView({behavior:'auto',block:'start',inline:'nearest'});
@@ -14042,6 +14050,12 @@ field('layer-forward').addEventListener('click',()=>{const idx=mqStudioCustomLay
       const endDrag=e=>{if(drag){mqStudioGuide=null;drag=null;canvas.style.cursor='default'; if(canvas.hasPointerCapture && e.pointerId!=null){try{canvas.releasePointerCapture(e.pointerId);}catch(err){}} clearTimeout(mqStudioFocusTimer); mqStudioFocusTimer=setTimeout(()=>{mqStudioFocus=null;update();},900);}};
       canvas.tabIndex=0;canvas.addEventListener('keydown',e=>{if((e.key==='Delete'||e.key==='Backspace')&&mqStudioSelectedLayerId){e.preventDefault();deleteStudioLayer(mqStudioSelectedLayerId);}});
       canvas.addEventListener('pointerup',endDrag);canvas.addEventListener('pointercancel',endDrag);canvas.addEventListener('pointerleave',e=>{if(!drag)canvas.style.cursor='default';});
+    }
+    if(!root.dataset.quickColorsInstalled){root.dataset.quickColorsInstalled='1';
+      field('quick-brand').addEventListener('input',e=>{field('color').value=e.target.value;update()});
+      field('quick-surface').addEventListener('input',()=>update());
+      field('quick-accent').addEventListener('input',e=>{field('accent-color').value=e.target.value;update()});
+      field('reset-colors').addEventListener('click',()=>{field('quick-brand').value=safeColor(color);field('color').value=safeColor(color);field('quick-surface').value='#e9d9c8';field('quick-accent').value='#d9be97';field('accent-color').value='#d9be97';update()});
     }
     renderGallery(root.querySelector('[data-studio-filter].active')?.dataset.studioFilter||'all');if(mqStudioSelected)update();
   }
