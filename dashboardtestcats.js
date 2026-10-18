@@ -13779,7 +13779,27 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
       field('headline-scale').value='100';field('sub-scale').value='100';field('cta-scale').value='100';field('headline-spacing').value='0';field('sub-spacing').value='0';field('content-x').value='0';field('content-y').value='0';field('cta-x').value='0';field('cta-y').value='0';
       mqStudioDetached=false;mqStudioCustomLayers=[];mqStudioSelectedLayerId=null;mqStudioGuide=null;renderLayerList();syncLayerControls();syncRangeLabels();
     }
-    function select(t){mqStudioSelected=t;field('edit-title').textContent=t.title;field('shop-name').value=shopName;field('headline').value=t.headline;field('subline').value=t.sub;field('cta').value=t.cta;field('color').value=safeColor(color);field('size').value=t.id==='yard'?'landscape':t.category==='print'?'poster':'square';setDefaults();field('composition').value=t.id==='premium'?'cinema':t.id==='yard'?'split':t.id==='before'?'magazine':t.id==='poster'?'window':'original';field('finish').value=t.mode==='luxury'?'bold':t.mode==='frame'?'editorial':t.category==='print'?'architect':'cinematic';field('accent').value=t.mode==='frame'?'frame':t.mode==='luxury'?'corner':t.id==='yard'?'stripe':'none';if(t.mode==='minimal'){field('headline-color').value='#382b36';field('sub-color').value='#685861'}workspace.style.display='block';previewShift=0;preview.style.transform='';update(true);detachBuiltIns(true);setTimeout(()=>{const scroller=root.closest('.mq-content')||document.querySelector('#midasquote-dashboard .mq-content');if(scroller){const a=workspace.getBoundingClientRect(),b=scroller.getBoundingClientRect();scroller.scrollTo({top:scroller.scrollTop+a.top-b.top-18,behavior:'smooth'});}else workspace.scrollIntoView({behavior:'smooth',block:'start'});},180);}
+    function detachBuiltIns(silent=false){
+      if(mqStudioDetached)return;
+      update(true);
+      const canvas=field('canvas'),regions=canvas._mqRegions||{},unit=canvas._mqUnit||1;
+      const layerFrom=(key,text,size,fontKey,color,fx)=>{const r=regions[key];if(!r||!text)return null;return {...defaultTextLayer(),name:key==='brand'?'Shop name':key==='headline'?'Headline':key==='sub'?'Supporting text':'Website',text,font:fontKey||'montserrat',color:color||'#ffffff',fx:fx||'none',x:Math.round(r[0]/unit),y:Math.round(r[1]/unit),w:Math.round(r[2]/unit),h:Math.round(r[3]/unit),size:size||40,align:'left'};};
+      const additions=[
+        layerFrom('brand',field('shop-name').value,22*Number(field('shop-scale').value)/100,field('shop-font').value,field('shop-color').value,field('brand-fx').value),
+        layerFrom('headline',field('headline').value,55*Number(field('headline-scale').value)/100,field('headline-font').value,field('headline-color').value,field('headline-fx').value),
+        layerFrom('sub',field('subline').value,27*Number(field('sub-scale').value)/100,field('sub-font').value,field('sub-color').value,field('sub-fx').value),
+        layerFrom('url',field('url-text').value||quoteLink().replace(/^https?:\/\//,''),18*Number(field('url-scale').value)/100,field('sub-font').value,field('url-color').value,field('url-fx').value)
+      ].filter(Boolean);
+      const cr=regions.cta;
+      if(cr){const b=defaultButtonLayer(field('cta').value);b.x=Math.round(cr[0]/unit);b.y=Math.round(cr[1]/unit);b.w=Math.round(cr[2]/unit);b.h=Math.round(cr[3]/unit);b.fill=field('cta-bg').value;b.color=field('cta-color').value;b.font=field('cta-font').value;additions.push(b);}
+      if(mqStudioLogo){const layer={id:layerUid(),type:'image',name:'Shop logo',place:'front',x:80,y:70,w:240,h:100,rotation:0,opacity:100,shadowColor:'#000000',shadowBlur:0,shadowX:0,shadowY:0,fit:'contain',radius:0,stroke:'#ffffff',strokeWidth:0,image:mqStudioLogo,dataUrl:mqStudioLogo.src};additions.push(layer);}
+      mqStudioDetached=true;mqStudioCustomLayers.push(...additions);mqStudioSelectedLayerId=null;renderLayerList();syncLayerControls();update();if(!silent)mqShowToast('Everything is freely movable');
+    }
+    function select(t){mqStudioSelected=t;field('edit-title').textContent=t.title;field('shop-name').value=shopName;field('headline').value=t.headline;field('subline').value=t.sub;field('cta').value=t.cta;field('color').value=safeColor(color);field('size').value=t.id==='yard'?'landscape':t.category==='print'?'poster':'square';setDefaults();field('composition').value=t.id==='premium'?'cinema':t.id==='yard'?'split':t.id==='before'?'magazine':t.id==='poster'?'window':'original';field('finish').value=t.mode==='luxury'?'bold':t.mode==='frame'?'editorial':t.category==='print'?'architect':'cinematic';field('accent').value=t.mode==='frame'?'frame':t.mode==='luxury'?'corner':t.id==='yard'?'stripe':'none';if(t.mode==='minimal'){field('headline-color').value='#382b36';field('sub-color').value='#685861'}workspace.style.display='block';previewShift=0;preview.style.transform='';update(true);detachBuiltIns(true);requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      const scroller=workspace.closest('.mq-content');
+      if(scroller){const a=workspace.getBoundingClientRect(),b=scroller.getBoundingClientRect();scroller.scrollTop+=a.top-b.top-18;}
+      else workspace.scrollIntoView({behavior:'instant',block:'start'});
+    }));}
     if(!root.dataset.studioInitialized){
       root.dataset.studioInitialized='true';
       root.querySelectorAll('[data-studio-filter]').forEach(btn=>btn.addEventListener('click',()=>{root.querySelectorAll('[data-studio-filter]').forEach(b=>b.classList.toggle('active',b===btn));renderGallery(btn.dataset.studioFilter)}));
