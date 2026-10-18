@@ -14341,12 +14341,15 @@ field('layer-forward').addEventListener('click',()=>{const idx=mqStudioCustomLay
         const objectTop=cv.top-wrap.top+box[1]*scaleY;
         const objectBottom=objectTop+box[3]*scaleY;
         const barWidth=hoverbar.offsetWidth||240,barHeight=hoverbar.offsetHeight||42;
-        const gap=10,leftOffset=10,margin=8;
-        const leftEdge=Math.max(margin,Math.min(wrap.width-barWidth-margin,objectLeft+leftOffset));
-        const fitsAbove=objectTop-gap-barHeight>=margin;
+        // Keep the action bar snug against the selection, with just a 4px gap.
+        // Use explicit pixel coordinates rather than CSS transforms, which
+        // interacted with older dashboard rules and could double the offset.
+        const gap=4,leftOffset=10,margin=8;
+        const leftEdge=Math.max(margin,Math.min(Math.max(margin,wrap.width-barWidth-margin),objectLeft+leftOffset));
+        const fitsAbove=objectTop-barHeight-gap>=margin;
         hoverbar.style.left=leftEdge+'px';
-        hoverbar.style.top=(fitsAbove?objectTop-gap:objectBottom+gap)+'px';
-        hoverbar.style.transform='translate(0,'+(fitsAbove?'-100%':'0')+')';
+        hoverbar.style.top=(fitsAbove?objectTop-barHeight-gap:objectBottom+gap)+'px';
+        hoverbar.style.transform='none';
         hoverLocked=true;
       }
       hoverbar.addEventListener('pointerenter',()=>clearTimeout(hoverHide));
