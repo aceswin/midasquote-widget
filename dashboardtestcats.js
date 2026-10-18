@@ -2602,7 +2602,7 @@ window.logoutMember = async function () {
   .mq-studio-preview-wrap{background:#f5f2f4;border:1px solid #eae5e9;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;min-width:0;position:sticky;top:16px}
   .mq-studio-preview-wrap canvas{display:block;width:auto;height:auto;max-width:100%;max-height:560px;border-radius:8px;box-shadow:0 10px 35px rgba(18,13,22,.17)}
   .mq-studio-preview-wrap p{font-size:10px;color:#8d8390;text-align:center;margin:12px 0 0}.mq-studio-preview-tip{font-size:11px;color:#6b6371;background:#fff;border:1px dashed #d8cfda;border-radius:10px;padding:8px 10px;margin:0 0 12px;text-align:center}
-  .mq-studio-legacy{border-top:1px solid #e7e2e9;padding-top:17px;color:#716a76;font-size:12px}.mq-studio-legacy summary{cursor:pointer;color:#4d4152;font-weight:700}.mq-studio-legacy p{line-height:1.6}
+  .mq-studio-layer-list{display:flex;flex-direction:column;gap:8px;margin:10px 0}.mq-studio-layer-item{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;padding:9px 11px;border:1px solid #d9d2dc;border-radius:10px;background:#fff;color:#322938;font:700 12px/1.3 Arial,sans-serif;cursor:pointer}.mq-studio-layer-item.active{background:#2d2436;color:#fff;border-color:#2d2436}.mq-studio-layer-item small{font-weight:400;opacity:.75}.mq-studio-layer-toolbar{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.mq-studio-layer-controls{margin-top:10px;padding-top:10px;border-top:1px solid #e6dfe7}.mq-studio-layer-section{display:none}.mq-studio-layer-section.show{display:block}.mq-studio-legacy{border-top:1px solid #e7e2e9;padding-top:17px;color:#716a76;font-size:12px}.mq-studio-legacy summary{cursor:pointer;color:#4d4152;font-weight:700}.mq-studio-legacy p{line-height:1.6}
   @media(max-width:1100px){.mq-studio-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.mq-studio-editor-layout{grid-template-columns:1fr}.mq-studio-preview-wrap{position:relative;top:auto}}
   @media(max-width:560px){.mq-studio-hero{padding:22px}.mq-studio-hero-star{display:none}.mq-studio-grid{gap:10px}.mq-studio-thumb{height:135px}.mq-studio-workspace{padding:14px}.mq-studio-editor-top{flex-wrap:wrap}.mq-studio-two-col,.mq-studio-color-grid,.mq-studio-three-col{grid-template-columns:1fr}}
   /* hard isolation against legacy dashboard styles */
@@ -2741,6 +2741,7 @@ window.logoutMember = async function () {
                       <div class="mq-studio-card-title">Copy</div>
                       <label>Shop name (edit for this graphic)<input id="mq-studio-shop-name" type="text" maxlength="80" placeholder="Your shop name"></label>
                       <label>Headline<input id="mq-studio-headline" type="text" maxlength="90"></label>
+                      <div class="mq-studio-two-col"><label>Highlight word or phrase<input id="mq-studio-emphasis" type="text" maxlength="50" placeholder="e.g. DREAM KITCHEN"></label><label>Highlight colour<input id="mq-studio-emphasis-color" type="color" value="#f3d6a4"></label></div>
                       <label>Supporting line<input id="mq-studio-subline" type="text" maxlength="140"></label>
                       <label>Call to action<input id="mq-studio-cta" type="text" maxlength="48"></label>
                       <label>Website text (shown on the graphic)<input id="mq-studio-url-text" type="text" maxlength="110" placeholder="Defaults to your quote link"></label>
@@ -2774,6 +2775,8 @@ window.logoutMember = async function () {
                     </div>
                     <div class="mq-studio-control-card">
                       <div class="mq-studio-card-title">Creative direction</div>
+                      <label>Instant style pack<select id="mq-studio-style-pack"><option value="custom">Custom / keep my changes</option><option value="luxe">Luxury editorial · champagne</option><option value="night">Dark cinematic · dramatic</option><option value="modern">Modern architect · minimal</option><option value="bold">Bold sales · high contrast</option><option value="warm">Warm family shop · inviting</option></select></label>
+                      <button type="button" class="mq-studio-muted-btn" id="mq-studio-apply-pack">Apply style pack</button>
                       <label>Composition<select id="mq-studio-composition"><option value="original">Original template</option><option value="cinema">Cinematic full photo</option><option value="split">Luxury split · photo right</option><option value="magazine">Magazine · photo above</option><option value="window">Architectural inset photo</option></select></label><label>Photo focal point <input type="range" min="0" max="100" value="50" id="mq-studio-focal"></label><label>Designer finish<select id="mq-studio-finish"><option value="cinematic">Cinematic · rich shadows</option><option value="editorial">Editorial · airy & refined</option><option value="architect">Architectural · crisp lines</option><option value="bold">Statement · dramatic contrast</option></select></label>
                       <div class="mq-studio-two-col"><label>Photo darkness <input id="mq-studio-overlay" type="range" min="0" max="85" value="46"></label><label>Accent detail<select id="mq-studio-accent"><option value="none">None</option><option value="corner">Corner marks</option><option value="frame">Fine border</option><option value="stripe">Side stripe</option></select></label></div>
                       <label>Accent colour<input id="mq-studio-accent-color" type="color" value="#d9be97"></label>
@@ -2835,8 +2838,98 @@ window.logoutMember = async function () {
                       <label><div class="mq-studio-range-row"><span>Website up / down</span><output id="mq-studio-url-y-out">0</output></div><input id="mq-studio-url-y" type="range" min="-420" max="420" value="0"></label>
                       <div class="mq-studio-two-col"><label>Website colour<input id="mq-studio-url-color" type="color" value="#e8d9dd"></label><label>Website size<input id="mq-studio-url-scale" type="range" min="65" max="220" value="100"></label></div>
                     </div>
+
+<div class="mq-studio-control-card">
+  <div class="mq-studio-card-title">Layer lab</div>
+  <div class="mq-studio-layer-toolbar">
+    <button type="button" class="mq-studio-muted-btn" id="mq-studio-add-text-layer">+ Text</button>
+    <button type="button" class="mq-studio-muted-btn" id="mq-studio-add-shape-layer">+ Shape</button>
+    <button type="button" class="mq-studio-muted-btn" id="mq-studio-add-image-layer-btn">+ Image</button>
+    <button type="button" class="mq-studio-muted-btn" id="mq-studio-add-frame-layer">+ Border</button>
+  </div>
+  <input id="mq-studio-add-image-layer-input" type="file" accept="image/*" style="display:none">
+  <div id="mq-studio-layer-list" class="mq-studio-layer-list"></div>
+  <div id="mq-studio-layer-controls" class="mq-studio-layer-controls">
+    <p class="mq-studio-tip" id="mq-studio-layer-empty">Add a custom text box, shape, border, or image layer to unlock much more freedom.</p>
+    <div id="mq-studio-layer-controls-body" style="display:none">
+      <div class="mq-studio-two-col">
+        <label>Layer name<input id="mq-studio-layer-name" type="text"></label>
+        <label>Layer position<select id="mq-studio-layer-place"><option value="front">Front</option><option value="back">Behind main design</option></select></label>
+      </div>
+      <div class="mq-studio-two-col">
+        <label>X position<input id="mq-studio-layer-x" type="number" step="1"></label>
+        <label>Y position<input id="mq-studio-layer-y" type="number" step="1"></label>
+      </div>
+      <div class="mq-studio-two-col">
+        <label>Width<input id="mq-studio-layer-w" type="number" min="1" step="1"></label>
+        <label>Height<input id="mq-studio-layer-h" type="number" min="1" step="1"></label>
+      </div>
+      <div class="mq-studio-two-col">
+        <label>Opacity <input id="mq-studio-layer-opacity" type="range" min="0" max="100" value="100"></label>
+        <label>Rotation <input id="mq-studio-layer-rotation" type="range" min="-180" max="180" value="0"></label>
+      </div>
+      <div class="mq-studio-two-col">
+        <label>Shadow colour<input id="mq-studio-layer-shadow-color" type="color" value="#000000"></label>
+        <label>Shadow blur <input id="mq-studio-layer-shadow-blur" type="range" min="0" max="60" value="0"></label>
+      </div>
+      <div class="mq-studio-two-col">
+        <label>Shadow X <input id="mq-studio-layer-shadow-x" type="range" min="-40" max="40" value="0"></label>
+        <label>Shadow Y <input id="mq-studio-layer-shadow-y" type="range" min="-40" max="40" value="0"></label>
+      </div>
+
+      <div id="mq-studio-layer-text-fields" class="mq-studio-layer-section">
+        <label>Text content<textarea id="mq-studio-layer-text"></textarea></label>
+        <div class="mq-studio-two-col">
+          <label>Font<select id="mq-studio-layer-font"><option value="playfair">Playfair Display</option><option value="cinzel">Cinzel</option><option value="dmserif">DM Serif Display</option><option value="cormorant">Cormorant Garamond</option><option value="montserrat">Montserrat</option><option value="poppins">Poppins</option><option value="oswald">Oswald</option><option value="bebas">Bebas Neue</option><option value="libre">Libre Baskerville</option><option value="georgia">Georgia</option><option value="arial">Arial</option></select></label>
+          <label>Align<select id="mq-studio-layer-align"><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option></select></label>
+        </div>
+        <div class="mq-studio-two-col">
+          <label>Text colour<input id="mq-studio-layer-color" type="color" value="#ffffff"></label>
+          <label>Font size<input id="mq-studio-layer-size" type="range" min="12" max="180" value="56"></label>
+        </div>
+        <div class="mq-studio-two-col">
+          <label>Letter spacing<input id="mq-studio-layer-spacing" type="range" min="0" max="20" value="0"></label>
+          <label>Effect<select id="mq-studio-layer-fx"><option value="none">None</option><option value="soft">Soft shadow</option><option value="strong">Strong shadow</option><option value="glow">Glow</option><option value="outline">Outline</option></select></label>
+        </div>
+      </div>
+
+      <div id="mq-studio-layer-shape-fields" class="mq-studio-layer-section">
+        <div class="mq-studio-two-col">
+          <label>Shape<select id="mq-studio-layer-shape"><option value="rect">Rectangle</option><option value="circle">Circle / ellipse</option><option value="line">Line</option></select></label>
+          <label>Corner radius<input id="mq-studio-layer-radius" type="range" min="0" max="120" value="16"></label>
+        </div>
+        <div class="mq-studio-two-col">
+          <label>Fill colour<input id="mq-studio-layer-fill" type="color" value="#ffffff"></label>
+          <label>Stroke colour<input id="mq-studio-layer-stroke" type="color" value="#ffffff"></label>
+        </div>
+        <label>Stroke width<input id="mq-studio-layer-stroke-width" type="range" min="0" max="30" value="0"></label>
+      </div>
+
+      <div id="mq-studio-layer-image-fields" class="mq-studio-layer-section">
+        <label>Replace image<input id="mq-studio-layer-image-file" type="file" accept="image/*"></label>
+        <div class="mq-studio-two-col">
+          <label>Fit<select id="mq-studio-layer-fit"><option value="cover">Cover</option><option value="contain">Contain</option><option value="stretch">Stretch</option></select></label>
+          <label>Border radius<input id="mq-studio-layer-image-radius" type="range" min="0" max="120" value="0"></label>
+        </div>
+        <div class="mq-studio-two-col">
+          <label>Border colour<input id="mq-studio-layer-image-stroke" type="color" value="#ffffff"></label>
+          <label>Border width<input id="mq-studio-layer-image-stroke-width" type="range" min="0" max="30" value="0"></label>
+        </div>
+      </div>
+
+      <div class="mq-studio-layer-toolbar" style="margin-top:10px">
+        <button type="button" class="mq-studio-muted-btn" id="mq-studio-layer-dup">Duplicate</button>
+        <button type="button" class="mq-studio-muted-btn" id="mq-studio-layer-delete">Delete</button>
+        <button type="button" class="mq-studio-muted-btn" id="mq-studio-layer-back">Move earlier</button>
+        <button type="button" class="mq-studio-muted-btn" id="mq-studio-layer-forward">Move later</button>
+      </div>
+    </div>
+  </div>
+</div>
                     <div class="mq-studio-control-card">
                       <div class="mq-studio-card-title">Photo & export</div>
+                      <div class="mq-studio-two-col"><button type="button" class="mq-studio-muted-btn" id="mq-studio-save-draft">Save design</button><button type="button" class="mq-studio-muted-btn" id="mq-studio-load-draft">Load saved design</button></div>
+                      <p class="mq-studio-tip">Drafts are saved in this browser. Images can be included up to local storage limits.</p>
                       <label>Project photo<input id="mq-studio-photo" type="file" accept="image/*"></label>
                       <button type="button" class="mq-studio-muted-btn" id="mq-studio-remove-photo">Remove photo</button>
                       <label>Export size<select id="mq-studio-size"><option value="square">Square · 1080 × 1080</option><option value="portrait">Feed portrait · 1080 × 1350</option><option value="story">Story / Reel · 1080 × 1920</option><option value="poster">Poster · 1080 × 1620</option><option value="landscape">Yard sign · 1620 × 1080</option></select></label>
@@ -2844,7 +2937,7 @@ window.logoutMember = async function () {
                       <p class="mq-studio-tip">Your shop name and marketing link are automatically added. Upload a project photo for the most effective result.</p>
                     </div>
                   </div>
-                  <div class="mq-studio-preview-wrap"><div class="mq-studio-preview-tip">Tip: drag the shop name, headline, button, or website directly on the preview.</div><canvas id="mq-studio-canvas" width="1080" height="1080" aria-label="Live marketing graphic preview"></canvas><p>Live preview · The downloaded image exports at full resolution</p></div>
+                  <div class="mq-studio-preview-wrap"><div class="mq-studio-preview-tip">Tip: drag the shop name, headline, button, website, or your custom layers directly on the preview.</div><canvas id="mq-studio-canvas" width="1080" height="1080" aria-label="Live marketing graphic preview"></canvas><p>Live preview · The downloaded image exports at full resolution</p></div>
                 </div>
               </div>
               <details class="mq-studio-legacy"><summary>More marketing tools & advanced designers <span>⌄</span></summary><p>All your original marketing tools are still available below, including advanced poster controls, standalone QR codes, social captions, and printable materials.</p></details>
@@ -13352,9 +13445,31 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       'content-x':v=>String(v),'content-y':v=>String(v),'cta-x':v=>String(v),'cta-y':v=>String(v),'url-x':v=>String(v),'url-y':v=>String(v)
     };
     function syncRangeLabels(){Object.keys(rangeOutputs).forEach(id=>{const input=field(id),out=field(id+'-out');if(input&&out)out.textContent=rangeOutputs[id](input.value)})}
+
+let mqStudioCustomLayers=[];
+let mqStudioSelectedLayerId=null;
+let mqStudioLayerCounter=1;
+const layerUid=()=>`lyr_${Date.now().toString(36)}_${(mqStudioLayerCounter++).toString(36)}`;
+const cloneObj=o=>JSON.parse(JSON.stringify(o));
+function defaultTextLayer(){return {id:layerUid(),type:'text',name:`Text ${mqStudioLayerCounter}`,place:'front',x:120,y:120,w:420,h:140,rotation:0,opacity:100,shadowColor:'#000000',shadowBlur:0,shadowX:0,shadowY:0,text:'New text',font:'playfair',align:'left',color:'#ffffff',size:56,spacing:0,fx:'soft'}}
+function defaultShapeLayer(){return {id:layerUid(),type:'shape',name:`Shape ${mqStudioLayerCounter}`,place:'front',x:150,y:150,w:260,h:160,rotation:0,opacity:100,shadowColor:'#000000',shadowBlur:0,shadowX:0,shadowY:0,shape:'rect',radius:16,fill:'#ffffff',stroke:'#ffffff',strokeWidth:0}}
+function defaultFrameLayer(){return {id:layerUid(),type:'shape',name:`Border ${mqStudioLayerCounter}`,place:'front',x:48,y:48,w:984,h:984,rotation:0,opacity:100,shadowColor:'#000000',shadowBlur:0,shadowX:0,shadowY:0,shape:'rect',radius:24,fill:'#ffffff',fillOpacity:0,stroke:'#ffffff',strokeWidth:5}}
+function hydrateLayer(layer){const l=cloneObj(layer);if(l.type==='image'&&l.dataUrl){const img=new Image();img.src=l.dataUrl;l.image=img;}return l}
+function currentLayer(){return mqStudioCustomLayers.find(l=>l.id===mqStudioSelectedLayerId)||null}
+function renderLayerList(){const list=field('layer-list');if(!list)return;list.innerHTML='';mqStudioCustomLayers.forEach((layer,idx)=>{const btn=document.createElement('button');btn.type='button';btn.className='mq-studio-layer-item'+(layer.id===mqStudioSelectedLayerId?' active':'');btn.innerHTML=`<span>${idx+1}. ${layer.name||layer.type}</span><small>${layer.type} · ${layer.place}</small>`;btn.addEventListener('click',()=>{mqStudioSelectedLayerId=layer.id;syncLayerControls();mqStudioFocus='layer:'+layer.id;update()});list.appendChild(btn);});field('layer-empty').style.display=mqStudioCustomLayers.length?'none':'';}
+function syncLayerControls(){const body=field('layer-controls-body');const layer=currentLayer();if(!body)return;body.style.display=layer?'':'none';field('layer-empty').style.display=layer?'none':'';root.querySelectorAll('.mq-studio-layer-section').forEach(el=>el.classList.remove('show'));if(!layer)return;field('layer-name').value=layer.name||'';field('layer-place').value=layer.place||'front';field('layer-x').value=Math.round(layer.x||0);field('layer-y').value=Math.round(layer.y||0);field('layer-w').value=Math.round(layer.w||1);field('layer-h').value=Math.round(layer.h||1);field('layer-opacity').value=layer.opacity==null?100:layer.opacity;field('layer-rotation').value=layer.rotation||0;field('layer-shadow-color').value=layer.shadowColor||'#000000';field('layer-shadow-blur').value=layer.shadowBlur||0;field('layer-shadow-x').value=layer.shadowX||0;field('layer-shadow-y').value=layer.shadowY||0;
+  if(layer.type==='text'){field('layer-text-fields').classList.add('show');field('layer-text').value=layer.text||'';field('layer-font').value=layer.font||'playfair';field('layer-align').value=layer.align||'left';field('layer-color').value=layer.color||'#ffffff';field('layer-size').value=layer.size||56;field('layer-spacing').value=layer.spacing||0;field('layer-fx').value=layer.fx||'none';}
+  if(layer.type==='shape'){field('layer-shape-fields').classList.add('show');field('layer-shape').value=layer.shape||'rect';field('layer-radius').value=layer.radius||0;field('layer-fill').value=layer.fill||'#ffffff';field('layer-stroke').value=layer.stroke||'#ffffff';field('layer-stroke-width').value=layer.strokeWidth||0;}
+  if(layer.type==='image'){field('layer-image-fields').classList.add('show');field('layer-fit').value=layer.fit||'cover';field('layer-image-radius').value=layer.radius||0;field('layer-image-stroke').value=layer.stroke||'#ffffff';field('layer-image-stroke-width').value=layer.strokeWidth||0;}
+  renderLayerList();
+}
+function applyLayerControls(){const layer=currentLayer();if(!layer)return;layer.name=field('layer-name').value||layer.name;layer.place=field('layer-place').value;layer.x=Number(field('layer-x').value)||0;layer.y=Number(field('layer-y').value)||0;layer.w=Math.max(1,Number(field('layer-w').value)||1);layer.h=Math.max(1,Number(field('layer-h').value)||1);layer.opacity=Number(field('layer-opacity').value)||0;layer.rotation=Number(field('layer-rotation').value)||0;layer.shadowColor=field('layer-shadow-color').value;layer.shadowBlur=Number(field('layer-shadow-blur').value)||0;layer.shadowX=Number(field('layer-shadow-x').value)||0;layer.shadowY=Number(field('layer-shadow-y').value)||0;if(layer.type==='text'){layer.text=field('layer-text').value;layer.font=field('layer-font').value;layer.align=field('layer-align').value;layer.color=field('layer-color').value;layer.size=Number(field('layer-size').value)||56;layer.spacing=Number(field('layer-spacing').value)||0;layer.fx=field('layer-fx').value;}if(layer.type==='shape'){layer.shape=field('layer-shape').value;layer.radius=Number(field('layer-radius').value)||0;layer.fill=field('layer-fill').value;layer.stroke=field('layer-stroke').value;layer.strokeWidth=Number(field('layer-stroke-width').value)||0;}if(layer.type==='image'){layer.fit=field('layer-fit').value;layer.radius=Number(field('layer-image-radius').value)||0;layer.stroke=field('layer-image-stroke').value;layer.strokeWidth=Number(field('layer-image-stroke-width').value)||0;}renderLayerList();}
+function addLayer(layer){mqStudioCustomLayers.push(layer);mqStudioSelectedLayerId=layer.id;syncLayerControls();update();}
     function currentOpts(){
       return {
         shopName:field('shop-name').value,shopFont:field('shop-font').value,shopColor:field('shop-color').value,shopScale:Number(field('shop-scale').value),shopSpacing:Number(field('shop-spacing').value),shopX:Number(field('shop-x').value),shopY:Number(field('shop-y').value),logo:mqStudioLogo,logoScale:Number(field('logo-scale').value),composition:field('composition').value,focal:Number(field('focal').value),finish:field('finish').value,overlay:Number(field('overlay').value),accent:field('accent').value,accentColor:field('accent-color').value,
+        emphasis:field('emphasis').value,emphasisColor:field('emphasis-color').value,
+        customLayers:mqStudioCustomLayers,
         headline:field('headline').value,
         sub:field('subline').value,
         cta:field('cta').value,
@@ -13414,11 +13529,37 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       applyTextFx(ctx,effect,color,k);drawSpacedText(ctx,text,x,y,spacing,align);clearTextFx(ctx);
     }
     function drawWrappedLinesFx(ctx,lines,x,startY,lineHeight,spacing,align,effect,color,k){lines.forEach((line,i)=>drawSpacedTextFx(ctx,line,x,startY+i*lineHeight,spacing,align,effect,color,k));}
+
+function applyRawShadow(ctx,color,blur,dx,dy,k){ctx.shadowColor=color||'rgba(0,0,0,.3)';ctx.shadowBlur=(blur||0)*k;ctx.shadowOffsetX=(dx||0)*k;ctx.shadowOffsetY=(dy||0)*k;}
+function clearRawShadow(ctx){ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetX=0;ctx.shadowOffsetY=0;}
+function drawImageFit(ctx,img,x,y,w,h,fit){if(!img)return;if(fit==='stretch'){ctx.drawImage(img,x,y,w,h);return;}if(fit==='contain'){const ratio=Math.min(w/img.width,h/img.height),iw=img.width*ratio,ih=img.height*ratio;ctx.drawImage(img,x+(w-iw)/2,y+(h-ih)/2,iw,ih);return;}cover(ctx,img,x,y,w,h);}
+function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y=(layer.y||0)*k,w=Math.max(1,(layer.w||1)*k),h=Math.max(1,(layer.h||1)*k),rot=(layer.rotation||0)*Math.PI/180;ctx.save();ctx.globalAlpha=Math.max(0,Math.min(1,(layer.opacity==null?100:layer.opacity)/100));ctx.translate(x+w/2,y+h/2);ctx.rotate(rot);ctx.translate(-(x+w/2),-(y+h/2));applyRawShadow(ctx,layer.shadowColor,layer.shadowBlur,layer.shadowX,layer.shadowY,k);let region=[x,y,w,h];if(layer.type==='shape'){ctx.fillStyle=layer.fill||'#ffffff';ctx.strokeStyle=layer.stroke||'#ffffff';ctx.lineWidth=(layer.strokeWidth||0)*k;if(layer.shape==='circle'){ctx.beginPath();ctx.ellipse(x+w/2,y+h/2,w/2,h/2,0,0,Math.PI*2);if((layer.fillOpacity||100)!==0)ctx.fill();if(ctx.lineWidth>0)ctx.stroke();}else if(layer.shape==='line'){ctx.beginPath();ctx.moveTo(x,y+h);ctx.lineTo(x+w,y);if(ctx.lineWidth===0)ctx.lineWidth=4*k;ctx.stroke();}else{ctx.beginPath();ctx.roundRect(x,y,w,h,(layer.radius||0)*k);if((layer.fillOpacity||100)!==0)ctx.fill();if(ctx.lineWidth>0)ctx.stroke();}}else if(layer.type==='image'){ctx.beginPath();ctx.roundRect(x,y,w,h,(layer.radius||0)*k);ctx.clip();drawImageFit(ctx,layer.image,x,y,w,h,layer.fit||'cover');ctx.restore();ctx.save();ctx.globalAlpha=Math.max(0,Math.min(1,(layer.opacity==null?100:layer.opacity)/100));ctx.translate(x+w/2,y+h/2);ctx.rotate(rot);ctx.translate(-(x+w/2),-(y+h/2));if((layer.strokeWidth||0)>0){ctx.strokeStyle=layer.stroke||'#ffffff';ctx.lineWidth=(layer.strokeWidth||0)*k;ctx.beginPath();ctx.roundRect(x,y,w,h,(layer.radius||0)*k);ctx.stroke();}}else if(layer.type==='text'){const size=Math.max(8,(layer.size||56))*k;ctx.font=font(size,layer.font||'playfair',700);ctx.fillStyle=layer.color||'#ffffff';const lines=wrap(ctx,String(layer.text||''),w,10,(layer.spacing||0)*k);const lineHeight=size*1.18;const align=layer.align||'left';const tx=align==='left'?x:align==='center'?x+w/2:x+w;drawWrappedLinesFx(ctx,lines,tx,y+size,lineHeight,(layer.spacing||0)*k,align,layer.fx||'none',layer.shadowColor||'#000000',k);region=[x,y,w,Math.max(h,lines.length*lineHeight+size*.2)];}
+  clearRawShadow(ctx);ctx.restore();regions.push({id:layer.id,rect:region});if(highlight){ctx.save();ctx.strokeStyle='#38bdf8';ctx.lineWidth=3*k;ctx.setLineDash([12*k,7*k]);ctx.strokeRect(region[0],region[1],region[2],region[3]);ctx.restore();}}
+    function drawHeadlineWithEmphasis(ctx,lines,x,y,lineHeight,spacing,align,effect,effectColor,k,phrase,phraseColor){
+      phrase=String(phrase||'').trim();
+      if(!phrase){drawWrappedLinesFx(ctx,lines,x,y,lineHeight,spacing,align,effect,effectColor,k);return;}
+      // Split visual styling at phrase matches without altering line breaks.
+      lines.forEach((line,i)=>{
+        const ix=line.toLocaleLowerCase().indexOf(phrase.toLocaleLowerCase());
+        if(ix<0){drawSpacedTextFx(ctx,line,x,y+i*lineHeight,spacing,align,effect,effectColor,k);return;}
+        const pieces=[line.slice(0,ix),line.slice(ix,ix+phrase.length),line.slice(ix+phrase.length)];
+        const fullW=textWidthWithSpacing(ctx,line,spacing);
+        let cursor=align==='center'?x-fullW/2:align==='right'?x-fullW:x;
+        const base=ctx.fillStyle;
+        pieces.forEach((piece,j)=>{
+          if(j===1)ctx.fillStyle=phraseColor;else ctx.fillStyle=base;
+          drawSpacedTextFx(ctx,piece,cursor,y+i*lineHeight,spacing,'left',effect,effectColor,k);
+          cursor+=textWidthWithSpacing(ctx,piece,spacing)+(j<2&&piece.length?spacing:0);
+        });
+        ctx.fillStyle=base;
+      });
+    }
     function paint(canvas,t,opts={}){
       const W=canvas.width,H=canvas.height,ctx=canvas.getContext('2d');
       ctx._mqFxOpts=opts;
       const k=Math.min(W/1080,H/1080), landscape=W>H, b=safeColor(opts.color||color), hasPhoto=!!opts.photo;
       const pad=70*k;
+      const customRegions=[];
       ctx.clearRect(0,0,W,H);ctx.fillStyle='#eee5dd';ctx.fillRect(0,0,W,H);
       const fill=(c,x,y,w,h)=>{ctx.fillStyle=c;ctx.fillRect(x,y,w,h)};
       let primary=safeColor(opts.headlineColor,'#ffffff'),secondary=safeColor(opts.subColor,'#eee0e7');
@@ -13478,6 +13619,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         if(hasPhoto)cover(ctx,opts.photo,inset,imgTop,W-2*inset,imgH,focal);
         ctx.strokeStyle='#ffffff75';ctx.lineWidth=3*k;ctx.strokeRect(inset-10*k,imgTop-10*k,W-2*inset+20*k,imgH+20*k);
       }
+      mqStudioCustomLayers.filter(layer=>layer.place==='back').forEach(layer=>drawCustomLayer(ctx,layer,k,customRegions,opts.highlight===('layer:'+layer.id)));
       // Professional art direction: photographic tonal treatment, architectural
       // framing and quiet editorial depth. Never place a bar behind a headline.
       const finish=opts.finish||'cinematic';
@@ -13549,7 +13691,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       if(opts.headlineFill==='gradient'){
         const grd=ctx.createLinearGradient(0,baseTop-size,W,baseTop+lines.length*lineHeight);grd.addColorStop(0,primary);grd.addColorStop(1,safeColor(opts.gradientEnd,'#d7b783'));ctx.fillStyle=grd;
       }
-      drawWrappedLinesFx(ctx,lines,anchorX,baseTop,lineHeight,titleSpacing,align,opts.headlineFx||'none',opts.fxColor||'rgba(0,0,0,.75)',k);
+      drawHeadlineWithEmphasis(ctx,lines,anchorX,baseTop,lineHeight,titleSpacing,align,opts.headlineFx||'none',opts.fxColor||'rgba(0,0,0,.75)',k,opts.emphasis,safeColor(opts.emphasisColor,'#f3d6a4'));
 
       let subTop=baseTop+lines.length*lineHeight+13*k;
       const subScale=(opts.subScale||100)/100;
@@ -13595,7 +13737,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const brandW=Math.min(W-2*pad, Math.max(220*k, textWidthWithSpacing(ctx,String(shopDisplay||''),nameSpace)+40*k));
       const brandX=align==='left'?clamp(nameX-10*k,8*k,W-brandW-8*k):align==='center'?clamp(nameX-brandW/2,8*k,W-brandW-8*k):clamp(nameX-brandW+10*k,8*k,W-brandW-8*k);
       const regions={brand:[brandX,Math.max(8*k,nameY-58*k),brandW,72*k],headline:[pad,Math.max(15*k,baseTop-80*k),W-2*pad,Math.max(100*k,(lines.length+1)*lineHeight)],sub:[pad,subTop-38*k,W-2*pad,Math.max(70*k,(subLines.length+1)*subLH)],cta:[bx-10*k,by-10*k,bw+20*k,ctaH+20*k],url:[clamp(urlX-20*k,8*k,W-220*k),urlY-38*k,Math.min(420*k,W*.76),55*k],photo:[10*k,10*k,W-20*k,H-20*k]};
-      canvas._mqRegions=regions;canvas._mqUnit=k;
+      canvas._mqRegions=regions;canvas._mqCustomLayerRegions=customRegions;canvas._mqUnit=k;
       // Only show selection hints in live preview (never in exported PNG).
       if(opts.highlight){
         const r=regions[opts.highlight];if(r){ctx.save();ctx.strokeStyle='#38bdf8';ctx.lineWidth=4*k;ctx.setLineDash([14*k,8*k]);ctx.strokeRect(...r);ctx.restore()}
@@ -13616,14 +13758,15 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       field('url-text').value='';field('url-x').value='0';field('url-y').value='0';field('url-color').value=mqStudioSelected?.mode==='minimal'?'#45323e':'#e8d9dd';field('url-scale').value='100';
       field('headline-font').value='playfair';field('sub-font').value='montserrat';field('cta-font').value='montserrat';field('align').value='left';
       field('headline-color').value='#ffffff';field('sub-color').value=mqStudioSelected && mqStudioSelected.mode==='minimal' ? '#685861' : '#f0e7ee';field('cta-bg').value='#f2e1ca';field('cta-color').value='#2b2430';field('headline-fx').value='soft';field('sub-fx').value='soft';field('brand-fx').value='soft';field('cta-fx').value='none';field('url-fx').value='soft';field('fx-color').value='#000000';field('fx-blur').value='8';field('fx-distance').value='4';field('fx-angle').value='90';field('fx-outline').value='3';field('headline-fill').value='solid';field('gradient-end').value='#d7b783';field('headline-back').value='none';field('back-color').value='#221623';field('back-opacity').value='70';
+      field('emphasis').value='';field('emphasis-color').value='#f3d6a4';field('style-pack').value='custom';
       field('headline-scale').value='100';field('sub-scale').value='100';field('cta-scale').value='100';field('headline-spacing').value='0';field('sub-spacing').value='0';field('content-x').value='0';field('content-y').value='0';field('cta-x').value='0';field('cta-y').value='0';
-      syncRangeLabels();
+      mqStudioCustomLayers=[];mqStudioSelectedLayerId=null;renderLayerList();syncLayerControls();syncRangeLabels();
     }
     function select(t){mqStudioSelected=t;field('edit-title').textContent=t.title;field('shop-name').value=shopName;field('headline').value=t.headline;field('subline').value=t.sub;field('cta').value=t.cta;field('color').value=safeColor(color);field('size').value=t.id==='yard'?'landscape':t.category==='print'?'poster':'square';setDefaults();field('composition').value=t.id==='premium'?'cinema':t.id==='yard'?'split':t.id==='before'?'magazine':t.id==='poster'?'window':'original';field('finish').value=t.mode==='luxury'?'bold':t.mode==='frame'?'editorial':t.category==='print'?'architect':'cinematic';field('accent').value=t.mode==='frame'?'frame':t.mode==='luxury'?'corner':t.id==='yard'?'stripe':'none';if(t.mode==='minimal'){field('headline-color').value='#382b36';field('sub-color').value='#685861'}workspace.style.display='block';previewShift=0;preview.style.transform='';update();workspace.scrollIntoView({behavior:'smooth',block:'start'});}
     if(!root.dataset.studioInitialized){
       root.dataset.studioInitialized='true';
       root.querySelectorAll('[data-studio-filter]').forEach(btn=>btn.addEventListener('click',()=>{root.querySelectorAll('[data-studio-filter]').forEach(b=>b.classList.toggle('active',b===btn));renderGallery(btn.dataset.studioFilter)}));
-      ['shop-name','shop-font','shop-color','shop-scale','shop-spacing','shop-x','shop-y','logo-scale','composition','focal','finish','overlay','accent','accent-color','headline','subline','cta','color','size','headline-font','sub-font','cta-font','align','headline-color','sub-color','cta-bg','cta-color','headline-fx','sub-fx','brand-fx','cta-fx','url-fx','fx-color','fx-blur','fx-distance','fx-angle','fx-outline','headline-fill','gradient-end','headline-back','back-color','back-opacity','headline-scale','sub-scale','cta-scale','headline-spacing','sub-spacing','content-x','content-y','cta-x','cta-y','url-text','url-x','url-y','url-color','url-scale'].forEach(id=>{
+      ['shop-name','shop-font','shop-color','shop-scale','shop-spacing','shop-x','shop-y','logo-scale','composition','focal','finish','overlay','accent','accent-color','headline','emphasis','emphasis-color','subline','cta','color','size','headline-font','sub-font','cta-font','align','headline-color','sub-color','cta-bg','cta-color','headline-fx','sub-fx','brand-fx','cta-fx','url-fx','fx-color','fx-blur','fx-distance','fx-angle','fx-outline','headline-fill','gradient-end','headline-back','back-color','back-opacity','headline-scale','sub-scale','cta-scale','headline-spacing','sub-spacing','content-x','content-y','cta-x','cta-y','url-text','url-x','url-y','url-color','url-scale'].forEach(id=>{
         const evt = ['headline-scale','sub-scale','cta-scale','headline-spacing','sub-spacing','content-x','content-y','cta-x','cta-y','color','headline-color','sub-color','cta-bg','cta-color'].includes(id) ? 'input' : 'input';
         field(id).addEventListener(evt,update);
         if(field(id).tagName==='SELECT')field(id).addEventListener('change',update);
@@ -13651,15 +13794,56 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       field('remove-photo').addEventListener('click',()=>{mqStudioPhoto=null;field('photo').value='';update()});
       field('back').addEventListener('click',()=>{workspace.style.display='none';previewShift=0;preview.style.transform='';root.scrollIntoView({behavior:'smooth',block:'start'})});
       field('download').addEventListener('click',()=>{update(true);const a=document.createElement('a');a.href=field('canvas').toDataURL('image/png');a.download=(shopName+'-'+mqStudioSelected.id+'-'+field('size').value).toLowerCase().replace(/[^a-z0-9-]+/g,'-')+'.png';a.click();update()});
+      const stylePacks={
+        luxe:{composition:'magazine',finish:'editorial',color:'#513541','headline-font':'playfair','shop-font':'cinzel','sub-font':'montserrat','cta-font':'montserrat','headline-color':'#fffaf2','sub-color':'#f6ebdf','cta-bg':'#e8cba1','cta-color':'#281d25','emphasis-color':'#e8cba1',accent:'corner','accent-color':'#d9b67c','headline-fx':'none','overlay':'28'},
+        night:{composition:'cinema',finish:'bold',color:'#261b29','headline-font':'cinzel','shop-font':'montserrat','sub-font':'montserrat','cta-font':'montserrat','headline-color':'#ffffff','sub-color':'#f3edef','cta-bg':'#ffffff','cta-color':'#191519','emphasis-color':'#e6c58f',accent:'none','headline-fx':'strong','overlay':'68'},
+        modern:{composition:'window',finish:'architect',color:'#263d3b','headline-font':'montserrat','shop-font':'montserrat','sub-font':'poppins','cta-font':'montserrat','headline-color':'#ffffff','sub-color':'#f2f3ed','cta-bg':'#f1eee4','cta-color':'#263d3b','emphasis-color':'#a8d3c1',accent:'frame','accent-color':'#f1eee4','headline-fx':'none','overlay':'10'},
+        bold:{composition:'split',finish:'bold',color:'#381b29','headline-font':'bebas','shop-font':'oswald','sub-font':'poppins','cta-font':'oswald','headline-color':'#ffffff','sub-color':'#fff2f3','cta-bg':'#e9bb66','cta-color':'#211a21','emphasis-color':'#e9bb66',accent:'stripe','accent-color':'#e9bb66','headline-fx':'soft','overlay':'42'},
+        warm:{composition:'original',finish:'editorial',color:'#67544c','headline-font':'cormorant','shop-font':'playfair','sub-font':'poppins','cta-font':'poppins','headline-color':'#ffffff','sub-color':'#fff7ef','cta-bg':'#f2dfc4','cta-color':'#382b23','emphasis-color':'#ffe0a7',accent:'none','headline-fx':'soft','overlay':'48'}
+      };
+      field('apply-pack').addEventListener('click',()=>{
+        const pack=stylePacks[field('style-pack').value];if(!pack)return;
+        Object.entries(pack).forEach(([key,value])=>{const input=field(key);if(input)input.value=value});
+        update();mqShowToast('Style pack applied');
+      });
+      const saveKey=()=>`midasquote_studio_draft_v4_${shopRecord.id||'shop'}_${mqStudioSelected?.id||'design'}`;
+      field('save-draft').addEventListener('click',()=>{
+        if(!mqStudioSelected)return;
+        try{
+          const values={};root.querySelectorAll('.mq-studio-fields input[id],.mq-studio-fields select[id],.mq-studio-fields textarea[id]').forEach(input=>{if(input.type!=='file')values[input.id.replace('mq-studio-','')]=input.value});
+          const layers=mqStudioCustomLayers.map(layer=>{const copy=cloneObj(layer);delete copy.image;return copy;});
+          localStorage.setItem(saveKey(),JSON.stringify({values,layers}));mqShowToast('Design settings saved in this browser');
+        }catch(err){mqShowToast('Could not save design in this browser','error')}
+      });
+      field('load-draft').addEventListener('click',()=>{
+        try{
+          const raw=localStorage.getItem(saveKey());if(!raw){mqShowToast('No saved design for this template','error');return}
+          const parsed=JSON.parse(raw);const values=parsed.values||parsed;Object.entries(values).forEach(([key,value])=>{const input=field(key);if(input&&input.type!=='file')input.value=value});
+          mqStudioCustomLayers=(parsed.layers||[]).map(hydrateLayer);mqStudioSelectedLayerId=mqStudioCustomLayers[0]?.id||null;renderLayerList();syncLayerControls();
+          update();mqShowToast('Saved design settings loaded');
+        }catch(err){mqShowToast('Could not load saved settings','error')}
+      });
+
+field('add-text-layer').addEventListener('click',()=>addLayer(defaultTextLayer()));
+field('add-shape-layer').addEventListener('click',()=>addLayer(defaultShapeLayer()));
+field('add-frame-layer').addEventListener('click',()=>addLayer(defaultFrameLayer()));
+field('add-image-layer-btn').addEventListener('click',()=>field('add-image-layer-input').click());
+field('add-image-layer-input').addEventListener('change',e=>{const file=e.target.files&&e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=()=>{const img=new Image();img.onload=()=>{addLayer({id:layerUid(),type:'image',name:`Image ${mqStudioLayerCounter}`,place:'front',x:180,y:180,w:320,h:220,rotation:0,opacity:100,shadowColor:'#000000',shadowBlur:0,shadowX:0,shadowY:0,fit:'cover',radius:0,stroke:'#ffffff',strokeWidth:0,dataUrl:reader.result,image:img});};img.src=reader.result;};reader.readAsDataURL(file);e.target.value='';});
+['layer-name','layer-place','layer-x','layer-y','layer-w','layer-h','layer-opacity','layer-rotation','layer-shadow-color','layer-shadow-blur','layer-shadow-x','layer-shadow-y','layer-text','layer-font','layer-align','layer-color','layer-size','layer-spacing','layer-fx','layer-shape','layer-radius','layer-fill','layer-stroke','layer-stroke-width','layer-fit','layer-image-radius','layer-image-stroke','layer-image-stroke-width'].forEach(id=>{const el=field(id);if(!el)return;el.addEventListener('input',()=>{applyLayerControls();update();});if(el.tagName==='SELECT')el.addEventListener('change',()=>{applyLayerControls();update();});});
+field('layer-image-file').addEventListener('change',e=>{const layer=currentLayer();const file=e.target.files&&e.target.files[0];if(!layer||layer.type!=='image'||!file)return;const reader=new FileReader();reader.onload=()=>{const img=new Image();img.onload=()=>{layer.dataUrl=reader.result;layer.image=img;update();};img.src=reader.result;};reader.readAsDataURL(file);e.target.value='';});
+field('layer-delete').addEventListener('click',()=>{if(!mqStudioSelectedLayerId)return;mqStudioCustomLayers=mqStudioCustomLayers.filter(l=>l.id!==mqStudioSelectedLayerId);mqStudioSelectedLayerId=mqStudioCustomLayers[0]?.id||null;syncLayerControls();update();});
+field('layer-dup').addEventListener('click',()=>{const layer=currentLayer();if(!layer)return;const copy=hydrateLayer({...cloneObj(layer),id:layerUid(),name:(layer.name||layer.type)+' copy',x:(layer.x||0)+24,y:(layer.y||0)+24});mqStudioCustomLayers.push(copy);mqStudioSelectedLayerId=copy.id;syncLayerControls();update();});
+field('layer-back').addEventListener('click',()=>{const idx=mqStudioCustomLayers.findIndex(l=>l.id===mqStudioSelectedLayerId);if(idx>0){const [item]=mqStudioCustomLayers.splice(idx,1);mqStudioCustomLayers.splice(idx-1,0,item);renderLayerList();update();}});
+field('layer-forward').addEventListener('click',()=>{const idx=mqStudioCustomLayers.findIndex(l=>l.id===mqStudioSelectedLayerId);if(idx>=0&&idx<mqStudioCustomLayers.length-1){const [item]=mqStudioCustomLayers.splice(idx,1);mqStudioCustomLayers.splice(idx+1,0,item);renderLayerList();update();}});
       field('copy-caption').addEventListener('click',()=>{const caption=[field('headline').value,field('subline').value,field('cta').value+': '+quoteLink()].join('\n\n');if(navigator.clipboard?.writeText)navigator.clipboard.writeText(caption).then(()=>mqShowToast('Caption copied')).catch(()=>mqShowToast('Could not copy caption','error'));else mqShowToast('Clipboard not available','error')});
       const canvas=field('canvas');
       const clampField=(id,val)=>{const el=field(id);if(!el)return;const min=Number(el.min||-9999),max=Number(el.max||9999);el.value=String(Math.round(clamp(val,min,max)));};
       const canvasPoint=e=>{const rect=canvas.getBoundingClientRect();return {x:(e.clientX-rect.left)*(canvas.width/rect.width),y:(e.clientY-rect.top)*(canvas.height/rect.height)}};
-      const regionAt=pt=>{const regions=canvas._mqRegions||{};const order=['cta','url','headline','sub','brand'];for(const key of order){const r=regions[key];if(!r)continue; if(pt.x>=r[0]&&pt.x<=r[0]+r[2]&&pt.y>=r[1]&&pt.y<=r[1]+r[3])return key;}return null;};
+      const regionAt=pt=>{const custom=(canvas._mqCustomLayerRegions||[]).slice().reverse();for(const item of custom){const r=item.rect;if(pt.x>=r[0]&&pt.x<=r[0]+r[2]&&pt.y>=r[1]&&pt.y<=r[1]+r[3])return 'layer:'+item.id;}const regions=canvas._mqRegions||{};const order=['cta','url','headline','sub','brand'];for(const key of order){const r=regions[key];if(!r)continue; if(pt.x>=r[0]&&pt.x<=r[0]+r[2]&&pt.y>=r[1]&&pt.y<=r[1]+r[3])return key;}return null;};
       let drag=null;
       canvas.style.cursor='grab';
-      canvas.addEventListener('pointerdown',e=>{if(!mqStudioSelected)return;const part=regionAt(canvasPoint(e));if(!part)return;drag={part,start:canvasPoint(e),unit:canvas._mqUnit||1,vals:{shopX:Number(field('shop-x').value)||0,shopY:Number(field('shop-y').value)||0,contentX:Number(field('content-x').value)||0,contentY:Number(field('content-y').value)||0,ctaX:Number(field('cta-x').value)||0,ctaY:Number(field('cta-y').value)||0,urlX:Number(field('url-x').value)||0,urlY:Number(field('url-y').value)||0}}; mqStudioFocus=part; update(); canvas.setPointerCapture(e.pointerId); canvas.style.cursor='grabbing'; e.preventDefault();});
-      canvas.addEventListener('pointermove',e=>{const pt=canvasPoint(e);const hover=regionAt(pt);canvas.style.cursor=drag?'grabbing':(hover?'grab':'default');if(!drag)return;const dx=(pt.x-drag.start.x)/(drag.unit||1),dy=(pt.y-drag.start.y)/(drag.unit||1); if(drag.part==='brand'){clampField('shop-x',drag.vals.shopX+dx);clampField('shop-y',drag.vals.shopY+dy);} else if(drag.part==='cta'){clampField('cta-x',drag.vals.ctaX+dx);clampField('cta-y',drag.vals.ctaY+dy);} else if(drag.part==='url'){clampField('url-x',drag.vals.urlX+dx);clampField('url-y',drag.vals.urlY+dy);} else {clampField('content-x',drag.vals.contentX+dx);clampField('content-y',drag.vals.contentY+dy);} update();});
+      canvas.addEventListener('pointerdown',e=>{if(!mqStudioSelected)return;const part=regionAt(canvasPoint(e));if(!part)return;const pt=canvasPoint(e);if(String(part).startsWith('layer:')){const layer=currentLayer()&&('layer:'+currentLayer().id)===part?currentLayer():mqStudioCustomLayers.find(l=>'layer:'+l.id===part);if(!layer)return;mqStudioSelectedLayerId=layer.id;syncLayerControls();drag={part,start:pt,layerId:layer.id,vals:{x:Number(layer.x)||0,y:Number(layer.y)||0}};mqStudioFocus=part;}else{drag={part,start:pt,unit:canvas._mqUnit||1,vals:{shopX:Number(field('shop-x').value)||0,shopY:Number(field('shop-y').value)||0,contentX:Number(field('content-x').value)||0,contentY:Number(field('content-y').value)||0,ctaX:Number(field('cta-x').value)||0,ctaY:Number(field('cta-y').value)||0,urlX:Number(field('url-x').value)||0,urlY:Number(field('url-y').value)||0}}; mqStudioFocus=part;} update(); canvas.setPointerCapture(e.pointerId); canvas.style.cursor='grabbing'; e.preventDefault();});
+      canvas.addEventListener('pointermove',e=>{const pt=canvasPoint(e);const hover=regionAt(pt);canvas.style.cursor=drag?'grabbing':(hover?'grab':'default');if(!drag)return;if(String(drag.part).startsWith('layer:')){const layer=mqStudioCustomLayers.find(l=>l.id===drag.layerId);if(!layer)return;layer.x=Math.round((drag.vals.x||0)+(pt.x-drag.start.x));layer.y=Math.round((drag.vals.y||0)+(pt.y-drag.start.y));syncLayerControls();update();return;}const dx=(pt.x-drag.start.x)/(drag.unit||1),dy=(pt.y-drag.start.y)/(drag.unit||1); if(drag.part==='brand'){clampField('shop-x',drag.vals.shopX+dx);clampField('shop-y',drag.vals.shopY+dy);} else if(drag.part==='cta'){clampField('cta-x',drag.vals.ctaX+dx);clampField('cta-y',drag.vals.ctaY+dy);} else if(drag.part==='url'){clampField('url-x',drag.vals.urlX+dx);clampField('url-y',drag.vals.urlY+dy);} else {clampField('content-x',drag.vals.contentX+dx);clampField('content-y',drag.vals.contentY+dy);} update();});
       const endDrag=e=>{if(drag){drag=null;canvas.style.cursor='default'; if(canvas.hasPointerCapture && e.pointerId!=null){try{canvas.releasePointerCapture(e.pointerId);}catch(err){}} clearTimeout(mqStudioFocusTimer); mqStudioFocusTimer=setTimeout(()=>{mqStudioFocus=null;update();},900);}};
       canvas.addEventListener('pointerup',endDrag);canvas.addEventListener('pointercancel',endDrag);canvas.addEventListener('pointerleave',e=>{if(!drag)canvas.style.cursor='default';});
     }
