@@ -2842,6 +2842,12 @@ window.logoutMember = async function () {
   }
   #midasquote-dashboard #mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-preview-wrap .mq-studio-preview-tip {margin:0!important;padding:4px 8px!important}
 }
+
+/* v7.5: compact fullscreen template switcher */
+#mq-studio .mq-studio-template-switch{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+#mq-studio .mq-studio-template-switch label{font-size:12px;font-weight:700;color:#5c4b60}
+#mq-studio .mq-studio-template-switch select{width:auto!important;max-width:260px;min-width:170px;padding:10px 30px 10px 12px;border:1px solid #d8cedb;border-radius:10px;background:#fff;color:#2c2434;font-size:13px;font-weight:650}
+@media(max-width:700px){#mq-studio .mq-studio-template-switch{justify-content:flex-start}#mq-studio .mq-studio-template-switch select{max-width:210px}}
 /* v4.9 canvas-first editing */
 #mq-page-marketing #mq-studio-workspace.mq-studio-canvas-first .mq-studio-editor-layout{grid-template-columns:1fr!important}
 #mq-page-marketing #mq-studio-workspace.mq-studio-canvas-first .mq-studio-fields{display:none!important}
@@ -2932,7 +2938,7 @@ window.logoutMember = async function () {
               <div class="mq-studio-nav" role="group" aria-label="Filter templates"><button type="button" class="active" data-studio-filter="all">All designs</button><button type="button" data-studio-filter="social">Social posts</button><button type="button" data-studio-filter="print">Posters & signs</button><button type="button" data-studio-filter="qr">QR promotions</button></div>
               <div class="mq-studio-grid" id="mq-studio-grid"></div>
               <div id="mq-studio-workspace" class="mq-studio-workspace" style="display:none">
-                <div class="mq-studio-editor-top"><div><span class="mq-studio-kicker">DESIGN STUDIO</span><h3 id="mq-studio-edit-title">Edit template</h3></div><button type="button" class="mq-studio-muted-btn" id="mq-studio-back">← All templates</button></div><div class="mq-studio-canvas-actions"><button type="button" id="mq-studio-quick-text">+ Add text</button><button type="button" id="mq-studio-quick-shape">+ Add shape</button><button type="button" id="mq-studio-properties-toggle">Selected object options</button><button type="button" id="mq-studio-settings-toggle">All design settings</button></div>
+                <div class="mq-studio-editor-top"><div><span class="mq-studio-kicker">DESIGN STUDIO</span><h3 id="mq-studio-edit-title">Edit template</h3></div><div class="mq-studio-template-switch"><label for="mq-studio-template-select">Switch design</label><select id="mq-studio-template-select" aria-label="Switch design template"></select><button type="button" class="mq-studio-muted-btn" id="mq-studio-back">← All templates</button></div></div><div class="mq-studio-canvas-actions"><button type="button" id="mq-studio-quick-text">+ Add text</button><button type="button" id="mq-studio-quick-shape">+ Add shape</button><button type="button" id="mq-studio-properties-toggle">Selected object options</button><button type="button" id="mq-studio-settings-toggle">All design settings</button></div>
                 <div class="mq-studio-editor-layout">
                   <div class="mq-studio-fields">
                     <div class="mq-studio-control-card">
@@ -14020,7 +14026,7 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
       ctx.fillStyle=safeColor(opts.ctaColor,'#2b2430');ctx.font=font(ctaSize,opts.ctaFont||'arial',700);if(!opts.detached)drawSpacedTextFx(ctx,cta,bx+bw/2,by+(ctaH*.62),0,'center',opts.ctaFx||'none',opts.fxColor||'rgba(0,0,0,.65)',k);
       ctx.textAlign='left';
 
-      if(t.category==='qr'&&typeof MQ_QR_LIB_FACTORY==='function'){
+      if(t.category==='qr' && !opts.detached && typeof MQ_QR_LIB_FACTORY==='function'){
         try{const qr=MQ_QR_LIB_FACTORY()(0,'M');qr.addData(quoteLink());qr.make();const n=qr.getModuleCount(),size=Math.min(208*k,W*.27),qx=W-size-pad,qy=H-size-62*k,step=size/n;
           ctx.fillStyle='#fff';rounded(ctx,qx-17*k,qy-17*k,size+34*k,size+34*k,13*k);ctx.fill();
           ctx.fillStyle='#171717';for(let r=0;r<n;r++)for(let c=0;c<n;c++)if(qr.isDark(r,c))ctx.fillRect(qx+c*step,qy+r*step,Math.ceil(step),Math.ceil(step));
@@ -14132,7 +14138,7 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
       if(mqStudioSelected && mqStudioSelected.category==='qr'){additions.push(defaultQrLayer());}
       mqStudioDetached=true;mqStudioCustomLayers.push(...additions);mqStudioSelectedLayerId=null;renderLayerList();syncLayerControls();update();if(!silent)mqShowToast('Everything is freely movable');
     }
-    function select(t){mqStudioSelected=t;field('edit-title').textContent=t.title;field('shop-name').value=shopName;field('headline').value=t.headline;field('subline').value=t.sub;field('cta').value=t.cta;field('color').value=safeColor(color);field('quick-brand').value=safeColor(color);field('quick-surface').value='#e9d9c8';field('quick-accent').value='#d9be97';field('size').value=t.id==='yard'?'landscape':t.category==='print'?'poster':'square';setDefaults();field('composition').value=t.id==='premium'?'cinema':t.id==='yard'?'split':t.id==='before'?'original':t.id==='poster'?'window':'original';field('finish').value=t.mode==='luxury'?'bold':t.mode==='frame'?'editorial':t.category==='print'?'architect':'cinematic';field('accent').value=t.mode==='frame'?'frame':t.mode==='luxury'?'corner':t.id==='yard'?'stripe':'none';if(t.mode==='minimal'){field('headline-color').value='#382b36';field('sub-color').value='#685861'}workspace.style.display='flex';workspace.classList.add('mq-studio-fullscreen','mq-studio-canvas-first');workspace.classList.remove('mq-studio-property-mode','mq-studio-show-layers');if(field('layers-toggle'))field('layers-toggle').textContent='☷ All layers';previewShift=0;preview.style.transform='';update(true);detachBuiltIns(true);const photoArea=defaultProjectPhotoLayer(t,field('composition').value);if(photoArea){mqStudioCustomLayers.unshift(photoArea);renderLayerList();update();}resetStudioHistory();requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    function select(t){mqStudioSelected=t;field('edit-title').textContent=t.title;if(field('template-select'))field('template-select').value=t.id;field('shop-name').value=shopName;field('headline').value=t.headline;field('subline').value=t.sub;field('cta').value=t.cta;field('color').value=safeColor(color);field('quick-brand').value=safeColor(color);field('quick-surface').value='#e9d9c8';field('quick-accent').value='#d9be97';field('size').value=t.id==='yard'?'landscape':t.category==='print'?'poster':'square';setDefaults();field('composition').value=t.id==='premium'?'cinema':t.id==='yard'?'split':t.id==='before'?'original':t.id==='poster'?'window':'original';field('finish').value=t.mode==='luxury'?'bold':t.mode==='frame'?'editorial':t.category==='print'?'architect':'cinematic';field('accent').value=t.mode==='frame'?'frame':t.mode==='luxury'?'corner':t.id==='yard'?'stripe':'none';if(t.mode==='minimal'){field('headline-color').value='#382b36';field('sub-color').value='#685861'}workspace.style.display='flex';workspace.classList.add('mq-studio-fullscreen','mq-studio-canvas-first');workspace.classList.remove('mq-studio-property-mode','mq-studio-show-layers');if(field('layers-toggle'))field('layers-toggle').textContent='☷ All layers';previewShift=0;preview.style.transform='';update(true);detachBuiltIns(true);const photoArea=defaultProjectPhotoLayer(t,field('composition').value);if(photoArea){mqStudioCustomLayers.unshift(photoArea);renderLayerList();update();}resetStudioHistory();requestAnimationFrame(()=>requestAnimationFrame(()=>{
       // Browser chooses the actual scrollable ancestor (in Webflow .mq-content has overflow:visible).
       // scrollIntoView works on the document and nested scrollers, unlike manually altering .mq-content.
       if(workspace.classList.contains('mq-studio-fullscreen'))return;
@@ -14149,6 +14155,20 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
     }));}
     if(!root.dataset.studioInitialized){
       root.dataset.studioInitialized='true';
+      const templateSwitcher=field('template-select');
+      if(templateSwitcher){
+        MQ_STUDIO_TEMPLATES.forEach(t=>{const option=document.createElement('option');option.value=t.id;option.textContent=t.title;templateSwitcher.appendChild(option)});
+        templateSwitcher.addEventListener('change',()=>{
+          const next=MQ_STUDIO_TEMPLATES.find(t=>t.id===templateSwitcher.value);
+          if(!next || next.id===mqStudioSelected?.id)return;
+          // Switching resets the current template's live layers. Require confirmation.
+          if(!window.confirm('Switch designs? Unsaved changes to this design will be lost. Save your draft first if you want to keep it.')){
+            templateSwitcher.value=mqStudioSelected?.id||'';return;
+          }
+          select(next);
+        });
+      }
+
       field('quick-size').addEventListener('change',()=>{field('size').value=field('quick-size').value;update();});
       root.querySelectorAll('[data-studio-filter]').forEach(btn=>btn.addEventListener('click',()=>{root.querySelectorAll('[data-studio-filter]').forEach(b=>b.classList.toggle('active',b===btn));renderGallery(btn.dataset.studioFilter)}));
       ['shop-name','shop-font','shop-color','shop-scale','shop-spacing','shop-x','shop-y','logo-scale','composition','focal','finish','overlay','accent','accent-color','headline','emphasis','emphasis-color','subline','cta','color','size','headline-font','sub-font','cta-font','align','headline-color','sub-color','cta-bg','cta-color','headline-fx','sub-fx','brand-fx','cta-fx','url-fx','fx-color','fx-blur','fx-distance','fx-angle','fx-outline','headline-fill','gradient-end','headline-back','back-color','back-opacity','headline-scale','sub-scale','cta-scale','headline-spacing','sub-spacing','content-x','content-y','cta-x','cta-y','url-text','url-x','url-y','url-color','url-scale'].forEach(id=>{
