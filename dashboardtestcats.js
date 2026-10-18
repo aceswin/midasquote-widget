@@ -14310,22 +14310,20 @@ field('layer-forward').addEventListener('click',()=>{const idx=mqStudioCustomLay
         hoveredId=id;
         hoverbar.querySelector('[data-action=replace]').style.display=layer.type==='image'?'':'none';
         hoverbar.style.display='flex';
-        // Anchor to the object's top-right corner, NOT its centre or the cursor.
-        // One consistent 10px vertical gap and a 14px offset to the right.
+        // Anchor consistently from the object's top-left corner.
+        // Toolbar should appear 10px above and 10px to the right of the item.
         const cv=canvas.getBoundingClientRect(),wrap=preview.getBoundingClientRect();
         const scaleX=cv.width/canvas.width,scaleY=cv.height/canvas.height;
-        const objectRight=cv.left-wrap.left+(box[0]+box[2])*scaleX;
+        const objectLeft=cv.left-wrap.left+box[0]*scaleX;
         const objectTop=cv.top-wrap.top+box[1]*scaleY;
         const objectBottom=objectTop+box[3]*scaleY;
         const barWidth=hoverbar.offsetWidth||240,barHeight=hoverbar.offsetHeight||42;
-        const gap=10,rightOffset=14,margin=8;
-        // Prefer right-aligned, slightly offset from the object's right edge.
-        // Only clamp horizontally if the toolbar would leave the workspace.
-        const rightEdge=Math.max(barWidth+margin,Math.min(wrap.width-margin,objectRight+rightOffset));
+        const gap=10,leftOffset=10,margin=8;
+        const leftEdge=Math.max(margin,Math.min(wrap.width-barWidth-margin,objectLeft+leftOffset));
         const fitsAbove=objectTop-gap-barHeight>=margin;
-        hoverbar.style.left=rightEdge+'px';
+        hoverbar.style.left=leftEdge+'px';
         hoverbar.style.top=(fitsAbove?objectTop-gap:objectBottom+gap)+'px';
-        hoverbar.style.transform=fitsAbove?'translate(-100%,-100%)':'translate(-100%,0)';
+        hoverbar.style.transform='translate(0,'+(fitsAbove?'-100%':'0')+')';
         hoverLocked=true;
       }
       hoverbar.addEventListener('pointerenter',()=>clearTimeout(hoverHide));
