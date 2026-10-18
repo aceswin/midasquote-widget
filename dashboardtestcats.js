@@ -2860,6 +2860,20 @@ window.logoutMember = async function () {
 #mq-studio .mq-studio-template-switch label{font-size:12px;font-weight:700;color:#5c4b60}
 #mq-studio .mq-studio-template-switch select{width:auto!important;max-width:260px;min-width:170px;padding:10px 30px 10px 12px;border:1px solid #d8cedb;border-radius:10px;background:#fff;color:#2c2434;font-size:13px;font-weight:650}
 @media(max-width:700px){#mq-studio .mq-studio-template-switch{justify-content:flex-start}#mq-studio .mq-studio-template-switch select{max-width:210px}}
+
+/* v8.1.3: sortable layer stack */
+#mq-page-marketing .mq-studio-layer-list{display:flex;flex-direction:column;gap:6px!important}
+#mq-page-marketing .mq-layer-group-label{font:800 10px/1.4 Arial,sans-serif;letter-spacing:1.3px;color:#897c8c;margin:9px 4px 2px}
+#mq-page-marketing .mq-studio-layer-item.mq-reorderable{display:flex;align-items:center;gap:4px!important;min-height:44px!important;overflow:visible!important;padding:6px!important}
+#mq-page-marketing .mq-studio-layer-item.mq-reorderable .mq-layer-handle{flex:0 0 17px;color:#ac9eb1;cursor:grab;font-size:20px;user-select:none}
+#mq-page-marketing .mq-studio-layer-item.mq-reorderable>button.mq-layer-name{flex:1 1 auto!important;width:auto!important;min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;text-align:left!important;font-size:12px!important}
+#mq-page-marketing .mq-studio-layer-item.mq-reorderable>button.mq-layer-icon-btn{width:27px!important;height:30px!important;min-width:27px!important;flex:0 0 27px!important;padding:0!important;display:flex!important;align-items:center;justify-content:center;font-size:13px;border:0;border-radius:6px;background:#f1edf3;color:#37293d;cursor:pointer}
+#mq-page-marketing .mq-studio-layer-item.mq-reorderable.active>button.mq-layer-icon-btn{background:#fff;color:#2b2331}
+#mq-page-marketing .mq-studio-layer-item.mq-reorderable>button.mq-layer-icon-btn:disabled{opacity:.26;cursor:not-allowed}
+#mq-page-marketing .mq-studio-layer-item.mq-reorderable>button.mq-layer-delete{background:#ffe4e6!important;color:#a52234!important}
+#mq-page-marketing .mq-studio-layer-item.mq-drag-over{outline:2px dashed #8f5279;outline-offset:2px}
+#mq-page-marketing .mq-studio-layer-item.mq-dragging{opacity:.4}
+
 /* v4.9 canvas-first editing */
 #mq-page-marketing #mq-studio-workspace.mq-studio-canvas-first .mq-studio-editor-layout{grid-template-columns:1fr!important}
 #mq-page-marketing #mq-studio-workspace.mq-studio-canvas-first .mq-studio-fields{display:none!important}
@@ -3144,8 +3158,8 @@ window.logoutMember = async function () {
       <div class="mq-studio-layer-toolbar" style="margin-top:10px">
         <button type="button" class="mq-studio-muted-btn" id="mq-studio-layer-dup">Duplicate</button>
         <button type="button" class="mq-studio-muted-btn" id="mq-studio-layer-delete">Delete</button><button type="button" class="mq-studio-muted-btn" id="mq-studio-reset-layer-position">Reset position</button>
-        <button type="button" class="mq-studio-muted-btn" id="mq-studio-layer-back">Move earlier</button>
-        <button type="button" class="mq-studio-muted-btn" id="mq-studio-layer-forward">Move later</button>
+        <button type="button" class="mq-studio-muted-btn" id="mq-studio-layer-back">Send backward 1</button>
+        <button type="button" class="mq-studio-muted-btn" id="mq-studio-layer-forward">Bring forward 1</button>
       </div>
     </div>
   </div>
@@ -13805,12 +13819,75 @@ function defaultButtonLayer(text){return {id:layerUid(),type:'button',name:'Call
 function defaultFrameLayer(){return {id:layerUid(),type:'shape',name:`Border ${mqStudioLayerCounter}`,place:'front',x:48,y:48,w:984,h:984,rotation:0,opacity:100,shadowColor:'#000000',shadowBlur:0,shadowX:0,shadowY:0,shape:'rect',radius:24,fill:'#ffffff',fillOpacity:0,stroke:'#ffffff',strokeWidth:5}}
 function hydrateLayer(layer){const l=cloneObj(layer);if(l.type==='image'&&l.dataUrl){const img=new Image();img.src=l.dataUrl;l.image=img;}return l}
 function currentLayer(){return mqStudioCustomLayers.find(l=>l.id===mqStudioSelectedLayerId)||null}
-function renderLayerList(){const list=field('layer-list');if(!list)return;list.innerHTML='';mqStudioCustomLayers.forEach((layer,idx)=>{
- const row=document.createElement('div');row.className='mq-studio-layer-item'+(layer.id===mqStudioSelectedLayerId?' active':'');
- const name=document.createElement('button');name.type='button';name.textContent=`${idx+1}. ${layer.name||layer.type}`;name.style.cssText='flex:1;text-align:left;border:0;background:none;color:inherit;cursor:pointer';name.onclick=()=>{mqStudioSelectedLayerId=layer.id;syncLayerControls();mqStudioFocus='layer:'+layer.id;update()};row.appendChild(name);
- const toggle=(label,title,key)=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.title=title;b.style.cssText='border:0;border-radius:5px;padding:4px 7px;cursor:pointer;background:#fff;color:#39283a';b.onclick=()=>{layer[key]=!layer[key];renderLayerList();update()};row.appendChild(b)};
- toggle(layer.hidden?'◌':'◉',layer.hidden?'Show layer':'Hide layer','hidden');toggle(layer.locked?'🔒':'🔓',layer.locked?'Unlock layer':'Lock layer','locked');const remove=document.createElement('button');remove.type='button';remove.textContent='✕';remove.title='Delete '+(layer.name||'layer');remove.style.cssText='border:0;border-radius:5px;padding:4px 9px;cursor:pointer;background:#fee2e2;color:#991b1b';remove.onclick=()=>deleteStudioLayer(layer.id);row.appendChild(remove);list.appendChild(row);
- });field('layer-empty').style.display=mqStudioCustomLayers.length?'none':'';}
+// The array is stored back-to-front within each compositor group. The layer
+// panel presents the reverse (topmost first), matching professional editors.
+function studioLayerGroup(layer){return layer.place==='back'?'back':'front'}
+function moveStudioLayer(id,delta){
+ const layer=mqStudioCustomLayers.find(l=>l.id===id);if(!layer)return;
+ const group=studioLayerGroup(layer);
+ const ordered=mqStudioCustomLayers.filter(l=>studioLayerGroup(l)===group);
+ const i=ordered.findIndex(l=>l.id===id),j=i+delta;
+ if(j<0||j>=ordered.length)return;
+ [ordered[i],ordered[j]]=[ordered[j],ordered[i]];
+ const back=group==='back'?ordered:mqStudioCustomLayers.filter(l=>studioLayerGroup(l)==='back');
+ const front=group==='front'?ordered:mqStudioCustomLayers.filter(l=>studioLayerGroup(l)==='front');
+ mqStudioCustomLayers=[...back,...front];
+ mqStudioSelectedLayerId=id;renderLayerList();syncLayerControls();update();
+}
+function dropStudioLayer(sourceId,targetId,before){
+ if(!sourceId||!targetId||sourceId===targetId)return;
+ const source=mqStudioCustomLayers.find(l=>l.id===sourceId);
+ const target=mqStudioCustomLayers.find(l=>l.id===targetId);
+ if(!source||!target)return;
+ // When dragged onto a different group, join that group's compositor pass.
+ const group=studioLayerGroup(target);
+ source.place=group;
+ const visible=mqStudioCustomLayers.filter(l=>studioLayerGroup(l)===group&&l.id!==sourceId).reverse();
+ const targetIndex=visible.findIndex(l=>l.id===targetId);
+ visible.splice(Math.max(0,targetIndex+(before?0:1)),0,source);
+ const reversed=visible.reverse();
+ const other=mqStudioCustomLayers.filter(l=>studioLayerGroup(l)!==group&&l.id!==sourceId);
+ mqStudioCustomLayers=group==='back'?[...reversed,...other]:[...other,...reversed];
+ mqStudioSelectedLayerId=sourceId;renderLayerList();syncLayerControls();update();
+}
+function renderLayerList(){
+ const list=field('layer-list');if(!list)return;
+ list.innerHTML='';let groupLabel='';
+ const ordered=[...mqStudioCustomLayers].reverse();
+ ordered.forEach((layer,idx)=>{
+  const group=studioLayerGroup(layer);
+  if(group!==groupLabel){
+   groupLabel=group;
+   const label=document.createElement('div');label.className='mq-layer-group-label';
+   label.textContent=group==='front'?'FRONT · above template':'BACK · behind template';
+   list.appendChild(label);
+  }
+  const row=document.createElement('div');
+  row.className='mq-studio-layer-item mq-reorderable'+(layer.id===mqStudioSelectedLayerId?' active':'');
+  row.dataset.layerId=layer.id;
+  row.draggable=true;
+  row.title='Drag this row to change its stacking order';
+  const handle=document.createElement('span');handle.className='mq-layer-handle';handle.textContent='⠿';handle.title='Drag to reorder';row.appendChild(handle);
+  const name=document.createElement('button');name.type='button';name.className='mq-layer-name';
+  name.textContent=layer.name||layer.type;name.title='Select '+(layer.name||layer.type);
+  name.onclick=()=>{mqStudioSelectedLayerId=layer.id;syncLayerControls();mqStudioFocus='layer:'+layer.id;update();};row.appendChild(name);
+  const makeButton=(label,title,fn)=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.title=title;b.className='mq-layer-icon-btn';b.onclick=fn;row.appendChild(b);return b;};
+  const members=mqStudioCustomLayers.filter(l=>studioLayerGroup(l)===group);
+  const pos=members.findIndex(l=>l.id===layer.id);
+  const up=makeButton('↑','Bring forward one layer',()=>moveStudioLayer(layer.id,1));up.disabled=pos===members.length-1;
+  const down=makeButton('↓','Send backward one layer',()=>moveStudioLayer(layer.id,-1));down.disabled=pos===0;
+  makeButton(layer.hidden?'◌':'◉',layer.hidden?'Show layer':'Hide layer',()=>{layer.hidden=!layer.hidden;renderLayerList();update()});
+  makeButton(layer.locked?'🔒':'🔓',layer.locked?'Unlock layer':'Lock layer',()=>{layer.locked=!layer.locked;renderLayerList();update()});
+  const remove=makeButton('✕','Delete '+(layer.name||'layer'),()=>deleteStudioLayer(layer.id));remove.classList.add('mq-layer-delete');
+  row.addEventListener('dragstart',e=>{e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',layer.id);row.classList.add('mq-dragging');});
+  row.addEventListener('dragend',()=>{list.querySelectorAll('.mq-drag-over,.mq-dragging').forEach(el=>el.classList.remove('mq-drag-over','mq-dragging'));});
+  row.addEventListener('dragover',e=>{e.preventDefault();e.dataTransfer.dropEffect='move';row.classList.add('mq-drag-over');});
+  row.addEventListener('dragleave',e=>{if(!row.contains(e.relatedTarget))row.classList.remove('mq-drag-over');});
+  row.addEventListener('drop',e=>{e.preventDefault();e.stopPropagation();row.classList.remove('mq-drag-over');const sourceId=e.dataTransfer.getData('text/plain');const rect=row.getBoundingClientRect();const above=e.clientY<rect.top+rect.height/2;dropStudioLayer(sourceId,layer.id,above);});
+  list.appendChild(row);
+ });
+ field('layer-empty').style.display=mqStudioCustomLayers.length?'none':'';
+}
 
 function syncLayerControls(){const body=field('layer-controls-body');const layer=currentLayer();const title=field('context-title');if(title)title.textContent=layer?(layer.name||({text:'Text',button:'Button',image:'Image',shape:'Shape'}[layer.type]||'Object'))+' settings':'Select an object';if(!body)return;body.style.display=layer?'':'none';field('layer-empty').style.display=layer?'none':'';root.querySelectorAll('.mq-studio-layer-section').forEach(el=>el.classList.remove('show'));if(!layer)return;field('layer-name').value=layer.name||'';field('layer-place').value=layer.place||'front';field('layer-x').value=Math.round(layer.x||0);field('layer-y').value=Math.round(layer.y||0);field('layer-w').value=Math.round(layer.w||1);field('layer-h').value=Math.round(layer.h||1);field('layer-opacity').value=layer.opacity==null?100:layer.opacity;field('layer-rotation').value=layer.rotation||0;field('layer-shadow-color').value=layer.shadowColor||'#000000';field('layer-shadow-blur').value=layer.shadowBlur||0;field('layer-shadow-x').value=layer.shadowX||0;field('layer-shadow-y').value=layer.shadowY||0;
   if(layer.type==='text'||layer.type==='button'){field('layer-text-fields').classList.add('show');field('layer-text').value=layer.text||'';field('layer-font').value=layer.font||'playfair';field('layer-align').value=layer.align||'left';field('layer-color').value=layer.color||'#ffffff';field('layer-size').value=layer.size||56;field('layer-spacing').value=layer.spacing||0;field('layer-fx').value=layer.fx||'none';if(field('layer-style'))field('layer-style').value='custom';if(field('layer-text-stroke-width'))field('layer-text-stroke-width').value=layer.textStrokeWidth||0;}
@@ -14386,8 +14463,8 @@ const onMovableImage=e=>{const file=e.target.files?.[0];if(!file)return;if(!file
 field('layer-image-file').addEventListener('change',e=>{const layer=currentLayer();const file=e.target.files&&e.target.files[0];if(!layer||layer.type!=='image'||!file)return;const reader=new FileReader();reader.onload=()=>{const img=new Image();img.onload=()=>{layer.dataUrl=reader.result;layer.image=img;update();};img.src=reader.result;};reader.readAsDataURL(file);e.target.value='';});
 field('layer-delete').addEventListener('click',()=>deleteStudioLayer(mqStudioSelectedLayerId));field('reset-layer-position').addEventListener('click',()=>{const l=currentLayer();if(!l)return;const c=field('canvas'),k=c._mqUnit||1;const cw=c.width/k,ch=c.height/k;l.x=Math.round(Math.max(18,(cw-(l.w||200))/2));l.y=Math.round(Math.max(18,(ch-(l.h||50))/2));l.rotation=0;l.hidden=false;l.locked=false;syncLayerControls();update();mqShowToast('Layer returned to the centre');});if(field('delete-selected'))field('delete-selected').addEventListener('click',()=>{if(mqStudioSelectedLayerId)deleteStudioLayer(mqStudioSelectedLayerId);else mqShowToast('Select an element first','error')});
 field('layer-dup').addEventListener('click',()=>{const layer=currentLayer();if(!layer)return;const copy=hydrateLayer({...cloneObj(layer),id:layerUid(),name:(layer.name||layer.type)+' copy',x:(layer.x||0)+24,y:(layer.y||0)+24});mqStudioCustomLayers.push(copy);mqStudioSelectedLayerId=copy.id;syncLayerControls();update();});
-field('layer-back').addEventListener('click',()=>{const idx=mqStudioCustomLayers.findIndex(l=>l.id===mqStudioSelectedLayerId);if(idx>0){const [item]=mqStudioCustomLayers.splice(idx,1);mqStudioCustomLayers.splice(idx-1,0,item);renderLayerList();update();}});
-field('layer-forward').addEventListener('click',()=>{const idx=mqStudioCustomLayers.findIndex(l=>l.id===mqStudioSelectedLayerId);if(idx>=0&&idx<mqStudioCustomLayers.length-1){const [item]=mqStudioCustomLayers.splice(idx,1);mqStudioCustomLayers.splice(idx+1,0,item);renderLayerList();update();}});
+field('layer-back').addEventListener('click',()=>moveStudioLayer(mqStudioSelectedLayerId,-1));
+field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSelectedLayerId,1));
       field('copy-caption').addEventListener('click',()=>{const caption=[field('headline').value,field('subline').value,field('cta').value+': '+quoteLink()].join('\n\n');if(navigator.clipboard?.writeText)navigator.clipboard.writeText(caption).then(()=>mqShowToast('Caption copied')).catch(()=>mqShowToast('Could not copy caption','error'));else mqShowToast('Clipboard not available','error')});
       const canvas=field('canvas');
       let inlineEditor=null;
