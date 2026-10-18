@@ -2560,7 +2560,7 @@ window.logoutMember = async function () {
 
           
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700;900&family=Cinzel:wght@500;700;800&family=Cormorant+Garamond:wght@500;700&family=Montserrat:wght@400;600;700;800&family=Poppins:wght@400;600;700;800&family=Oswald:wght@500;600;700&family=Bebas+Neue&family=Libre+Baskerville:wght@400;700&family=DM+Serif+Display&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700;900&family=Cinzel:wght@500;700;800&family=Cormorant+Garamond:wght@500;700&family=Montserrat:wght@400;600;700;800&family=Poppins:wght@400;600;700;800&family=Oswald:wght@500;600;700&family=Bebas+Neue&family=Libre+Baskerville:wght@400;700&family=DM+Serif+Display&family=Anton&family=Abril+Fatface&family=League+Spartan:wght@500;700;800&family=Archivo+Black&family=Caveat:wght@500;700&family=Permanent+Marker&family=Fredoka:wght@500;700&family=Raleway:wght@500;700;800&family=Manrope:wght@500;700;800&family=Barlow+Condensed:wght@500;700&display=swap');
 
   #mq-page-marketing #mq-studio .mq-studio-quick-colors{width:100%;display:flex;align-items:center;gap:11px;flex-wrap:wrap;background:#fff;border:1px solid #e5dce6;border-radius:12px;padding:11px 14px;margin-bottom:12px;color:#46374b}
   #mq-page-marketing #mq-studio .mq-studio-quick-colors>span{font:800 10px/1.3 Arial,sans-serif;letter-spacing:.1em;margin-right:auto}
@@ -2622,7 +2622,7 @@ window.logoutMember = async function () {
   .mq-studio-preview-wrap{background:#f5f2f4;border:1px solid #eae5e9;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;min-width:0;position:sticky;top:16px}
   .mq-studio-preview-wrap canvas{display:block;width:auto;height:auto;max-width:100%;max-height:560px;border-radius:8px;box-shadow:0 10px 35px rgba(18,13,22,.17)}
   .mq-studio-preview-wrap p{font-size:10px;color:#8d8390;text-align:center;margin:12px 0 0}.mq-studio-preview-tip{font-size:11px;color:#6b6371;background:#fff;border:1px dashed #d8cfda;border-radius:10px;padding:8px 10px;margin:0 0 12px;text-align:center}
-  .mq-studio-preview-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-self:stretch;margin-bottom:9px}.mq-studio-preview-toolbar button{flex:1;min-width:140px}.mq-studio-preview-wrap canvas{touch-action:none}.mq-studio-layer-list{display:flex;flex-direction:column;gap:8px;margin:10px 0}.mq-studio-layer-item{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;padding:9px 11px;border:1px solid #d9d2dc;border-radius:10px;background:#fff;color:#322938;font:700 12px/1.3 Arial,sans-serif;cursor:pointer}.mq-studio-layer-item.active{background:#2d2436;color:#fff;border-color:#2d2436}.mq-studio-layer-item small{font-weight:400;opacity:.75}.mq-studio-layer-toolbar{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.mq-studio-layer-item{min-height:52px!important;padding:9px 10px!important;gap:10px!important;flex-wrap:nowrap!important;overflow:hidden!important}.mq-studio-layer-item>button:first-child{min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;padding:6px 2px!important;font-size:12px!important}.mq-studio-layer-item>button:not(:first-child){width:33px!important;height:32px!important;min-width:33px!important;flex:0 0 33px!important;padding:5px!important;display:grid!important;place-items:center!important}.mq-studio-preview-wrap{position:relative}.mq-studio-hoverbar{position:absolute;display:none;align-items:center;gap:8px;background:#211a29f5;border:1px solid #ffffff2b;border-radius:10px;padding:6px;z-index:10;box-shadow:0 8px 25px #0005;transform:translate(-50%,-100%);white-space:nowrap;max-width:95%}.mq-studio-hoverbar button{cursor:pointer;border:0;border-radius:8px;background:#fff;color:#291d31;font:700 12px/1.25 Arial,sans-serif!important;padding:10px 14px!important;min-height:36px!important;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center}.mq-studio-hoverbar button:hover{background:#e5cbaa}.mq-studio-layer-controls{margin-top:10px;padding-top:10px;border-top:1px solid #e6dfe7}.mq-studio-layer-section{display:none}.mq-studio-layer-section.show{display:block}.mq-studio-legacy{border-top:1px solid #e7e2e9;padding-top:17px;color:#716a76;font-size:12px}.mq-studio-legacy summary{cursor:pointer;color:#4d4152;font-weight:700}.mq-studio-legacy p{line-height:1.6}
+  .mq-studio-preview-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-self:stretch;margin-bottom:9px}.mq-studio-preview-toolbar button{flex:1;min-width:140px}.mq-studio-preview-wrap canvas{touch-action:none}.mq-studio-layer-list{display:flex;flex-direction:column;gap:8px;margin:10px 0}.mq-studio-layer-item{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;padding:9px 11px;border:1px solid #d9d2dc;border-radius:10px;background:#fff;color:#322938;font:700 12px/1.3 Arial,sans-serif;cursor:pointer}.mq-studio-layer-item.active{background:#2d2436;color:#fff;border-color:#2d2436}.mq-studio-layer-item small{font-weight:400;opacity:.75}.mq-studio-layer-toolbar{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.mq-font-preview-note{display:block;font-size:11px;color:#7a6f80;margin-top:4px}.mq-studio-layer-item{min-height:52px!important;padding:9px 10px!important;gap:10px!important;flex-wrap:nowrap!important;overflow:hidden!important}.mq-studio-layer-item>button:first-child{min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;padding:6px 2px!important;font-size:12px!important}.mq-studio-layer-item>button:not(:first-child){width:33px!important;height:32px!important;min-width:33px!important;flex:0 0 33px!important;padding:5px!important;display:grid!important;place-items:center!important}.mq-studio-preview-wrap{position:relative}.mq-studio-hoverbar{position:absolute;display:none;align-items:center;gap:8px;background:#211a29f5;border:1px solid #ffffff2b;border-radius:10px;padding:6px;z-index:10;box-shadow:0 8px 25px #0005;transform:translate(-50%,-100%);white-space:nowrap;max-width:95%}.mq-studio-hoverbar button{cursor:pointer;border:0;border-radius:8px;background:#fff;color:#291d31;font:700 12px/1.25 Arial,sans-serif!important;padding:10px 14px!important;min-height:36px!important;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center}.mq-studio-hoverbar button:hover{background:#e5cbaa}.mq-studio-layer-controls{margin-top:10px;padding-top:10px;border-top:1px solid #e6dfe7}.mq-studio-layer-section{display:none}.mq-studio-layer-section.show{display:block}.mq-studio-legacy{border-top:1px solid #e7e2e9;padding-top:17px;color:#716a76;font-size:12px}.mq-studio-legacy summary{cursor:pointer;color:#4d4152;font-weight:700}.mq-studio-legacy p{line-height:1.6}
   @media(max-width:1100px){.mq-studio-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.mq-studio-editor-layout{grid-template-columns:1fr}.mq-studio-preview-wrap{position:relative;top:auto}}
   @media(max-width:560px){.mq-studio-hero{padding:22px}.mq-studio-hero-star{display:none}.mq-studio-grid{gap:10px}.mq-studio-thumb{height:135px}.mq-studio-workspace{padding:14px}.mq-studio-editor-top{flex-wrap:wrap}.mq-studio-two-col,.mq-studio-color-grid,.mq-studio-three-col{grid-template-columns:1fr}}
   /* hard isolation against legacy dashboard styles */
@@ -2938,7 +2938,7 @@ window.logoutMember = async function () {
               <div class="mq-studio-nav" role="group" aria-label="Filter templates"><button type="button" class="active" data-studio-filter="all">All designs</button><button type="button" data-studio-filter="social">Social posts</button><button type="button" data-studio-filter="print">Posters & signs</button><button type="button" data-studio-filter="qr">QR promotions</button></div>
               <div class="mq-studio-grid" id="mq-studio-grid"></div>
               <div id="mq-studio-workspace" class="mq-studio-workspace" style="display:none">
-                <div class="mq-studio-editor-top"><div><span class="mq-studio-kicker">DESIGN STUDIO</span><h3 id="mq-studio-edit-title">Edit template</h3></div><div class="mq-studio-template-switch"><label for="mq-studio-template-select">Switch design</label><select id="mq-studio-template-select" aria-label="Switch design template"></select><button type="button" class="mq-studio-muted-btn" id="mq-studio-back">← All templates</button></div></div><div class="mq-studio-canvas-actions"><button type="button" id="mq-studio-quick-text">+ Add text</button><button type="button" id="mq-studio-quick-shape">+ Add shape</button><button type="button" id="mq-studio-properties-toggle">Selected object options</button><button type="button" id="mq-studio-settings-toggle">All design settings</button></div>
+                <div class="mq-studio-editor-top"><div><span class="mq-studio-kicker">DESIGN STUDIO</span><h3 id="mq-studio-edit-title">Edit template</h3></div><div class="mq-studio-template-switch"><label for="mq-studio-template-select">Switch design</label><select id="mq-studio-template-select" aria-label="Switch design template"></select><button type="button" class="mq-studio-muted-btn" id="mq-studio-back">← All templates</button></div></div><div class="mq-studio-canvas-actions"><button type="button" id="mq-studio-quick-text">+ Add text</button><button type="button" id="mq-studio-quick-shape">+ Add shape</button><button type="button" id="mq-studio-quick-arrow">+ Add arrow</button><button type="button" id="mq-studio-quick-doodle">+ Add doodle</button><button type="button" id="mq-studio-properties-toggle">Selected object options</button><button type="button" id="mq-studio-settings-toggle">All design settings</button></div>
                 <div class="mq-studio-editor-layout">
                   <div class="mq-studio-fields">
                     <div class="mq-studio-control-card">
@@ -3048,9 +3048,13 @@ window.logoutMember = async function () {
   <div class="mq-studio-layer-toolbar">
     <button type="button" class="mq-studio-muted-btn" id="mq-studio-add-text-layer">+ Text</button>
     <button type="button" class="mq-studio-muted-btn" id="mq-studio-add-shape-layer">+ Shape</button>
+    <button type="button" class="mq-studio-muted-btn" id="mq-studio-add-arrow-layer">+ Arrow</button>
+    <button type="button" class="mq-studio-muted-btn" id="mq-studio-add-doodle-layer">+ Doodle</button>
+    <button type="button" class="mq-studio-muted-btn" id="mq-studio-add-swipe-layer">+ Brush swipe</button>
     <button type="button" class="mq-studio-muted-btn" id="mq-studio-add-image-layer-btn">+ Image</button>
     <button type="button" class="mq-studio-muted-btn" id="mq-studio-add-frame-layer">+ Border</button>
   </div>
+  <span class="mq-font-preview-note">Font menus now include a live-style preview label such as “Abc 123”. Combine brush swipes, arrows, and doodles for social-style ads.</span>
   <input id="mq-studio-add-image-layer-input" type="file" accept="image/*" style="display:none">
   <div id="mq-studio-layer-list" class="mq-studio-layer-list"></div>
   <div id="mq-studio-layer-controls" class="mq-studio-layer-controls">
@@ -3084,8 +3088,12 @@ window.logoutMember = async function () {
       <div id="mq-studio-layer-text-fields" class="mq-studio-layer-section">
         <label>Text content<textarea id="mq-studio-layer-text"></textarea></label>
         <div class="mq-studio-two-col">
-          <label>Font<select id="mq-studio-layer-font"><option value="playfair">Playfair Display</option><option value="cinzel">Cinzel</option><option value="dmserif">DM Serif Display</option><option value="cormorant">Cormorant Garamond</option><option value="montserrat">Montserrat</option><option value="poppins">Poppins</option><option value="oswald">Oswald</option><option value="bebas">Bebas Neue</option><option value="libre">Libre Baskerville</option><option value="georgia">Georgia</option><option value="arial">Arial</option></select></label>
+          <label>Font<select id="mq-studio-layer-font"></select></label>
           <label>Align<select id="mq-studio-layer-align"><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option></select></label>
+        </div>
+        <div class="mq-studio-two-col">
+          <label>Text style<select id="mq-studio-layer-style"><option value="custom">Custom</option><option value="luxury">Luxury serif</option><option value="bold">Bold poster</option><option value="marker">Marker note</option><option value="story">Social story hook</option><option value="caption">Clean caption</option></select></label>
+          <label>Effect<select id="mq-studio-layer-fx"><option value="none">None</option><option value="soft">Soft shadow</option><option value="strong">Strong shadow</option><option value="glow">Glow</option><option value="outline">Outline</option></select></label>
         </div>
         <div class="mq-studio-two-col">
           <label>Text colour<input id="mq-studio-layer-color" type="color" value="#ffffff"></label>
@@ -3093,13 +3101,13 @@ window.logoutMember = async function () {
         </div>
         <div class="mq-studio-two-col">
           <label>Letter spacing<input id="mq-studio-layer-spacing" type="range" min="0" max="20" value="0"></label>
-          <label>Effect<select id="mq-studio-layer-fx"><option value="none">None</option><option value="soft">Soft shadow</option><option value="strong">Strong shadow</option><option value="glow">Glow</option><option value="outline">Outline</option></select></label>
+          <label>Stroke / outline width<input id="mq-studio-layer-text-stroke-width" type="range" min="0" max="30" value="0"></label>
         </div>
       </div>
 
       <div id="mq-studio-layer-shape-fields" class="mq-studio-layer-section">
         <div class="mq-studio-two-col">
-          <label>Shape<select id="mq-studio-layer-shape"><option value="rect">Rectangle</option><option value="circle">Circle / ellipse</option><option value="line">Line</option></select></label>
+          <label>Shape<select id="mq-studio-layer-shape"><option value="rect">Rectangle</option><option value="circle">Circle / ellipse</option><option value="line">Line</option><option value="arrow">Arrow</option><option value="curve">Curved arrow</option><option value="burst">Burst / rays</option><option value="brush">Brush swipe</option><option value="underline">Doodle underline</option></select></label>
           <label>Corner radius<input id="mq-studio-layer-radius" type="range" min="0" max="120" value="16"></label>
         </div>
         <div class="mq-studio-two-col">
@@ -13648,8 +13656,24 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     }
 
     const safeColor=(v,fallback)=>/^#[0-9a-f]{6}$/i.test(v||'')?v:(fallback||'#56314b');
-    const fontFace=(key,fallbackSerif=false)=>({playfair:'"Playfair Display", Georgia, serif',cinzel:'"Cinzel", Georgia, serif',dmserif:'"DM Serif Display", Georgia, serif',cormorant:'"Cormorant Garamond", Georgia, serif',libre:'"Libre Baskerville", Georgia, serif',montserrat:'"Montserrat", Arial, sans-serif',poppins:'"Poppins", Arial, sans-serif',oswald:'"Oswald", Arial, sans-serif',bebas:'"Bebas Neue", Impact, sans-serif',georgia:'Georgia, serif',arial:'Arial, sans-serif',trebuchet:'"Trebuchet MS", Arial, sans-serif',verdana:'Verdana, Arial, sans-serif',times:'"Times New Roman", Georgia, serif'}[key]||(fallbackSerif?'Georgia, serif':'Arial, sans-serif'));
+    const FONT_OPTIONS=[
+      ['playfair','Playfair Display'],['cinzel','Cinzel'],['dmserif','DM Serif Display'],['cormorant','Cormorant Garamond'],['abril','Abril Fatface'],['libre','Libre Baskerville'],
+      ['montserrat','Montserrat'],['poppins','Poppins'],['raleway','Raleway'],['manrope','Manrope'],['spartan','League Spartan'],['archivo','Archivo Black'],['oswald','Oswald'],['anton','Anton'],['bebas','Bebas Neue'],['barlow','Barlow Condensed'],
+      ['fredoka','Fredoka'],['marker','Permanent Marker'],['caveat','Caveat'],['georgia','Georgia'],['arial','Arial'],['trebuchet','Trebuchet'],['verdana','Verdana'],['times','Times New Roman']
+    ];
+    const fontFace=(key,fallbackSerif=false)=>({playfair:'"Playfair Display", Georgia, serif',cinzel:'"Cinzel", Georgia, serif',dmserif:'"DM Serif Display", Georgia, serif',cormorant:'"Cormorant Garamond", Georgia, serif',abril:'"Abril Fatface", Georgia, serif',libre:'"Libre Baskerville", Georgia, serif',montserrat:'"Montserrat", Arial, sans-serif',poppins:'"Poppins", Arial, sans-serif',raleway:'"Raleway", Arial, sans-serif',manrope:'"Manrope", Arial, sans-serif',spartan:'"League Spartan", Arial, sans-serif',archivo:'"Archivo Black", Arial, sans-serif',oswald:'"Oswald", Arial, sans-serif',anton:'"Anton", Impact, sans-serif',bebas:'"Bebas Neue", Impact, sans-serif',barlow:'"Barlow Condensed", Arial, sans-serif',fredoka:'"Fredoka", Arial, sans-serif',marker:'"Permanent Marker", "Trebuchet MS", sans-serif',caveat:'"Caveat", "Trebuchet MS", cursive',georgia:'Georgia, serif',arial:'Arial, sans-serif',trebuchet:'"Trebuchet MS", Arial, sans-serif',verdana:'Verdana, Arial, sans-serif',times:'"Times New Roman", Georgia, serif'}[key]||(fallbackSerif?'Georgia, serif':'Arial, sans-serif'));
     const font=(size,fam,weight=700)=>`${weight} ${Math.round(size)}px ${fontFace(fam)}`;
+    function populateStudioFontSelects(){
+      const selectors=['shop-font','headline-font','sub-font','cta-font','layer-font'];
+      const preferred={
+        'shop-font':'playfair','headline-font':'playfair','sub-font':'montserrat','cta-font':'montserrat','layer-font':'playfair'
+      };
+      selectors.forEach(id=>{
+        const select=field(id);if(!select)return;const current=select.value||preferred[id]||'playfair';
+        select.innerHTML=FONT_OPTIONS.map(([value,label])=>`<option value="${value}">${label} · Abc 123</option>`).join('');
+        select.value=current;
+      });
+    }
     const textWidthWithSpacing=(ctx,txt,spacing=0)=>{txt=String(txt||'');if(!txt)return 0;return ctx.measureText(txt).width+Math.max(0,txt.length-1)*spacing};
     const wrap=(ctx,txt,maxWidth,maxLines=5,spacing=0)=>{
       const words=String(txt||'').split(/\s+/).filter(Boolean),lines=[];let current='';
@@ -13665,6 +13689,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       'content-x':v=>String(v),'content-y':v=>String(v),'cta-x':v=>String(v),'cta-y':v=>String(v),'url-x':v=>String(v),'url-y':v=>String(v)
     };
     function syncRangeLabels(){Object.keys(rangeOutputs).forEach(id=>{const input=field(id),out=field(id+'-out');if(input&&out)out.textContent=rangeOutputs[id](input.value)})}
+    populateStudioFontSelects();
 
 let mqStudioDetached=false;
 let mqStudioCustomLayers=[];
@@ -13674,6 +13699,9 @@ const layerUid=()=>`lyr_${Date.now().toString(36)}_${(mqStudioLayerCounter++).to
 const cloneObj=o=>JSON.parse(JSON.stringify(o));
 function defaultTextLayer(){return {id:layerUid(),type:'text',name:`Text ${mqStudioLayerCounter}`,place:'front',x:120,y:120,w:420,h:140,rotation:0,opacity:100,shadowColor:'#000000',shadowBlur:0,shadowX:0,shadowY:0,text:'New text',font:'playfair',align:'left',color:'#ffffff',size:56,spacing:0,fx:'soft'}}
 function defaultShapeLayer(){return {id:layerUid(),type:'shape',name:`Shape ${mqStudioLayerCounter}`,place:'front',x:150,y:150,w:260,h:160,rotation:0,opacity:100,shadowColor:'#000000',shadowBlur:0,shadowX:0,shadowY:0,shape:'rect',radius:16,fill:'#ffffff',stroke:'#ffffff',strokeWidth:0}}
+function defaultArrowLayer(kind='arrow'){return {id:layerUid(),type:'shape',name:kind==='curve'?'Curved arrow':'Arrow',place:'front',x:170,y:240,w:260,h:180,rotation:0,opacity:100,shadowColor:'#000000',shadowBlur:12,shadowX:0,shadowY:6,shape:kind,radius:20,fill:'#ffffff',stroke:'#ffffff',strokeWidth:12}}
+function defaultDoodleLayer(kind='burst'){return {id:layerUid(),type:'shape',name:kind==='underline'?'Underline doodle':'Doodle',place:'front',x:200,y:160,w:240,h:140,rotation:0,opacity:100,shadowColor:'#000000',shadowBlur:0,shadowX:0,shadowY:0,shape:kind,radius:20,fill:'#ffffff',stroke:'#ffffff',strokeWidth:10}}
+function defaultBrushSwipeLayer(){return {id:layerUid(),type:'shape',name:'Brush swipe',place:'front',x:180,y:160,w:420,h:120,rotation:-4,opacity:100,shadowColor:'#000000',shadowBlur:0,shadowX:0,shadowY:0,shape:'brush',radius:24,fill:'#f5d94a',stroke:'#f5d94a',strokeWidth:0}}
 function defaultProjectPhotoLayer(t,composition){
   const landscape=field('size').value==='landscape',portrait=field('size').value==='portrait'||field('size').value==='poster',story=field('size').value==='story';
   const W=landscape?1620:1080,H=story?1920:portrait?field('size').value==='poster'?1620:1350:1080;
@@ -13730,12 +13758,12 @@ function renderLayerList(){const list=field('layer-list');if(!list)return;list.i
  });field('layer-empty').style.display=mqStudioCustomLayers.length?'none':'';}
 
 function syncLayerControls(){const body=field('layer-controls-body');const layer=currentLayer();const title=field('context-title');if(title)title.textContent=layer?(layer.name||({text:'Text',button:'Button',image:'Image',shape:'Shape'}[layer.type]||'Object'))+' settings':'Select an object';if(!body)return;body.style.display=layer?'':'none';field('layer-empty').style.display=layer?'none':'';root.querySelectorAll('.mq-studio-layer-section').forEach(el=>el.classList.remove('show'));if(!layer)return;field('layer-name').value=layer.name||'';field('layer-place').value=layer.place||'front';field('layer-x').value=Math.round(layer.x||0);field('layer-y').value=Math.round(layer.y||0);field('layer-w').value=Math.round(layer.w||1);field('layer-h').value=Math.round(layer.h||1);field('layer-opacity').value=layer.opacity==null?100:layer.opacity;field('layer-rotation').value=layer.rotation||0;field('layer-shadow-color').value=layer.shadowColor||'#000000';field('layer-shadow-blur').value=layer.shadowBlur||0;field('layer-shadow-x').value=layer.shadowX||0;field('layer-shadow-y').value=layer.shadowY||0;
-  if(layer.type==='text'||layer.type==='button'){field('layer-text-fields').classList.add('show');field('layer-text').value=layer.text||'';field('layer-font').value=layer.font||'playfair';field('layer-align').value=layer.align||'left';field('layer-color').value=layer.color||'#ffffff';field('layer-size').value=layer.size||56;field('layer-spacing').value=layer.spacing||0;field('layer-fx').value=layer.fx||'none';}
+  if(layer.type==='text'||layer.type==='button'){field('layer-text-fields').classList.add('show');field('layer-text').value=layer.text||'';field('layer-font').value=layer.font||'playfair';field('layer-align').value=layer.align||'left';field('layer-color').value=layer.color||'#ffffff';field('layer-size').value=layer.size||56;field('layer-spacing').value=layer.spacing||0;field('layer-fx').value=layer.fx||'none';if(field('layer-style'))field('layer-style').value='custom';if(field('layer-text-stroke-width'))field('layer-text-stroke-width').value=layer.textStrokeWidth||0;}
   if(layer.type==='shape'||layer.type==='button'){field('layer-shape-fields').classList.add('show');field('layer-shape').value=layer.shape||'rect';field('layer-radius').value=layer.radius||0;field('layer-fill').value=layer.fill||'#ffffff';field('layer-stroke').value=layer.stroke||'#ffffff';field('layer-stroke-width').value=layer.strokeWidth||0;}
   if(layer.type==='image'){field('layer-image-fields').classList.add('show');field('layer-fit').value=layer.fit||'cover';field('layer-image-radius').value=layer.radius||0;field('layer-image-stroke').value=layer.stroke||'#ffffff';field('layer-image-stroke-width').value=layer.strokeWidth||0;}
   renderLayerList();
 }
-function applyLayerControls(){const layer=currentLayer();if(!layer)return;layer.name=field('layer-name').value||layer.name;layer.place=field('layer-place').value;layer.x=Number(field('layer-x').value)||0;layer.y=Number(field('layer-y').value)||0;layer.w=Math.max(1,Number(field('layer-w').value)||1);layer.h=Math.max(1,Number(field('layer-h').value)||1);layer.opacity=Number(field('layer-opacity').value)||0;layer.rotation=Number(field('layer-rotation').value)||0;layer.shadowColor=field('layer-shadow-color').value;layer.shadowBlur=Number(field('layer-shadow-blur').value)||0;layer.shadowX=Number(field('layer-shadow-x').value)||0;layer.shadowY=Number(field('layer-shadow-y').value)||0;if(layer.type==='text'||layer.type==='button'){layer.text=field('layer-text').value;layer.font=field('layer-font').value;layer.align=field('layer-align').value;layer.color=field('layer-color').value;layer.size=Number(field('layer-size').value)||56;layer.spacing=Number(field('layer-spacing').value)||0;layer.fx=field('layer-fx').value;}if(layer.type==='shape'||layer.type==='button'){layer.shape=field('layer-shape').value;layer.radius=Number(field('layer-radius').value)||0;layer.fill=field('layer-fill').value;layer.stroke=field('layer-stroke').value;layer.strokeWidth=Number(field('layer-stroke-width').value)||0;}if(layer.type==='image'){layer.fit=field('layer-fit').value;layer.radius=Number(field('layer-image-radius').value)||0;layer.stroke=field('layer-image-stroke').value;layer.strokeWidth=Number(field('layer-image-stroke-width').value)||0;}renderLayerList();}
+function applyLayerControls(){const layer=currentLayer();if(!layer)return;layer.name=field('layer-name').value||layer.name;layer.place=field('layer-place').value;layer.x=Number(field('layer-x').value)||0;layer.y=Number(field('layer-y').value)||0;layer.w=Math.max(1,Number(field('layer-w').value)||1);layer.h=Math.max(1,Number(field('layer-h').value)||1);layer.opacity=Number(field('layer-opacity').value)||0;layer.rotation=Number(field('layer-rotation').value)||0;layer.shadowColor=field('layer-shadow-color').value;layer.shadowBlur=Number(field('layer-shadow-blur').value)||0;layer.shadowX=Number(field('layer-shadow-x').value)||0;layer.shadowY=Number(field('layer-shadow-y').value)||0;if(layer.type==='text'||layer.type==='button'){layer.text=field('layer-text').value;layer.font=field('layer-font').value;layer.align=field('layer-align').value;layer.color=field('layer-color').value;layer.size=Number(field('layer-size').value)||56;layer.spacing=Number(field('layer-spacing').value)||0;layer.fx=field('layer-fx').value;layer.textStrokeWidth=Number(field('layer-text-stroke-width')?.value||0)||0;}if(layer.type==='shape'||layer.type==='button'){layer.shape=field('layer-shape').value;layer.radius=Number(field('layer-radius').value)||0;layer.fill=field('layer-fill').value;layer.stroke=field('layer-stroke').value;layer.strokeWidth=Number(field('layer-stroke-width').value)||0;}if(layer.type==='image'){layer.fit=field('layer-fit').value;layer.radius=Number(field('layer-image-radius').value)||0;layer.stroke=field('layer-image-stroke').value;layer.strokeWidth=Number(field('layer-image-stroke-width').value)||0;}renderLayerList();}
 function deleteStudioLayer(id){
  const target=mqStudioCustomLayers.find(l=>l.id===id);if(!target)return;
  mqStudioCustomLayers=mqStudioCustomLayers.filter(l=>l.id!==id);
@@ -13825,35 +13853,33 @@ function applyRawShadow(ctx,color,blur,dx,dy,k){ctx.shadowColor=color||'rgba(0,0
 function clearRawShadow(ctx){ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetX=0;ctx.shadowOffsetY=0;}
 function drawImageFit(ctx,img,x,y,w,h,fit){if(!img)return;if(fit==='stretch'){ctx.drawImage(img,x,y,w,h);return;}if(fit==='contain'){const ratio=Math.min(w/img.width,h/img.height),iw=img.width*ratio,ih=img.height*ratio;ctx.drawImage(img,x+(w-iw)/2,y+(h-ih)/2,iw,ih);return;}cover(ctx,img,x,y,w,h);}
 function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y=(layer.y||0)*k,w=Math.max(1,(layer.w||1)*k),h=Math.max(1,(layer.h||1)*k),rot=(layer.rotation||0)*Math.PI/180;ctx.save();ctx.globalAlpha=Math.max(0,Math.min(1,(layer.opacity==null?100:layer.opacity)/100));ctx.translate(x+w/2,y+h/2);ctx.rotate(rot);ctx.translate(-(x+w/2),-(y+h/2));applyRawShadow(ctx,layer.shadowColor,layer.shadowBlur,layer.shadowX,layer.shadowY,k);let region=[x,y,w,h];if(layer.type==='shape'){
-  // A single filled path casts the shadow. Canvas shadows are rendered behind
-  // the fill automatically, while the outline is drawn separately without one.
   const blur=Math.max(0,Number(layer.shadowBlur)||0);
   const dx=Number(layer.shadowX)||0,dy=Number(layer.shadowY)||0;
-  const hasShadow=blur>0||dx!==0||dy!==0;
-  const hasFill=(layer.fillOpacity??100)!==0 && layer.shape!=='line';
+  const shape=layer.shape||'rect';
+  const sw=Math.max(1,Number(layer.strokeWidth)||0)*k;
+  const buildPath=()=>{
+    ctx.beginPath();
+    if(shape==='circle'){ctx.ellipse(x+w/2,y+h/2,w/2,h/2,0,0,Math.PI*2);return 'fill';}
+    if(shape==='line'){ctx.moveTo(x,y+h);ctx.lineTo(x+w,y);return 'stroke';}
+    if(shape==='rect'){ctx.roundRect(x,y,w,h,(layer.radius||0)*k);return 'fill';}
+    if(shape==='brush'){
+      ctx.moveTo(x+w*0.02,y+h*0.50);ctx.quadraticCurveTo(x+w*0.10,y+h*0.06,x+w*0.28,y+h*0.14);ctx.lineTo(x+w*0.92,y+h*0.08);ctx.quadraticCurveTo(x+w*1.00,y+h*0.10,x+w*0.97,y+h*0.44);ctx.lineTo(x+w*0.95,y+h*0.78);ctx.quadraticCurveTo(x+w*0.88,y+h*0.96,x+w*0.72,y+h*0.88);ctx.lineTo(x+w*0.07,y+h*0.92);ctx.quadraticCurveTo(x-w*0.01,y+h*0.82,x+w*0.02,y+h*0.50);ctx.closePath();return 'fill';}
+    if(shape==='arrow'){
+      const shaft=Math.max(h*0.20,sw*1.6),mid=y+h*0.56,head=w*0.24;ctx.moveTo(x,mid-shaft/2);ctx.lineTo(x+w-head,mid-shaft/2);ctx.lineTo(x+w-head,mid-h*0.18);ctx.lineTo(x+w,mid);ctx.lineTo(x+w-head,mid+h*0.18);ctx.lineTo(x+w-head,mid+shaft/2);ctx.lineTo(x,mid+shaft/2);ctx.closePath();return 'fill';}
+    if(shape==='curve'){
+      ctx.moveTo(x+w*0.15,y+h*0.85);ctx.quadraticCurveTo(x+w*0.20,y+h*0.10,x+w*0.72,y+h*0.18);return 'curve';}
+    if(shape==='underline'){
+      ctx.moveTo(x+w*0.04,y+h*0.65);ctx.quadraticCurveTo(x+w*0.30,y+h*0.94,x+w*0.52,y+h*0.70);ctx.quadraticCurveTo(x+w*0.72,y+h*0.48,x+w*0.96,y+h*0.62);return 'stroke';}
+    if(shape==='burst'){
+      const cx=x+w/2,cy=y+h/2,inner=Math.min(w,h)*0.10,outer=Math.min(w,h)*0.48;for(let i=0;i<10;i++){const a=(Math.PI*2/10)*i-Math.PI/2;ctx.moveTo(cx+Math.cos(a)*inner,cy+Math.sin(a)*inner);ctx.lineTo(cx+Math.cos(a)*outer,cy+Math.sin(a)*outer);}return 'stroke';}
+    ctx.roundRect(x,y,w,h,(layer.radius||0)*k);return 'fill';
+  };
+  const mode=buildPath();
+  if(blur>0||dx!==0||dy!==0){ctx.shadowColor=layer.shadowColor||'#000000';ctx.shadowBlur=Math.max(8,blur)*k;ctx.shadowOffsetX=dx*k;ctx.shadowOffsetY=dy*k;}
+  if(mode==='fill'){ctx.fillStyle=layer.fill||'#ffffff';ctx.fill();}
+  else {ctx.strokeStyle=layer.stroke||layer.fill||'#ffffff';ctx.lineWidth=Math.max(shape==='burst'||shape==='underline'||shape==='curve'?6:4,Number(layer.strokeWidth)||0)*k;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke();if(shape==='curve'){const tipX=x+w*0.72,tipY=y+h*0.18;clearRawShadow(ctx);ctx.beginPath();ctx.moveTo(tipX,tipY);ctx.lineTo(tipX-w*0.08,tipY+h*0.01);ctx.lineTo(tipX-w*0.02,tipY+h*0.10);ctx.stroke();}}
   clearRawShadow(ctx);
-  ctx.beginPath();
-  if(layer.shape==='circle')ctx.ellipse(x+w/2,y+h/2,w/2,h/2,0,0,Math.PI*2);
-  else if(layer.shape==='line'){ctx.moveTo(x,y+h);ctx.lineTo(x+w,y);}
-  else ctx.roundRect(x,y,w,h,(layer.radius||0)*k);
-  if(hasShadow){
-    ctx.shadowColor=layer.shadowColor||'#000000';
-    ctx.shadowBlur=Math.max(8,blur)*k;
-    ctx.shadowOffsetX=dx*k;
-    ctx.shadowOffsetY=dy*k;
-  }
-  if(hasFill){ctx.fillStyle=layer.fill||'#ffffff';ctx.fill();}
-  else if(layer.shape==='line' && hasShadow){
-    ctx.strokeStyle=layer.stroke||'#ffffff';
-    ctx.lineWidth=Math.max(4,Number(layer.strokeWidth)||0)*k;
-    ctx.stroke();
-  }
-  clearRawShadow(ctx);
-  if(layer.shape==='line'||(Number(layer.strokeWidth)||0)>0){
-    ctx.strokeStyle=layer.stroke||'#ffffff';
-    ctx.lineWidth=Math.max(layer.shape==='line'?4:0,Number(layer.strokeWidth)||0)*k;
-    ctx.stroke();
-  }
+  if(mode==='fill' && (Number(layer.strokeWidth)||0)>0){buildPath();ctx.strokeStyle=layer.stroke||'#ffffff';ctx.lineWidth=sw;ctx.lineJoin='round';ctx.lineCap='round';ctx.stroke();}
 }else if(layer.type==='image'){
   // Shadow is a separate rounded silhouette OUTSIDE the image clip. The image
   // and border are then rendered shadow-free so the shadow cannot disappear
@@ -13873,7 +13899,7 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
   else if(layer.projectPhoto){ctx.fillStyle=layer.fill||'#e9d9c8';ctx.fillRect(x,y,w,h);ctx.fillStyle='rgba(255,255,255,.16)';ctx.fillRect(x+w*.12,y+h*.14,w*.76,h*.72);}
   ctx.restore();
   if((layer.strokeWidth||0)>0){ctx.strokeStyle=layer.stroke||'#ffffff';ctx.lineWidth=(layer.strokeWidth||0)*k;ctx.beginPath();ctx.roundRect(x,y,w,h,radius);ctx.stroke();}
-}else if(layer.type==='button'){ctx.fillStyle=layer.fill||'#f2e1ca';ctx.beginPath();ctx.roundRect(x,y,w,h,Math.min(w/2,h/2,(layer.radius??12)*k));ctx.fill();if((layer.strokeWidth||0)>0){ctx.strokeStyle=layer.stroke||'#ffffff';ctx.lineWidth=layer.strokeWidth*k;ctx.stroke();}clearRawShadow(ctx);ctx.fillStyle=layer.color||'#292234';let size=Math.max(8,(layer.size||24))*k;const space=(layer.spacing||0)*k;const label=String(layer.text||'');ctx.font=font(size,layer.font||'montserrat',700);while(size>9*k && textWidthWithSpacing(ctx,label,space)>w-18*k){size-=k;ctx.font=font(size,layer.font||'montserrat',700);}drawSpacedTextFx(ctx,label,x+w/2,y+h/2+size*.35,space,'center',layer.fx||'none',layer.shadowColor||'#000000',k,layer);}else if(layer.type==='text'){const size=Math.max(8,(layer.size||56))*k;ctx.font=font(size,layer.font||'playfair',700);ctx.fillStyle=layer.color||'#ffffff';const lines=wrap(ctx,String(layer.text||''),w,10,(layer.spacing||0)*k);const lineHeight=size*1.18;const align=layer.align||'left';const tx=align==='left'?x:align==='center'?x+w/2:x+w;drawWrappedLinesFx(ctx,lines,tx,y+size,lineHeight,(layer.spacing||0)*k,align,layer.fx||'none',layer.shadowColor||'#000000',k,layer);region=[x,y,w,Math.max(h,lines.length*lineHeight+size*.2)];}
+}else if(layer.type==='button'){ctx.fillStyle=layer.fill||'#f2e1ca';ctx.beginPath();ctx.roundRect(x,y,w,h,Math.min(w/2,h/2,(layer.radius??12)*k));ctx.fill();if((layer.strokeWidth||0)>0){ctx.strokeStyle=layer.stroke||'#ffffff';ctx.lineWidth=layer.strokeWidth*k;ctx.stroke();}clearRawShadow(ctx);ctx.fillStyle=layer.color||'#292234';let size=Math.max(8,(layer.size||24))*k;const space=(layer.spacing||0)*k;const label=String(layer.text||'');ctx.font=font(size,layer.font||'montserrat',700);while(size>9*k && textWidthWithSpacing(ctx,label,space)>w-18*k){size-=k;ctx.font=font(size,layer.font||'montserrat',700);}drawSpacedTextFx(ctx,label,x+w/2,y+h/2+size*.35,space,'center',layer.fx||'none',layer.shadowColor||'#000000',k,layer);if((layer.textStrokeWidth||0)>0){ctx.lineWidth=(layer.textStrokeWidth||0)*k;ctx.strokeStyle=layer.stroke||'#ffffff';ctx.textAlign='center';ctx.textBaseline='alphabetic';ctx.strokeText(label,x+w/2,y+h/2+size*.35);}}else if(layer.type==='text'){const size=Math.max(8,(layer.size||56))*k;ctx.font=font(size,layer.font||'playfair',700);ctx.fillStyle=layer.color||'#ffffff';const lines=wrap(ctx,String(layer.text||''),w,10,(layer.spacing||0)*k);const lineHeight=size*1.18;const align=layer.align||'left';const tx=align==='left'?x:align==='center'?x+w/2:x+w;drawWrappedLinesFx(ctx,lines,tx,y+size,lineHeight,(layer.spacing||0)*k,align,layer.fx||'none',layer.shadowColor||'#000000',k,layer);if((layer.textStrokeWidth||0)>0){ctx.lineWidth=(layer.textStrokeWidth||0)*k;ctx.strokeStyle=layer.stroke||'#ffffff';ctx.textAlign=align;ctx.textBaseline='alphabetic';lines.forEach((line,i)=>ctx.strokeText(line,tx,y+size+i*lineHeight));}region=[x,y,w,Math.max(h,lines.length*lineHeight+size*.2)];}
   clearRawShadow(ctx);ctx.restore();regions.push({id:layer.id,rect:region});if(highlight){ctx.save();ctx.strokeStyle='#38bdf8';ctx.lineWidth=3*k;ctx.setLineDash([12*k,7*k]);ctx.strokeRect(region[0],region[1],region[2],region[3]);ctx.setLineDash([]);[[region[0],region[1]],[region[0]+region[2],region[1]],[region[0],region[1]+region[3]],[region[0]+region[2],region[1]+region[3]]].forEach(([hx,hy])=>{ctx.fillStyle='#fff';ctx.fillRect(hx-9*k,hy-9*k,18*k,18*k);ctx.strokeRect(hx-9*k,hy-9*k,18*k,18*k)});ctx.restore();}}
     function drawHeadlineWithEmphasis(ctx,lines,x,y,lineHeight,spacing,align,effect,effectColor,k,phrase,phraseColor){
       phrase=String(phrase||'').trim();
@@ -14278,13 +14304,17 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
 if(field('detach'))field('detach').addEventListener('click',()=>{if(mqStudioDetached){mqShowToast('Elements are already independent layers');return;}detachBuiltIns(false);});
 field('add-text-layer').addEventListener('click',()=>addLayer(defaultTextLayer()));
 field('add-shape-layer').addEventListener('click',()=>addLayer(defaultShapeLayer()));
+if(field('add-arrow-layer'))field('add-arrow-layer').addEventListener('click',()=>addLayer(defaultArrowLayer('arrow')));
+if(field('add-doodle-layer'))field('add-doodle-layer').addEventListener('click',()=>addLayer(defaultDoodleLayer('burst')));
+if(field('add-swipe-layer'))field('add-swipe-layer').addEventListener('click',()=>addLayer(defaultBrushSwipeLayer()));
 field('add-frame-layer').addEventListener('click',()=>addLayer(defaultFrameLayer()));
 field('add-image-layer-btn').addEventListener('click',()=>field('add-image-layer-input').click());
+if(field('layer-style'))field('layer-style').addEventListener('change',()=>{const layer=currentLayer();if(!layer||!(layer.type==='text'||layer.type==='button'))return;const preset=field('layer-style').value;const presets={custom:null,luxury:{font:'abril',size:64,spacing:0,fx:'soft',textStrokeWidth:0,color:'#fff8ef'},bold:{font:'anton',size:74,spacing:1,fx:'strong',textStrokeWidth:0,color:'#ffffff'},marker:{font:'marker',size:54,spacing:0,fx:'none',textStrokeWidth:0,color:'#111111'},story:{font:'spartan',size:68,spacing:1,fx:'strong',textStrokeWidth:0,color:'#ffffff'},caption:{font:'manrope',size:34,spacing:0,fx:'soft',textStrokeWidth:0,color:'#ffffff'}};const cfg=presets[preset];if(!cfg)return;Object.assign(layer,cfg);syncLayerControls();update();});
       if(field('direct-image-btn'))field('direct-image-btn').addEventListener('click',()=>field('direct-image-input').click());
       field('photo-quick').addEventListener('click',()=>field('photo').click());
       
 const onMovableImage=e=>{const file=e.target.files?.[0];if(!file)return;if(!file.type.startsWith('image/')){mqShowToast('Please choose an image','error');return;}const reader=new FileReader();reader.onerror=()=>mqShowToast('Image file could not be read','error');reader.onload=()=>{const img=new Image();img.onerror=()=>mqShowToast('Image could not be loaded','error');img.onload=()=>{const cv=field('canvas'),k=cv._mqUnit||1;const ratio=img.naturalWidth/img.naturalHeight;const w=Math.min(520,Math.max(180,cv.width/k*.42));const newLayer={id:layerUid(),type:'image',name:`Image ${mqStudioLayerCounter}`,place:'front',x:Math.round(cv.width/k*.24),y:Math.round(cv.height/k*.28),w:Math.round(w),h:Math.round(w/ratio),rotation:0,opacity:100,shadowColor:'#000000',shadowBlur:0,shadowX:0,shadowY:0,fit:'contain',radius:0,stroke:'#ffffff',strokeWidth:0,dataUrl:String(reader.result),image:img};addLayer(newLayer);mqStudioSelectedLayerId=newLayer.id;syncLayerControls();update();mqShowToast('Movable image added — drag or resize it on the preview');};img.src=String(reader.result);};reader.readAsDataURL(file);e.target.value='';};field('add-image-layer-input').addEventListener('change',onMovableImage);field('direct-image-input').addEventListener('change',onMovableImage);
-['layer-name','layer-place','layer-x','layer-y','layer-w','layer-h','layer-opacity','layer-rotation','layer-shadow-color','layer-shadow-blur','layer-shadow-x','layer-shadow-y','layer-text','layer-font','layer-align','layer-color','layer-size','layer-spacing','layer-fx','layer-shape','layer-radius','layer-fill','layer-stroke','layer-stroke-width','layer-fit','layer-image-radius','layer-image-stroke','layer-image-stroke-width'].forEach(id=>{const el=field(id);if(!el)return;el.addEventListener('input',()=>{applyLayerControls();update();});if(el.tagName==='SELECT')el.addEventListener('change',()=>{applyLayerControls();update();});});
+['layer-name','layer-place','layer-x','layer-y','layer-w','layer-h','layer-opacity','layer-rotation','layer-shadow-color','layer-shadow-blur','layer-shadow-x','layer-shadow-y','layer-text','layer-font','layer-align','layer-color','layer-size','layer-spacing','layer-fx','layer-style','layer-text-stroke-width','layer-shape','layer-radius','layer-fill','layer-stroke','layer-stroke-width','layer-fit','layer-image-radius','layer-image-stroke','layer-image-stroke-width'].forEach(id=>{const el=field(id);if(!el)return;el.addEventListener('input',()=>{applyLayerControls();update();});if(el.tagName==='SELECT')el.addEventListener('change',()=>{applyLayerControls();update();});});
 field('layer-image-file').addEventListener('change',e=>{const layer=currentLayer();const file=e.target.files&&e.target.files[0];if(!layer||layer.type!=='image'||!file)return;const reader=new FileReader();reader.onload=()=>{const img=new Image();img.onload=()=>{layer.dataUrl=reader.result;layer.image=img;update();};img.src=reader.result;};reader.readAsDataURL(file);e.target.value='';});
 field('layer-delete').addEventListener('click',()=>deleteStudioLayer(mqStudioSelectedLayerId));field('reset-layer-position').addEventListener('click',()=>{const l=currentLayer();if(!l)return;const c=field('canvas'),k=c._mqUnit||1;const cw=c.width/k,ch=c.height/k;l.x=Math.round(Math.max(18,(cw-(l.w||200))/2));l.y=Math.round(Math.max(18,(ch-(l.h||50))/2));l.rotation=0;l.hidden=false;l.locked=false;syncLayerControls();update();mqShowToast('Layer returned to the centre');});if(field('delete-selected'))field('delete-selected').addEventListener('click',()=>{if(mqStudioSelectedLayerId)deleteStudioLayer(mqStudioSelectedLayerId);else mqShowToast('Select an element first','error')});
 field('layer-dup').addEventListener('click',()=>{const layer=currentLayer();if(!layer)return;const copy=hydrateLayer({...cloneObj(layer),id:layerUid(),name:(layer.name||layer.type)+' copy',x:(layer.x||0)+24,y:(layer.y||0)+24});mqStudioCustomLayers.push(copy);mqStudioSelectedLayerId=copy.id;syncLayerControls();update();});
@@ -14320,6 +14350,8 @@ field('layer-forward').addEventListener('click',()=>{const idx=mqStudioCustomLay
       const showPropertyMode=()=>{workspace.classList.remove('mq-studio-canvas-first');workspace.classList.add('mq-studio-property-mode');previewShift=0;preview.style.transform='';requestAnimationFrame(queuePreviewFollow);};
       field('quick-text').addEventListener('click',()=>{addLayer(defaultTextLayer());showPropertyMode();editLayerInline(currentLayer());});
       field('quick-shape').addEventListener('click',()=>{addLayer(defaultShapeLayer());showPropertyMode();});
+      if(field('quick-arrow'))field('quick-arrow').addEventListener('click',()=>{addLayer(defaultArrowLayer('arrow'));showPropertyMode();});
+      if(field('quick-doodle'))field('quick-doodle').addEventListener('click',()=>{addLayer(defaultBrushSwipeLayer());showPropertyMode();});
       field('layers-toggle').addEventListener('click',()=>{
         const beforeRotation=new Map(mqStudioCustomLayers.map(layer=>[layer.id,Number(layer.rotation)||0]));
         workspace.classList.toggle('mq-studio-show-layers');
