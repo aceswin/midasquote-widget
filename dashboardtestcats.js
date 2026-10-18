@@ -13526,6 +13526,37 @@ function defaultProjectPhotoLayer(t,composition){
   return {id:layerUid(),type:'image',projectPhoto:true,name:'Project photo area',place:'front',x:Math.round(x),y:Math.round(y),w:Math.round(w),h:Math.round(h),rotation:0,opacity:100,shadowColor:'#000000',shadowBlur:0,shadowX:0,shadowY:0,fit:'cover',radius:0,stroke:'#ffffff',strokeWidth:0,fill:safeColor(field('quick-surface').value,'#e9d9c8'),image:mqStudioPhoto};
 }
 function projectPhotoLayer(){return mqStudioCustomLayers.find(l=>l.projectPhoto)}
+function makeQrDataUrl(link,size=512){
+  try{
+    window.mqQrGen = window.mqQrGen || MQ_QR_LIB_FACTORY();
+    const qr = window.mqQrGen(0,'M');
+    qr.addData(String(link||quoteLink()||''));
+    qr.make();
+    const count=qr.getModuleCount();
+    const margin=Math.round(size*0.10);
+    const inner=size-margin*2;
+    const cell=inner/count;
+    const c=document.createElement('canvas');
+    c.width=size;c.height=size;
+    const ctx=c.getContext('2d');
+    ctx.fillStyle='#ffffff';ctx.fillRect(0,0,size,size);
+    ctx.fillStyle='#111111';
+    for(let r=0;r<count;r++)for(let col=0;col<count;col++)if(qr.isDark(r,col))ctx.fillRect(Math.round(margin+col*cell),Math.round(margin+r*cell),Math.ceil(cell),Math.ceil(cell));
+    return c.toDataURL('image/png');
+  }catch(err){return ''}
+}
+function defaultQrLayer(){
+  const canvas=field('canvas');
+  const unit=canvas? (canvas._mqUnit||1) : 1;
+  const W=canvas? Math.round(canvas.width/unit):1080;
+  const H=canvas? Math.round(canvas.height/unit):1080;
+  const size=Math.round(Math.min(208,W*.27));
+  const pad=Math.round(Math.max(32,W*.06));
+  const dataUrl=makeQrDataUrl(quoteLink(),640);
+  const img=dataUrl? new Image():null;
+  if(img) img.src=dataUrl;
+  return {id:layerUid(),type:'image',qrCode:true,name:'QR code',place:'front',x:Math.round(W-size-pad),y:Math.round(H-size-62),w:size,h:size,rotation:0,opacity:100,shadowColor:'#000000',shadowBlur:0,shadowX:0,shadowY:0,fit:'contain',radius:12,stroke:'#ffffff',strokeWidth:10,fill:'#ffffff',image:img,dataUrl};
+}
 function defaultButtonLayer(text){return {id:layerUid(),type:'button',name:'Call to action',place:'front',x:80,y:840,w:330,h:68,rotation:0,opacity:100,shadowColor:'#000000',shadowBlur:0,shadowX:0,shadowY:0,text:text||'GET YOUR ESTIMATE',font:'montserrat',align:'center',color:'#271c29',size:24,spacing:0,fx:'none',fill:'#f2e1ca',radius:12,stroke:'#ffffff',strokeWidth:0}}
 function defaultFrameLayer(){return {id:layerUid(),type:'shape',name:`Border ${mqStudioLayerCounter}`,place:'front',x:48,y:48,w:984,h:984,rotation:0,opacity:100,shadowColor:'#000000',shadowBlur:0,shadowX:0,shadowY:0,shape:'rect',radius:24,fill:'#ffffff',fillOpacity:0,stroke:'#ffffff',strokeWidth:5}}
 function hydrateLayer(layer){const l=cloneObj(layer);if(l.type==='image'&&l.dataUrl){const img=new Image();img.src=l.dataUrl;l.image=img;}return l}
@@ -13865,6 +13896,7 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
       const cr=regions.cta;
       if(cr){const b=defaultButtonLayer(field('cta').value);b.x=Math.round(cr[0]/unit);b.y=Math.round(cr[1]/unit);b.w=Math.round(cr[2]/unit);b.h=Math.round(cr[3]/unit);b.fill=field('cta-bg').value;b.color=field('cta-color').value;b.font=field('cta-font').value;additions.push(b);}
       if(mqStudioLogo){const layer={id:layerUid(),type:'image',name:'Shop logo',place:'front',x:80,y:70,w:240,h:100,rotation:0,opacity:100,shadowColor:'#000000',shadowBlur:0,shadowX:0,shadowY:0,fit:'contain',radius:0,stroke:'#ffffff',strokeWidth:0,image:mqStudioLogo,dataUrl:mqStudioLogo.src};additions.push(layer);}
+      if(mqStudioSelected && mqStudioSelected.category==='qr'){additions.push(defaultQrLayer());}
       mqStudioDetached=true;mqStudioCustomLayers.push(...additions);mqStudioSelectedLayerId=null;renderLayerList();syncLayerControls();update();if(!silent)mqShowToast('Everything is freely movable');
     }
     function select(t){mqStudioSelected=t;field('edit-title').textContent=t.title;field('shop-name').value=shopName;field('headline').value=t.headline;field('subline').value=t.sub;field('cta').value=t.cta;field('color').value=safeColor(color);field('quick-brand').value=safeColor(color);field('quick-surface').value='#e9d9c8';field('quick-accent').value='#d9be97';field('size').value=t.id==='yard'?'landscape':t.category==='print'?'poster':'square';setDefaults();field('composition').value=t.id==='premium'?'cinema':t.id==='yard'?'split':t.id==='before'?'original':t.id==='poster'?'window':'original';field('finish').value=t.mode==='luxury'?'bold':t.mode==='frame'?'editorial':t.category==='print'?'architect':'cinematic';field('accent').value=t.mode==='frame'?'frame':t.mode==='luxury'?'corner':t.id==='yard'?'stripe':'none';if(t.mode==='minimal'){field('headline-color').value='#382b36';field('sub-color').value='#685861'}workspace.style.display='block';workspace.classList.add('mq-studio-canvas-first');workspace.classList.remove('mq-studio-property-mode','mq-studio-show-layers');if(field('layers-toggle'))field('layers-toggle').textContent='☷ All layers';previewShift=0;preview.style.transform='';update(true);detachBuiltIns(true);const photoArea=defaultProjectPhotoLayer(t,field('composition').value);if(photoArea){mqStudioCustomLayers.unshift(photoArea);renderLayerList();update();}requestAnimationFrame(()=>requestAnimationFrame(()=>{
