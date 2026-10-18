@@ -13807,34 +13807,35 @@ function applyRawShadow(ctx,color,blur,dx,dy,k){ctx.shadowColor=color||'rgba(0,0
 function clearRawShadow(ctx){ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetX=0;ctx.shadowOffsetY=0;}
 function drawImageFit(ctx,img,x,y,w,h,fit){if(!img)return;if(fit==='stretch'){ctx.drawImage(img,x,y,w,h);return;}if(fit==='contain'){const ratio=Math.min(w/img.width,h/img.height),iw=img.width*ratio,ih=img.height*ratio;ctx.drawImage(img,x+(w-iw)/2,y+(h-ih)/2,iw,ih);return;}cover(ctx,img,x,y,w,h);}
 function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y=(layer.y||0)*k,w=Math.max(1,(layer.w||1)*k),h=Math.max(1,(layer.h||1)*k),rot=(layer.rotation||0)*Math.PI/180;ctx.save();ctx.globalAlpha=Math.max(0,Math.min(1,(layer.opacity==null?100:layer.opacity)/100));ctx.translate(x+w/2,y+h/2);ctx.rotate(rot);ctx.translate(-(x+w/2),-(y+h/2));applyRawShadow(ctx,layer.shadowColor,layer.shadowBlur,layer.shadowX,layer.shadowY,k);let region=[x,y,w,h];if(layer.type==='shape'){
-  // Draw the shadow from the filled geometry ONLY, never from the outline.
-  // Keep a subtle soft falloff rather than a second hard-edged silhouette.
+  // A single filled path casts the shadow. Canvas shadows are rendered behind
+  // the fill automatically, while the outline is drawn separately without one.
   const blur=Math.max(0,Number(layer.shadowBlur)||0);
   const dx=Number(layer.shadowX)||0,dy=Number(layer.shadowY)||0;
+  const hasShadow=blur>0||dx!==0||dy!==0;
+  const hasFill=(layer.fillOpacity??100)!==0 && layer.shape!=='line';
   clearRawShadow(ctx);
-  ctx.fillStyle=layer.fill||'#ffffff';ctx.strokeStyle=layer.stroke||'#ffffff';
-  ctx.lineWidth=(layer.strokeWidth||0)*k;
   ctx.beginPath();
   if(layer.shape==='circle')ctx.ellipse(x+w/2,y+h/2,w/2,h/2,0,0,Math.PI*2);
   else if(layer.shape==='line'){ctx.moveTo(x,y+h);ctx.lineTo(x+w,y);}
   else ctx.roundRect(x,y,w,h,(layer.radius||0)*k);
-  if(blur>0 || dx!==0 || dy!==0){
-    // Draw a translucent, blurred copy behind the shape instead of a hard duplicate.
-    ctx.save();
-    ctx.translate(dx*k,dy*k);
-    ctx.filter=`blur(${Math.max(6,blur)*k}px)`;
-    ctx.fillStyle=layer.shadowColor||'#000000';
-    ctx.globalAlpha*=0.26;
-    if(layer.shape==='line'){
-      ctx.strokeStyle=layer.shadowColor||'#000000';
-      ctx.lineWidth=Math.max(4,(layer.strokeWidth||4))*k;
-      ctx.stroke();
-    }else ctx.fill();
-    ctx.restore();
+  if(hasShadow){
+    ctx.shadowColor=layer.shadowColor||'#000000';
+    ctx.shadowBlur=Math.max(8,blur)*k;
+    ctx.shadowOffsetX=dx*k;
+    ctx.shadowOffsetY=dy*k;
+  }
+  if(hasFill){ctx.fillStyle=layer.fill||'#ffffff';ctx.fill();}
+  else if(layer.shape==='line' && hasShadow){
+    ctx.strokeStyle=layer.stroke||'#ffffff';
+    ctx.lineWidth=Math.max(4,Number(layer.strokeWidth)||0)*k;
+    ctx.stroke();
   }
   clearRawShadow(ctx);
-  if(layer.shape!=='line' && (layer.fillOpacity??100)!==0){ctx.fillStyle=layer.fill||'#ffffff';ctx.fill();}
-  if(layer.shape==='line' || ctx.lineWidth>0){ctx.strokeStyle=layer.stroke||'#ffffff';ctx.lineWidth=Math.max(layer.shape==='line'?4:0,Number(layer.strokeWidth)||0)*k;ctx.stroke();}
+  if(layer.shape==='line'||(Number(layer.strokeWidth)||0)>0){
+    ctx.strokeStyle=layer.stroke||'#ffffff';
+    ctx.lineWidth=Math.max(layer.shape==='line'?4:0,Number(layer.strokeWidth)||0)*k;
+    ctx.stroke();
+  }
 }else if(layer.type==='image'){ctx.beginPath();ctx.roundRect(x,y,w,h,(layer.radius||0)*k);ctx.clip();if(layer.image && layer.image.complete && layer.image.naturalWidth){drawImageFit(ctx,layer.image,x,y,w,h,layer.fit||'cover');}else if(layer.projectPhoto){ctx.fillStyle=layer.fill||'#e9d9c8';ctx.fillRect(x,y,w,h);ctx.fillStyle='rgba(255,255,255,.16)';ctx.fillRect(x+w*.12,y+h*.14,w*.76,h*.72);}ctx.restore();ctx.save();ctx.globalAlpha=Math.max(0,Math.min(1,(layer.opacity==null?100:layer.opacity)/100));ctx.translate(x+w/2,y+h/2);ctx.rotate(rot);ctx.translate(-(x+w/2),-(y+h/2));if((layer.strokeWidth||0)>0){ctx.strokeStyle=layer.stroke||'#ffffff';ctx.lineWidth=(layer.strokeWidth||0)*k;ctx.beginPath();ctx.roundRect(x,y,w,h,(layer.radius||0)*k);ctx.stroke();}}else if(layer.type==='button'){ctx.fillStyle=layer.fill||'#f2e1ca';ctx.beginPath();ctx.roundRect(x,y,w,h,Math.min(w/2,h/2,(layer.radius??12)*k));ctx.fill();if((layer.strokeWidth||0)>0){ctx.strokeStyle=layer.stroke||'#ffffff';ctx.lineWidth=layer.strokeWidth*k;ctx.stroke();}clearRawShadow(ctx);ctx.fillStyle=layer.color||'#292234';let size=Math.max(8,(layer.size||24))*k;const space=(layer.spacing||0)*k;const label=String(layer.text||'');ctx.font=font(size,layer.font||'montserrat',700);while(size>9*k && textWidthWithSpacing(ctx,label,space)>w-18*k){size-=k;ctx.font=font(size,layer.font||'montserrat',700);}drawSpacedTextFx(ctx,label,x+w/2,y+h/2+size*.35,space,'center',layer.fx||'none',layer.shadowColor||'#000000',k);}else if(layer.type==='text'){const size=Math.max(8,(layer.size||56))*k;ctx.font=font(size,layer.font||'playfair',700);ctx.fillStyle=layer.color||'#ffffff';const lines=wrap(ctx,String(layer.text||''),w,10,(layer.spacing||0)*k);const lineHeight=size*1.18;const align=layer.align||'left';const tx=align==='left'?x:align==='center'?x+w/2:x+w;drawWrappedLinesFx(ctx,lines,tx,y+size,lineHeight,(layer.spacing||0)*k,align,layer.fx||'none',layer.shadowColor||'#000000',k);region=[x,y,w,Math.max(h,lines.length*lineHeight+size*.2)];}
   clearRawShadow(ctx);ctx.restore();regions.push({id:layer.id,rect:region});if(highlight){ctx.save();ctx.strokeStyle='#38bdf8';ctx.lineWidth=3*k;ctx.setLineDash([12*k,7*k]);ctx.strokeRect(region[0],region[1],region[2],region[3]);ctx.setLineDash([]);[[region[0],region[1]],[region[0]+region[2],region[1]],[region[0],region[1]+region[3]],[region[0]+region[2],region[1]+region[3]]].forEach(([hx,hy])=>{ctx.fillStyle='#fff';ctx.fillRect(hx-9*k,hy-9*k,18*k,18*k);ctx.strokeRect(hx-9*k,hy-9*k,18*k,18*k)});ctx.restore();}}
     function drawHeadlineWithEmphasis(ctx,lines,x,y,lineHeight,spacing,align,effect,effectColor,k,phrase,phraseColor){
@@ -13867,15 +13868,15 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
       const fill=(c,x,y,w,h)=>{ctx.fillStyle=c;ctx.fillRect(x,y,w,h)};
       let primary=safeColor(opts.headlineColor,'#ffffff'),secondary=safeColor(opts.subColor,'#eee0e7');
       if(t.mode==='luxury'){
-        fill('#181922',0,0,W,H);
+        fill(b,0,0,W,H);
         if(hasPhoto){cover(ctx,opts.photo,0,0,W,H)}
-        else{const g=ctx.createLinearGradient(0,0,W,H);g.addColorStop(0,'#171921');g.addColorStop(1,'#4b3e42');fill(g,0,0,W,H)}
+        else{const g=ctx.createLinearGradient(0,0,W,H);g.addColorStop(0,b);g.addColorStop(1,b);fill(g,0,0,W,H)}
       }else if(t.mode==='minimal'){
-        fill(surface,0,0,W,H);
+        fill(b,0,0,W,H);
         if(hasPhoto){cover(ctx,opts.photo,0,H*.42,W,H*.58);const grad=ctx.createLinearGradient(0,H*.39,0,H*.76);grad.addColorStop(0,surface);grad.addColorStop(1,'rgba(243,236,227,0)');ctx.fillStyle=grad;ctx.fillRect(0,H*.39,W,H*.39)}
         primary=safeColor(opts.headlineColor,'#382b36');secondary=safeColor(opts.subColor,'#685861');
       }else if(t.mode==='frame'){
-        fill(surface,0,0,W,H);fill(b,30*k,30*k,W-60*k,H-60*k);
+        fill(b,0,0,W,H);fill(b,30*k,30*k,W-60*k,H-60*k);
         if(opts.projectPhotoLayer){/* movable frame draws the photo */}
         else if(hasPhoto){cover(ctx,opts.photo,W*.07,H*.07,W*.86,H*.42);ctx.strokeStyle=surface;ctx.lineWidth=9*k;ctx.strokeRect(W*.07,H*.07,W*.86,H*.42)}
         else {const sheen=ctx.createLinearGradient(0,0,W,H);sheen.addColorStop(0,'rgba(255,255,255,.12)');sheen.addColorStop(1,'rgba(255,255,255,0)');ctx.fillStyle=sheen;ctx.fillRect(35*k,35*k,W-70*k,H-70*k);ctx.strokeStyle=surface;ctx.lineWidth=3*k;ctx.strokeRect(52*k,52*k,W-104*k,H-104*k)}
@@ -13898,11 +13899,11 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
       const composition=opts.composition||'original';
       const focal=Number.isFinite(opts.focal)?opts.focal:50;
       if(composition==='cinema'){
-        fill('#171116',0,0,W,H);
+        fill(b,0,0,W,H);
         if(hasPhoto){cover(ctx,opts.photo,0,0,W,H,focal);const shade=ctx.createLinearGradient(0,0,W*.87,H*.7);shade.addColorStop(0,'rgba(15,10,18,.75)');shade.addColorStop(.55,'rgba(15,10,18,.46)');shade.addColorStop(1,'rgba(15,10,18,.15)');ctx.fillStyle=shade;ctx.fillRect(0,0,W,H)}
-        else fill('#2d1a26',0,0,W,H);
+        else fill(b,0,0,W,H);
       }else if(composition==='split'){
-        fill('#221b25',0,0,W,H);
+        fill(b,0,0,W,H);
         const photoX=W*.54;
         if(!opts.projectPhotoLayer && hasPhoto)cover(ctx,opts.photo,photoX,0,W-photoX,H,focal);
         else if(!opts.projectPhotoLayer)fill(surface,photoX,0,W-photoX,H);
@@ -13910,7 +13911,7 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
         fill(b,0,0,photoX, H);
         fill('#ffffff0d',photoX-5*k,0,5*k,H);
       }else if(composition==='magazine'){
-        fill(surface,0,0,W,H);
+        fill(b,0,0,W,H);
         if(hasPhoto)cover(ctx,opts.photo,0,0,W,H*.54,focal);
         else fill(b,0,0,W,H*.54);
         fill(b,0,H*.54,W,H*.46);
