@@ -3023,15 +3023,15 @@ window.logoutMember = async function () {
                     <div class="mq-studio-control-card">
                       <div class="mq-studio-card-title">Font effects</div>
                       <div class="mq-studio-two-col">
-                        <label>Headline effect<select id="mq-studio-headline-fx"><option value="none">None</option><option value="soft">Soft shadow</option><option value="strong">Strong shadow</option><option value="glow">Glow</option><option value="outline">Outline</option></select></label>
-                        <label>Supporting effect<select id="mq-studio-sub-fx"><option value="none">None</option><option value="soft">Soft shadow</option><option value="strong">Strong shadow</option><option value="glow">Glow</option><option value="outline">Outline</option></select></label>
+                        <label>Headline effect<select id="mq-studio-headline-fx"><option value="none">None (no shadow)</option><option value="custom">Custom shadow</option><option value="soft">Soft shadow</option><option value="strong">Strong shadow</option><option value="glow">Glow</option><option value="outline">Outline</option></select></label>
+                        <label>Supporting effect<select id="mq-studio-sub-fx"><option value="none">None (no shadow)</option><option value="custom">Custom shadow</option><option value="soft">Soft shadow</option><option value="strong">Strong shadow</option><option value="glow">Glow</option><option value="outline">Outline</option></select></label>
                       </div>
                       <div class="mq-studio-two-col">
-                        <label>Shop name effect<select id="mq-studio-brand-fx"><option value="none">None</option><option value="soft">Soft shadow</option><option value="strong">Strong shadow</option><option value="glow">Glow</option><option value="outline">Outline</option></select></label>
-                        <label>Button text effect<select id="mq-studio-cta-fx"><option value="none">None</option><option value="soft">Soft shadow</option><option value="strong">Strong shadow</option><option value="glow">Glow</option><option value="outline">Outline</option></select></label>
+                        <label>Shop name effect<select id="mq-studio-brand-fx"><option value="none">None (no shadow)</option><option value="custom">Custom shadow</option><option value="soft">Soft shadow</option><option value="strong">Strong shadow</option><option value="glow">Glow</option><option value="outline">Outline</option></select></label>
+                        <label>Button text effect<select id="mq-studio-cta-fx"><option value="none">None (no shadow)</option><option value="custom">Custom shadow</option><option value="soft">Soft shadow</option><option value="strong">Strong shadow</option><option value="glow">Glow</option><option value="outline">Outline</option></select></label>
                       </div>
                       <div class="mq-studio-two-col">
-                        <label>Website effect<select id="mq-studio-url-fx"><option value="none">None</option><option value="soft">Soft shadow</option><option value="strong">Strong shadow</option><option value="glow">Glow</option><option value="outline">Outline</option></select></label>
+                        <label>Website effect<select id="mq-studio-url-fx"><option value="none">None (no shadow)</option><option value="custom">Custom shadow</option><option value="soft">Soft shadow</option><option value="strong">Strong shadow</option><option value="glow">Glow</option><option value="outline">Outline</option></select></label>
                         <label>Effect colour<input id="mq-studio-fx-color" type="color" value="#000000"></label>
                       </div>
                       <div class="mq-studio-two-col">
@@ -3121,7 +3121,7 @@ window.logoutMember = async function () {
         </div>
         <div class="mq-studio-two-col">
           <label>Text style<select id="mq-studio-layer-style"><option value="custom">Custom</option><option value="luxury">Luxury serif</option><option value="bold">Bold poster</option><option value="marker">Marker note</option><option value="story">Social story hook</option><option value="caption">Clean caption</option><option value="sticker">Sticker headline</option><option value="handwritten">Handwritten note</option></select></label>
-          <label>Effect<select id="mq-studio-layer-fx"><option value="none">None</option><option value="soft">Soft shadow</option><option value="strong">Strong shadow</option><option value="glow">Glow</option><option value="outline">Outline</option></select></label>
+          <label>Effect<select id="mq-studio-layer-fx"><option value="none">None (no shadow)</option><option value="custom">Custom shadow</option><option value="soft">Soft shadow</option><option value="strong">Strong shadow</option><option value="glow">Glow</option><option value="outline">Outline</option></select></label>
         </div>
         <div class="mq-studio-two-col">
           <label>Text colour<input id="mq-studio-layer-color" type="color" value="#ffffff"></label>
@@ -13734,6 +13734,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         });
         select.after(holder);holder.append(button,menu);
         // When the template or layer changes, reflect the newly selected font.
+        // Expose a UI-only refresh for programmatic font assignments when switching layers.
+        select._mqRefreshFont=refresh;
         select.addEventListener('change',refresh);
         select.addEventListener('input',refresh);
         button.addEventListener('focus',refresh);
@@ -13894,7 +13896,7 @@ function renderLayerList(){
 }
 
 function syncLayerControls(){const body=field('layer-controls-body');const layer=currentLayer();const title=field('context-title');if(title)title.textContent=layer?(layer.name||({text:'Text',button:'Button',image:'Image',shape:'Shape'}[layer.type]||'Object'))+' settings':'Select an object';if(!body)return;body.style.display=layer?'':'none';field('layer-empty').style.display=layer?'none':'';root.querySelectorAll('.mq-studio-layer-section').forEach(el=>el.classList.remove('show'));if(!layer)return;field('layer-name').value=layer.name||'';field('layer-place').value=layer.place||'front';field('layer-x').value=Math.round(layer.x||0);field('layer-y').value=Math.round(layer.y||0);field('layer-w').value=Math.round(layer.w||1);field('layer-h').value=Math.round(layer.h||1);field('layer-opacity').value=layer.opacity==null?100:layer.opacity;field('layer-rotation').value=layer.rotation||0;field('layer-shadow-color').value=layer.shadowColor||'#000000';field('layer-shadow-blur').value=layer.shadowBlur||0;field('layer-shadow-x').value=layer.shadowX||0;field('layer-shadow-y').value=layer.shadowY||0;
-  if(layer.type==='text'||layer.type==='button'){field('layer-text-fields').classList.add('show');field('layer-text').value=layer.text||'';field('layer-font').value=layer.font||'playfair';field('layer-align').value=layer.align||'left';field('layer-color').value=layer.color||'#ffffff';field('layer-size').value=layer.size||56;field('layer-spacing').value=layer.spacing||0;field('layer-fx').value=layer.fx||'none';if(field('layer-style'))field('layer-style').value='custom';if(field('layer-text-stroke-width'))field('layer-text-stroke-width').value=layer.textStrokeWidth||0;}
+  if(layer.type==='text'||layer.type==='button'){field('layer-text-fields').classList.add('show');field('layer-text').value=layer.text||'';field('layer-font').value=layer.font||'playfair';field('layer-font')._mqRefreshFont?.();field('layer-align').value=layer.align||'left';field('layer-color').value=layer.color||'#ffffff';field('layer-size').value=layer.size||56;field('layer-spacing').value=layer.spacing||0;field('layer-fx').value=layer.fx||'none';if(field('layer-style'))field('layer-style').value='custom';if(field('layer-text-stroke-width'))field('layer-text-stroke-width').value=layer.textStrokeWidth||0;}
   if(layer.type==='shape'||layer.type==='button'){field('layer-shape-fields').classList.add('show');field('layer-shape').value=layer.shape||'rect';field('layer-radius').value=layer.radius||0;field('layer-fill').value=layer.fill||'#ffffff';field('layer-stroke').value=layer.stroke||'#ffffff';field('layer-stroke-width').value=layer.strokeWidth||0;}
   if(layer.type==='image'){field('layer-image-fields').classList.add('show');field('layer-fit').value=layer.fit||'cover';field('layer-image-radius').value=layer.radius||0;field('layer-image-stroke').value=layer.stroke||'#ffffff';field('layer-image-stroke-width').value=layer.strokeWidth||0;}
   renderLayerList();
@@ -13967,11 +13969,11 @@ function addLayer(layer){mqStudioCustomLayers.push(layer);mqStudioSelectedLayerI
       else if(effect==='outline'){ctx.strokeStyle=color||'#000000';ctx.lineWidth=Math.max(1,Number(options.fxOutline??3))*k;ctx.lineJoin='round';ctx.miterLimit=2;}
     }
     function clearTextFx(ctx){ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetX=0;ctx.shadowOffsetY=0;ctx.lineWidth=0;}
-    // Per-layer shadows are independent from the text effect dropdown.
-    // A chosen blur / X / Y overrides the effect's default shadow geometry;
-    // 'None' still permits a real drop shadow from the layer sliders.
+    // "None" is an explicit OFF switch for text shadow and text effect.
+    // Custom shadow enables manual X/Y/Blur sliders with no preset effect.
     function drawSpacedTextFx(ctx,text,x,y,spacing,align,effect,color,k,layerShadow=null){
-      const useLayerShadow=layerShadow && ((Number(layerShadow.shadowBlur)||0)>0 || (Number(layerShadow.shadowX)||0)!==0 || (Number(layerShadow.shadowY)||0)!==0);
+      const effectEnabled=effect!=='none';
+      const useLayerShadow=effectEnabled && layerShadow && ((Number(layerShadow.shadowBlur)||0)>0 || (Number(layerShadow.shadowX)||0)!==0 || (Number(layerShadow.shadowY)||0)!==0);
       if(effect==='outline'){
         applyTextFx(ctx,effect,color,k);strokeSpacedText(ctx,text,x,y,spacing,align);clearTextFx(ctx);
       }else applyTextFx(ctx,effect,color,k);
@@ -14563,7 +14565,26 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
       });
       field('properties-toggle').addEventListener('click',()=>{if(workspace.classList.contains('mq-studio-property-mode')){workspace.classList.remove('mq-studio-property-mode');workspace.classList.add('mq-studio-canvas-first');}else showPropertyMode();requestAnimationFrame(queuePreviewFollow);});
       field('settings-toggle').addEventListener('click',()=>{workspace.classList.toggle('mq-studio-canvas-first');workspace.classList.remove('mq-studio-property-mode');previewShift=0;preview.style.transform='';requestAnimationFrame(queuePreviewFollow);});
-      canvas.addEventListener('dblclick',e=>{const hit=regionAt(canvasPoint(e));if(!hit?.startsWith('layer:'))return;const layer=mqStudioCustomLayers.find(l=>l.id===hit.slice(6));if(layer?.type==='text'||layer?.type==='button'){hideHover();editLayerInline(layer);}});
+      canvas.addEventListener('dblclick',e=>{
+        const hit=regionAt(canvasPoint(e));
+        if(!hit?.startsWith('layer:'))return;
+        const layer=mqStudioCustomLayers.find(l=>l.id===hit.slice(6));
+        if(!layer||layer.hidden||layer.locked)return;
+        // Always select the item and reveal only its relevant properties.
+        mqStudioSelectedLayerId=layer.id;
+        showPropertyMode();
+        syncLayerControls();
+        update();
+        // Let the fullscreen columns finish laying out before placing the
+        // inline editor beside the canvas (otherwise it can jump).
+        if(layer.type==='text'||layer.type==='button'){
+          requestAnimationFrame(()=>editLayerInline(layer));
+        }else if(layer.type==='shape'){
+          requestAnimationFrame(()=>field('layer-shape')?.focus({preventScroll:true}));
+        }else if(layer.type==='image'){
+          requestAnimationFrame(()=>field('layer-fit')?.focus({preventScroll:true}));
+        }
+      });
       const clampField=(id,val)=>{const el=field(id);if(!el)return;const min=Number(el.min||-9999),max=Number(el.max||9999);el.value=String(Math.round(clamp(val,min,max)));};
       const canvasPoint=e=>{const rect=canvas.getBoundingClientRect();return {x:(e.clientX-rect.left)*(canvas.width/rect.width),y:(e.clientY-rect.top)*(canvas.height/rect.height)}};
       const regionAt=pt=>{const custom=(canvas._mqCustomLayerRegions||[]).slice().reverse();for(const item of custom){const layer=mqStudioCustomLayers.find(l=>l.id===item.id);if(!layer||layer.hidden||layer.locked)continue;const r=item.rect;const radius=18*(canvas._mqUnit||1);if(layer.id===mqStudioSelectedLayerId){const corners=[['nw',r[0],r[1]],['ne',r[0]+r[2],r[1]],['sw',r[0],r[1]+r[3]],['se',r[0]+r[2],r[1]+r[3]]];for(const [side,x,y] of corners){if(Math.abs(pt.x-x)<radius&&Math.abs(pt.y-y)<radius)return 'resize:'+item.id+':'+side}}if(pt.x>=r[0]&&pt.x<=r[0]+r[2]&&pt.y>=r[1]&&pt.y<=r[1]+r[3])return 'layer:'+item.id;}if(mqStudioDetached)return null;const regions=canvas._mqRegions||{};const order=['cta','url','headline','sub','brand'];for(const key of order){const r=regions[key];if(!r)continue; if(pt.x>=r[0]&&pt.x<=r[0]+r[2]&&pt.y>=r[1]&&pt.y<=r[1]+r[3])return key;}return null;};
