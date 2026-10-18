@@ -68,6 +68,64 @@
   }
 
   // ============================================================
+  // FETCHING THE SHOP'S DATA (built to survive slow / flaky connections)
+  // ============================================================
+  // History: this used to be 3 sequential tries with an 8-second wait each and nothing
+  // on screen but a spinner, so a visitor on a slow or briefly-locked-out connection
+  // (Airtable only allows 5 requests/second for the whole account) could sit through
+  // ~25-30 seconds of nothing and leave (seen on a Microsoft Clarity recording of a
+  // Facebook-ad visitor). Now:
+  //   - the request is started again in parallel at 5s and 10s (the first one is NOT
+  //     cancelled, so whichever answers first wins), and a quick failure (HTTP 429 /
+  //     5xx / dropped connection) is retried straight away instead of after a long wait;
+  //   - the last good copy of the shop's data is kept in the browser (localStorage). If
+  //     the network hasn't answered after 7 seconds, or every try failed, that copy is
+  //     used so returning visitors can still open the estimator. Normally the live data
+  //     always wins, so price changes still show up immediately;
+  //   - the hard stop is ~25s, after which the "Having trouble loading" card appears.
+  const MQ_SHOP_CACHE = t => 'mq_shop_payload_v1_' + t;
+  function mqReadShopCache(token) {
+    try {
+      const o = JSON.parse(localStorage.getItem(MQ_SHOP_CACHE(token)) || 'null');
+      if (o && o.payload && o.payload.shop && o.t && Date.now() - o.t < 14 * 864e5) return o.payload;
+    } catch (e) {}
+    return null;
+  }
+  function mqWriteShopCache(token, payload) {
+    try { localStorage.setItem(MQ_SHOP_CACHE(token), JSON.stringify({ t: Date.now(), payload })); } catch (e) {}
+  }
+  function mqFetchShopPayload(token) {
+    const url = `${CONFIG.PROXY_WORKER}/shop-data?shop=${encodeURIComponent(token)}`;
+    const SLOW_MS = 7000, HARD_MS = 25000, MAX_TRIES = 3;
+    return new Promise((resolve, reject) => {
+      let settled = false, started = 0, inflight = 0, lastErr = null;
+      const timers = [];
+      const finish = (ok, v) => { if (settled) return; settled = true; timers.forEach(clearTimeout); (ok ? resolve : reject)(v); };
+      const useCacheOr = err => { const c = mqReadShopCache(token); if (c) { window._mqUsedCachedShopData = true; finish(true, c); } else finish(false, err); };
+      const launch = () => {
+        if (settled || started >= MAX_TRIES) return;
+        started++; inflight++;
+        const ctl = new AbortController();
+        const killer = setTimeout(() => ctl.abort(), HARD_MS);
+        fetch(url, { signal: ctl.signal, cache: 'no-store' })
+          .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+          .then(p => { clearTimeout(killer); if (p && !p.error && p.shop) mqWriteShopCache(token, p); finish(true, p); })
+          .catch(err => {
+            clearTimeout(killer); lastErr = err; inflight--;
+            if (settled) return;
+            if (started < MAX_TRIES) timers.push(setTimeout(launch, 450 * started));
+            else if (inflight <= 0) useCacheOr(err);
+          });
+      };
+      launch();
+      timers.push(setTimeout(launch, 5000));
+      timers.push(setTimeout(launch, 10000));
+      timers.push(setTimeout(() => { if (!settled && mqReadShopCache(token)) useCacheOr(lastErr); }, SLOW_MS));
+      timers.push(setTimeout(() => useCacheOr(lastErr || new Error('timeout')), HARD_MS));
+    });
+  }
+
+  // ============================================================
   // LOAD SHOP DATA
   // ============================================================
   // Matches the dashboard's "My Products" tab photo-key format so the widget
@@ -127,8 +185,7 @@
   }
 
   async function loadShopData(token) {
-    const res = await fetchWithRetry(`${CONFIG.PROXY_WORKER}/shop-data?shop=${encodeURIComponent(token)}`, {});
-    const payload = await res.json();
+    const payload = await mqFetchShopPayload(token);
     if (payload.error || !payload.shop) { console.error('MidasQuote: Shop not found:', token); return null; }
 
     const shopRecord = payload.shop;
@@ -8885,6 +8942,19 @@
     }
   }
 
+  // The "Having trouble loading" card with a Try again button (used when the shop data
+  // can't be fetched AND when something goes wrong while building the widget itself,
+  // so a visitor is never left looking at a spinner that will never finish).
+  function mqRenderLoadError(container) {
+    container.innerHTML=`<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:2.5rem 1.5rem;text-align:center;color:#4b5563;font-size:14px;line-height:1.6">
+        <div style="font-size:2rem;margin-bottom:0.75rem">⚠️</div>
+        <div style="font-weight:600;color:#111;font-size:15px;margin-bottom:6px">Having trouble loading your estimate</div>
+        <div style="margin-bottom:1rem">This is usually just a slow or dropped connection. Please try again.</div>
+        <button onclick="this.closest('#midasquote-widget').dispatchEvent(new Event('mq-retry'))" style="background:#1a1a1a;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Try again</button>
+      </div>`;
+    container.addEventListener('mq-retry', () => init(), { once: true });
+  }
+
   async function init() {
     const container=document.getElementById('midasquote-widget');
     if(!container){console.error('MidasQuote: Add <div id="midasquote-widget"></div> to your page.');return;}
@@ -8899,9 +8969,13 @@
     // very next tick clears this on its own instead of needing a matching
     // clearInterval() threaded into every one of those branches.
     let mqLoadingPhraseIdx = 0;
+    const mqLoadingStart = Date.now();
     const mqLoadingInterval = setInterval(() => {
       const el = document.getElementById('mq-loading-phrase');
       if (!el) { clearInterval(mqLoadingInterval); return; }
+      // After a few seconds stop the playful phrases and say what's going on, so a slow
+      // connection never just looks like a frozen page.
+      if (Date.now() - mqLoadingStart > 6000) { el.textContent = 'Still loading — your connection looks a bit slow. Hang tight…'; return; }
       mqLoadingPhraseIdx = (mqLoadingPhraseIdx + 1) % MQ_LOADING_PHRASES.length;
       el.textContent = MQ_LOADING_PHRASES[mqLoadingPhraseIdx];
     }, 900);
@@ -8910,13 +8984,7 @@
       data = await loadShopData(shopToken);
     } catch (err) {
       console.error('MidasQuote: failed to load shop data', err);
-      container.innerHTML=`<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:2.5rem 1.5rem;text-align:center;color:#4b5563;font-size:14px;line-height:1.6">
-        <div style="font-size:2rem;margin-bottom:0.75rem">⚠️</div>
-        <div style="font-weight:600;color:#111;font-size:15px;margin-bottom:6px">Having trouble loading your estimate</div>
-        <div style="margin-bottom:1rem">This is usually just a slow or dropped connection. Please try again.</div>
-        <button onclick="this.closest('#midasquote-widget').dispatchEvent(new Event('mq-retry'))" style="background:#1a1a1a;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Try again</button>
-      </div>`;
-      container.addEventListener('mq-retry', () => init(), { once: true });
+      mqRenderLoadError(container);
       return;
     }
     if(!data) {
@@ -8956,22 +9024,30 @@
     // watermark and shows every item's plain placeholder icon instead of any
     // photo — see mqInjectDemoWatermark, mqShowRoomDescription, and
     // mqRefreshMeasureGuide for the rest of what Demo affects.
-    injectStyles(
-      shop['Brand colour']||'#1a1a1a',
-      shop['Focal colour'],
-      shop['Box border colour'],
-      shop['Box background colour'],
-      shop['Box text colour']
-    );
-    buildCTMAT(data);
-    buildTRIM(data);
-    buildTALLCAB(data);
-    container.innerHTML=mqFxLazyImgs(buildWidgetHTML(shop,specs,data));
-    wireWidget(data);
-    if (window._mqIsDemoPlan) mqInjectDemoWatermark(container);
-    if (window.mqFxInit) window.mqFxInit();
-    mqSetupModalOverlays();
-    mqSetupStickyBar();
+    try {
+      injectStyles(
+        shop['Brand colour']||'#1a1a1a',
+        shop['Focal colour'],
+        shop['Box border colour'],
+        shop['Box background colour'],
+        shop['Box text colour']
+      );
+      buildCTMAT(data);
+      buildTRIM(data);
+      buildTALLCAB(data);
+      container.innerHTML=mqFxLazyImgs(buildWidgetHTML(shop,specs,data));
+      wireWidget(data);
+      if (window._mqIsDemoPlan) mqInjectDemoWatermark(container);
+      if (window.mqFxInit) window.mqFxInit();
+      mqSetupModalOverlays();
+      mqSetupStickyBar();
+    } catch (err) {
+      // Building the widget threw (very old browser, or odd data). Show the retry card
+      // rather than leaving the spinner up forever.
+      console.error('MidasQuote: failed to build the estimator', err);
+      mqRenderLoadError(container);
+      return;
+    }
     // Delegated so it automatically covers every input/select/checkbox in
     // the widget, including ones added later (surface cards, tall cabinet
     // rows, etc.) — no need to individually wire each one.
@@ -9927,7 +10003,11 @@
   // done. Classic is untouched.
   function mqFxLazyImgs(html) {
     if (!window._mqFxOn) return html;
-    return String(html).replace(/(?<!class="mq-logo-real">)<img (?![^>]*\bloading=)/g, '<img loading="lazy" ');
+    // (A regex look-behind used to do the "skip the logo" part here, but older iPhones
+    // (iOS 16.3 and earlier) can't even parse a look-behind, which killed the WHOLE
+    // widget script before it ran. So the check is done by hand instead.)
+    const LOGO = 'class="mq-logo-real">';
+    return String(html).replace(/<img (?![^>]*\bloading=)/g, (m, off, str) => str.slice(Math.max(0, off - LOGO.length), off) === LOGO ? m : '<img loading="lazy" ');
   }
 
   // After the chooser's own photos have arrived (or a few seconds, whichever
@@ -10154,9 +10234,12 @@
     window.mqFxApply(window._mqActiveTabPrefix || 'b');
   };
 
-  init();
-  mqInitMobileFontFix();
-  mqInitBottomBounceAutoOpen();
+  // Start as soon as the page has the <div id="midasquote-widget"> to fill. If this script
+  // happens to run before that div exists (script placed in the page <head>, or loaded
+  // early by a site builder), wait for the page to finish parsing instead of giving up.
+  const mqStart = () => { init(); mqInitMobileFontFix(); mqInitBottomBounceAutoOpen(); };
+  if (document.getElementById('midasquote-widget') || document.readyState !== 'loading') mqStart();
+  else document.addEventListener('DOMContentLoaded', mqStart, { once: true });
 
 
 })();
