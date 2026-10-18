@@ -2800,6 +2800,48 @@ window.logoutMember = async function () {
 /* v6.4 late override for property mode preview height, leaving room for the action bar. */
 #mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-preview-wrap canvas{max-height:min(330px,36vh)!important}
 @media(max-width:980px){#mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-preview-wrap canvas{max-height:450px!important}}
+/* v6.5: keep image actions and history visible in property-edit mode. */
+@media (min-width:981px) {
+  #midasquote-dashboard #mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-preview-wrap {
+    display:flex!important;
+    flex-direction:column!important;
+    justify-content:flex-start!important;
+    max-height:none!important;
+    overflow:visible!important;
+    gap:6px!important;
+  }
+  #midasquote-dashboard #mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-preview-wrap .mq-studio-format-bar,
+  #midasquote-dashboard #mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-preview-wrap .mq-studio-quick-colors,
+  #midasquote-dashboard #mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-preview-wrap .mq-studio-preview-toolbar {
+    display:flex!important;
+    visibility:visible!important;
+    flex:0 0 auto!important;
+    flex-wrap:wrap!important;
+    width:100%!important;
+    margin:0!important;
+  }
+  #midasquote-dashboard #mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-preview-wrap .mq-studio-preview-toolbar button {
+    flex:1 1 42%!important;
+    min-width:0!important;
+    padding:8px 10px!important;
+    min-height:38px!important;
+    font-size:12px!important;
+  }
+  #midasquote-dashboard #mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-preview-wrap canvas {
+    max-height:min(295px,31vh)!important;
+    max-width:100%!important;
+    flex:0 1 auto!important;
+  }
+  #midasquote-dashboard #mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-preview-wrap .mq-history-toolbar {
+    display:flex!important;
+    position:relative!important;
+    visibility:visible!important;
+    flex:0 0 auto!important;
+    margin:2px 0 0!important;
+    width:100%!important;
+  }
+  #midasquote-dashboard #mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-preview-wrap .mq-studio-preview-tip {margin:0!important;padding:4px 8px!important}
+}
 /* v4.9 canvas-first editing */
 #mq-page-marketing #mq-studio-workspace.mq-studio-canvas-first .mq-studio-editor-layout{grid-template-columns:1fr!important}
 #mq-page-marketing #mq-studio-workspace.mq-studio-canvas-first .mq-studio-fields{display:none!important}
