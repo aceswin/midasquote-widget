@@ -2750,6 +2750,30 @@ window.logoutMember = async function () {
 #mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-layer-toolbar{display:none!important}
 #mq-page-marketing #mq-studio-workspace.mq-studio-property-mode #mq-studio-layer-controls{border-top:0!important;padding-top:0!important;margin-top:0!important}
 
+/* v6.4: Keep the history controls visible in the same preview panel in both editor modes. */
+#mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-preview-wrap canvas{
+  max-height:min(330px,36vh)!important;
+}
+#mq-page-marketing #mq-studio-workspace .mq-studio-preview-wrap .mq-history-toolbar{
+  display:flex!important;
+  visibility:visible!important;
+  opacity:1!important;
+  position:sticky!important;
+  bottom:0!important;
+  z-index:15!important;
+  background:#fff!important;
+  box-shadow:0 -4px 16px rgba(35,23,37,.10)!important;
+  flex-shrink:0!important;
+}
+#mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-preview-wrap{
+  justify-content:flex-start!important;
+  padding-bottom:8px!important;
+  scroll-padding-bottom:70px;
+}
+@media(max-width:980px){
+ #mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-preview-wrap canvas{max-height:450px!important}
+ #mq-page-marketing #mq-studio-workspace .mq-studio-preview-wrap .mq-history-toolbar{position:relative!important;bottom:auto!important}
+}
 /* v6.3: keep preview visible beside selected-object settings. */
 #mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-preview-wrap{
   max-height:calc(100vh - 84px)!important;
@@ -2773,6 +2797,9 @@ window.logoutMember = async function () {
    will-change:transform!important;
  }
 }
+/* v6.4 late override for property mode preview height, leaving room for the action bar. */
+#mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-preview-wrap canvas{max-height:min(330px,36vh)!important}
+@media(max-width:980px){#mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-preview-wrap canvas{max-height:450px!important}}
 /* v4.9 canvas-first editing */
 #mq-page-marketing #mq-studio-workspace.mq-studio-canvas-first .mq-studio-editor-layout{grid-template-columns:1fr!important}
 #mq-page-marketing #mq-studio-workspace.mq-studio-canvas-first .mq-studio-fields{display:none!important}
