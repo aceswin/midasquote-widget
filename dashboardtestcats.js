@@ -3078,7 +3078,7 @@ window.logoutMember = async function () {
     <button type="button" class="mq-studio-muted-btn" id="mq-studio-add-doodle-layer">+ Doodle</button>
     <button type="button" class="mq-studio-muted-btn" id="mq-studio-add-swipe-layer">+ Brush swipe</button>
     <button type="button" class="mq-studio-muted-btn" id="mq-studio-add-bubble-layer">+ Bubble</button>
-    <button type="button" class="mq-studio-muted-btn" id="mq-studio-add-sticker-layer">+ Sticker</button>
+    <button type="button" class="mq-studio-muted-btn" id="mq-studio-add-sticker-layer">+ Sticker</button><button type="button" class="mq-studio-muted-btn" id="mq-studio-add-oval-bubble">+ Oval bubble</button><button type="button" class="mq-studio-muted-btn" id="mq-studio-add-chunky-arrow">+ Chunky arrow</button>
     <button type="button" class="mq-studio-muted-btn" id="mq-studio-add-image-layer-btn">+ Image</button>
     <button type="button" class="mq-studio-muted-btn" id="mq-studio-add-frame-layer">+ Border</button>
   </div>
@@ -3135,7 +3135,7 @@ window.logoutMember = async function () {
 
       <div id="mq-studio-layer-shape-fields" class="mq-studio-layer-section">
         <div class="mq-studio-two-col">
-          <label>Shape<select id="mq-studio-layer-shape"><option value="rect">Rectangle</option><option value="circle">Circle / ellipse</option><option value="line">Line</option><option value="arrow">Arrow</option><option value="curve">Curved arrow</option><option value="burst">Burst / rays</option><option value="brush">Brush swipe</option><option value="underline">Doodle underline</option><option value="bubble">Speech bubble</option><option value="starburst">Sticker burst</option><option value="sparkle">Sparkle</option><option value="check">Checkmark</option><option value="heart">Heart</option></select></label>
+          <label>Shape<select id="mq-studio-layer-shape"><option value="rect">Rectangle</option><option value="circle">Circle / ellipse</option><option value="line">Line</option><option value="arrow">Arrow</option><option value="curve">Curved arrow · flowing</option><option value="curvebold">Curved arrow · chunky</option><option value="curvethin">Curved arrow · fine</option><option value="curveswoosh">Curved arrow · swoosh</option><option value="curveloop">Curved arrow · loop</option><option value="burst">Burst / rays</option><option value="brush">Brush swipe</option><option value="underline">Doodle underline</option><option value="bubble">Speech bubble · rounded</option><option value="bubbleoval">Speech bubble · oval</option><option value="bubblecloud">Thought bubble · cloud</option><option value="bubblecomic">Speech bubble · comic</option><option value="bubblehand">Speech bubble · hand-drawn</option><option value="bubbleburst">Speech bubble · shout</option><option value="starburst">Sticker burst</option><option value="sparkle">Sparkle</option><option value="check">Checkmark</option><option value="heart">Heart</option></select></label>
           <label>Corner radius<input id="mq-studio-layer-radius" type="range" min="0" max="120" value="16"></label>
         </div>
         <div class="mq-studio-two-col">
@@ -14002,16 +14002,49 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
       ctx.moveTo(x+w*0.02,y+h*0.50);ctx.quadraticCurveTo(x+w*0.10,y+h*0.06,x+w*0.28,y+h*0.14);ctx.lineTo(x+w*0.92,y+h*0.08);ctx.quadraticCurveTo(x+w*1.00,y+h*0.10,x+w*0.97,y+h*0.44);ctx.lineTo(x+w*0.95,y+h*0.78);ctx.quadraticCurveTo(x+w*0.88,y+h*0.96,x+w*0.72,y+h*0.88);ctx.lineTo(x+w*0.07,y+h*0.92);ctx.quadraticCurveTo(x-w*0.01,y+h*0.82,x+w*0.02,y+h*0.50);ctx.closePath();return 'fill';}
     if(shape==='arrow'){
       const shaft=Math.max(h*0.20,sw*1.6),mid=y+h*0.56,head=w*0.24;ctx.moveTo(x,mid-shaft/2);ctx.lineTo(x+w-head,mid-shaft/2);ctx.lineTo(x+w-head,mid-h*0.18);ctx.lineTo(x+w,mid);ctx.lineTo(x+w-head,mid+h*0.18);ctx.lineTo(x+w-head,mid+shaft/2);ctx.lineTo(x,mid+shaft/2);ctx.closePath();return 'fill';}
-    if(shape==='curve'){
-      // Sweeping curved arrow with a slightly shorter neck so the arrowhead has
-      // breathing room and doesn't feel cramped against the curve.
-      ctx.moveTo(x+w*0.12,y+h*0.88);
-      ctx.bezierCurveTo(x+w*0.04,y+h*0.20,x+w*0.60,y+h*0.06,x+w*0.78,y+h*0.26);
-      return 'curve';}
+    if(['curve','curvebold','curvethin','curveswoosh','curveloop'].includes(shape)){
+      // A single continuous outlined path. The head is integrated at the end
+      // instead of being a separate disconnected stroke.
+      const thick=shape==='curvebold'?.105:shape==='curvethin'?.025:shape==='curveswoosh'?.075:.055;
+      const cy=shape==='curveloop'?.64:.68;
+      ctx.moveTo(x+w*.12,y+h*.88);
+      if(shape==='curveloop') ctx.bezierCurveTo(x-w*.04,y+h*.12,x+w*.40,y-h*.04,x+w*.52,y+h*.36);
+      else ctx.bezierCurveTo(x+w*.06,y+h*.13,x+w*.55,y+h*.08,x+w*.77,y+h*.32);
+      const endX=shape==='curveloop'?.82:.91;
+      const endY=shape==='curveloop'?.19:.28;
+      // The path makes the shaft; arrowhead joins at its tip on the same path.
+      const tipX=x+w*endX,tipY=y+h*endY;
+      const neckX=x+w*(shape==='curveloop'?.52:.77),neckY=y+h*(shape==='curveloop'?.36:.32);
+      ctx.lineTo(tipX,tipY);
+      const ang=Math.atan2(tipY-neckY,tipX-neckX),hlen=Math.min(w,h)*(shape==='curvebold'?.25:.21),spread=.72;
+      ctx.moveTo(tipX-hlen*Math.cos(ang-spread),tipY-hlen*Math.sin(ang-spread));
+      ctx.lineTo(tipX,tipY);
+      ctx.lineTo(tipX-hlen*Math.cos(ang+spread),tipY-hlen*Math.sin(ang+spread));
+      return 'stroke';}
     if(shape==='underline'){
       ctx.moveTo(x+w*0.04,y+h*0.65);ctx.quadraticCurveTo(x+w*0.30,y+h*0.94,x+w*0.52,y+h*0.70);ctx.quadraticCurveTo(x+w*0.72,y+h*0.48,x+w*0.96,y+h*0.62);return 'stroke';}
-    if(shape==='bubble'){
-      const r=Math.min((layer.radius||0)*k,w*0.18,h*0.18);ctx.roundRect(x,y,w,h-r*0.65,r);ctx.moveTo(x+w*0.20,y+h-r*0.20);ctx.lineTo(x+w*0.12,y+h+r*0.22);ctx.lineTo(x+w*0.31,y+h-r*0.08);ctx.closePath();return 'fill';}
+    if(['bubble','bubbleoval','bubblecloud','bubblecomic','bubblehand','bubbleburst'].includes(shape)){
+      // One CLOSED silhouette so the tail joins cleanly with the body.
+      if(shape==='bubbleburst'){
+        const cx=x+w/2,cy=y+h*.46,n=12;for(let i=0;i<n*2;i++){const a=-Math.PI/2+i*Math.PI/n,r=i%2?0.36:0.49;const px=cx+Math.cos(a)*w*r,py=cy+Math.sin(a)*h*r;if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);}ctx.closePath();return 'fill';
+      }
+      if(shape==='bubblecloud'){
+        const cx=x+w/2,cy=y+h*.44;for(let i=0;i<=48;i++){const a=i*Math.PI*2/48,r=1+.09*Math.cos(9*a),px=cx+Math.cos(a)*w*.44*r,py=cy+Math.sin(a)*h*.37*r;if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);}ctx.closePath();ctx.moveTo(x+w*.24,y+h*.86);ctx.arc(x+w*.24,y+h*.86,Math.min(w,h)*.05,0,Math.PI*2);ctx.moveTo(x+w*.12,y+h*.97);ctx.arc(x+w*.12,y+h*.97,Math.min(w,h)*.025,0,Math.PI*2);return 'fill';
+      }
+      if(shape==='bubbleoval'){
+        ctx.moveTo(x+w*.88,y+h*.62);ctx.bezierCurveTo(x+w*.76,y+h*.85,x+w*.28,y+h*.85,x+w*.12,y+h*.61);ctx.bezierCurveTo(x-w*.01,y+h*.36,x+w*.12,y+h*.10,x+w*.46,y+h*.10);ctx.bezierCurveTo(x+w*.86,y+h*.07,x+w*.98,y+h*.35,x+w*.88,y+h*.62);ctx.lineTo(x+w*.88,y+h*.91);ctx.lineTo(x+w*.69,y+h*.74);ctx.closePath();return 'fill';
+      }
+      const irregular=shape==='bubblehand',comic=shape==='bubblecomic';
+      const r=Math.min((layer.radius||28)*k,w*.17,h*.18);
+      const left=x+w*.06,top=y+h*.07,right=x+w*.94,bottom=y+h*.77;
+      ctx.moveTo(left+r,top);ctx.lineTo(right-r,top);ctx.quadraticCurveTo(right+(irregular?4*k:0),top,right,top+r);
+      ctx.lineTo(right,bottom-r);ctx.quadraticCurveTo(right,bottom,right-r,bottom);
+      ctx.lineTo(x+w*(comic?.69:.38),bottom);
+      ctx.lineTo(x+w*(comic?.86:.24),y+h*.98);
+      ctx.lineTo(x+w*(comic?.55:.26),bottom);
+      ctx.lineTo(left+r,bottom);ctx.quadraticCurveTo(left,bottom,left,bottom-r);
+      ctx.lineTo(left,top+r);ctx.quadraticCurveTo(left,top,left+r,top);ctx.closePath();return 'fill';
+    }
     if(shape==='starburst'){
       const cx=x+w/2,cy=y+h/2,outer=Math.min(w,h)*0.50,inner=outer*0.68,points=18;for(let i=0;i<points*2;i++){const a=-Math.PI/2+i*Math.PI/points;const rad=i%2===0?outer:inner;const px=cx+Math.cos(a)*rad,py=cy+Math.sin(a)*rad;if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);}ctx.closePath();return 'fill';}
     if(shape==='sparkle'){
@@ -14027,23 +14060,8 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
   const mode=buildPath();
   if(blur>0||dx!==0||dy!==0){ctx.shadowColor=layer.shadowColor||'#000000';ctx.shadowBlur=Math.max(8,blur)*k;ctx.shadowOffsetX=dx*k;ctx.shadowOffsetY=dy*k;}
   if(mode==='fill'){ctx.fillStyle=layer.fill||'#ffffff';ctx.fill();}
-  else {ctx.strokeStyle=layer.stroke||layer.fill||'#ffffff';ctx.lineWidth=Math.max(shape==='burst'||shape==='underline'||shape==='curve'||shape==='sparkle'||shape==='check'?6:4,Number(layer.strokeWidth)||0)*k;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke();if(shape==='curve'){
-      // Draw a separate arrowhead just beyond the end of the curve so the inner
-      // corner has more open space and reads more clearly as an arrow.
-      const neckX=x+w*.78, neckY=y+h*.26;
-      const tipX=x+w*.91, tipY=y+h*.21;
-      const wingLen=Math.min(w,h)*.18;
-      const tangent=Math.atan2(tipY-neckY, tipX-neckX);
-      const spread=.78;
-      clearRawShadow(ctx);ctx.beginPath();
-      ctx.moveTo(tipX-wingLen*Math.cos(tangent-spread),tipY-wingLen*Math.sin(tangent-spread));
-      ctx.lineTo(tipX,tipY);
-      ctx.lineTo(tipX-wingLen*Math.cos(tangent+spread),tipY-wingLen*Math.sin(tangent+spread));
-      ctx.lineWidth=Math.max(7,Number(layer.strokeWidth)||0)*k;
-      ctx.lineCap='round';
-      ctx.lineJoin='round';
-      ctx.stroke();
-    }}
+  else {ctx.strokeStyle=layer.stroke||layer.fill||'#ffffff';ctx.lineWidth=Math.max(shape==='burst'||shape==='underline'||shape.startsWith('curve')||shape==='sparkle'||shape==='check'?6:4,Number(layer.strokeWidth)||0)*k;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke();}
+
   clearRawShadow(ctx);
   if(mode==='fill' && (Number(layer.strokeWidth)||0)>0){buildPath();ctx.strokeStyle=layer.stroke||'#ffffff';ctx.lineWidth=sw;ctx.lineJoin='round';ctx.lineCap='round';ctx.stroke();}
 }else if(layer.type==='image'){
@@ -14475,6 +14493,8 @@ if(field('add-doodle-layer'))field('add-doodle-layer').addEventListener('click',
 if(field('add-swipe-layer'))field('add-swipe-layer').addEventListener('click',()=>addLayer(defaultBrushSwipeLayer()));
 if(field('add-bubble-layer'))field('add-bubble-layer').addEventListener('click',()=>addLayer(defaultBubbleLayer()));
 if(field('add-sticker-layer'))field('add-sticker-layer').addEventListener('click',()=>addLayer(defaultStickerLayer()));
+if(field('add-oval-bubble'))field('add-oval-bubble').addEventListener('click',()=>{const l=defaultBubbleLayer();l.shape='bubbleoval';l.name='Oval speech bubble';addLayer(l);});
+if(field('add-chunky-arrow'))field('add-chunky-arrow').addEventListener('click',()=>{const l=defaultArrowLayer('curvebold');l.name='Chunky curved arrow';addLayer(l);});
 field('add-frame-layer').addEventListener('click',()=>addLayer(defaultFrameLayer()));
 field('add-image-layer-btn').addEventListener('click',()=>field('add-image-layer-input').click());
 if(field('layer-style'))field('layer-style').addEventListener('change',()=>{const layer=currentLayer();if(!layer||!(layer.type==='text'||layer.type==='button'))return;const preset=field('layer-style').value;const presets={custom:null,luxury:{font:'abril',size:64,spacing:0,fx:'soft',textStrokeWidth:0,color:'#fff8ef'},bold:{font:'anton',size:74,spacing:1,fx:'strong',textStrokeWidth:0,color:'#ffffff'},marker:{font:'marker',size:54,spacing:0,fx:'none',textStrokeWidth:0,color:'#111111'},story:{font:'spartan',size:68,spacing:1,fx:'strong',textStrokeWidth:0,color:'#ffffff'},caption:{font:'manrope',size:34,spacing:0,fx:'soft',textStrokeWidth:0,color:'#ffffff'},sticker:{font:'anton',size:82,spacing:1,fx:'none',textStrokeWidth:6,color:'#111111'},handwritten:{font:'caveat',size:66,spacing:0,fx:'soft',textStrokeWidth:0,color:'#ffffff'}};const cfg=presets[preset];if(!cfg)return;Object.assign(layer,cfg);syncLayerControls();update();});
