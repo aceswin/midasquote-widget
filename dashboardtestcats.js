@@ -2711,6 +2711,21 @@ window.logoutMember = async function () {
   @media(max-width:600px){#midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-hero{padding:24px!important}}
   #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-card-active{border-color:#b79869!important;box-shadow:0 0 0 3px rgba(183,152,105,.22)!important;transition:border-color .2s,box-shadow .2s}
   #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-preview-wrap{background:linear-gradient(140deg,#f7f3f7,#ede6ed)!important}
+
+/* v4.9 canvas-first editing */
+#mq-page-marketing #mq-studio-workspace.mq-studio-canvas-first .mq-studio-editor-layout{grid-template-columns:1fr!important}
+#mq-page-marketing #mq-studio-workspace.mq-studio-canvas-first .mq-studio-fields{display:none!important}
+#mq-page-marketing #mq-studio-workspace.mq-studio-canvas-first .mq-studio-preview-wrap{width:100%;max-width:980px;margin:auto;position:relative!important;transform:none!important}
+#mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-editor-layout{grid-template-columns:minmax(280px,360px) minmax(0,1fr)!important}
+#mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-fields{display:flex!important}
+#mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-fields>.mq-studio-control-card{display:none!important}
+#mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-fields>.mq-studio-control-card:has(#mq-studio-layer-list){display:block!important}
+#mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-preview-wrap{position:relative!important;transform:none!important}
+#mq-page-marketing #mq-studio-workspace .mq-studio-canvas-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:8px 0 12px}
+#mq-page-marketing #mq-studio-workspace .mq-studio-canvas-actions button{border:1px solid #d9cfda;border-radius:9px;padding:9px 13px;background:#fff;color:#30253a;font-size:12px;font-weight:700;cursor:pointer}
+#mq-page-marketing #mq-studio-workspace .mq-studio-canvas-actions button:hover{background:#f5eef6}
+#mq-page-marketing #mq-studio-workspace .mq-studio-inline-editor{position:absolute;z-index:30;resize:none;box-sizing:border-box;border:2px solid #7d5caa;border-radius:5px;background:#fffffff2;color:#19151c;font:700 22px/1.25 Arial,sans-serif;box-shadow:0 10px 35px #0004;padding:7px;outline:none;min-width:70px;min-height:45px}
+@media(max-width:980px){#mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-editor-layout{grid-template-columns:1fr!important}}
 </style>
           <!-- MARKETING KIT -->
           <div class="mq-page mq-sr-tab" id="mq-page-marketing">
@@ -2734,7 +2749,7 @@ window.logoutMember = async function () {
               <div class="mq-studio-nav" role="group" aria-label="Filter templates"><button type="button" class="active" data-studio-filter="all">All designs</button><button type="button" data-studio-filter="social">Social posts</button><button type="button" data-studio-filter="print">Posters & signs</button><button type="button" data-studio-filter="qr">QR promotions</button></div>
               <div class="mq-studio-grid" id="mq-studio-grid"></div>
               <div id="mq-studio-workspace" class="mq-studio-workspace" style="display:none">
-                <div class="mq-studio-editor-top"><div><span class="mq-studio-kicker">CUSTOMIZE YOUR DESIGN</span><h3 id="mq-studio-edit-title">Edit template</h3></div><button type="button" class="mq-studio-muted-btn" id="mq-studio-back">← All templates</button></div>
+                <div class="mq-studio-editor-top"><div><span class="mq-studio-kicker">DESIGN STUDIO</span><h3 id="mq-studio-edit-title">Edit template</h3></div><button type="button" class="mq-studio-muted-btn" id="mq-studio-back">← All templates</button></div><div class="mq-studio-canvas-actions"><button type="button" id="mq-studio-quick-text">+ Add text</button><button type="button" id="mq-studio-quick-shape">+ Add shape</button><button type="button" id="mq-studio-properties-toggle">Selected object options</button><button type="button" id="mq-studio-settings-toggle">All design settings</button><span style="font-size:11px;color:#746778">Double-click text to edit in place · Click any object for its options</span></div>
                 <div class="mq-studio-editor-layout">
                   <div class="mq-studio-fields">
                     <div class="mq-studio-control-card">
@@ -13795,7 +13810,7 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
       if(mqStudioLogo){const layer={id:layerUid(),type:'image',name:'Shop logo',place:'front',x:80,y:70,w:240,h:100,rotation:0,opacity:100,shadowColor:'#000000',shadowBlur:0,shadowX:0,shadowY:0,fit:'contain',radius:0,stroke:'#ffffff',strokeWidth:0,image:mqStudioLogo,dataUrl:mqStudioLogo.src};additions.push(layer);}
       mqStudioDetached=true;mqStudioCustomLayers.push(...additions);mqStudioSelectedLayerId=null;renderLayerList();syncLayerControls();update();if(!silent)mqShowToast('Everything is freely movable');
     }
-    function select(t){mqStudioSelected=t;field('edit-title').textContent=t.title;field('shop-name').value=shopName;field('headline').value=t.headline;field('subline').value=t.sub;field('cta').value=t.cta;field('color').value=safeColor(color);field('size').value=t.id==='yard'?'landscape':t.category==='print'?'poster':'square';setDefaults();field('composition').value=t.id==='premium'?'cinema':t.id==='yard'?'split':t.id==='before'?'magazine':t.id==='poster'?'window':'original';field('finish').value=t.mode==='luxury'?'bold':t.mode==='frame'?'editorial':t.category==='print'?'architect':'cinematic';field('accent').value=t.mode==='frame'?'frame':t.mode==='luxury'?'corner':t.id==='yard'?'stripe':'none';if(t.mode==='minimal'){field('headline-color').value='#382b36';field('sub-color').value='#685861'}workspace.style.display='block';previewShift=0;preview.style.transform='';update(true);detachBuiltIns(true);requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    function select(t){mqStudioSelected=t;field('edit-title').textContent=t.title;field('shop-name').value=shopName;field('headline').value=t.headline;field('subline').value=t.sub;field('cta').value=t.cta;field('color').value=safeColor(color);field('size').value=t.id==='yard'?'landscape':t.category==='print'?'poster':'square';setDefaults();field('composition').value=t.id==='premium'?'cinema':t.id==='yard'?'split':t.id==='before'?'magazine':t.id==='poster'?'window':'original';field('finish').value=t.mode==='luxury'?'bold':t.mode==='frame'?'editorial':t.category==='print'?'architect':'cinematic';field('accent').value=t.mode==='frame'?'frame':t.mode==='luxury'?'corner':t.id==='yard'?'stripe':'none';if(t.mode==='minimal'){field('headline-color').value='#382b36';field('sub-color').value='#685861'}workspace.style.display='block';workspace.classList.add('mq-studio-canvas-first');workspace.classList.remove('mq-studio-property-mode');previewShift=0;preview.style.transform='';update(true);detachBuiltIns(true);requestAnimationFrame(()=>requestAnimationFrame(()=>{
       // Browser chooses the actual scrollable ancestor (in Webflow .mq-content has overflow:visible).
       // scrollIntoView works on the document and nested scrollers, unlike manually altering .mq-content.
       workspace.scrollIntoView({behavior:'auto',block:'start',inline:'nearest'});
@@ -13886,6 +13901,37 @@ field('layer-back').addEventListener('click',()=>{const idx=mqStudioCustomLayers
 field('layer-forward').addEventListener('click',()=>{const idx=mqStudioCustomLayers.findIndex(l=>l.id===mqStudioSelectedLayerId);if(idx>=0&&idx<mqStudioCustomLayers.length-1){const [item]=mqStudioCustomLayers.splice(idx,1);mqStudioCustomLayers.splice(idx+1,0,item);renderLayerList();update();}});
       field('copy-caption').addEventListener('click',()=>{const caption=[field('headline').value,field('subline').value,field('cta').value+': '+quoteLink()].join('\n\n');if(navigator.clipboard?.writeText)navigator.clipboard.writeText(caption).then(()=>mqShowToast('Caption copied')).catch(()=>mqShowToast('Could not copy caption','error'));else mqShowToast('Clipboard not available','error')});
       const canvas=field('canvas');
+      let inlineEditor=null;
+      function closeInlineEditor(commit=true){
+        if(!inlineEditor)return;
+        const editor=inlineEditor,layer=mqStudioCustomLayers.find(l=>l.id===editor.dataset.layerId);
+        if(commit&&layer){layer.text=editor.value;mqStudioSelectedLayerId=layer.id;syncLayerControls();update();}
+        editor.remove();inlineEditor=null;
+      }
+      function editLayerInline(layer){
+        if(!layer||!(layer.type==='text'||layer.type==='button')||layer.locked)return;
+        closeInlineEditor(true);
+        const region=(canvas._mqCustomLayerRegions||[]).find(r=>r.id===layer.id)?.rect;
+        if(!region)return;
+        mqStudioSelectedLayerId=layer.id;
+        const r=canvas.getBoundingClientRect(),wr=preview.getBoundingClientRect();
+        const sx=r.width/canvas.width,sy=r.height/canvas.height;
+        const editor=document.createElement('textarea');editor.className='mq-studio-inline-editor';editor.dataset.layerId=layer.id;
+        editor.value=layer.text||'';
+        editor.style.left=(r.left-wr.left+region[0]*sx)+'px';
+        editor.style.top=(r.top-wr.top+region[1]*sy)+'px';
+        editor.style.width=Math.max(135,region[2]*sx)+'px';editor.style.height=Math.max(62,region[3]*sy)+'px';
+        editor.style.fontFamily=fontFace(layer.font||'arial');editor.style.fontSize=Math.max(15,Math.min(42,(layer.size||45)*sy))+'px';
+        preview.appendChild(editor);inlineEditor=editor;editor.focus();editor.select();
+        editor.addEventListener('keydown',e=>{if(e.key==='Escape'){e.stopPropagation();closeInlineEditor(false);}else if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();closeInlineEditor(true);}});
+        editor.addEventListener('blur',()=>{if(inlineEditor===editor)closeInlineEditor(true)});
+      }
+      const showPropertyMode=()=>{workspace.classList.remove('mq-studio-canvas-first');workspace.classList.add('mq-studio-property-mode');preview.style.transform='';};
+      field('quick-text').addEventListener('click',()=>{addLayer(defaultTextLayer());showPropertyMode();editLayerInline(currentLayer());});
+      field('quick-shape').addEventListener('click',()=>{addLayer(defaultShapeLayer());showPropertyMode();});
+      field('properties-toggle').addEventListener('click',()=>{if(workspace.classList.contains('mq-studio-property-mode')){workspace.classList.remove('mq-studio-property-mode');workspace.classList.add('mq-studio-canvas-first');}else showPropertyMode();});
+      field('settings-toggle').addEventListener('click',()=>{workspace.classList.toggle('mq-studio-canvas-first');workspace.classList.remove('mq-studio-property-mode');preview.style.transform='';});
+      canvas.addEventListener('dblclick',e=>{const hit=regionAt(canvasPoint(e));if(!hit?.startsWith('layer:'))return;const layer=mqStudioCustomLayers.find(l=>l.id===hit.slice(6));if(layer?.type==='text'||layer?.type==='button'){hideHover();editLayerInline(layer);}});
       const clampField=(id,val)=>{const el=field(id);if(!el)return;const min=Number(el.min||-9999),max=Number(el.max||9999);el.value=String(Math.round(clamp(val,min,max)));};
       const canvasPoint=e=>{const rect=canvas.getBoundingClientRect();return {x:(e.clientX-rect.left)*(canvas.width/rect.width),y:(e.clientY-rect.top)*(canvas.height/rect.height)}};
       const regionAt=pt=>{const custom=(canvas._mqCustomLayerRegions||[]).slice().reverse();for(const item of custom){const layer=mqStudioCustomLayers.find(l=>l.id===item.id);if(!layer||layer.hidden||layer.locked)continue;const r=item.rect;const radius=18*(canvas._mqUnit||1);if(layer.id===mqStudioSelectedLayerId){const corners=[['nw',r[0],r[1]],['ne',r[0]+r[2],r[1]],['sw',r[0],r[1]+r[3]],['se',r[0]+r[2],r[1]+r[3]]];for(const [side,x,y] of corners){if(Math.abs(pt.x-x)<radius&&Math.abs(pt.y-y)<radius)return 'resize:'+item.id+':'+side}}if(pt.x>=r[0]&&pt.x<=r[0]+r[2]&&pt.y>=r[1]&&pt.y<=r[1]+r[3])return 'layer:'+item.id;}if(mqStudioDetached)return null;const regions=canvas._mqRegions||{};const order=['cta','url','headline','sub','brand'];for(const key of order){const r=regions[key];if(!r)continue; if(pt.x>=r[0]&&pt.x<=r[0]+r[2]&&pt.y>=r[1]&&pt.y<=r[1]+r[3])return key;}return null;};
@@ -13919,12 +13965,12 @@ field('layer-forward').addEventListener('click',()=>{const idx=mqStudioCustomLay
       }
       hoverbar.addEventListener('pointerenter',()=>clearTimeout(hoverHide));hoverbar.addEventListener('pointerleave',()=>{hoverHide=setTimeout(hideHover,300)});
       const duplicateLayer=id=>{const layer=mqStudioCustomLayers.find(l=>l.id===id);if(!layer)return;const copy=hydrateLayer({...cloneObj(layer),id:layerUid(),name:(layer.name||layer.type)+' copy',x:(layer.x||0)+24,y:(layer.y||0)+24});mqStudioCustomLayers.push(copy);mqStudioSelectedLayerId=copy.id;syncLayerControls();update();};
-      hoverbar.addEventListener('click',e=>{const button=e.target.closest('button[data-action]');if(!button||!hoveredId)return;const id=hoveredId,layer=mqStudioCustomLayers.find(l=>l.id===id);if(!layer)return;mqStudioSelectedLayerId=id;const action=button.dataset.action;if(action==='delete'){deleteStudioLayer(id);hideHover()}else if(action==='duplicate'){duplicateLayer(id);hideHover()}else if(action==='replace'&&layer.type==='image'){field('layer-image-file').click();hideHover()}else if(action==='edit'){syncLayerControls();if(layer.type==='text'||layer.type==='button'){field('layer-text').focus();field('layer-text').select()}else if(layer.type==='image')field('layer-image-file').click();else field('layer-fill').focus();hideHover()}update()});
+      hoverbar.addEventListener('click',e=>{const button=e.target.closest('button[data-action]');if(!button||!hoveredId)return;const id=hoveredId,layer=mqStudioCustomLayers.find(l=>l.id===id);if(!layer)return;mqStudioSelectedLayerId=id;const action=button.dataset.action;if(action==='delete'){deleteStudioLayer(id);hideHover()}else if(action==='duplicate'){duplicateLayer(id);hideHover()}else if(action==='replace'&&layer.type==='image'){field('layer-image-file').click();hideHover()}else if(action==='edit'){showPropertyMode();syncLayerControls();if(layer.type==='text'||layer.type==='button'){editLayerInline(layer)}else if(layer.type==='image')field('layer-image-file').click();else field('layer-fill').focus();hideHover()}update()});
       canvas.addEventListener('pointermove',e=>{if(!drag)positionHover(e)});
       canvas.addEventListener('pointerleave',()=>{clearTimeout(hoverHide);hoverHide=setTimeout(()=>{if(!hoverbar.matches(':hover'))hideHover()},400)});
       let drag=null;
       canvas.style.cursor='grab';
-      canvas.addEventListener('pointerdown',e=>{if(!mqStudioSelected)return;const part=regionAt(canvasPoint(e));if(!part)return;const pt=canvasPoint(e);if(part.startsWith('resize:')){const [,layerId,corner]=part.split(':');const layer=mqStudioCustomLayers.find(l=>l.id===layerId);if(!layer)return;drag={part,kind:'resize',layerId,corner,start:pt,vals:{x:layer.x,y:layer.y,w:layer.w,h:layer.h}};canvas.setPointerCapture(e.pointerId);e.preventDefault();return;}if(String(part).startsWith('layer:')){const layer=currentLayer()&&('layer:'+currentLayer().id)===part?currentLayer():mqStudioCustomLayers.find(l=>'layer:'+l.id===part);if(!layer)return;mqStudioSelectedLayerId=layer.id;syncLayerControls();drag={part,start:pt,layerId:layer.id,vals:{x:Number(layer.x)||0,y:Number(layer.y)||0}};mqStudioFocus=part;}else{drag={part,start:pt,unit:canvas._mqUnit||1,vals:{shopX:Number(field('shop-x').value)||0,shopY:Number(field('shop-y').value)||0,contentX:Number(field('content-x').value)||0,contentY:Number(field('content-y').value)||0,ctaX:Number(field('cta-x').value)||0,ctaY:Number(field('cta-y').value)||0,urlX:Number(field('url-x').value)||0,urlY:Number(field('url-y').value)||0}}; mqStudioFocus=part;} update(); canvas.setPointerCapture(e.pointerId); canvas.style.cursor='grabbing'; e.preventDefault();});
+      canvas.addEventListener('pointerdown',e=>{if(!mqStudioSelected)return;const part=regionAt(canvasPoint(e));if(!part)return;const pt=canvasPoint(e);if(part.startsWith('resize:')){const [,layerId,corner]=part.split(':');const layer=mqStudioCustomLayers.find(l=>l.id===layerId);if(!layer)return;drag={part,kind:'resize',layerId,corner,start:pt,vals:{x:layer.x,y:layer.y,w:layer.w,h:layer.h}};canvas.setPointerCapture(e.pointerId);e.preventDefault();return;}if(String(part).startsWith('layer:')){const layer=currentLayer()&&('layer:'+currentLayer().id)===part?currentLayer():mqStudioCustomLayers.find(l=>'layer:'+l.id===part);if(!layer)return;mqStudioSelectedLayerId=layer.id;syncLayerControls();showPropertyMode();drag={part,start:pt,layerId:layer.id,vals:{x:Number(layer.x)||0,y:Number(layer.y)||0}};mqStudioFocus=part;}else{drag={part,start:pt,unit:canvas._mqUnit||1,vals:{shopX:Number(field('shop-x').value)||0,shopY:Number(field('shop-y').value)||0,contentX:Number(field('content-x').value)||0,contentY:Number(field('content-y').value)||0,ctaX:Number(field('cta-x').value)||0,ctaY:Number(field('cta-y').value)||0,urlX:Number(field('url-x').value)||0,urlY:Number(field('url-y').value)||0}}; mqStudioFocus=part;} update(); canvas.setPointerCapture(e.pointerId); canvas.style.cursor='grabbing'; e.preventDefault();});
       canvas.addEventListener('pointermove',e=>{const pt=canvasPoint(e);const hover=regionAt(pt);canvas.style.cursor=drag?'grabbing':hover?.startsWith('resize:')?'nwse-resize':(hover?'grab':'default');if(!drag)return;
         if(drag.kind==='resize'){const layer=mqStudioCustomLayers.find(l=>l.id===drag.layerId);if(!layer)return;const dx=pt.x-drag.start.x,dy=pt.y-drag.start.y;const w=drag.corner.includes('w')?drag.vals.w-dx:drag.vals.w+dx;const h=drag.corner.includes('n')?drag.vals.h-dy:drag.vals.h+dy;layer.w=Math.round(Math.max(25,w));layer.h=Math.round(Math.max(25,h));layer.x=Math.round(drag.corner.includes('w')?drag.vals.x+drag.vals.w-layer.w:drag.vals.x);layer.y=Math.round(drag.corner.includes('n')?drag.vals.y+drag.vals.h-layer.h:drag.vals.y);syncLayerControls();update();return;}
         if(String(drag.part).startsWith('layer:')){const layer=mqStudioCustomLayers.find(l=>l.id===drag.layerId);if(!layer)return;
