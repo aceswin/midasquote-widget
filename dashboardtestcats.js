@@ -13715,7 +13715,7 @@ function defaultQrLayer(){
   const pad=Math.round(Math.max(32,W*.06));
   const dataUrl=makeQrDataUrl(quoteLink(),640);
   const img=dataUrl? new Image():null;
-  if(img) img.src=dataUrl;
+  if(img){ img.onload=()=>{ if(mqStudioSelected?.category==='qr' && mqStudioCustomLayers.some(l=>l.image===img))update(); }; img.onerror=()=>mqShowToast('QR image could not load','error'); img.src=dataUrl; }
   return {id:layerUid(),type:'image',qrCode:true,name:'QR code',place:'front',x:Math.round(W-size-pad),y:Math.round(H-size-62),w:size,h:size,rotation:0,opacity:100,shadowColor:'#000000',shadowBlur:0,shadowX:0,shadowY:0,fit:'contain',radius:12,stroke:'#ffffff',strokeWidth:10,fill:'#ffffff',image:img,dataUrl};
 }
 function defaultButtonLayer(text){return {id:layerUid(),type:'button',name:'Call to action',place:'front',x:80,y:840,w:330,h:68,rotation:0,opacity:100,shadowColor:'#000000',shadowBlur:0,shadowX:0,shadowY:0,text:text||'GET YOUR ESTIMATE',font:'montserrat',align:'center',color:'#271c29',size:24,spacing:0,fx:'none',fill:'#f2e1ca',radius:12,stroke:'#ffffff',strokeWidth:0}}
@@ -14111,6 +14111,11 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
         snapshot.detached=saved.detached;snapshot.selected=null;restoreStudioState(snapshot);clearTimeout(mqHistoryTimer);commitStudioHistory();return true;
       }catch(err){return false;}}
     function resetStudioHistory(){clearTimeout(mqHistoryTimer);clearTimeout(mqDraftTimer);mqHistory=[];mqHistoryIndex=-1;mqHistoryTemplateId=mqStudioSelected?.id;commitStudioHistory();}
+    // Ephemeral per-template drafts: kept only in this dashboard instance, never uploaded.
+    const mqSessionDesigns=new Map();
+    function rememberSessionDesign(){if(!mqStudioSelected)return;clearTimeout(mqHistoryTimer);mqSessionDesigns.set(mqStudioSelected.id,captureStudioState());}
+    function restoreSessionDesign(id){const saved=mqSessionDesigns.get(id);if(!saved)return false;restoreStudioState(saved);mqStudioSelectedLayerId=null;renderLayerList();syncLayerControls();update();resetStudioHistory();return true;}
+
     function update(forExport=false){if(!mqStudioSelected)return;if(field('quick-brand'))field('quick-brand').value=field('color').value;if(field('quick-accent'))field('quick-accent').value=field('accent-color').value;const quickRemove=field('photo-remove-quick');if(quickRemove){quickRemove.disabled=!mqStudioPhoto;quickRemove.style.opacity=mqStudioPhoto?'1':'.45';quickRemove.title=mqStudioPhoto?'Remove the template project photo':'No project photo to remove';}syncRangeLabels();const canvas=field('canvas');const sizes={square:[1080,1080],portrait:[1080,1350],story:[1080,1920],poster:[1080,1620],landscape:[1620,1080]};const fmt=field('size').value;const quickFmt=field('quick-size');if(quickFmt&&quickFmt.value!==fmt)quickFmt.value=fmt;const dims=sizes[fmt]||sizes.square;if(field('format-dimensions'))field('format-dimensions').textContent=dims.join(' × ')+' px';if(canvas.width!==dims[0])canvas.width=dims[0];if(canvas.height!==dims[1])canvas.height=dims[1];paint(canvas,mqStudioSelected,{...currentOpts(),highlight:forExport?null:mqStudioFocus,suppressSelection:!!forExport});queuePreviewFollow();if(!forExport)scheduleStudioHistory()}
     function setDefaults(){
       field('shop-font').value='playfair';field('shop-color').value=mqStudioSelected && mqStudioSelected.mode==='minimal'?'#382b36':'#ffffff';field('shop-scale').value='100';field('shop-spacing').value='2';field('shop-x').value='0';field('shop-y').value='0';field('logo-scale').value='100';field('composition').value='original';field('focal').value='50';field('finish').value='cinematic';field('overlay').value='46';field('accent').value='none';field('accent-color').value='#d9be97';
@@ -14161,11 +14166,9 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
         templateSwitcher.addEventListener('change',()=>{
           const next=MQ_STUDIO_TEMPLATES.find(t=>t.id===templateSwitcher.value);
           if(!next || next.id===mqStudioSelected?.id)return;
-          // Switching resets the current template's live layers. Require confirmation.
-          if(!window.confirm('Switch designs? Unsaved changes to this design will be lost. Save your draft first if you want to keep it.')){
-            templateSwitcher.value=mqStudioSelected?.id||'';return;
-          }
+          rememberSessionDesign();
           select(next);
+          restoreSessionDesign(next.id);
         });
       }
 
