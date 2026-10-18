@@ -13803,11 +13803,23 @@ function addLayer(layer){mqStudioCustomLayers.push(layer);mqStudioSelectedLayerI
       else if(effect==='outline'){ctx.strokeStyle=color||'#000000';ctx.lineWidth=Math.max(1,Number(options.fxOutline??3))*k;ctx.lineJoin='round';ctx.miterLimit=2;}
     }
     function clearTextFx(ctx){ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetX=0;ctx.shadowOffsetY=0;ctx.lineWidth=0;}
-    function drawSpacedTextFx(ctx,text,x,y,spacing,align,effect,color,k){
-      if(effect==='outline'){applyTextFx(ctx,effect,color,k);strokeSpacedText(ctx,text,x,y,spacing,align);clearTextFx(ctx);drawSpacedText(ctx,text,x,y,spacing,align);return;}
-      applyTextFx(ctx,effect,color,k);drawSpacedText(ctx,text,x,y,spacing,align);clearTextFx(ctx);
+    // Per-layer shadows are independent from the text effect dropdown.
+    // A chosen blur / X / Y overrides the effect's default shadow geometry;
+    // 'None' still permits a real drop shadow from the layer sliders.
+    function drawSpacedTextFx(ctx,text,x,y,spacing,align,effect,color,k,layerShadow=null){
+      const useLayerShadow=layerShadow && ((Number(layerShadow.shadowBlur)||0)>0 || (Number(layerShadow.shadowX)||0)!==0 || (Number(layerShadow.shadowY)||0)!==0);
+      if(effect==='outline'){
+        applyTextFx(ctx,effect,color,k);strokeSpacedText(ctx,text,x,y,spacing,align);clearTextFx(ctx);
+      }else applyTextFx(ctx,effect,color,k);
+      if(useLayerShadow){
+        ctx.shadowColor=layerShadow.shadowColor||'#000000';
+        ctx.shadowBlur=Math.max(0,Number(layerShadow.shadowBlur)||0)*k;
+        ctx.shadowOffsetX=(Number(layerShadow.shadowX)||0)*k;
+        ctx.shadowOffsetY=(Number(layerShadow.shadowY)||0)*k;
+      }
+      drawSpacedText(ctx,text,x,y,spacing,align);clearTextFx(ctx);
     }
-    function drawWrappedLinesFx(ctx,lines,x,startY,lineHeight,spacing,align,effect,color,k){lines.forEach((line,i)=>drawSpacedTextFx(ctx,line,x,startY+i*lineHeight,spacing,align,effect,color,k));}
+    function drawWrappedLinesFx(ctx,lines,x,startY,lineHeight,spacing,align,effect,color,k,layerShadow=null){lines.forEach((line,i)=>drawSpacedTextFx(ctx,line,x,startY+i*lineHeight,spacing,align,effect,color,k,layerShadow));}
 
 function applyRawShadow(ctx,color,blur,dx,dy,k){ctx.shadowColor=color||'rgba(0,0,0,.3)';ctx.shadowBlur=(blur||0)*k;ctx.shadowOffsetX=(dx||0)*k;ctx.shadowOffsetY=(dy||0)*k;}
 function clearRawShadow(ctx){ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetX=0;ctx.shadowOffsetY=0;}
@@ -13861,7 +13873,7 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
   else if(layer.projectPhoto){ctx.fillStyle=layer.fill||'#e9d9c8';ctx.fillRect(x,y,w,h);ctx.fillStyle='rgba(255,255,255,.16)';ctx.fillRect(x+w*.12,y+h*.14,w*.76,h*.72);}
   ctx.restore();
   if((layer.strokeWidth||0)>0){ctx.strokeStyle=layer.stroke||'#ffffff';ctx.lineWidth=(layer.strokeWidth||0)*k;ctx.beginPath();ctx.roundRect(x,y,w,h,radius);ctx.stroke();}
-}else if(layer.type==='button'){ctx.fillStyle=layer.fill||'#f2e1ca';ctx.beginPath();ctx.roundRect(x,y,w,h,Math.min(w/2,h/2,(layer.radius??12)*k));ctx.fill();if((layer.strokeWidth||0)>0){ctx.strokeStyle=layer.stroke||'#ffffff';ctx.lineWidth=layer.strokeWidth*k;ctx.stroke();}clearRawShadow(ctx);ctx.fillStyle=layer.color||'#292234';let size=Math.max(8,(layer.size||24))*k;const space=(layer.spacing||0)*k;const label=String(layer.text||'');ctx.font=font(size,layer.font||'montserrat',700);while(size>9*k && textWidthWithSpacing(ctx,label,space)>w-18*k){size-=k;ctx.font=font(size,layer.font||'montserrat',700);}drawSpacedTextFx(ctx,label,x+w/2,y+h/2+size*.35,space,'center',layer.fx||'none',layer.shadowColor||'#000000',k);}else if(layer.type==='text'){const size=Math.max(8,(layer.size||56))*k;ctx.font=font(size,layer.font||'playfair',700);ctx.fillStyle=layer.color||'#ffffff';const lines=wrap(ctx,String(layer.text||''),w,10,(layer.spacing||0)*k);const lineHeight=size*1.18;const align=layer.align||'left';const tx=align==='left'?x:align==='center'?x+w/2:x+w;drawWrappedLinesFx(ctx,lines,tx,y+size,lineHeight,(layer.spacing||0)*k,align,layer.fx||'none',layer.shadowColor||'#000000',k);region=[x,y,w,Math.max(h,lines.length*lineHeight+size*.2)];}
+}else if(layer.type==='button'){ctx.fillStyle=layer.fill||'#f2e1ca';ctx.beginPath();ctx.roundRect(x,y,w,h,Math.min(w/2,h/2,(layer.radius??12)*k));ctx.fill();if((layer.strokeWidth||0)>0){ctx.strokeStyle=layer.stroke||'#ffffff';ctx.lineWidth=layer.strokeWidth*k;ctx.stroke();}clearRawShadow(ctx);ctx.fillStyle=layer.color||'#292234';let size=Math.max(8,(layer.size||24))*k;const space=(layer.spacing||0)*k;const label=String(layer.text||'');ctx.font=font(size,layer.font||'montserrat',700);while(size>9*k && textWidthWithSpacing(ctx,label,space)>w-18*k){size-=k;ctx.font=font(size,layer.font||'montserrat',700);}drawSpacedTextFx(ctx,label,x+w/2,y+h/2+size*.35,space,'center',layer.fx||'none',layer.shadowColor||'#000000',k,layer);}else if(layer.type==='text'){const size=Math.max(8,(layer.size||56))*k;ctx.font=font(size,layer.font||'playfair',700);ctx.fillStyle=layer.color||'#ffffff';const lines=wrap(ctx,String(layer.text||''),w,10,(layer.spacing||0)*k);const lineHeight=size*1.18;const align=layer.align||'left';const tx=align==='left'?x:align==='center'?x+w/2:x+w;drawWrappedLinesFx(ctx,lines,tx,y+size,lineHeight,(layer.spacing||0)*k,align,layer.fx||'none',layer.shadowColor||'#000000',k,layer);region=[x,y,w,Math.max(h,lines.length*lineHeight+size*.2)];}
   clearRawShadow(ctx);ctx.restore();regions.push({id:layer.id,rect:region});if(highlight){ctx.save();ctx.strokeStyle='#38bdf8';ctx.lineWidth=3*k;ctx.setLineDash([12*k,7*k]);ctx.strokeRect(region[0],region[1],region[2],region[3]);ctx.setLineDash([]);[[region[0],region[1]],[region[0]+region[2],region[1]],[region[0],region[1]+region[3]],[region[0]+region[2],region[1]+region[3]]].forEach(([hx,hy])=>{ctx.fillStyle='#fff';ctx.fillRect(hx-9*k,hy-9*k,18*k,18*k);ctx.strokeRect(hx-9*k,hy-9*k,18*k,18*k)});ctx.restore();}}
     function drawHeadlineWithEmphasis(ctx,lines,x,y,lineHeight,spacing,align,effect,effectColor,k,phrase,phraseColor){
       phrase=String(phrase||'').trim();
