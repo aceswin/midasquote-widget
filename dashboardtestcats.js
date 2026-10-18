@@ -14116,7 +14116,7 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
     function rememberSessionDesign(){if(!mqStudioSelected)return;clearTimeout(mqHistoryTimer);mqSessionDesigns.set(mqStudioSelected.id,captureStudioState());}
     function restoreSessionDesign(id){const saved=mqSessionDesigns.get(id);if(!saved)return false;restoreStudioState(saved);mqStudioSelectedLayerId=null;renderLayerList();syncLayerControls();update();resetStudioHistory();return true;}
 
-    function update(forExport=false){if(!mqStudioSelected)return;if(field('quick-brand'))field('quick-brand').value=field('color').value;if(field('quick-accent'))field('quick-accent').value=field('accent-color').value;const quickRemove=field('photo-remove-quick');if(quickRemove){quickRemove.disabled=!mqStudioPhoto;quickRemove.style.opacity=mqStudioPhoto?'1':'.45';quickRemove.title=mqStudioPhoto?'Remove the template project photo':'No project photo to remove';}syncRangeLabels();const canvas=field('canvas');const sizes={square:[1080,1080],portrait:[1080,1350],story:[1080,1920],poster:[1080,1620],landscape:[1620,1080]};const fmt=field('size').value;const quickFmt=field('quick-size');if(quickFmt&&quickFmt.value!==fmt)quickFmt.value=fmt;const dims=sizes[fmt]||sizes.square;if(field('format-dimensions'))field('format-dimensions').textContent=dims.join(' × ')+' px';if(canvas.width!==dims[0])canvas.width=dims[0];if(canvas.height!==dims[1])canvas.height=dims[1];paint(canvas,mqStudioSelected,{...currentOpts(),highlight:forExport?null:mqStudioFocus,suppressSelection:!!forExport});queuePreviewFollow();if(!forExport)scheduleStudioHistory()}
+    function update(forExport=false){if(!mqStudioSelected)return;if(field('quick-brand'))field('quick-brand').value=field('color').value;if(field('quick-accent'))field('quick-accent').value=field('accent-color').value;const quickRemove=field('photo-remove-quick');if(quickRemove){quickRemove.disabled=!mqStudioPhoto;quickRemove.style.opacity=mqStudioPhoto?'1':'.45';quickRemove.title=mqStudioPhoto?'Remove the template project photo':'No project photo to remove';}syncRangeLabels();const canvas=field('canvas');const sizes={square:[1080,1080],portrait:[1080,1350],story:[1080,1920],poster:[1080,1620],landscape:[1620,1080]};const fmt=field('size').value;const quickFmt=field('quick-size');if(quickFmt&&quickFmt.value!==fmt)quickFmt.value=fmt;const dims=sizes[fmt]||sizes.square;if(field('format-dimensions'))field('format-dimensions').textContent=dims.join(' × ')+' px';if(canvas.width!==dims[0])canvas.width=dims[0];if(canvas.height!==dims[1])canvas.height=dims[1];paint(canvas,mqStudioSelected,{...currentOpts(),highlight:forExport?null:mqStudioFocus,suppressSelection:!!forExport});queuePreviewFollow();if(!forExport){root._mqSyncActions?.();scheduleStudioHistory()}}
     function setDefaults(){
       field('shop-font').value='playfair';field('shop-color').value=mqStudioSelected && mqStudioSelected.mode==='minimal'?'#382b36':'#ffffff';field('shop-scale').value='100';field('shop-spacing').value='2';field('shop-x').value='0';field('shop-y').value='0';field('logo-scale').value='100';field('composition').value='original';field('focal').value='50';field('finish').value='cinematic';field('overlay').value='46';field('accent').value='none';field('accent-color').value='#d9be97';
       field('url-text').value='';field('url-x').value='0';field('url-y').value='0';field('url-color').value=mqStudioSelected?.mode==='minimal'?'#45323e':'#e8d9dd';field('url-scale').value='100';
@@ -14305,71 +14305,71 @@ field('layer-forward').addEventListener('click',()=>{const idx=mqStudioCustomLay
       const clampField=(id,val)=>{const el=field(id);if(!el)return;const min=Number(el.min||-9999),max=Number(el.max||9999);el.value=String(Math.round(clamp(val,min,max)));};
       const canvasPoint=e=>{const rect=canvas.getBoundingClientRect();return {x:(e.clientX-rect.left)*(canvas.width/rect.width),y:(e.clientY-rect.top)*(canvas.height/rect.height)}};
       const regionAt=pt=>{const custom=(canvas._mqCustomLayerRegions||[]).slice().reverse();for(const item of custom){const layer=mqStudioCustomLayers.find(l=>l.id===item.id);if(!layer||layer.hidden||layer.locked)continue;const r=item.rect;const radius=18*(canvas._mqUnit||1);if(layer.id===mqStudioSelectedLayerId){const corners=[['nw',r[0],r[1]],['ne',r[0]+r[2],r[1]],['sw',r[0],r[1]+r[3]],['se',r[0]+r[2],r[1]+r[3]]];for(const [side,x,y] of corners){if(Math.abs(pt.x-x)<radius&&Math.abs(pt.y-y)<radius)return 'resize:'+item.id+':'+side}}if(pt.x>=r[0]&&pt.x<=r[0]+r[2]&&pt.y>=r[1]&&pt.y<=r[1]+r[3])return 'layer:'+item.id;}if(mqStudioDetached)return null;const regions=canvas._mqRegions||{};const order=['cta','url','headline','sub','brand'];for(const key of order){const r=regions[key];if(!r)continue; if(pt.x>=r[0]&&pt.x<=r[0]+r[2]&&pt.y>=r[1]&&pt.y<=r[1]+r[3])return key;}return null;};
-      const hoverbar=field('hoverbar');let hoveredId=null;let hoverHide=null;
-      // The preview is translated and resized in fullscreen mode. Place the
-      // toolbar in the document's top layer coordinate space so its position
-      // matches the actual canvas pixels on screen, not its transformed parent.
-      if(hoverbar && hoverbar.parentElement!==document.body)document.body.appendChild(hoverbar);
-      hoverbar.style.setProperty('position','fixed','important');
-      hoverbar.style.setProperty('z-index','2147483000','important');
-      hoverbar.style.setProperty('transform','none','important');
-      // Lock the toolbar at its first position until explicitly dismissed.
-      // Prevent oscillation when the pointer crosses the action buttons or resize handles.
-      let hoverLocked=false;
-      const hideHover=()=>{clearTimeout(hoverHide);if(hoverbar){hoverbar.style.display='none'}hoveredId=null;hoverLocked=false};
-      function scheduleHoverHide(){
-        clearTimeout(hoverHide);
-        hoverHide=setTimeout(()=>{
-          if(!hoverbar.matches(':hover'))hideHover();
-        },600);
+      // Fixed selected-object toolbar. Never follows the pointer or overlaps the art.
+      const hoverbar=field('hoverbar');
+      const actionHost=preview.querySelector('.mq-studio-preview-tip');
+      if(actionHost&&hoverbar){actionHost.parentNode.insertBefore(hoverbar,actionHost);}
+      hoverbar.classList.add('mq-studio-fixed-actions');
+      hoverbar.style.cssText='position:relative!important;inset:auto!important;left:auto!important;top:auto!important;transform:none!important;display:flex!important;width:100%!important;max-width:100%!important;box-sizing:border-box!important;align-items:center!important;justify-content:center!important;flex-wrap:wrap!important;margin:4px 0 8px!important;z-index:2!important;background:#f8f6f8!important;border:1px solid #e4dae5!important;box-shadow:none!important;padding:8px!important;border-radius:12px!important';
+      const selectionLabel=document.createElement('span');
+      selectionLabel.className='mq-studio-action-label';
+      selectionLabel.style.cssText='flex:1 1 150px;min-width:110px;color:#382b40;font:700 12px Arial,sans-serif;padding:0 8px';
+      hoverbar.insertBefore(selectionLabel,hoverbar.firstChild);
+      function syncFixedActions(){
+        const layer=mqStudioCustomLayers.find(l=>l.id===mqStudioSelectedLayerId&&!l.hidden);
+        selectionLabel.textContent=layer?'Selected: '+(layer.name||layer.type):'Select an object to edit';
+        hoverbar.querySelectorAll('button[data-action]').forEach(button=>{
+          button.disabled=!layer;
+          button.style.opacity=layer?'1':'.40';
+          button.style.cursor=layer?'pointer':'not-allowed';
+        });
+        const replace=hoverbar.querySelector('[data-action=replace]');
+        if(replace)replace.style.display=layer?.type==='image'?'inline-flex':'none';
       }
-      function positionHover(e){
-        if(drag||!mqStudioSelected)return;
-        // Stay still on the SAME object, but immediately re-anchor to a NEW object.
-        // Previously hoverLocked kept the toolbar at the old object's position.
-        const hit=regionAt(canvasPoint(e));
-        const id=hit?.startsWith('layer:')?hit.slice(6):hit?.startsWith('resize:')?hit.split(':')[1]:null;
-        if(!id){if(hoverLocked)scheduleHoverHide();return;}
-        if(hoverLocked && hoveredId===id){clearTimeout(hoverHide);return;}
-        // Different object: discard stale anchor, keep the toolbar visible.
-        clearTimeout(hoverHide);
-        hoverLocked=false;
-        const layer=mqStudioCustomLayers.find(l=>l.id===id);
-        if(!layer||layer.hidden)return;
-        const box=(canvas._mqCustomLayerRegions||[]).find(x=>x.id===id)?.rect;
-        if(!box)return;
-        hoveredId=id;
-        hoverbar.querySelector('[data-action=replace]').style.display=layer.type==='image'?'':'none';
-        hoverbar.style.display='flex';
-        // Use viewport coordinates directly. Both the canvas and hoverbar are
-        // measured in the SAME coordinate system, independent of fullscreen
-        // scroll containers, sticky transforms, or editor zoom.
-        const cv=canvas.getBoundingClientRect();
-        const sx=cv.width/canvas.width,sy=cv.height/canvas.height;
-        const objectLeft=cv.left+box[0]*sx;
-        const objectTop=cv.top+box[1]*sy;
-        const objectBottom=objectTop+box[3]*sy;
-        const barWidth=hoverbar.offsetWidth||240,barHeight=hoverbar.offsetHeight||42;
-        const gap=5,offsetX=10,margin=8;
-        const left=Math.max(margin,Math.min(window.innerWidth-barWidth-margin,objectLeft+offsetX));
-        const above=objectTop-barHeight-gap>=margin;
-        const top=above?objectTop-barHeight-gap:Math.min(window.innerHeight-barHeight-margin,objectBottom+gap);
-        hoverbar.style.setProperty('left',left+'px','important');
-        hoverbar.style.setProperty('top',Math.max(margin,top)+'px','important');
-        hoverbar.style.setProperty('transform','none','important');
-        hoverLocked=true;
-      }
-      window.addEventListener('scroll',hideHover,true);
-      window.addEventListener('resize',hideHover);
-      hoverbar.addEventListener('pointerenter',()=>clearTimeout(hoverHide));
-      hoverbar.addEventListener('pointerleave',scheduleHoverHide);
+      root._mqSyncActions=syncFixedActions;
+      const hideHover=()=>{}; // Compatibility with pointer handlers; no hover state to hide.
       const duplicateLayer=id=>{const layer=mqStudioCustomLayers.find(l=>l.id===id);if(!layer)return;const copy=hydrateLayer({...cloneObj(layer),id:layerUid(),name:(layer.name||layer.type)+' copy',x:(layer.x||0)+24,y:(layer.y||0)+24});mqStudioCustomLayers.push(copy);mqStudioSelectedLayerId=copy.id;syncLayerControls();update();};
-      hoverbar.addEventListener('click',e=>{const button=e.target.closest('button[data-action]');if(!button||!hoveredId)return;const id=hoveredId,layer=mqStudioCustomLayers.find(l=>l.id===id);if(!layer)return;mqStudioSelectedLayerId=id;const action=button.dataset.action;if(action==='delete'){deleteStudioLayer(id);hideHover()}else if(action==='duplicate'){duplicateLayer(id);hideHover()}else if(action==='replace'&&layer.type==='image'){field('layer-image-file').click();hideHover()}else if(action==='edit'){showPropertyMode();syncLayerControls();if(layer.type==='text'||layer.type==='button'){editLayerInline(layer)}else if(layer.type==='image')field('layer-image-file').click();else field('layer-fill').focus();hideHover()}update()});
-      canvas.addEventListener('pointermove',e=>{if(!drag)positionHover(e)});
-      canvas.addEventListener('pointerleave',scheduleHoverHide);
+      hoverbar.addEventListener('click',e=>{
+        const button=e.target.closest('button[data-action]');
+        const id=mqStudioSelectedLayerId;
+        const layer=mqStudioCustomLayers.find(l=>l.id===id);
+        if(!button||!layer)return;
+        const action=button.dataset.action;
+        if(action==='delete'){deleteStudioLayer(id);}
+        else if(action==='duplicate'){duplicateLayer(id);}
+        else if(action==='replace'&&layer.type==='image'){field('layer-image-file').click();}
+        else if(action==='edit'){
+          showPropertyMode();syncLayerControls();
+          if(layer.type==='text'||layer.type==='button')editLayerInline(layer);
+          else if(layer.type==='image'){ /* Image Edit shows contextual image properties; Replace opens the file chooser. */ }
+          else field('layer-fill').focus();
+        }
+        syncFixedActions();update();
+      });
       let drag=null;
       canvas.style.cursor='grab';
-      canvas.addEventListener('pointerdown',e=>{if(!mqStudioSelected)return;studioPointerActive=true;hideHover();const part=regionAt(canvasPoint(e));if(!part){studioPointerActive=false;return;}const pt=canvasPoint(e);if(part.startsWith('resize:')){const [,layerId,corner]=part.split(':');const layer=mqStudioCustomLayers.find(l=>l.id===layerId);if(!layer)return;drag={part,kind:'resize',layerId,corner,start:pt,vals:{x:layer.x,y:layer.y,w:layer.w,h:layer.h}};canvas.setPointerCapture(e.pointerId);e.preventDefault();return;}if(String(part).startsWith('layer:')){const layer=currentLayer()&&('layer:'+currentLayer().id)===part?currentLayer():mqStudioCustomLayers.find(l=>'layer:'+l.id===part);if(!layer)return;mqStudioSelectedLayerId=layer.id;drag={part,start:pt,startClient:{x:e.clientX,y:e.clientY},rect:canvas.getBoundingClientRect(),canvasW:canvas.width,canvasH:canvas.height,layerId:layer.id,wasMoved:false,vals:{x:Number(layer.x)||0,y:Number(layer.y)||0}};mqStudioFocus=part;}else{drag={part,start:pt,unit:canvas._mqUnit||1,vals:{shopX:Number(field('shop-x').value)||0,shopY:Number(field('shop-y').value)||0,contentX:Number(field('content-x').value)||0,contentY:Number(field('content-y').value)||0,ctaX:Number(field('cta-x').value)||0,ctaY:Number(field('cta-y').value)||0,urlX:Number(field('url-x').value)||0,urlY:Number(field('url-y').value)||0}}; mqStudioFocus=part;} update(); canvas.setPointerCapture(e.pointerId); canvas.style.cursor='grabbing'; e.preventDefault();});
+      canvas.addEventListener('pointerdown',e=>{
+        if(!mqStudioSelected)return;
+        studioPointerActive=true;
+        const part=regionAt(canvasPoint(e));
+        if(!part){studioPointerActive=false;mqStudioSelectedLayerId=null;syncLayerControls();update();syncFixedActions();return;}
+        const pt=canvasPoint(e);
+        if(part.startsWith('resize:')){
+          const [,layerId,corner]=part.split(':');const layer=mqStudioCustomLayers.find(l=>l.id===layerId);if(!layer)return;
+          drag={part,kind:'resize',layerId,corner,start:pt,vals:{x:layer.x,y:layer.y,w:layer.w,h:layer.h}};
+          canvas.setPointerCapture(e.pointerId);e.preventDefault();return;
+        }
+        if(part.startsWith('layer:')){
+          const layer=mqStudioCustomLayers.find(l=>'layer:'+l.id===part);if(!layer)return;
+          mqStudioSelectedLayerId=layer.id;
+          drag={part,start:pt,startClient:{x:e.clientX,y:e.clientY},rect:canvas.getBoundingClientRect(),canvasW:canvas.width,canvasH:canvas.height,layerId:layer.id,wasMoved:false,vals:{x:Number(layer.x)||0,y:Number(layer.y)||0}};
+          mqStudioFocus=part;
+        }else{
+          drag={part,start:pt,unit:canvas._mqUnit||1,vals:{shopX:Number(field('shop-x').value)||0,shopY:Number(field('shop-y').value)||0,contentX:Number(field('content-x').value)||0,contentY:Number(field('content-y').value)||0,ctaX:Number(field('cta-x').value)||0,ctaY:Number(field('cta-y').value)||0,urlX:Number(field('url-x').value)||0,urlY:Number(field('url-y').value)||0}};
+          mqStudioFocus=part;
+        }
+        syncFixedActions();update();canvas.setPointerCapture(e.pointerId);canvas.style.cursor='grabbing';e.preventDefault();
+      });
       canvas.addEventListener('pointermove',e=>{const pt=drag?.rect?{x:(e.clientX-drag.rect.left)*(drag.canvasW/drag.rect.width),y:(e.clientY-drag.rect.top)*(drag.canvasH/drag.rect.height)}:canvasPoint(e);const hover=drag?null:regionAt(pt);canvas.style.cursor=drag?'grabbing':hover?.startsWith('resize:')?'nwse-resize':(hover?'grab':'default');if(!drag)return; if(drag.startClient && !drag.wasMoved){if(Math.hypot(e.clientX-drag.startClient.x,e.clientY-drag.startClient.y)<7)return;drag.wasMoved=true;}
         if(drag.kind==='resize'){const layer=mqStudioCustomLayers.find(l=>l.id===drag.layerId);if(!layer)return;const dx=pt.x-drag.start.x,dy=pt.y-drag.start.y;const w=drag.corner.includes('w')?drag.vals.w-dx:drag.vals.w+dx;const h=drag.corner.includes('n')?drag.vals.h-dy:drag.vals.h+dy;layer.w=Math.round(Math.max(25,w));layer.h=Math.round(Math.max(25,h));layer.x=Math.round(drag.corner.includes('w')?drag.vals.x+drag.vals.w-layer.w:drag.vals.x);layer.y=Math.round(drag.corner.includes('n')?drag.vals.y+drag.vals.h-layer.h:drag.vals.y);update();return;}
         if(String(drag.part).startsWith('layer:')){const layer=mqStudioCustomLayers.find(l=>l.id===drag.layerId);if(!layer)return;
