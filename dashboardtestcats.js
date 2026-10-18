@@ -14306,6 +14306,13 @@ field('layer-forward').addEventListener('click',()=>{const idx=mqStudioCustomLay
       const canvasPoint=e=>{const rect=canvas.getBoundingClientRect();return {x:(e.clientX-rect.left)*(canvas.width/rect.width),y:(e.clientY-rect.top)*(canvas.height/rect.height)}};
       const regionAt=pt=>{const custom=(canvas._mqCustomLayerRegions||[]).slice().reverse();for(const item of custom){const layer=mqStudioCustomLayers.find(l=>l.id===item.id);if(!layer||layer.hidden||layer.locked)continue;const r=item.rect;const radius=18*(canvas._mqUnit||1);if(layer.id===mqStudioSelectedLayerId){const corners=[['nw',r[0],r[1]],['ne',r[0]+r[2],r[1]],['sw',r[0],r[1]+r[3]],['se',r[0]+r[2],r[1]+r[3]]];for(const [side,x,y] of corners){if(Math.abs(pt.x-x)<radius&&Math.abs(pt.y-y)<radius)return 'resize:'+item.id+':'+side}}if(pt.x>=r[0]&&pt.x<=r[0]+r[2]&&pt.y>=r[1]&&pt.y<=r[1]+r[3])return 'layer:'+item.id;}if(mqStudioDetached)return null;const regions=canvas._mqRegions||{};const order=['cta','url','headline','sub','brand'];for(const key of order){const r=regions[key];if(!r)continue; if(pt.x>=r[0]&&pt.x<=r[0]+r[2]&&pt.y>=r[1]&&pt.y<=r[1]+r[3])return key;}return null;};
       const hoverbar=field('hoverbar');let hoveredId=null;let hoverHide=null;
+      // The preview is translated and resized in fullscreen mode. Place the
+      // toolbar in the document's top layer coordinate space so its position
+      // matches the actual canvas pixels on screen, not its transformed parent.
+      if(hoverbar && hoverbar.parentElement!==document.body)document.body.appendChild(hoverbar);
+      hoverbar.style.setProperty('position','fixed','important');
+      hoverbar.style.setProperty('z-index','2147483000','important');
+      hoverbar.style.setProperty('transform','none','important');
       // Lock the toolbar at its first position until explicitly dismissed.
       // Prevent oscillation when the pointer crosses the action buttons or resize handles.
       let hoverLocked=false;
@@ -14334,25 +14341,26 @@ field('layer-forward').addEventListener('click',()=>{const idx=mqStudioCustomLay
         hoveredId=id;
         hoverbar.querySelector('[data-action=replace]').style.display=layer.type==='image'?'':'none';
         hoverbar.style.display='flex';
-        // Anchor consistently from the object's top-left corner.
-        // Toolbar should appear 10px above and 10px to the right of the item.
-        const cv=canvas.getBoundingClientRect(),wrap=preview.getBoundingClientRect();
-        const scaleX=cv.width/canvas.width,scaleY=cv.height/canvas.height;
-        const objectLeft=cv.left-wrap.left+box[0]*scaleX;
-        const objectTop=cv.top-wrap.top+box[1]*scaleY;
-        const objectBottom=objectTop+box[3]*scaleY;
+        // Use viewport coordinates directly. Both the canvas and hoverbar are
+        // measured in the SAME coordinate system, independent of fullscreen
+        // scroll containers, sticky transforms, or editor zoom.
+        const cv=canvas.getBoundingClientRect();
+        const sx=cv.width/canvas.width,sy=cv.height/canvas.height;
+        const objectLeft=cv.left+box[0]*sx;
+        const objectTop=cv.top+box[1]*sy;
+        const objectBottom=objectTop+box[3]*sy;
         const barWidth=hoverbar.offsetWidth||240,barHeight=hoverbar.offsetHeight||42;
-        // Keep the action bar snug against the selection, with just a 4px gap.
-        // Use explicit pixel coordinates rather than CSS transforms, which
-        // interacted with older dashboard rules and could double the offset.
-        const gap=4,leftOffset=10,margin=8;
-        const leftEdge=Math.max(margin,Math.min(Math.max(margin,wrap.width-barWidth-margin),objectLeft+leftOffset));
-        const fitsAbove=objectTop-barHeight-gap>=margin;
-        hoverbar.style.left=leftEdge+'px';
-        hoverbar.style.top=(fitsAbove?objectTop-barHeight-gap:objectBottom+gap)+'px';
-        hoverbar.style.transform='none';
+        const gap=5,offsetX=10,margin=8;
+        const left=Math.max(margin,Math.min(window.innerWidth-barWidth-margin,objectLeft+offsetX));
+        const above=objectTop-barHeight-gap>=margin;
+        const top=above?objectTop-barHeight-gap:Math.min(window.innerHeight-barHeight-margin,objectBottom+gap);
+        hoverbar.style.setProperty('left',left+'px','important');
+        hoverbar.style.setProperty('top',Math.max(margin,top)+'px','important');
+        hoverbar.style.setProperty('transform','none','important');
         hoverLocked=true;
       }
+      window.addEventListener('scroll',hideHover,true);
+      window.addEventListener('resize',hideHover);
       hoverbar.addEventListener('pointerenter',()=>clearTimeout(hoverHide));
       hoverbar.addEventListener('pointerleave',scheduleHoverHide);
       const duplicateLayer=id=>{const layer=mqStudioCustomLayers.find(l=>l.id===id);if(!layer)return;const copy=hydrateLayer({...cloneObj(layer),id:layerUid(),name:(layer.name||layer.type)+' copy',x:(layer.x||0)+24,y:(layer.y||0)+24});mqStudioCustomLayers.push(copy);mqStudioSelectedLayerId=copy.id;syncLayerControls();update();};
