@@ -13436,16 +13436,23 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     let previewShift=0, followQueued=false;
     function followPreview(){
       followQueued=false;
-      if(!preview||!controls||workspace.style.display==='none'||!mqStudioSelected){return}
-      if(window.innerWidth<=1100){
+      if(!preview||!controls||workspace.style.display==='none'||!mqStudioSelected)return;
+      // A narrow window has stacked controls: don't pin the artwork over them.
+      const editor=workspace.querySelector('.mq-studio-editor-layout');
+      if(!editor || window.innerWidth<=1100 || getComputedStyle(editor).gridTemplateColumns.split(' ').length<2){
         previewShift=0;preview.style.transform='';return;
       }
-      const previewTop=preview.getBoundingClientRect().top-previewShift;
-      const maxTravel=Math.max(0,controls.getBoundingClientRect().height-preview.offsetHeight);
-      const target=Math.max(0,Math.min(maxTravel,96-previewTop));
-      if(Math.abs(target-previewShift)>.5){
-        previewShift=target;
-        preview.style.transform=`translate3d(0, ${target}px, 0)`;
+      // Determine the preview's natural position by subtracting our own translation.
+      // Use the entire editor as the boundary, not controls.offsetHeight, because
+      // contextual controls change height while selecting different layer types.
+      const rect=preview.getBoundingClientRect();
+      const editorRect=editor.getBoundingClientRect();
+      const naturalTop=rect.top-previewShift;
+      const available=Math.max(0,editorRect.bottom-naturalTop-preview.offsetHeight);
+      const next=Math.max(0,Math.min(available,88-naturalTop));
+      if(Math.abs(next-previewShift)>0.5){
+        previewShift=next;
+        preview.style.transform=`translate3d(0, ${next}px, 0)`;
       }
     }
     function queuePreviewFollow(){
@@ -13455,9 +13462,15 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     }
     if(!root.dataset.previewFollowInstalled){
       root.dataset.previewFollowInstalled='true';
-      // Capture scrolls on window AND nested dashboard content scrollers.
       window.addEventListener('scroll',queuePreviewFollow,true);
       window.addEventListener('resize',queuePreviewFollow);
+      // The selected object's properties panel can grow/shrink without a scroll.
+      // Keep its visible preview position in sync with those changes.
+      if(typeof ResizeObserver!=='undefined'){
+        const observer=new ResizeObserver(queuePreviewFollow);
+        observer.observe(controls);
+        observer.observe(workspace);
+      }
     }
 
     const safeColor=(v,fallback)=>/^#[0-9a-f]{6}$/i.test(v||'')?v:(fallback||'#56314b');
