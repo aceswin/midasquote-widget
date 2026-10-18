@@ -2856,6 +2856,59 @@ window.logoutMember = async function () {
 #mq-page-marketing #mq-studio-workspace .mq-studio-canvas-actions button:hover{background:#f5eef6}
 #mq-page-marketing #mq-studio-workspace .mq-studio-inline-editor{position:absolute;z-index:30;resize:none;box-sizing:border-box;border:2px solid #7d5caa;border-radius:5px;background:#fffffff2;color:#19151c;font:700 22px/1.25 Arial,sans-serif;box-shadow:0 10px 35px #0004;padding:7px;outline:none;min-width:70px;min-height:45px}
 @media(max-width:980px){#mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-editor-layout{grid-template-columns:1fr!important}}
+
+/* v7: immersive overlay editor; ordinary dashboard gallery stays on its page */
+#midasquote-dashboard #mq-page-marketing #mq-studio-workspace.mq-studio-fullscreen{
+ position:fixed!important;inset:0!important;z-index:2147483000!important;
+ display:flex!important;flex-direction:column!important;width:100vw!important;height:100dvh!important;
+ max-width:none!important;max-height:none!important;overflow:hidden!important;
+ padding:14px 22px!important;margin:0!important;border:0!important;border-radius:0!important;
+ background:#f7f4f7!important;box-shadow:none!important;
+}
+#mq-page-marketing #mq-studio-workspace.mq-studio-fullscreen .mq-studio-editor-top{flex:0 0 auto;min-height:52px!important;margin:0 0 6px!important}
+#mq-page-marketing #mq-studio-workspace.mq-studio-fullscreen .mq-studio-canvas-actions{flex:0 0 auto!important;padding:2px 0 9px!important}
+#mq-page-marketing #mq-studio-workspace.mq-studio-fullscreen .mq-studio-editor-layout{
+ display:grid!important;grid-template-columns:minmax(280px,345px) minmax(0,1fr)!important;
+ flex:1 1 auto!important;min-height:0!important;height:auto!important;gap:18px!important;
+ overflow:hidden!important;align-items:stretch!important;
+}
+#mq-page-marketing #mq-studio-workspace.mq-studio-fullscreen .mq-studio-fields{
+ display:flex!important;min-height:0!important;max-height:100%!important;overflow-y:auto!important;overscroll-behavior:contain;
+ padding:0 7px 18px 0!important;scrollbar-width:thin;
+}
+#mq-page-marketing #mq-studio-workspace.mq-studio-fullscreen .mq-studio-preview-wrap,
+#midasquote-dashboard #mq-page-marketing #mq-studio-workspace.mq-studio-fullscreen .mq-studio-preview-wrap{
+ display:flex!important;flex-direction:column!important;justify-content:flex-start!important;align-items:center!important;
+ position:relative!important;top:auto!important;transform:none!important;will-change:auto!important;
+ min-height:0!important;max-height:100%!important;height:100%!important;overflow-y:auto!important;overflow-x:hidden!important;
+ padding:10px!important;gap:7px!important;margin:0!important;width:100%!important;max-width:none!important;
+}
+#mq-page-marketing #mq-studio-workspace.mq-studio-fullscreen .mq-studio-preview-wrap canvas,
+#midasquote-dashboard #mq-page-marketing #mq-studio-workspace.mq-studio-fullscreen .mq-studio-preview-wrap canvas{
+ display:block!important;width:auto!important;height:auto!important;max-width:100%!important;
+ max-height:clamp(220px,49dvh,720px)!important;flex:0 1 auto!important;object-fit:contain!important;transform:none!important;
+}
+#mq-page-marketing #mq-studio-workspace.mq-studio-fullscreen .mq-studio-format-bar,
+#mq-page-marketing #mq-studio-workspace.mq-studio-fullscreen .mq-studio-quick-colors,
+#mq-page-marketing #mq-studio-workspace.mq-studio-fullscreen .mq-studio-preview-toolbar{
+ display:flex!important;flex:0 0 auto!important;visibility:visible!important;flex-wrap:wrap!important;width:100%!important;margin:0!important;
+}
+#mq-page-marketing #mq-studio-workspace.mq-studio-fullscreen .mq-history-toolbar{
+ display:flex!important;visibility:visible!important;position:sticky!important;bottom:0!important;z-index:12!important;
+ width:100%!important;flex:0 0 auto!important;margin:0!important;background:#fff!important;
+}
+#mq-page-marketing #mq-studio-workspace.mq-studio-fullscreen.mq-studio-canvas-first .mq-studio-editor-layout{grid-template-columns:1fr!important}
+#mq-page-marketing #mq-studio-workspace.mq-studio-fullscreen.mq-studio-canvas-first .mq-studio-fields{display:none!important}
+#mq-page-marketing #mq-studio-workspace.mq-studio-fullscreen.mq-studio-canvas-first .mq-studio-preview-wrap{max-width:1120px!important;margin:auto!important}
+#mq-page-marketing #mq-studio-workspace.mq-studio-fullscreen.mq-studio-property-mode .mq-studio-fields>.mq-studio-control-card{display:none!important}
+#mq-page-marketing #mq-studio-workspace.mq-studio-fullscreen.mq-studio-property-mode .mq-studio-fields>.mq-studio-control-card:has(#mq-studio-layer-list){display:block!important}
+@media(max-width:760px){
+ #midasquote-dashboard #mq-page-marketing #mq-studio-workspace.mq-studio-fullscreen{padding:8px!important}
+ #mq-page-marketing #mq-studio-workspace.mq-studio-fullscreen .mq-studio-editor-layout{grid-template-columns:1fr!important;overflow-y:auto!important}
+ #mq-page-marketing #mq-studio-workspace.mq-studio-fullscreen .mq-studio-fields{max-height:none!important;overflow:visible!important}
+ #mq-page-marketing #mq-studio-workspace.mq-studio-fullscreen .mq-studio-preview-wrap{height:auto!important;overflow:visible!important}
+ #mq-page-marketing #mq-studio-workspace.mq-studio-fullscreen .mq-studio-preview-wrap canvas{max-height:45dvh!important}
+}
 </style>
           <!-- MARKETING KIT -->
           <div class="mq-page mq-sr-tab" id="mq-page-marketing">
@@ -13549,6 +13602,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     function followPreview(){
       followQueued=false;
       if(studioPointerActive)return;
+      if(workspace.classList.contains('mq-studio-fullscreen')){previewShift=0;if(preview)preview.style.transform='';return;}
       if(!preview||!controls||workspace.style.display==='none'||!mqStudioSelected)return;
       // A narrow window has stacked controls: don't pin the artwork over them.
       const editor=workspace.querySelector('.mq-studio-editor-layout');
@@ -14048,9 +14102,10 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
       if(mqStudioSelected && mqStudioSelected.category==='qr'){additions.push(defaultQrLayer());}
       mqStudioDetached=true;mqStudioCustomLayers.push(...additions);mqStudioSelectedLayerId=null;renderLayerList();syncLayerControls();update();if(!silent)mqShowToast('Everything is freely movable');
     }
-    function select(t){mqStudioSelected=t;field('edit-title').textContent=t.title;field('shop-name').value=shopName;field('headline').value=t.headline;field('subline').value=t.sub;field('cta').value=t.cta;field('color').value=safeColor(color);field('quick-brand').value=safeColor(color);field('quick-surface').value='#e9d9c8';field('quick-accent').value='#d9be97';field('size').value=t.id==='yard'?'landscape':t.category==='print'?'poster':'square';setDefaults();field('composition').value=t.id==='premium'?'cinema':t.id==='yard'?'split':t.id==='before'?'original':t.id==='poster'?'window':'original';field('finish').value=t.mode==='luxury'?'bold':t.mode==='frame'?'editorial':t.category==='print'?'architect':'cinematic';field('accent').value=t.mode==='frame'?'frame':t.mode==='luxury'?'corner':t.id==='yard'?'stripe':'none';if(t.mode==='minimal'){field('headline-color').value='#382b36';field('sub-color').value='#685861'}workspace.style.display='block';workspace.classList.add('mq-studio-canvas-first');workspace.classList.remove('mq-studio-property-mode','mq-studio-show-layers');if(field('layers-toggle'))field('layers-toggle').textContent='☷ All layers';previewShift=0;preview.style.transform='';update(true);detachBuiltIns(true);const photoArea=defaultProjectPhotoLayer(t,field('composition').value);if(photoArea){mqStudioCustomLayers.unshift(photoArea);renderLayerList();update();}resetStudioHistory();requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    function select(t){mqStudioSelected=t;field('edit-title').textContent=t.title;field('shop-name').value=shopName;field('headline').value=t.headline;field('subline').value=t.sub;field('cta').value=t.cta;field('color').value=safeColor(color);field('quick-brand').value=safeColor(color);field('quick-surface').value='#e9d9c8';field('quick-accent').value='#d9be97';field('size').value=t.id==='yard'?'landscape':t.category==='print'?'poster':'square';setDefaults();field('composition').value=t.id==='premium'?'cinema':t.id==='yard'?'split':t.id==='before'?'original':t.id==='poster'?'window':'original';field('finish').value=t.mode==='luxury'?'bold':t.mode==='frame'?'editorial':t.category==='print'?'architect':'cinematic';field('accent').value=t.mode==='frame'?'frame':t.mode==='luxury'?'corner':t.id==='yard'?'stripe':'none';if(t.mode==='minimal'){field('headline-color').value='#382b36';field('sub-color').value='#685861'}workspace.style.display='flex';workspace.classList.add('mq-studio-fullscreen','mq-studio-canvas-first');workspace.classList.remove('mq-studio-property-mode','mq-studio-show-layers');if(field('layers-toggle'))field('layers-toggle').textContent='☷ All layers';previewShift=0;preview.style.transform='';update(true);detachBuiltIns(true);const photoArea=defaultProjectPhotoLayer(t,field('composition').value);if(photoArea){mqStudioCustomLayers.unshift(photoArea);renderLayerList();update();}resetStudioHistory();requestAnimationFrame(()=>requestAnimationFrame(()=>{
       // Browser chooses the actual scrollable ancestor (in Webflow .mq-content has overflow:visible).
       // scrollIntoView works on the document and nested scrollers, unlike manually altering .mq-content.
+      if(workspace.classList.contains('mq-studio-fullscreen'))return;
       workspace.scrollIntoView({behavior:'auto',block:'start',inline:'nearest'});
       const rect=workspace.getBoundingClientRect();
       if(rect.top>140 || rect.top<0){
@@ -14094,7 +14149,7 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
       const removeProjectPhoto=()=>{mqStudioPhoto=null;const photoArea=projectPhotoLayer();if(photoArea){photoArea.image=null;delete photoArea.dataUrl;}field('photo').value='';update();mqShowToast('Project photo removed');};
       field('remove-photo').addEventListener('click',removeProjectPhoto);
       field('photo-remove-quick').addEventListener('click',removeProjectPhoto);
-      field('back').addEventListener('click',()=>{workspace.style.display='none';previewShift=0;preview.style.transform='';root.scrollIntoView({behavior:'smooth',block:'start'})});
+      field('back').addEventListener('click',()=>{workspace.style.display='none';workspace.classList.remove('mq-studio-fullscreen');previewShift=0;preview.style.transform='';root.scrollIntoView({behavior:'smooth',block:'start'})});
       field('quick-download').addEventListener('click',()=>field('download').click());
       field('download').addEventListener('click',()=>{update(true);const a=document.createElement('a');a.href=field('canvas').toDataURL('image/png');a.download=(shopName+'-'+mqStudioSelected.id+'-'+field('size').value).toLowerCase().replace(/[^a-z0-9-]+/g,'-')+'.png';a.click();update()});
       const stylePacks={
