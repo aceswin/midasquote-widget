@@ -5,6 +5,7 @@
  * This is a test
  */
 
+
 (function () {
 
   // Bundled QR code generator (qrcode-generator v2.0.4, MIT License, Kazuhiko Arase) — avoids external CDN dependency
