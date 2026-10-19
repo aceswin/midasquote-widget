@@ -14005,7 +14005,7 @@ function defaultQrLayer(){
   const pad=Math.round(Math.max(32,W*.06));
   const dataUrl=makeQrDataUrl(quoteLink(),640);
   const img=dataUrl? new Image():null;
-  if(img){ img.onload=()=>{ if(mqStudioSelected?.category==='qr' && mqStudioCustomLayers.some(l=>l.image===img))update(); }; img.onerror=()=>mqShowToast('QR image could not load','error'); img.src=dataUrl; }
+  if(img){ img.onload=()=>{ if(mqStudioCustomLayers.some(l=>l.image===img))update(); }; img.onerror=()=>mqShowToast('QR image could not load','error'); img.src=dataUrl; }
   return {id:layerUid(),type:'image',qrCode:true,name:'QR code',place:'front',x:Math.round(W-size-pad),y:Math.round(H-size-62),w:size,h:size,rotation:0,opacity:100,shadowColor:'#000000',shadowBlur:0,shadowX:0,shadowY:0,fit:'contain',radius:12,stroke:'#ffffff',strokeWidth:10,fill:'#ffffff',image:img,dataUrl};
 }
 function defaultButtonLayer(text){return {id:layerUid(),type:'button',name:'Call to action',place:'front',x:80,y:840,w:330,h:68,rotation:0,opacity:100,shadowColor:'#000000',shadowBlur:0,shadowX:0,shadowY:0,text:text||'GET YOUR ESTIMATE',font:'montserrat',align:'center',color:'#271c29',size:24,spacing:0,fx:'none',fill:'#f2e1ca',radius:12,stroke:'#ffffff',strokeWidth:0}}
@@ -14045,6 +14045,14 @@ function seededStudioLayers(t){
       layers.push(textLayer('Headline',t.headline,76,752,1460,74,62,classic==='estate'?'#1a1c21':'#ffffff','oswald','left','none'));
       layers.push(textLayer('Shop name',String(shopName).toUpperCase(),76,858,1480,60,45,classic==='estate'?'#1a1c21':'#ffffff','montserrat','left','none'));
       layers.push(textLayer('Call to action',t.cta,76,968,1450,54,36,accent,'montserrat','left','none'));
+      if(classic==='cta'){
+        // A call to scan must include the code itself. Keep it an editable image layer.
+        const qr=defaultQrLayer();
+        qr.name='Scan for a Quote · QR code';
+        qr.x=1260; qr.y=376; qr.w=268; qr.h=268;
+        qr.fit='contain'; qr.fill='#ffffff'; qr.radius=14; qr.stroke='#ffffff'; qr.strokeWidth=14;
+        layers.push(qr);
+      }
     }else{
       if(photoLeft){layers.push(imageLayer('Project photo — replace',0,0,850,1080,0));layers.push(shapeLayer('Brand panel',850,0,770,1080,bg,'rect',0));}
       else{layers.push(shapeLayer('Brand panel',0,0,740,1080,bg,'rect',0));layers.push(imageLayer('Project photo — replace',740,0,880,1080,0));}
