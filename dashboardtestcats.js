@@ -2587,6 +2587,10 @@ window.logoutMember = async function () {
   .mq-studio-tile{background:#fff;border:1px solid #e9e6e9;border-radius:13px;padding:9px;text-align:left;cursor:pointer;box-shadow:0 3px 18px rgba(32,26,41,.04);transition:transform .2s,border-color .2s,box-shadow .2s;color:inherit}
   .mq-studio-tile:hover,.mq-studio-tile:focus-visible{transform:translateY(-3px);border-color:#a98caa;box-shadow:0 10px 28px rgba(32,26,41,.12);outline:none}
   .mq-studio-thumb{display:block;width:100%;height:175px;object-fit:cover;border-radius:8px;background:#eee8e9}
+  #mq-studio .mq-studio-yard-card .mq-studio-thumb-area{height:auto!important;aspect-ratio:3 / 2!important;background:#efe9e5!important;overflow:hidden!important;border-radius:9px!important}
+  #mq-studio .mq-studio-yard-card .mq-studio-thumb{display:block!important;width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;object-fit:fill!important;border-radius:0!important}
+  #mq-studio .mq-studio-yard-card{border-color:#e4ded7!important;box-shadow:0 4px 16px rgba(39,30,25,.09)!important}
+  #mq-studio .mq-studio-yard-card:hover{border-color:#d5ae60!important;box-shadow:0 12px 32px rgba(39,30,25,.14)!important}
   .mq-studio-tile-meta{display:flex;align-items:flex-start;justify-content:space-between;gap:6px;padding:11px 5px 4px}
   .mq-studio-tile strong{font-size:13px;display:block}.mq-studio-tile small{display:block;margin-top:4px;font-size:11px;color:#78727c}
   .mq-studio-tile-meta b{font-size:17px;color:#6f5368;font-weight:400}
@@ -13914,6 +13918,19 @@ function defaultProjectPhotoLayer(t,composition){
   return {id:layerUid(),type:'image',projectPhoto:true,name:'Project photo area',place:'front',x:Math.round(x),y:Math.round(y),w:Math.round(w),h:Math.round(h),rotation:0,opacity:100,shadowColor:'#000000',shadowBlur:0,shadowX:0,shadowY:0,fit:'cover',radius:0,stroke:'#ffffff',strokeWidth:0,fill:safeColor(field('quick-surface').value,'#e9d9c8'),image:mqStudioPhoto};
 }
 function projectPhotoLayer(){return mqStudioCustomLayers.find(l=>l.projectPhoto)}
+function applyProjectPhotoToTargets(image,applyToAllEmpty=false){
+  if(!image)return;
+  const current=currentLayer();
+  const mark=(layer)=>{if(!layer||layer.type!=='image')return;layer.image=image;layer.dataUrl=image.src;layer.sharedProjectPhoto=true;};
+  if(current&&current.type==='image'&&!current.locked){mark(current);return 1;}
+  const blanks=mqStudioCustomLayers.filter(l=>l.type==='image'&&!l.locked&&(!l.dataUrl||!String(l.dataUrl).trim()));
+  if(blanks.length){(applyToAllEmpty?blanks:[blanks[0]]).forEach(mark);return applyToAllEmpty?blanks.length:1;}
+  const project=projectPhotoLayer();
+  if(project&&!project.locked){mark(project);return 1;}
+  const first=mqStudioCustomLayers.find(l=>l.type==='image'&&!l.locked);
+  if(first){mark(first);return 1;}
+  return 0;
+}
 function makeQrDataUrl(link,size=512){
   try{
     window.mqQrGen = window.mqQrGen || MQ_QR_LIB_FACTORY();
@@ -13952,21 +13969,25 @@ function seededStudioLayers(t){
   const shapeLayer=(name,x,y,w,h,fill,shape='rect',radius=18,place='front',stroke='#ffffff',strokeWidth=0)=>({id:layerUid(),type:'shape',name,place,x,y,w,h,rotation:0,opacity:100,shadowColor:'#000000',shadowBlur:0,shadowX:0,shadowY:0,shape,radius,fill,stroke,strokeWidth});
   const imageLayer=(name,x,y,w,h,radius=18,useDefaultPhoto=true)=>({id:layerUid(),type:'image',name,place:'front',x,y,w,h,rotation:0,opacity:100,shadowColor:'#000000',shadowBlur:12,shadowX:0,shadowY:7,fit:'cover',radius,stroke:'#ffffff',strokeWidth:6,fill:'#d9d2c7',image:useDefaultPhoto?(mqStudioPhoto||null):null,dataUrl:useDefaultPhoto?(mqStudioPhoto?.src||''):''});
   if(t.id==='yardbefore'){
-    layers.push(shapeLayer('Title banner',0,0,1620,160,'#202027','rect',0));
-    layers.push(textLayer('Headline','BEFORE  &  AFTER',130,38,1360,82,64,'#ffffff','oswald','center','none'));
-    layers.push(shapeLayer('Photo backing',30,192,1560,684,'#ede8e0','rect',14));
-    layers.push(shapeLayer('Before panel',52,218,730,624,'#e6ddd2'));
-    layers.push(shapeLayer('After panel',838,218,730,624,'#e6ddd2'));
-    layers.push(imageLayer('Before photo — click Replace',52,218,730,624,16,false));
-    layers.push(imageLayer('After photo — click Replace',838,218,730,624,16,false));
-    layers.push(shapeLayer('Center divider',802,218,16,624,'#c9a24b','rect',0));
-    layers.push(shapeLayer('Before label background',52,155,730,66,'#202027','rect',0));
-    layers.push(textLayer('Before label','BEFORE',85,168,640,52,44,'#ffffff','oswald','center','none'));
-    layers.push(shapeLayer('After label background',838,155,730,66,'#202027','rect',0));
-    layers.push(textLayer('After label','AFTER',870,168,650,52,44,'#ffffff','oswald','center','none'));
-    layers.push(shapeLayer('Bottom brand band',0,890,1620,190,'#202027','rect',0));
-    layers.push(textLayer('Shop name',String(shopName).toUpperCase(),74,918,1480,65,52,'#ffffff','montserrat','center','none'));
-    layers.push(textLayer('Website',quoteLink().replace(/^https?:\/\//,''),210,996,1200,44,26,'#dcc58b','montserrat','center','none'));
+    layers.push(shapeLayer('Sign background',0,0,1620,1080,'#6b1830','rect',0,'back'));
+    layers.push(shapeLayer('Top banner',0,0,1620,150,'#202027','rect',0));
+    layers.push(textLayer('Headline','BEFORE  &  AFTER',130,34,1360,84,66,'#ffffff','oswald','center','none'));
+    layers.push(shapeLayer('Photo stage',46,176,1528,686,'#efe7dc','rect',18,'front','#dbc58e',0));
+    layers.push(shapeLayer('Before label background',86,168,620,56,'#202027','round',18));
+    layers.push(shapeLayer('After label background',914,168,620,56,'#202027','round',18));
+    layers.push(textLayer('Before label','BEFORE',120,177,552,40,34,'#ffffff','oswald','center','none'));
+    layers.push(textLayer('After label','AFTER',948,177,552,40,34,'#ffffff','oswald','center','none'));
+    layers.push(shapeLayer('Before panel',86,242,620,518,'#d9d2c7','rect',18,'front','#ffffff',4));
+    layers.push(shapeLayer('After panel',914,242,620,518,'#d9d2c7','rect',18,'front','#ffffff',4));
+    layers.push(imageLayer('Before photo — click Replace',94,250,604,502,16,false));
+    layers.push(imageLayer('After photo — click Replace',922,250,604,502,16,false));
+    layers.push(shapeLayer('Center divider',786,250,48,502,'#c9a24b','round',24));
+    layers.push(textLayer('Before prompt','UPLOAD\nBEFORE PHOTO',186,430,420,120,34,'#6b5f53','oswald','center','none'));
+    layers.push(textLayer('After prompt','UPLOAD\nAFTER PHOTO',1014,430,420,120,34,'#6b5f53','oswald','center','none'));
+    layers.push(textLayer('Tip line','Use “Replace” on each panel — or use the top project photo button to fill both panels.',130,786,1360,36,20,'#6f6155','montserrat','center','none'));
+    layers.push(shapeLayer('Bottom brand band',0,892,1620,188,'#202027','rect',0));
+    layers.push(textLayer('Shop name',String(shopName).toUpperCase(),74,926,1480,56,48,'#ffffff','montserrat','center','none'));
+    layers.push(textLayer('Website',quoteLink().replace(/^https?:\/\//,''),210,990,1200,40,24,'#dcc58b','montserrat','center','none'));
   }
   if(t.id.startsWith('ys-')){
     const classic=t.id.slice(3);
@@ -14526,25 +14547,54 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
       if(svgData)return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svgData);
       const canvas=document.createElement('canvas');canvas.width=360;canvas.height=360;paint(canvas,t,{color,surface:'#e9d9c8',photo:mqStudioPhoto,headlineFont:'playfair',subFont:'montserrat',ctaFont:'montserrat',align:'left',headlineColor:'#ffffff',subColor:'#f0e7ee',ctaBg:'#f2e1ca',ctaColor:'#2b2430',headlineFx:'soft',subFx:'soft',brandFx:'soft',ctaFx:'none',urlFx:'soft',fxColor:'#000000',headlineScale:100,subScale:100,ctaScale:100,headlineSpacing:0,subSpacing:0,contentX:0,contentY:0,ctaX:0,ctaY:0});return canvas.toDataURL('image/png')}
     function customStudioThumbSvg(t){
-      const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-      const shop=esc((shopName||'YOUR SHOP').toUpperCase());
-      const headline=esc((t.headline||'').toUpperCase());
-      const cta=esc((t.cta||'').toUpperCase());
-      const bgPhoto=`<defs><linearGradient id="ph" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#f1ebe4"/><stop offset="55%" stop-color="#ccb8a4"/><stop offset="100%" stop-color="#73584a"/></linearGradient></defs>`;
-      const kitchen=`<rect x="0" y="0" width="360" height="360" fill="url(#ph)"/><rect x="24" y="205" width="312" height="92" rx="8" fill="#f5f0ea" opacity="0.78"/><rect x="42" y="92" width="84" height="108" rx="8" fill="#e9e4dd" opacity="0.92"/><rect x="236" y="96" width="82" height="104" rx="8" fill="#e9e4dd" opacity="0.92"/><rect x="120" y="132" width="120" height="122" rx="9" fill="#dbc3aa" opacity="0.95"/><rect x="132" y="106" width="96" height="18" rx="4" fill="#efe9e2" opacity="0.96"/><circle cx="62" cy="68" r="10" fill="#f8f0e3" opacity="0.95"/><circle cx="102" cy="68" r="10" fill="#f8f0e3" opacity="0.9"/><circle cx="302" cy="60" r="8" fill="#f8f0e3" opacity="0.9"/>`;
-      const screen=`<rect x="58" y="128" width="244" height="136" rx="12" fill="#ffffff" stroke="#e4ddd3"/><rect x="58" y="128" width="244" height="26" rx="12" fill="#f3f4f6" stroke="#e4ddd3"/><circle cx="78" cy="141" r="4" fill="#d1d5db"/><circle cx="92" cy="141" r="4" fill="#d1d5db"/><circle cx="106" cy="141" r="4" fill="#d1d5db"/><rect x="77" y="176" width="206" height="64" rx="8" fill="#f8fafc" stroke="#e5e7eb"/><rect x="135" y="212" width="88" height="18" rx="9" fill="#111827"/><text x="179" y="225" text-anchor="middle" font-size="9" font-family="Arial" fill="#fff">Set up shop items</text>`;
-      if(t.id==='yardbefore')return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 360">${bgPhoto}<rect width="360" height="64" fill="#1f2129"/><text x="180" y="41" text-anchor="middle" font-family="Arial" font-size="30" font-weight="800" fill="#fff">BEFORE &amp; AFTER</text><rect x="20" y="92" width="148" height="170" rx="10" fill="#e8dfd4" stroke="#ffffff" stroke-width="4"/><rect x="192" y="92" width="148" height="170" rx="10" fill="#e8dfd4" stroke="#ffffff" stroke-width="4"/><rect x="174" y="92" width="12" height="170" fill="#c9a24b"/><text x="94" y="84" text-anchor="middle" font-family="Arial" font-size="16" font-weight="800" fill="#fff">BEFORE</text><text x="266" y="84" text-anchor="middle" font-family="Arial" font-size="16" font-weight="800" fill="#fff">AFTER</text><rect x="20" y="282" width="320" height="58" fill="#1f2129"/><text x="180" y="316" text-anchor="middle" font-family="Arial" font-size="18" font-weight="700" fill="#fff">${shop}</text></svg>`;
-      if(t.id==='yardscan')return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 360">${bgPhoto}${kitchen}<rect width="360" height="360" fill="#000" opacity="0.42"/><rect x="215" y="22" width="106" height="42" rx="18" fill="#fff"/><text x="268" y="48" text-anchor="middle" font-family="Arial" font-size="15" font-weight="800" fill="#111827">SCAN ME</text><text x="36" y="112" font-family="Arial" font-size="36" font-weight="900" fill="#fff">SCAN FOR A</text><text x="36" y="146" font-family="Arial" font-size="36" font-weight="900" fill="#fff">FAST QUOTE</text><rect x="36" y="286" width="288" height="38" rx="4" fill="#111" opacity="0.92" stroke="#c9a24b"/><text x="180" y="311" text-anchor="middle" font-family="Arial" font-size="18" font-weight="800" fill="#c9a24b">${cta}</text></svg>`;
-      if(t.id==='yardshowroom')return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 360">${bgPhoto}<rect width="360" height="360" fill="#6b1830"/><text x="32" y="58" font-family="Georgia" font-size="14" font-weight="700" fill="#fff">${shop}</text><text x="32" y="90" font-family="Arial" font-size="30" font-weight="900" fill="#fff">VISIT OUR ONLINE</text><text x="32" y="120" font-family="Arial" font-size="30" font-weight="900" fill="#fff">SHOWROOM</text><text x="32" y="150" font-family="Arial" font-size="12" font-weight="700" fill="#f5e9d6">Browse styles, colours and ideas without lifting a finger.</text>${screen}<rect x="36" y="298" width="132" height="26" rx="6" fill="#f4e8d7"/><text x="102" y="316" text-anchor="middle" font-family="Arial" font-size="11" font-weight="800" fill="#443226">BROWSE SHOWROOM</text></svg>`;
-      if(t.id==='ys-diamond')return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 360">${bgPhoto}<rect width="360" height="360" fill="#15171b"/><rect x="190" y="0" width="170" height="360" fill="#d6d1ca"/><rect x="16" y="16" width="146" height="328" fill="none" stroke="#d8ad54" stroke-width="4"/><text x="36" y="110" font-family="Arial" font-size="32" font-weight="900" fill="#ffffff">QUALITY</text><text x="36" y="144" font-family="Arial" font-size="32" font-weight="900" fill="#ffffff">YOU CAN</text><text x="36" y="178" font-family="Arial" font-size="32" font-weight="900" fill="#ffffff">SEE</text><rect x="36" y="206" width="102" height="5" fill="#d8ad54"/><text x="36" y="256" font-family="Arial" font-size="18" font-weight="700" fill="#ffffff">${shop}</text><text x="36" y="310" font-family="Arial" font-size="16" font-weight="800" fill="#d8ad54">GET AN ESTIMATE</text></svg>`;
-      if(t.id==='ys-premium')return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 360">${bgPhoto}<rect width="360" height="360" fill="#17171b"/><rect x="18" y="18" width="156" height="324" fill="none" stroke="#d8ad54" stroke-width="4"/><rect x="182" y="0" width="178" height="360" fill="#d9d2c7"/><text x="38" y="116" font-family="Arial" font-size="30" font-weight="900" fill="#ffffff">DESIGNED</text><text x="38" y="146" font-family="Arial" font-size="30" font-weight="900" fill="#ffffff">TO IMPRESS</text><rect x="38" y="184" width="96" height="5" fill="#d8ad54"/><text x="38" y="244" font-family="Arial" font-size="18" font-weight="700" fill="#ffffff">${shop}</text><text x="38" y="306" font-family="Arial" font-size="16" font-weight="800" fill="#d8ad54">EXPLORE OUR WORK</text></svg>`;
-      if(t.category==='yard')return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 360">${bgPhoto}${kitchen}<rect width="360" height="360" fill="#000" opacity="0.38"/><text x="28" y="108" font-family="Arial" font-size="28" font-weight="900" fill="#fff">${headline.slice(0,18)}</text><text x="28" y="136" font-family="Arial" font-size="28" font-weight="900" fill="#fff">${headline.slice(18,36)}</text><rect x="28" y="286" width="304" height="38" rx="4" fill="#f4e8d7"/><text x="180" y="311" text-anchor="middle" font-family="Arial" font-size="16" font-weight="800" fill="#3b2d24">${cta}</text></svg>`;
-      return '';
+      if(t.category!=='yard')return '';
+      // Purpose-built, landscape previews. Each preview follows its editable
+      // sign's major blocks rather than using a one-size-fits-all mockup.
+      const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;');
+      const id=t.id, isClassic=id.startsWith('ys-');
+      const classic=isClassic?id.slice(3):'';
+      const photoLeft=['modern','showcase','curved','corner','estate','cta'].includes(classic);
+      const dark=['diamond','badge','premium','ribbon','modern','showcase','band','cta'].includes(classic);
+      const darkBg=dark?'#17171b':'#f9f7f2', darkFg=dark?'#fff':'#25242a', accent=dark?'#d8ad54':'#986f43';
+      const shop=esc((shopName||'YOUR CABINET SHOP').toUpperCase());
+      const fmt=(v,max=25)=>{let words=String(v||'').toUpperCase().split(/\s+/), lines=[''];for(const word of words){const i=lines.length-1; if((lines[i]+' '+word).trim().length>max&&lines[i]&&lines.length<3)lines.push(word);else lines[i]=(lines[i]+' '+word).trim();}return lines.map(esc)};
+      const copy=(txt,x,y,maxW,lineH=40,size=31,fill='#fff',anchor='start',maxChars=23)=>fmt(txt,maxChars).map((ln,i)=>`<text x="${x}" y="${y+i*lineH}" text-anchor="${anchor}" font-family="Impact,Arial,sans-serif" font-weight="900" font-size="${size}" fill="${fill}">${ln}</text>`).join('');
+      const header='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 360" width="540" height="360">';
+      const defs=`<defs><linearGradient id="cab" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#eae0d1"/><stop offset=".5" stop-color="#bcaa97"/><stop offset="1" stop-color="#655c56"/></linearGradient><linearGradient id="soft" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#faf7f2"/><stop offset="1" stop-color="#e8dbcb"/></linearGradient></defs>`;
+      const photo=(x,y,w,h)=>`<svg x="${x}" y="${y}" width="${w}" height="${h}" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice"><rect width="400" height="300" fill="url(#cab)"/><rect x="25" y="56" width="116" height="138" rx="3" fill="#f1ede6"/><rect x="257" y="56" width="116" height="138" rx="3" fill="#f1ede6"/><rect x="152" y="69" width="94" height="126" fill="#b09e89"/><rect x="18" y="194" width="364" height="22" fill="#fffaf4"/><rect x="18" y="216" width="364" height="55" fill="#ede5dc"/><rect x="102" y="198" width="197" height="16" fill="#c1b3a2"/><rect x="110" y="212" width="180" height="57" fill="#90765e"/><path d="M110 234H290M201 216V268" stroke="#d5bfa6" stroke-width="2"/><circle cx="70" cy="95" r="5" fill="#8b755e"/><circle cx="323" cy="95" r="5" fill="#8b755e"/><path d="M55 205V170C55 150 84 150 84 170V201" stroke="#74685f" stroke-width="5" fill="none"/><circle cx="192" cy="33" r="13" fill="#fff0d8" opacity=".95"/></svg>`;
+      const framed=(x,y,w,h,color='#fff')=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="5" fill="none" stroke="${color}" stroke-width="3"/>`;
+      const strip=(txt,bg='#eee3d3',fg='#251e1c')=>`<rect x="24" y="300" width="492" height="42" rx="7" fill="${bg}"/>${copy(txt,270,328,480,32,21,fg,'middle',33)}`;
+      const caption=(txt,y=286,c='#fff')=>`<text x="28" y="${y}" font-family="Arial,sans-serif" font-size="17" font-weight="700" fill="${c}">${esc(String(txt||'').slice(0,44))}</text>`;
+      let body='';
+      if(id==='yardbefore'){
+        body=`<rect width="540" height="360" fill="#202027"/>${copy('BEFORE & AFTER',270,46,490,36,35,'#fff','middle',23)}<rect y="62" width="540" height="224" fill="#eee4d8"/><rect x="20" y="91" width="240" height="173" rx="6" fill="#d9d2c7" stroke="#fff" stroke-width="5"/><rect x="280" y="91" width="240" height="173" rx="6" fill="#d9d2c7" stroke="#fff" stroke-width="5"/><rect x="265" y="90" width="10" height="176" rx="4" fill="#c9a24b"/>${copy('BEFORE',140,82,220,30,23,'#292830','middle')}${copy('AFTER',400,82,220,30,23,'#292830','middle')}${copy('ADD PHOTO',140,190,220,28,22,'#8e8278','middle')}${copy('ADD PHOTO',400,190,220,28,22,'#8e8278','middle')}<rect y="287" width="540" height="73" fill="#202027"/>${copy(shop,270,322,520,28,23,'#fff','middle',37)}<text x="270" y="346" text-anchor="middle" font-size="13" font-family="Arial" fill="#e5c77c">YOUR WEBSITE</text>`;
+      }else if(isClassic){
+        if(classic==='band')body=`${photo(0,55,540,240)}<rect width="540" height="69" fill="#182334"/><rect y="284" width="540" height="76" fill="#182334"/>${copy(shop,270,43,510,30,23,'#fff','middle',35)}${copy(t.headline,270,326,500,26,23,'#fff','middle',34)}`;
+        else if(['cta','estate'].includes(classic))body=`${photo(0,0,540,232)}<rect y="232" width="540" height="128" fill="${classic==='cta'?'#14233a':'#f8f5f0'}"/><rect y="229" width="540" height="6" fill="${accent}"/>${copy(t.headline,26,272,490,31,27,classic==='cta'?'#fff':'#25242a','start',32)}${caption(shop,334,classic==='cta'?'#eadfcf':'#27252a')}`;
+        else{
+          const px=photoLeft?0:250, panelX=photoLeft?250:0, panelW=photoLeft?290:250;
+          body=`${photo(px,0,540-panelW,360)}<rect x="${panelX}" y="0" width="${panelW}" height="360" fill="${darkBg}"/>`;
+          const textX=panelX+23;
+          if(['premium','diamond'].includes(classic))body+=framed(panelX+11,12,panelW-22,334,accent);
+          if(classic==='badge')body+=`<circle cx="${panelX+panelW/2}" cy="68" r="49" fill="${accent}"/>`;
+          if(classic==='ribbon')body+=`<path d="M${panelX+13} 21h${panelW-26}l-15 74H${panelX+13}Z" fill="${accent}"/>`;
+          body+=`${copy(t.headline,textX,154,panelW-35,36,29,darkFg,'start',14)}<rect x="${textX}" y="211" width="93" height="5" fill="${accent}"/>${copy(shop,textX,250,panelW-35,28,18,darkFg,'start',23)}${copy(t.cta,textX,325,panelW-35,23,19,accent,'start',25)}`;
+        }
+      }else if(id==='yardshowroom'){
+        body=`<rect width="540" height="360" fill="#691c35"/>${copy('VISIT OUR ONLINE SHOWROOM',24,56,510,38,34,'#fff','start',24)}${photo(28,106,332,216)}<rect x="373" y="107" width="142" height="143" rx="7" fill="#fff"/><rect x="384" y="122" width="120" height="9" fill="#e9e4dc"/><rect x="384" y="146" width="120" height="92" fill="#eae7e2"/><rect x="382" y="267" width="135" height="51" rx="7" fill="#ead7bd"/>${copy('BROWSE',449,287,130,21,17,'#3d2a2a','middle')}${copy('OUR WORK',449,307,130,21,17,'#3d2a2a','middle')}`;
+      }else{
+        body=`${photo(0,0,540,360)}<rect width="540" height="360" fill="#171318" opacity=".38"/>${copy(t.headline,25,103,500,39,34,'#fff','start',21)}`;
+        if(id==='yardfinance')body+=`<circle cx="443" cy="91" r="65" fill="#f0d14d" stroke="#fff1ba" stroke-width="3"/>${copy('FINANCE',443,87,130,22,21,'#28212a','middle',11)}${copy('AVAILABLE',443,111,130,22,18,'#28212a','middle',12)}`;
+        if(id==='yardbooking')body+=`<rect x="365" y="29" width="149" height="43" rx="21" fill="#e5bd71"/>${copy('NOW BOOKING',439,58,144,25,18,'#231e1d','middle',14)}`;
+        if(id==='yardscan')body+=`<rect x="394" y="30" width="121" height="48" rx="24" fill="#fff"/>${copy('SCAN ME',454,59,116,24,19,'#222','middle')}`;
+        body+=`${caption(t.sub,252,'#f9ebde')}${strip(t.cta)}`;
+      }
+      return header+defs+body+'</svg>';
     }
     function renderGallery(filter='all'){
       grid.innerHTML='';MQ_STUDIO_TEMPLATES.filter(t=>filter==='all'||t.category===filter).forEach(t=>{
         const btn=document.createElement('button');btn.type='button';btn.className='mq-studio-tile';btn.innerHTML=`<div class="mq-studio-thumb-area"><img class="mq-studio-thumb" alt=""/></div><div class="mq-studio-tile-meta"><span><strong></strong><small></small></span><b aria-hidden="true">↗</b></div>`;
-        btn.querySelector('img').src=thumb(t);btn.querySelector('strong').textContent=t.title;btn.querySelector('small').textContent=t.tag;
+        if(t.category==='yard')btn.classList.add('mq-studio-yard-card');btn.querySelector('img').src=thumb(t);btn.querySelector('strong').textContent=t.title;btn.querySelector('small').textContent=t.tag;
         btn.addEventListener('click',()=>select(t));grid.appendChild(btn);
       });
     }
@@ -14717,8 +14767,8 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
       root.querySelector('.mq-studio-fields').addEventListener('focusin',markFocus);
       root.querySelector('.mq-studio-fields').addEventListener('input',markFocus);
       field('logo').addEventListener('change',e=>{const file=e.target.files?.[0];if(!file)return;if(!file.type.startsWith('image/'))return;const url=URL.createObjectURL(file);const img=new Image();img.onload=()=>{URL.revokeObjectURL(url);mqStudioLogo=img;update()};img.onerror=()=>{URL.revokeObjectURL(url);mqShowToast('Could not load logo','error')};img.src=url});
-      field('photo').addEventListener('change',e=>{const file=e.target.files&&e.target.files[0];if(!file)return;if(!file.type.startsWith('image/'))return;const blob=URL.createObjectURL(file);const image=new Image();image.onload=()=>{URL.revokeObjectURL(blob);mqStudioPhoto=image;const photoArea=projectPhotoLayer();if(photoArea){photoArea.image=image;photoArea.dataUrl=image.src;}update()};image.onerror=()=>{URL.revokeObjectURL(blob);mqShowToast('Could not read image','error')};image.src=blob});
-      const removeProjectPhoto=()=>{mqStudioPhoto=null;const photoArea=projectPhotoLayer();if(photoArea){photoArea.image=null;delete photoArea.dataUrl;}field('photo').value='';update();mqShowToast('Project photo removed');};
+      field('photo').addEventListener('change',e=>{const file=e.target.files&&e.target.files[0];if(!file)return;if(!file.type.startsWith('image/'))return;const blob=URL.createObjectURL(file);const image=new Image();image.onload=()=>{URL.revokeObjectURL(blob);mqStudioPhoto=image;const filled=applyProjectPhotoToTargets(image,true);if(!filled){const photoArea=projectPhotoLayer();if(photoArea){photoArea.image=image;photoArea.dataUrl=image.src;photoArea.sharedProjectPhoto=true;}}update();mqShowToast(filled>1?'Project photo added to all empty photo areas':'Project photo added');};image.onerror=()=>{URL.revokeObjectURL(blob);mqShowToast('Could not read image','error')};image.src=blob});
+      const removeProjectPhoto=()=>{mqStudioPhoto=null;mqStudioCustomLayers.forEach(layer=>{if(layer.type==='image'&&(layer.projectPhoto||layer.sharedProjectPhoto)){layer.image=null;delete layer.dataUrl;}});field('photo').value='';update();mqShowToast('Project photo removed');};
       field('remove-photo').addEventListener('click',removeProjectPhoto);
       field('photo-remove-quick').addEventListener('click',removeProjectPhoto);
       field('back').addEventListener('click',()=>{unlockStudioScroll();workspace.style.display='none';workspace.classList.remove('mq-studio-fullscreen');previewShift=0;preview.style.transform='';root.scrollIntoView({behavior:'smooth',block:'start'})});
