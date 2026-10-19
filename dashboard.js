@@ -771,9 +771,9 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       `
     },
     marketing: {
-      title: 'Marketing Kit',
+      title: 'Design Studio',
       body: `
-        <p>Ready-made assets to help you promote your quote tool — share these however makes sense for your shop.</p>
+        <p>Create and customize graphics, posts, posters and QR promotions for your business.</p>
       `
     },
   };
@@ -1616,7 +1616,7 @@ window.logoutMember = async function () {
           <div class="mq-nav-item" onclick="mqNav('showroom',this)"><span class="mq-nav-icon">🖼️</span> Showroom</div>
           <div class="mq-nav-section">Launch &amp; Grow</div>
           <div class="mq-nav-item" onclick="mqNav('embed',this)"><span class="mq-nav-icon">🔗</span> Embed code</div>
-          <div class="mq-nav-item" onclick="mqNav('marketing',this)"><span class="mq-nav-icon">📣</span> Marketing Kit</div>
+          <div class="mq-nav-item" onclick="mqNav('marketing',this)"><span class="mq-nav-icon">📣</span> Design Studio</div>
           <div class="mq-nav-item" onclick="mqNav('proposals',this)"><span class="mq-nav-icon">📄</span> Proposals</div>
           <div class="mq-nav-section">Account</div>
           <div class="mq-nav-item" onclick="mqNav('billing',this)"><span class="mq-nav-icon">💳</span> Account</div>
@@ -2558,11 +2558,395 @@ window.logoutMember = async function () {
             </div>
           </div>
 
+          
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700;900&family=Cinzel:wght@500;700;800&family=Cormorant+Garamond:wght@500;700&family=Montserrat:wght@400;600;700;800&family=Poppins:wght@400;600;700;800&family=Oswald:wght@500;600;700&family=Bebas+Neue&family=Libre+Baskerville:wght@400;700&family=DM+Serif+Display&family=Anton&family=Abril+Fatface&family=League+Spartan:wght@500;700;800&family=Archivo+Black&family=Caveat:wght@500;700&family=Permanent+Marker&family=Fredoka:wght@500;700&family=Raleway:wght@500;700;800&family=Manrope:wght@500;700;800&family=Barlow+Condensed:wght@500;700&display=swap');
+
+  #mq-page-marketing #mq-studio .mq-studio-quick-colors{width:100%;display:flex;align-items:center;gap:11px;flex-wrap:wrap;background:#fff;border:1px solid #e5dce6;border-radius:12px;padding:11px 14px;margin-bottom:12px;color:#46374b}
+  #mq-page-marketing #mq-studio .mq-studio-quick-colors>span{font:800 10px/1.3 Arial,sans-serif;letter-spacing:.1em;margin-right:auto}
+  #mq-page-marketing #mq-studio .mq-studio-quick-colors label{display:flex;align-items:center;gap:7px;font:700 11px/1.3 Arial,sans-serif;margin:0!important}
+  #mq-page-marketing #mq-studio .mq-studio-quick-colors input[type=color]{width:38px!important;height:32px!important;min-height:32px!important;padding:2px!important;border-radius:8px!important;border:1px solid #d9cdd9!important;cursor:pointer}
+  #mq-page-marketing #mq-studio .mq-studio-quick-colors button{min-height:32px!important;padding:7px 10px!important;font-size:11px!important}
+  @media(max-width:700px){#mq-page-marketing #mq-studio .mq-studio-quick-colors>span{width:100%}}
+
+#mq-page-marketing #mq-studio .mq-studio-format-bar{display:flex;align-items:center;flex-wrap:wrap;gap:10px;width:100%;background:#fff;border:1px solid #e5dce6;border-radius:12px;padding:12px 14px;margin-bottom:10px;box-sizing:border-box}
+#mq-page-marketing #mq-studio .mq-studio-format-bar label{font:800 12px/1.3 Arial,sans-serif;color:#33263b;margin:0}
+#mq-page-marketing #mq-studio .mq-studio-format-bar select{flex:1;min-width:205px;max-width:100%;height:42px;border:1px solid #d8d1db;border-radius:9px;padding:8px 12px;color:#2e2336;background:#fff;font:600 12px Arial,sans-serif}
+#mq-page-marketing #mq-studio .mq-studio-format-bar span{font:600 11px Arial,sans-serif;color:#756b79}
+  /* MidasQuote Marketing Studio v3.0 — enhanced editor */
+  #mq-page-marketing .mq-studio{--mqs-ink:#24212b;--mqs-sub:#716e79;--mqs-panel:#ffffff;--mqs-line:#e7e1e8;--mqs-soft:#f7f3f6;margin:0 0 26px;color:var(--mqs-ink);font-family:inherit}
+  .mq-studio-hero{display:flex;justify-content:space-between;align-items:center;gap:20px;background:linear-gradient(115deg,#211c2c 0%,#46314c 64%,#7b5060 100%);color:white;padding:30px 34px;border-radius:18px;overflow:hidden;margin-bottom:22px}
+  .mq-studio-kicker{display:block;font-size:10px;font-weight:800;letter-spacing:.16em;color:#c9aa81;margin-bottom:9px}
+  .mq-studio-hero h2{font-size:clamp(22px,3vw,32px);line-height:1.16;margin:0 0 8px;color:white;font-family:Georgia,serif;font-weight:500}
+  .mq-studio-hero p{font-size:13px;line-height:1.65;margin:0;color:#e3dce3;max-width:520px}
+  .mq-studio-hero-star{font-size:74px;color:#d0aa76;opacity:.7;line-height:1}
+  .mq-studio-nav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+  .mq-studio-nav button,.mq-studio-muted-btn{cursor:pointer;border:1px solid #dfdce2;background:#fff;color:#494452;border-radius:10px;padding:9px 14px;font-size:12px;font-weight:700;transition:.15s}
+  .mq-studio-nav button.active,.mq-studio-nav button:hover{background:#2c2436;border-color:#2c2436;color:white}
+  .mq-studio-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;margin-bottom:20px}
+  .mq-studio-tile{background:#fff;border:1px solid #e9e6e9;border-radius:13px;padding:9px;text-align:left;cursor:pointer;box-shadow:0 3px 18px rgba(32,26,41,.04);transition:transform .2s,border-color .2s,box-shadow .2s;color:inherit}
+  .mq-studio-tile:hover,.mq-studio-tile:focus-visible{transform:translateY(-3px);border-color:#a98caa;box-shadow:0 10px 28px rgba(32,26,41,.12);outline:none}
+  .mq-studio-thumb{display:block;width:100%;height:175px;object-fit:cover;border-radius:8px;background:#eee8e9}
+  .mq-studio-tile-meta{display:flex;align-items:flex-start;justify-content:space-between;gap:6px;padding:11px 5px 4px}
+  .mq-studio-tile strong{font-size:13px;display:block}.mq-studio-tile small{display:block;margin-top:4px;font-size:11px;color:#78727c}
+  .mq-studio-tile-meta b{font-size:17px;color:#6f5368;font-weight:400}
+  .mq-studio-workspace{background:#fff;border:1px solid #e9e6e9;border-radius:18px;padding:22px;margin:12px 0 24px;box-shadow:0 9px 30px rgba(36,30,44,.06);scroll-margin-top:80px;max-width:100%;overflow:hidden}
+  .mq-studio-editor-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:18px}
+  .mq-studio-editor-top h3{font-size:21px;font-family:Georgia,serif;margin:0}
+  #mq-studio .mq-history-toolbar{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;margin:14px 0 8px;padding:12px;border:1px solid #e8e0e8;background:#fff;border-radius:12px;width:100%;box-sizing:border-box}
+  #mq-studio .mq-history-toolbar button{cursor:pointer;min-height:37px;padding:7px 13px;border:1px solid #e1dae4;border-radius:9px;background:#fff;color:#33283a;font:700 12px Arial,sans-serif}
+  #mq-studio .mq-history-toolbar button:hover:not(:disabled){background:#f4edf3}
+  #mq-studio .mq-studio-preview-wrap .mq-history-toolbar button{white-space:nowrap;flex:0 1 auto}
+  @media(max-width:650px){#mq-studio .mq-history-status{width:100%;text-align:center;margin:0}}
+  #mq-studio .mq-history-toolbar button:disabled{opacity:.40;cursor:default}
+  #mq-studio .mq-history-status{color:#766a7a;font:600 11px Arial,sans-serif;margin-left:auto}
+
+  .mq-studio-editor-layout{display:grid;grid-template-columns:minmax(320px,.82fr) minmax(0,1.18fr);gap:26px;align-items:start}
+  .mq-studio-fields{display:flex;flex-direction:column;gap:14px}
+  .mq-studio-control-card{background:var(--mqs-soft);border:1px solid var(--mqs-line);border-radius:14px;padding:15px 15px 14px}
+  .mq-studio-card-title{font:700 13px/1.2 Arial,sans-serif;letter-spacing:.04em;color:#54455a;text-transform:uppercase;margin:0 0 11px}
+  .mq-studio-fields label{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:700;color:#494451;margin-bottom:10px}
+  .mq-studio-fields label:last-child{margin-bottom:0}
+  .mq-studio-fields input:not([type=file]):not([type=color]):not([type=range]),.mq-studio-fields select,.mq-studio-fields textarea{box-sizing:border-box;width:100%;border:1px solid #d8d1db;border-radius:10px;background:white;padding:10px 12px;color:#24212b;font-size:13px;min-height:42px}
+  .mq-studio-fields textarea{min-height:84px;resize:vertical}
+  .mq-studio-fields input[type=color]{width:100%;height:44px;padding:4px;cursor:pointer;border:1px solid #d8d1db;border-radius:10px;background:white}
+  .mq-studio-fields input[type=file]{width:100%;font-size:12px;padding:10px;border:1px dashed #cfc6d2;border-radius:10px;background:#fff}
+  .mq-studio-fields input[type=range]{width:100%}
+  .mq-studio-two-col{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+  .mq-studio-three-col{display:grid;grid-template-columns:repeat(3,1fr);gap:11px}
+  .mq-studio-range-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}
+  .mq-studio-range-row output{min-width:48px;text-align:right;font:700 12px/1 Arial,sans-serif;color:#6d596d}
+  .mq-studio-color-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+  .mq-studio-editor-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:0}.mq-studio-editor-actions button{flex:1;min-width:135px}
+  .mq-studio-tip{font-size:11px;color:#79727e;line-height:1.6;margin:4px 0 0}
+  .mq-studio-preview-wrap{background:#f5f2f4;border:1px solid #eae5e9;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;min-width:0;position:sticky;top:16px}
+  .mq-studio-preview-wrap canvas{display:block;width:auto;height:auto;max-width:100%;max-height:560px;border-radius:8px;box-shadow:0 10px 35px rgba(18,13,22,.17)}
+  .mq-studio-preview-wrap p{font-size:10px;color:#8d8390;text-align:center;margin:12px 0 0}.mq-studio-preview-tip{font-size:11px;color:#6b6371;background:#fff;border:1px dashed #d8cfda;border-radius:10px;padding:8px 10px;margin:0 0 12px;text-align:center}
+
+/* v8.1.1 native-select replacement: font samples are styled DOM nodes. */
+#mq-studio .mq-font-native{position:absolute!important;width:1px!important;height:1px!important;opacity:0!important;pointer-events:none!important}
+#mq-studio .mq-rich-font-picker{position:relative;width:100%;min-width:0}
+#mq-studio .mq-rich-font-trigger{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;min-height:50px;padding:10px 12px;border:1px solid #d8d1db;border-radius:10px;background:#fff;color:#2b2230;font:700 13px Arial,sans-serif;cursor:pointer;text-align:left}
+#mq-studio .mq-rich-font-trigger-sample{font-size:25px;font-weight:700;white-space:nowrap;color:#74465b}
+#mq-studio .mq-rich-font-menu{position:absolute;left:0;top:calc(100% + 4px);width:max(270px,100%);max-width:min(350px,calc(100vw - 30px));max-height:340px;overflow:auto;background:white;z-index:999999;border:1px solid #d9d0db;border-radius:12px;box-shadow:0 16px 40px #0004;padding:5px}
+#mq-studio .mq-rich-font-menu[hidden]{display:none!important}
+#mq-studio .mq-rich-font-option{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:9px 12px;border:none;border-radius:8px;background:white;color:#2b2230;text-align:left;cursor:pointer}
+#mq-studio .mq-rich-font-option:hover,#mq-studio .mq-rich-font-option[aria-selected="true"]{background:#f3e8ee}
+#mq-studio .mq-rich-font-name{font:600 12px Arial,sans-serif;white-space:nowrap}
+#mq-studio .mq-rich-font-sample{font-size:25px;font-weight:700;white-space:nowrap;line-height:1.25}
+  .mq-studio-preview-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-self:stretch;margin-bottom:9px}.mq-studio-preview-toolbar button{flex:1;min-width:140px}.mq-studio-preview-wrap canvas{touch-action:none}.mq-studio-layer-list{display:flex;flex-direction:column;gap:8px;margin:10px 0}.mq-studio-layer-item{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;padding:9px 11px;border:1px solid #d9d2dc;border-radius:10px;background:#fff;color:#322938;font:700 12px/1.3 Arial,sans-serif;cursor:pointer}.mq-studio-layer-item.active{background:#2d2436;color:#fff;border-color:#2d2436}.mq-studio-layer-item small{font-weight:400;opacity:.75}.mq-studio-layer-toolbar{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.mq-font-preview-note{display:block;font-size:11px;color:#7a6f80;margin-top:4px}.mq-studio-layer-item{min-height:52px!important;padding:9px 10px!important;gap:10px!important;flex-wrap:nowrap!important;overflow:hidden!important}.mq-studio-layer-item>button:first-child{min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;padding:6px 2px!important;font-size:12px!important}.mq-studio-layer-item>button:not(:first-child){width:33px!important;height:32px!important;min-width:33px!important;flex:0 0 33px!important;padding:5px!important;display:grid!important;place-items:center!important}.mq-studio-preview-wrap{position:relative}.mq-studio-hoverbar{position:absolute;display:none;align-items:center;gap:8px;background:#211a29f5;border:1px solid #ffffff2b;border-radius:10px;padding:6px;z-index:10;box-shadow:0 8px 25px #0005;transform:translate(-50%,-100%);white-space:nowrap;max-width:95%}.mq-studio-hoverbar button{cursor:pointer;border:0;border-radius:8px;background:#fff;color:#291d31;font:700 12px/1.25 Arial,sans-serif!important;padding:10px 14px!important;min-height:36px!important;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center}.mq-studio-hoverbar button:hover{background:#e5cbaa}.mq-studio-layer-controls{margin-top:10px;padding-top:10px;border-top:1px solid #e6dfe7}.mq-studio-layer-section{display:none}.mq-studio-layer-section.show{display:block}.mq-studio-legacy{border-top:1px solid #e7e2e9;padding-top:17px;color:#716a76;font-size:12px}.mq-studio-legacy summary{cursor:pointer;color:#4d4152;font-weight:700}.mq-studio-legacy p{line-height:1.6}
+  @media(max-width:1100px){.mq-studio-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.mq-studio-editor-layout{grid-template-columns:1fr}.mq-studio-preview-wrap{position:relative;top:auto}}
+  @media(max-width:560px){.mq-studio-hero{padding:22px}.mq-studio-hero-star{display:none}.mq-studio-grid{gap:10px}.mq-studio-thumb{height:135px}.mq-studio-workspace{padding:14px}.mq-studio-editor-top{flex-wrap:wrap}.mq-studio-two-col,.mq-studio-color-grid,.mq-studio-three-col{grid-template-columns:1fr}}
+  /* hard isolation against legacy dashboard styles */
+  #midasquote-dashboard #mq-page-marketing #mq-studio{box-sizing:border-box;width:100%;max-width:100%;font-family:Arial,Helvetica,sans-serif;line-height:1.45}
+  #midasquote-dashboard #mq-page-marketing #mq-studio *,#midasquote-dashboard #mq-page-marketing #mq-studio *::before,#midasquote-dashboard #mq-page-marketing #mq-studio *::after{box-sizing:border-box}
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-nav{display:flex!important;flex-wrap:wrap!important;gap:9px!important;margin:0 0 18px!important}
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-nav button,
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-muted-btn{display:inline-flex!important;align-items:center;justify-content:center;min-height:38px;padding:9px 15px!important;border:1px solid #dbd5de!important;border-radius:10px!important;background:#fff!important;color:#4e4050!important;font:700 12px/1.2 Arial,sans-serif!important;text-align:center!important;white-space:normal!important;width:auto!important;max-width:100%;box-shadow:none!important;cursor:pointer}
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-nav button.active{background:#292234!important;border-color:#292234!important;color:#fff!important}
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-grid{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:16px!important;align-items:stretch}
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-tile{appearance:none;display:flex!important;flex-direction:column!important;padding:10px!important;width:100%!important;min-width:0!important;height:auto!important;background:#fff!important;border:1px solid #e9e4e9!important;border-radius:14px!important;text-align:left!important;overflow:hidden!important;color:#29232b!important;box-shadow:0 3px 12px #180e190d!important;white-space:normal!important}
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-thumb-area{display:flex!important;align-items:center;justify-content:center;width:100%;height:226px;overflow:hidden;border-radius:9px;background:#ede7e7}
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-thumb{display:block!important;width:100%!important;height:100%!important;max-width:100%!important;object-fit:contain!important;object-position:center!important;border:0!important;border-radius:0!important}
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-tile-meta{display:flex!important;width:100%;min-height:53px;gap:8px;padding:11px 4px 1px!important;align-items:center!important;color:#28212e!important}
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-tile-meta strong{display:block!important;font:700 13px/1.35 Arial,sans-serif!important;color:#29232b!important}
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-tile-meta small{display:block!important;font:400 11px/1.3 Arial,sans-serif!important;color:#8b7b8b!important;margin-top:4px}
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-preview-wrap canvas{display:block!important;width:auto!important;height:auto!important;max-width:100%!important;max-height:560px!important;object-fit:contain!important}
+  @media(max-width:1100px){#midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+  @media(max-width:560px){#midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-grid{gap:10px!important}#midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-thumb-area{height:160px}}
+
+  /* v2.4: scroll-following preview uses JS translation so ancestor overflow rules
+     cannot silently disable CSS sticky. */
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-preview-wrap{
+    position:relative!important;top:auto!important;align-self:start!important;
+    will-change:transform;
+  }
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-preview-wrap canvas{
+    max-height:min(560px, 65vh)!important;
+  }
+  @media(max-width:980px){
+    #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-preview-wrap{transform:none!important;will-change:auto}
+  }
+
+  /* v2.3 — force actual spacing inside the host dashboard. */
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-hero{
+    padding:30px 36px!important; margin:0 0 22px!important; gap:22px!important;
+    min-height:150px!important;
+  }
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-hero > div:first-child{
+    padding:0!important; margin:0!important; min-width:0!important; flex:1 1 auto!important;
+  }
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-hero .mq-studio-kicker{
+    display:block!important; margin:0 0 9px!important; padding:0!important;
+  }
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-hero h2{
+    margin:0 0 11px!important; padding:0!important;
+    color:#fff!important; font:500 clamp(25px,3vw,35px)/1.16 Georgia,serif!important;
+  }
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-hero p{
+    margin:0!important; padding:0!important; color:#f2e9ef!important;
+    font:400 13px/1.6 Arial,sans-serif!important;
+  }
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-workspace{
+    padding:26px 28px 30px!important; margin:18px 0 28px!important;
+  }
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-editor-top{
+    padding:0 0 18px!important; margin:0 0 20px!important;
+    border-bottom:1px solid #eee7ed!important;
+  }
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-editor-layout{
+    column-gap:26px!important; row-gap:20px!important;
+  }
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-fields{
+    gap:14px!important; padding:0!important;
+  }
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-control-card{
+    padding:20px 20px 18px!important; margin:0!important;
+    border:1px solid #e7dfe8!important; border-radius:15px!important;
+    background:#f8f5f8!important;
+  }
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-card-title{
+    display:block!important; padding:0!important; margin:0 0 16px!important;
+    font:700 12px/1.3 Arial,sans-serif!important; letter-spacing:.11em!important;
+  }
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-fields label{
+    display:flex!important; flex-direction:column!important; gap:7px!important;
+    margin:0 0 15px!important; padding:0!important;
+  }
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-fields label:last-child{margin-bottom:0!important}
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-two-col,
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-color-grid{
+    gap:15px!important;
+  }
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-fields input:not([type=range]):not([type=file]):not([type=color]),
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-fields select{
+    padding:11px 13px!important; width:100%!important; min-width:0!important;
+  }
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-preview-wrap{
+    padding:20px!important; overflow:hidden!important;
+  }
+  @media(max-width:650px){
+    #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-hero{padding:24px!important;min-height:0!important}
+    #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-workspace{padding:16px!important}
+    #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-control-card{padding:16px!important}
+    #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-two-col,
+    #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-color-grid{grid-template-columns:1fr!important}
+  }
+  /* v2.5: premium art direction and branded controls */
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-control-card{box-sizing:border-box!important;padding:20px!important;border:1px solid #e7dfe8!important;background:#faf8fa!important;border-radius:17px!important;margin-bottom:3px!important}
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-editor-top{padding:10px 12px 20px!important}
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-hero{padding:34px 38px!important}
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-hero h2{padding:0!important;margin:0 0 10px!important}
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-preview-wrap{padding:22px!important;background:#f4eff2!important}
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-fields input[type=range]{accent-color:#693b53!important}
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-control-card input[type=file]{max-width:100%}
+  @media(max-width:600px){#midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-hero{padding:24px!important}}
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-card-active{border-color:#b79869!important;box-shadow:0 0 0 3px rgba(183,152,105,.22)!important;transition:border-color .2s,box-shadow .2s}
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-studio-preview-wrap{background:linear-gradient(140deg,#f7f3f7,#ede6ed)!important}
+
+
+/* v5.2: compact, truly contextual object inspector */
+#mq-page-marketing #mq-studio-workspace.mq-studio-property-mode #mq-studio-layer-list,
+#mq-page-marketing #mq-studio-workspace.mq-studio-property-mode #mq-studio-add-text-layer,
+#mq-page-marketing #mq-studio-workspace.mq-studio-property-mode #mq-studio-add-shape-layer,
+#mq-page-marketing #mq-studio-workspace.mq-studio-property-mode #mq-studio-add-image-layer-btn,
+#mq-page-marketing #mq-studio-workspace.mq-studio-property-mode #mq-studio-add-frame-layer,
+#mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-layer-intro {display:none!important}
+#mq-page-marketing #mq-studio-workspace.mq-studio-property-mode.mq-studio-show-layers #mq-studio-layer-list{display:flex!important;overflow-anchor:none}
+#mq-page-marketing #mq-studio-workspace.mq-studio-property-mode #mq-studio-layer-list{max-height:280px;overflow-y:auto;margin:10px 0 16px}
+#mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-fields>.mq-studio-control-card:has(#mq-studio-layer-list){padding:20px!important}
+#mq-page-marketing #mq-studio-workspace .mq-studio-context-top{display:flex;align-items:center;gap:8px;justify-content:space-between;margin-bottom:14px}
+#mq-page-marketing #mq-studio-workspace .mq-studio-context-top h4{margin:0;color:#302237;font-size:16px;font-weight:800}
+#mq-page-marketing #mq-studio-workspace .mq-studio-context-top button{font-size:12px;padding:8px 11px;border:1px solid #d7cedb;background:white;border-radius:9px;color:#3d3044;cursor:pointer}
+#mq-page-marketing #mq-studio-workspace .mq-studio-context-top button:hover{background:#f1eaf2}
+#mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-layer-toolbar{display:none!important}
+#mq-page-marketing #mq-studio-workspace.mq-studio-property-mode #mq-studio-layer-controls{border-top:0!important;padding-top:0!important;margin-top:0!important}
+
+/* v6.4: Keep the history controls visible in the same preview panel in both editor modes. */
+#mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-preview-wrap canvas{
+  max-height:min(330px,36vh)!important;
+}
+#mq-page-marketing #mq-studio-workspace .mq-studio-preview-wrap .mq-history-toolbar{
+  display:flex!important;
+  visibility:visible!important;
+  opacity:1!important;
+  position:sticky!important;
+  bottom:0!important;
+  z-index:15!important;
+  background:#fff!important;
+  box-shadow:0 -4px 16px rgba(35,23,37,.10)!important;
+  flex-shrink:0!important;
+}
+#mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-preview-wrap{
+  justify-content:flex-start!important;
+  padding-bottom:8px!important;
+  scroll-padding-bottom:70px;
+}
+@media(max-width:980px){
+ #mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-preview-wrap canvas{max-height:450px!important}
+ #mq-page-marketing #mq-studio-workspace .mq-studio-preview-wrap .mq-history-toolbar{position:relative!important;bottom:auto!important}
+}
+/* v6.3: keep preview visible beside selected-object settings. */
+#mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-preview-wrap{
+  max-height:calc(100vh - 84px)!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  align-self:start!important;
+  position:relative!important;
+  transform:translate3d(0,0,0);
+  scrollbar-width:thin;
+}
+#mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-preview-wrap canvas{
+  max-height:min(440px,43vh)!important;
+}
+@media(max-width:980px){
+ #mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-preview-wrap{
+   max-height:none!important;overflow-y:visible!important;transform:none!important;
+ }
+}
+@media(min-width:981px){
+ #midasquote-dashboard #mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-preview-wrap{
+   will-change:transform!important;
+ }
+}
+/* v6.4 late override for property mode preview height, leaving room for the action bar. */
+#mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-preview-wrap canvas{max-height:min(330px,36vh)!important}
+@media(max-width:980px){#mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-preview-wrap canvas{max-height:450px!important}}
+/* v6.5: keep image actions and history visible in property-edit mode. */
+@media (min-width:981px) {
+  #midasquote-dashboard #mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-preview-wrap {
+    display:flex!important;
+    flex-direction:column!important;
+    justify-content:flex-start!important;
+    max-height:none!important;
+    overflow:visible!important;
+    gap:6px!important;
+  }
+  #midasquote-dashboard #mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-preview-wrap .mq-studio-format-bar,
+  #midasquote-dashboard #mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-preview-wrap .mq-studio-quick-colors,
+  #midasquote-dashboard #mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-preview-wrap .mq-studio-preview-toolbar {
+    display:flex!important;
+    visibility:visible!important;
+    flex:0 0 auto!important;
+    flex-wrap:wrap!important;
+    width:100%!important;
+    margin:0!important;
+  }
+  #midasquote-dashboard #mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-preview-wrap .mq-studio-preview-toolbar button {
+    flex:1 1 42%!important;
+    min-width:0!important;
+    padding:8px 10px!important;
+    min-height:38px!important;
+    font-size:12px!important;
+  }
+  #midasquote-dashboard #mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-preview-wrap canvas {
+    max-height:min(295px,31vh)!important;
+    max-width:100%!important;
+    flex:0 1 auto!important;
+  }
+  #midasquote-dashboard #mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-preview-wrap .mq-history-toolbar {
+    display:flex!important;
+    position:relative!important;
+    visibility:visible!important;
+    flex:0 0 auto!important;
+    margin:2px 0 0!important;
+    width:100%!important;
+  }
+  #midasquote-dashboard #mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-preview-wrap .mq-studio-preview-tip {margin:0!important;padding:4px 8px!important}
+}
+
+/* v7.5: compact fullscreen template switcher */
+#mq-studio .mq-studio-template-switch{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+#mq-studio .mq-studio-template-switch label{font-size:12px;font-weight:700;color:#5c4b60}
+#mq-studio .mq-studio-template-switch select{width:auto!important;max-width:260px;min-width:170px;padding:10px 30px 10px 12px;border:1px solid #d8cedb;border-radius:10px;background:#fff;color:#2c2434;font-size:13px;font-weight:650}
+@media(max-width:700px){#mq-studio .mq-studio-template-switch{justify-content:flex-start}#mq-studio .mq-studio-template-switch select{max-width:210px}}
+
+/* v8.1.3: sortable layer stack */
+#mq-page-marketing .mq-studio-layer-list{display:flex;flex-direction:column;gap:6px!important}
+#mq-page-marketing .mq-layer-group-label{font:800 10px/1.4 Arial,sans-serif;letter-spacing:1.3px;color:#897c8c;margin:9px 4px 2px}
+#mq-page-marketing .mq-studio-layer-item.mq-reorderable{display:flex;align-items:center;gap:4px!important;min-height:44px!important;overflow:visible!important;padding:6px!important}
+#mq-page-marketing .mq-studio-layer-item.mq-reorderable .mq-layer-handle{flex:0 0 17px;color:#ac9eb1;cursor:grab;font-size:20px;user-select:none}
+#mq-page-marketing .mq-studio-layer-item.mq-reorderable>button.mq-layer-name{flex:1 1 auto!important;width:auto!important;min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;text-align:left!important;font-size:12px!important}
+#mq-page-marketing .mq-studio-layer-item.mq-reorderable>button.mq-layer-icon-btn{width:27px!important;height:30px!important;min-width:27px!important;flex:0 0 27px!important;padding:0!important;display:flex!important;align-items:center;justify-content:center;font-size:13px;border:0;border-radius:6px;background:#f1edf3;color:#37293d;cursor:pointer}
+#mq-page-marketing .mq-studio-layer-item.mq-reorderable.active>button.mq-layer-icon-btn{background:#fff;color:#2b2331}
+#mq-page-marketing .mq-studio-layer-item.mq-reorderable>button.mq-layer-icon-btn:disabled{opacity:.26;cursor:not-allowed}
+#mq-page-marketing .mq-studio-layer-item.mq-reorderable>button.mq-layer-delete{background:#ffe4e6!important;color:#a52234!important}
+#mq-page-marketing .mq-studio-layer-item.mq-drag-over{outline:2px dashed #8f5279;outline-offset:2px}
+#mq-page-marketing .mq-studio-layer-item.mq-dragging{opacity:.4}
+
+/* v4.9 canvas-first editing */
+#mq-page-marketing #mq-studio-workspace.mq-studio-canvas-first .mq-studio-editor-layout{grid-template-columns:1fr!important}
+#mq-page-marketing #mq-studio-workspace.mq-studio-canvas-first .mq-studio-fields{display:none!important}
+#mq-page-marketing #mq-studio-workspace.mq-studio-canvas-first .mq-studio-preview-wrap{width:100%;max-width:980px;margin:auto;position:relative!important;transform:none!important}
+#mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-editor-layout{grid-template-columns:minmax(280px,360px) minmax(0,1fr)!important}
+#mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-fields{display:flex!important}
+#mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-fields>.mq-studio-control-card{display:none!important}
+#mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-fields>.mq-studio-control-card:has(#mq-studio-layer-list){display:block!important}
+#mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-preview-wrap{position:relative!important;will-change:transform}
+#mq-page-marketing #mq-studio-workspace .mq-studio-canvas-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:8px 0 12px}
+#mq-page-marketing #mq-studio-workspace .mq-studio-canvas-actions button{border:1px solid #d9cfda;border-radius:9px;padding:9px 13px;background:#fff;color:#30253a;font-size:12px;font-weight:700;cursor:pointer}
+#mq-page-marketing #mq-studio-workspace .mq-studio-canvas-actions button:hover{background:#f5eef6}
+#mq-page-marketing #mq-studio-workspace .mq-studio-inline-editor{position:absolute;z-index:30;resize:none;box-sizing:border-box;border:2px solid #7d5caa;border-radius:5px;background:#fffffff2;color:#19151c;font:700 22px/1.25 Arial,sans-serif;box-shadow:0 10px 35px #0004;padding:7px;outline:none;min-width:70px;min-height:45px}
+@media(max-width:980px){#mq-page-marketing #mq-studio-workspace.mq-studio-property-mode .mq-studio-editor-layout{grid-template-columns:1fr!important}}
+
+/* v7: immersive overlay editor; ordinary dashboard gallery stays on its page */
+#midasquote-dashboard #mq-page-marketing #mq-studio-workspace.mq-studio-fullscreen{
+ position:fixed!important;inset:0!important;z-index:2147483000!important;
+ display:flex!important;flex-direction:column!important;width:100vw!important;height:100dvh!important;
+ max-width:none!important;max-height:none!important;overflow:hidden!important;
+ padding:14px 22px!important;margin:0!important;border:0!important;border-radius:0!important;
+ background:#f7f4f7!important;box-shadow:none!important;
+}
+#mq-page-marketing #mq-studio-workspace.mq-studio-fullscreen .mq-studio-editor-top{flex:0 0 auto;min-height:52px!important;margin:0 0 6px!important}
+#mq-page-marketing #mq-studio-workspace.mq-studio-fullscreen .mq-studio-canvas-actions{flex:0 0 auto!important;padding:2px 0 9px!important}
+#mq-page-marketing #mq-studio-workspace.mq-studio-fullscreen .mq-studio-editor-layout{
+ display:grid!important;grid-template-columns:minmax(280px,345px) minmax(0,1fr)!important;
+ flex:1 1 auto!important;min-height:0!important;height:auto!important;gap:18px!important;
+ overflow:hidden!important;align-items:stretch!important;
+}
+#mq-page-marketing #mq-studio-workspace.mq-studio-fullscreen .mq-studio-fields{
+ display:flex!important;min-height:0!important;max-height:100%!important;overflow-y:auto!important;overscroll-behavior:contain;
+ padding:0 7px 18px 0!important;scrollbar-width:thin;
+}
+#mq-page-marketing #mq-studio-workspace.mq-studio-fullscreen .mq-studio-preview-wrap,
+#midasquote-dashboard #mq-page-marketing #mq-studio-workspace.mq-studio-fullscreen .mq-studio-preview-wrap{
+ display:flex!important;flex-direction:column!important;justify-content:flex-start!important;align-items:center!important;
+ position:relative!important;top:auto!important;transform:none!important;will-change:auto!important;
+ min-height:0!important;max-height:100%!important;height:100%!important;overflow-y:auto!important;overflow-x:hidden!important;
+ padding:10px!important;gap:7px!important;margin:0!important;width:100%!important;max-width:none!important;
+}
+#mq-page-marketing #mq-studio-workspace.mq-studio-fullscreen .mq-studio-preview-wrap canvas,
+#midasquote-dashboard #mq-page-marketing #mq-studio-workspace.mq-studio-fullscreen .mq-studio-preview-wrap canvas{
+ display:block!important;width:auto!important;height:auto!important;max-width:100%!important;
+ max-height:clamp(220px,49dvh,720px)!important;flex:0 1 auto!important;object-fit:contain!important;transform:none!important;
+}
+#mq-page-marketing #mq-studio-workspace.mq-studio-fullscreen .mq-studio-format-bar,
+#mq-page-marketing #mq-studio-workspace.mq-studio-fullscreen .mq-studio-quick-colors,
+#mq-page-marketing #mq-studio-workspace.mq-studio-fullscreen .mq-studio-preview-toolbar{
+ display:flex!important;flex:0 0 auto!important;visibility:visible!important;flex-wrap:wrap!important;width:100%!important;margin:0!important;
+}
+#mq-page-marketing #mq-studio-workspace.mq-studio-fullscreen .mq-history-toolbar{
+ display:flex!important;visibility:visible!important;position:sticky!important;bottom:0!important;z-index:12!important;
+ width:100%!important;flex:0 0 auto!important;margin:0!important;background:#fff!important;
+}
+#mq-page-marketing #mq-studio-workspace.mq-studio-fullscreen.mq-studio-canvas-first .mq-studio-editor-layout{grid-template-columns:1fr!important}
+#mq-page-marketing #mq-studio-workspace.mq-studio-fullscreen.mq-studio-canvas-first .mq-studio-fields{display:none!important}
+#mq-page-marketing #mq-studio-workspace.mq-studio-fullscreen.mq-studio-canvas-first .mq-studio-preview-wrap{max-width:1120px!important;margin:auto!important}
+#mq-page-marketing #mq-studio-workspace.mq-studio-fullscreen.mq-studio-property-mode .mq-studio-fields>.mq-studio-control-card{display:none!important}
+#mq-page-marketing #mq-studio-workspace.mq-studio-fullscreen.mq-studio-property-mode .mq-studio-fields>.mq-studio-control-card:has(#mq-studio-layer-list){display:block!important}
+@media(max-width:760px){
+ #midasquote-dashboard #mq-page-marketing #mq-studio-workspace.mq-studio-fullscreen{padding:8px!important}
+ #mq-page-marketing #mq-studio-workspace.mq-studio-fullscreen .mq-studio-editor-layout{grid-template-columns:1fr!important;overflow-y:auto!important}
+ #mq-page-marketing #mq-studio-workspace.mq-studio-fullscreen .mq-studio-fields{max-height:none!important;overflow:visible!important}
+ #mq-page-marketing #mq-studio-workspace.mq-studio-fullscreen .mq-studio-preview-wrap{height:auto!important;overflow:visible!important}
+ #mq-page-marketing #mq-studio-workspace.mq-studio-fullscreen .mq-studio-preview-wrap canvas{max-height:45dvh!important}
+}
+</style>
           <!-- MARKETING KIT -->
           <div class="mq-page mq-sr-tab" id="mq-page-marketing">
             <button class="mq-help-btn" onclick="mqShowHelp('marketing')"><span class="mq-help-badge">?</span> Need help?</button>
-            <div class="mq-page-title">Marketing Kit</div>
-            <div class="mq-page-sub">Ready-made copy to help you promote your new quote widget — personalized with your shop's link</div>
+            <div class="mq-page-title">Design Studio</div>
+            <div class="mq-page-sub">Create professional ads, posters, social graphics and QR designs for your business — all customizable</div>
 
             <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin-bottom:1.25rem">
               <label class="mq-label" style="display:block;margin-bottom:6px">Link to use across everything below</label>
@@ -2574,6 +2958,231 @@ window.logoutMember = async function () {
               <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 12px;margin-top:8px;font-size:12px;color:#166534">✅ Once applied, this link is automatically used across every marketing item on this page — posts, graphics, QR codes, and everything else.</div>
             </div>
 
+            <!-- MARKETING STUDIO v2.2: Visual template gallery and enhanced design editor. Legacy tools preserved below. -->
+            <section id="mq-studio" class="mq-studio">
+              <div class="mq-studio-hero"><div><span class="mq-studio-kicker">✦ YOUR CREATIVE WORKSPACE</span><h2>Design work worth showing off.</h2><p>Art-directed ads for cabinet shops. Choose a composition, fine-tune your branding, and export beautifully.</p></div><span class="mq-studio-hero-star">✳</span></div>
+              <div class="mq-studio-nav" role="group" aria-label="Filter templates"><button type="button" class="active" data-studio-filter="all">All designs</button><button type="button" data-studio-filter="social">Social posts</button><button type="button" data-studio-filter="print">Posters & signs</button><button type="button" data-studio-filter="qr">QR promotions</button></div>
+              <div class="mq-studio-grid" id="mq-studio-grid"></div>
+              <div id="mq-studio-workspace" class="mq-studio-workspace" style="display:none">
+                <div class="mq-studio-editor-top"><div><span class="mq-studio-kicker">DESIGN STUDIO</span><h3 id="mq-studio-edit-title">Edit template</h3></div><div class="mq-studio-template-switch"><label for="mq-studio-template-select">Switch design</label><select id="mq-studio-template-select" aria-label="Switch design template"></select><button type="button" class="mq-studio-muted-btn" id="mq-studio-back">← All templates</button></div></div><div class="mq-studio-canvas-actions"><button type="button" id="mq-studio-quick-text">+ Add text</button><button type="button" id="mq-studio-quick-shape">+ Add shape</button><button type="button" id="mq-studio-quick-arrow">+ Add arrow</button><button type="button" id="mq-studio-quick-doodle">+ Add doodle</button><button type="button" id="mq-studio-quick-bubble">+ Add bubble</button><button type="button" id="mq-studio-quick-sticker">+ Add sticker</button><button type="button" id="mq-studio-properties-toggle">Selected object options</button><button type="button" id="mq-studio-settings-toggle">All design settings</button></div>
+                <div class="mq-studio-editor-layout">
+                  <div class="mq-studio-fields">
+                    <div class="mq-studio-control-card">
+                      <div class="mq-studio-card-title">Copy</div>
+                      <label>Shop name (edit for this graphic)<input id="mq-studio-shop-name" type="text" maxlength="80" placeholder="Your shop name"></label>
+                      <label>Headline<input id="mq-studio-headline" type="text" maxlength="90"></label>
+                      <div class="mq-studio-two-col"><label>Highlight word or phrase<input id="mq-studio-emphasis" type="text" maxlength="50" placeholder="e.g. DREAM KITCHEN"></label><label>Highlight colour<input id="mq-studio-emphasis-color" type="color" value="#f3d6a4"></label></div>
+                      <label>Supporting line<input id="mq-studio-subline" type="text" maxlength="140"></label>
+                      <label>Call to action<input id="mq-studio-cta" type="text" maxlength="48"></label>
+                      <label>Website text (shown on the graphic)<input id="mq-studio-url-text" type="text" maxlength="110" placeholder="Defaults to your quote link"></label>
+                    </div>
+                    <div class="mq-studio-control-card">
+                      <div class="mq-studio-card-title">Brand signature</div>
+                      <div class="mq-studio-two-col">
+                        <label>Shop name font<select id="mq-studio-shop-font"><option value="playfair">Playfair Display</option><option value="cinzel">Cinzel</option><option value="dmserif">DM Serif Display</option><option value="cormorant">Cormorant Garamond</option><option value="montserrat">Montserrat</option><option value="poppins">Poppins</option><option value="oswald">Oswald</option><option value="bebas">Bebas Neue</option><option value="libre">Libre Baskerville</option><option value="arial">Arial</option><option value="georgia">Georgia</option><option value="trebuchet">Trebuchet</option><option value="verdana">Verdana</option><option value="times">Times New Roman</option></select></label>
+                        <label>Shop name colour<input type="color" id="mq-studio-shop-color" value="#ffffff"></label>
+                      </div>
+                      <div class="mq-studio-two-col">
+                        <label>Shop name size <input type="range" id="mq-studio-shop-scale" min="50" max="240" value="100"></label>
+                        <label>Shop name spacing <input type="range" id="mq-studio-shop-spacing" min="0" max="12" value="2"></label>
+                      </div>
+                      <div class="mq-studio-two-col">
+                        <label>Name horizontal <input type="range" id="mq-studio-shop-x" min="-1080" max="1080" value="0"></label>
+                        <label>Name vertical <input type="range" id="mq-studio-shop-y" min="-1920" max="1920" value="0"></label>
+                      </div>
+                      <label>Shop logo (optional)<input id="mq-studio-logo" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml"></label>
+                      <label>Logo size<input id="mq-studio-logo-scale" type="range" min="30" max="230" value="100"></label>
+                    </div><div class="mq-studio-control-card">
+                      <div class="mq-studio-card-title">Typography</div>
+                      <div class="mq-studio-two-col">
+                        <label>Headline font<select id="mq-studio-headline-font"><option value="playfair">Playfair Display</option><option value="cinzel">Cinzel</option><option value="dmserif">DM Serif Display</option><option value="cormorant">Cormorant Garamond</option><option value="montserrat">Montserrat</option><option value="poppins">Poppins</option><option value="oswald">Oswald</option><option value="bebas">Bebas Neue</option><option value="libre">Libre Baskerville</option><option value="georgia">Georgia</option><option value="arial">Arial</option><option value="trebuchet">Trebuchet</option><option value="verdana">Verdana</option><option value="times">Times New Roman</option></select></label>
+                        <label>Supporting font<select id="mq-studio-sub-font"><option value="montserrat">Montserrat</option><option value="poppins">Poppins</option><option value="oswald">Oswald</option><option value="bebas">Bebas Neue</option><option value="playfair">Playfair Display</option><option value="cinzel">Cinzel</option><option value="dmserif">DM Serif Display</option><option value="cormorant">Cormorant Garamond</option><option value="libre">Libre Baskerville</option><option value="arial">Arial</option><option value="georgia">Georgia</option><option value="trebuchet">Trebuchet</option><option value="verdana">Verdana</option><option value="times">Times New Roman</option></select></label>
+                      </div>
+                      <div class="mq-studio-two-col">
+                        <label>Button font<select id="mq-studio-cta-font"><option value="montserrat">Montserrat</option><option value="poppins">Poppins</option><option value="oswald">Oswald</option><option value="bebas">Bebas Neue</option><option value="playfair">Playfair Display</option><option value="cinzel">Cinzel</option><option value="dmserif">DM Serif Display</option><option value="cormorant">Cormorant Garamond</option><option value="libre">Libre Baskerville</option><option value="arial">Arial</option><option value="georgia">Georgia</option><option value="trebuchet">Trebuchet</option><option value="verdana">Verdana</option><option value="times">Times New Roman</option></select></label>
+                        <label>Text alignment<select id="mq-studio-align"><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option></select></label>
+                      </div>
+                    </div>
+                    <div class="mq-studio-control-card">
+                      <div class="mq-studio-card-title">Creative direction</div>
+                      <label>Instant style pack<select id="mq-studio-style-pack"><option value="custom">Custom / keep my changes</option><option value="luxe">Luxury editorial · champagne</option><option value="night">Dark cinematic · dramatic</option><option value="modern">Modern architect · minimal</option><option value="bold">Bold sales · high contrast</option><option value="warm">Warm family shop · inviting</option></select></label>
+                      <button type="button" class="mq-studio-muted-btn" id="mq-studio-apply-pack">Apply style pack</button>
+                      <label>Composition<select id="mq-studio-composition"><option value="original">Original template</option><option value="cinema">Cinematic full photo</option><option value="split">Luxury split · photo right</option><option value="magazine">Magazine · photo above</option><option value="window">Architectural inset photo</option></select></label><label>Photo focal point <input type="range" min="0" max="100" value="50" id="mq-studio-focal"></label><label>Designer finish<select id="mq-studio-finish"><option value="cinematic">Cinematic · rich shadows</option><option value="editorial">Editorial · airy & refined</option><option value="architect">Architectural · crisp lines</option><option value="bold">Statement · dramatic contrast</option></select></label>
+                      <div class="mq-studio-two-col"><label>Photo darkness <input id="mq-studio-overlay" type="range" min="0" max="85" value="46"></label><label>Accent detail<select id="mq-studio-accent"><option value="none">None</option><option value="corner">Corner marks</option><option value="frame">Fine border</option><option value="stripe">Side stripe</option></select></label></div>
+                      <label>Accent colour<input id="mq-studio-accent-color" type="color" value="#d9be97"></label>
+                    </div><div class="mq-studio-control-card">
+                      <div class="mq-studio-card-title">Colours</div>
+                      <div class="mq-studio-color-grid">
+                        <label>Brand colour<input id="mq-studio-color" type="color" value="#56314b" aria-label="Brand colour"></label>
+                        <label>Headline colour<input id="mq-studio-headline-color" type="color" value="#ffffff"></label>
+                        <label>Supporting colour<input id="mq-studio-sub-color" type="color" value="#f0e7ee"></label>
+                        <label>Button colour<input id="mq-studio-cta-bg" type="color" value="#f2e1ca"></label>
+                        <label>Button text colour<input id="mq-studio-cta-color" type="color" value="#2b2430"></label>
+                      </div>
+                    </div>
+                    <div class="mq-studio-control-card">
+                      <div class="mq-studio-card-title">Font effects</div>
+                      <div class="mq-studio-two-col">
+                        <label>Headline effect<select id="mq-studio-headline-fx"><option value="none">None (no shadow)</option><option value="custom">Custom shadow</option><option value="soft">Soft shadow</option><option value="strong">Strong shadow</option><option value="glow">Glow</option><option value="outline">Outline</option></select></label>
+                        <label>Supporting effect<select id="mq-studio-sub-fx"><option value="none">None (no shadow)</option><option value="custom">Custom shadow</option><option value="soft">Soft shadow</option><option value="strong">Strong shadow</option><option value="glow">Glow</option><option value="outline">Outline</option></select></label>
+                      </div>
+                      <div class="mq-studio-two-col">
+                        <label>Shop name effect<select id="mq-studio-brand-fx"><option value="none">None (no shadow)</option><option value="custom">Custom shadow</option><option value="soft">Soft shadow</option><option value="strong">Strong shadow</option><option value="glow">Glow</option><option value="outline">Outline</option></select></label>
+                        <label>Button text effect<select id="mq-studio-cta-fx"><option value="none">None (no shadow)</option><option value="custom">Custom shadow</option><option value="soft">Soft shadow</option><option value="strong">Strong shadow</option><option value="glow">Glow</option><option value="outline">Outline</option></select></label>
+                      </div>
+                      <div class="mq-studio-two-col">
+                        <label>Website effect<select id="mq-studio-url-fx"><option value="none">None (no shadow)</option><option value="custom">Custom shadow</option><option value="soft">Soft shadow</option><option value="strong">Strong shadow</option><option value="glow">Glow</option><option value="outline">Outline</option></select></label>
+                        <label>Effect colour<input id="mq-studio-fx-color" type="color" value="#000000"></label>
+                      </div>
+                      <div class="mq-studio-two-col">
+                        <label>Shadow blur <input id="mq-studio-fx-blur" type="range" min="0" max="35" value="8"></label>
+                        <label>Shadow distance <input id="mq-studio-fx-distance" type="range" min="0" max="25" value="4"></label>
+                        <label>Shadow direction <input id="mq-studio-fx-angle" type="range" min="0" max="360" value="90"></label>
+                        <label>Outline thickness <input id="mq-studio-fx-outline" type="range" min="1" max="12" value="3"></label>
+                      </div>
+                      <div class="mq-studio-two-col">
+                        <label>Headline fill<select id="mq-studio-headline-fill"><option value="solid">Solid colour</option><option value="gradient">Two-colour gradient</option></select></label>
+                        <label>Gradient end colour<input id="mq-studio-gradient-end" type="color" value="#d7b783"></label>
+                      </div>
+                      <div class="mq-studio-two-col">
+                        <label>Headline background<select id="mq-studio-headline-back"><option value="none">None</option><option value="band">Translucent band</option><option value="box">Solid panel</option><option value="stroke">Outlined panel</option></select></label>
+                        <label>Background colour<input id="mq-studio-back-color" type="color" value="#221623"></label>
+                      </div>
+                      <label>Background opacity <input id="mq-studio-back-opacity" type="range" min="0" max="100" value="70"></label>
+                    </div>
+                    <div class="mq-studio-control-card">
+                      <div class="mq-studio-card-title">Sizing & spacing</div>
+                      <label><div class="mq-studio-range-row"><span>Headline size</span><output id="mq-studio-headline-scale-out">100%</output></div><input id="mq-studio-headline-scale" type="range" min="70" max="145" value="100"></label>
+                      <label><div class="mq-studio-range-row"><span>Supporting size</span><output id="mq-studio-sub-scale-out">100%</output></div><input id="mq-studio-sub-scale" type="range" min="70" max="145" value="100"></label>
+                      <label><div class="mq-studio-range-row"><span>Button size</span><output id="mq-studio-cta-scale-out">100%</output></div><input id="mq-studio-cta-scale" type="range" min="70" max="145" value="100"></label>
+                      <label><div class="mq-studio-range-row"><span>Headline spacing</span><output id="mq-studio-headline-spacing-out">0px</output></div><input id="mq-studio-headline-spacing" type="range" min="0" max="12" value="0"></label>
+                      <label><div class="mq-studio-range-row"><span>Supporting spacing</span><output id="mq-studio-sub-spacing-out">0px</output></div><input id="mq-studio-sub-spacing" type="range" min="0" max="8" value="0"></label>
+                    </div>
+                    <div class="mq-studio-control-card">
+                      <div class="mq-studio-card-title">Placement</div>
+                      <label><div class="mq-studio-range-row"><span>Text left / right</span><output id="mq-studio-content-x-out">0</output></div><input id="mq-studio-content-x" type="range" min="-1080" max="1080" value="0"></label>
+                      <label><div class="mq-studio-range-row"><span>Text up / down</span><output id="mq-studio-content-y-out">0</output></div><input id="mq-studio-content-y" type="range" min="-1920" max="1920" value="0"></label>
+                      <label><div class="mq-studio-range-row"><span>Button left / right</span><output id="mq-studio-cta-x-out">0</output></div><input id="mq-studio-cta-x" type="range" min="-1080" max="1080" value="0"></label>
+                      <label><div class="mq-studio-range-row"><span>Button up / down</span><output id="mq-studio-cta-y-out">0</output></div><input id="mq-studio-cta-y" type="range" min="-1920" max="1920" value="0"></label>
+                      <label><div class="mq-studio-range-row"><span>Website left / right</span><output id="mq-studio-url-x-out">0</output></div><input id="mq-studio-url-x" type="range" min="-1080" max="1080" value="0"></label>
+                      <label><div class="mq-studio-range-row"><span>Website up / down</span><output id="mq-studio-url-y-out">0</output></div><input id="mq-studio-url-y" type="range" min="-1920" max="1920" value="0"></label>
+                      <div class="mq-studio-two-col"><label>Website colour<input id="mq-studio-url-color" type="color" value="#e8d9dd"></label><label>Website size<input id="mq-studio-url-scale" type="range" min="65" max="220" value="100"></label></div>
+                    </div>
+
+<div class="mq-studio-control-card">
+  <div class="mq-studio-context-top"><h4 id="mq-studio-context-title">Object options</h4><button type="button" id="mq-studio-layers-toggle">☷ All layers</button></div><div class="mq-studio-layer-intro"><p class="mq-studio-tip"><strong>Everything starts freely movable.</strong> The shop name, headline, description, button and website are automatically converted into independent layers when you open a design.</p></div>
+  <div class="mq-studio-layer-toolbar">
+    <button type="button" class="mq-studio-muted-btn" id="mq-studio-add-text-layer">+ Text</button>
+    <button type="button" class="mq-studio-muted-btn" id="mq-studio-add-shape-layer">+ Shape</button>
+    <button type="button" class="mq-studio-muted-btn" id="mq-studio-add-arrow-layer">+ Arrow</button>
+    <button type="button" class="mq-studio-muted-btn" id="mq-studio-add-doodle-layer">+ Doodle</button>
+    <button type="button" class="mq-studio-muted-btn" id="mq-studio-add-swipe-layer">+ Brush swipe</button>
+    <button type="button" class="mq-studio-muted-btn" id="mq-studio-add-bubble-layer">+ Bubble</button>
+    <button type="button" class="mq-studio-muted-btn" id="mq-studio-add-sticker-layer">+ Sticker</button><button type="button" class="mq-studio-muted-btn" id="mq-studio-add-oval-bubble">+ Oval bubble</button><button type="button" class="mq-studio-muted-btn" id="mq-studio-add-chunky-arrow">+ Chunky arrow</button>
+    <button type="button" class="mq-studio-muted-btn" id="mq-studio-add-image-layer-btn">+ Image</button>
+    <button type="button" class="mq-studio-muted-btn" id="mq-studio-add-frame-layer">+ Border</button>
+  </div>
+  <span class="mq-font-preview-note">Font menus now include a live-style preview label such as “Abc 123”. Combine brush swipes, arrows, doodles, speech bubbles, and stickers for social-style ads.</span>
+  <input id="mq-studio-add-image-layer-input" type="file" accept="image/*" style="display:none">
+  <div id="mq-studio-layer-list" class="mq-studio-layer-list"></div>
+  <div id="mq-studio-layer-controls" class="mq-studio-layer-controls">
+    <p class="mq-studio-tip" id="mq-studio-layer-empty">Add a custom text box, shape, border, or image layer to unlock much more freedom.</p>
+    <div id="mq-studio-layer-controls-body" style="display:none">
+      <div class="mq-studio-two-col">
+        <label>Layer name<input id="mq-studio-layer-name" type="text"></label>
+        <label>Layer position<select id="mq-studio-layer-place"><option value="front">Front</option><option value="back">Behind main design</option></select></label>
+      </div>
+      <div class="mq-studio-two-col">
+        <label>X position<input id="mq-studio-layer-x" type="number" step="1"></label>
+        <label>Y position<input id="mq-studio-layer-y" type="number" step="1"></label>
+      </div>
+      <div class="mq-studio-two-col">
+        <label>Width<input id="mq-studio-layer-w" type="number" min="1" step="1"></label>
+        <label>Height<input id="mq-studio-layer-h" type="number" min="1" step="1"></label>
+      </div>
+      <div class="mq-studio-two-col">
+        <label>Opacity <input id="mq-studio-layer-opacity" type="range" min="0" max="100" value="100"></label>
+        <label>Rotation <span style="display:flex;gap:5px;align-items:center;margin-top:6px"><button type="button" id="mq-studio-rotation-minus" title="Rotate counterclockwise by 1 degree; Shift-click for 0.1 degree" style="padding:7px 11px;min-height:36px;flex:0 0 auto">↶</button><input id="mq-studio-layer-rotation" type="range" min="-180" max="180" step="0.1" value="0" style="min-width:45px;flex:1"><button type="button" id="mq-studio-rotation-plus" title="Rotate clockwise by 1 degree; Shift-click for 0.1 degree" style="padding:7px 11px;min-height:36px;flex:0 0 auto">↷</button></span><span style="display:flex;align-items:center;gap:5px;margin-top:5px"><input id="mq-studio-rotation-number" type="number" min="-180" max="180" step="0.1" value="0" style="max-width:96px;min-height:35px;padding:5px 8px"><span>degrees · Shift-click arrows = 0.1°</span></span></label>
+      </div>
+      <div class="mq-studio-two-col">
+        <label>Shadow colour<input id="mq-studio-layer-shadow-color" type="color" value="#000000"></label>
+        <label>Shadow blur <input id="mq-studio-layer-shadow-blur" type="range" min="0" max="60" value="0"></label>
+      </div>
+      <div class="mq-studio-two-col">
+        <label>Shadow X <input id="mq-studio-layer-shadow-x" type="range" min="-40" max="40" value="0"></label>
+        <label>Shadow Y <input id="mq-studio-layer-shadow-y" type="range" min="-40" max="40" value="0"></label>
+      </div>
+
+      <div id="mq-studio-layer-text-fields" class="mq-studio-layer-section">
+        <label>Text content<textarea id="mq-studio-layer-text"></textarea></label>
+        <div class="mq-studio-two-col">
+          <label>Font<select id="mq-studio-layer-font"></select></label>
+          <label>Align<select id="mq-studio-layer-align"><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option></select></label>
+        </div>
+        <div class="mq-studio-two-col">
+          <label>Text style<select id="mq-studio-layer-style"><option value="custom">Custom</option><option value="luxury">Luxury serif</option><option value="bold">Bold poster</option><option value="marker">Marker note</option><option value="story">Social story hook</option><option value="caption">Clean caption</option><option value="sticker">Sticker headline</option><option value="handwritten">Handwritten note</option></select></label>
+          <label>Effect<select id="mq-studio-layer-fx"><option value="none">None (no shadow)</option><option value="custom">Custom shadow</option><option value="soft">Soft shadow</option><option value="strong">Strong shadow</option><option value="glow">Glow</option><option value="outline">Outline</option></select></label>
+        </div>
+        <div class="mq-studio-two-col">
+          <label>Text colour<input id="mq-studio-layer-color" type="color" value="#ffffff"></label>
+          <label>Font size<input id="mq-studio-layer-size" type="range" min="12" max="180" value="56"></label>
+        </div>
+        <div class="mq-studio-two-col">
+          <label>Letter spacing<input id="mq-studio-layer-spacing" type="range" min="0" max="20" value="0"></label>
+          <label>Text curve <input id="mq-studio-layer-curve" type="range" min="-100" max="100" value="0" step="1"><span id="mq-studio-curve-value" style="font-size:12px;color:#76667b">Straight · 0</span></label>
+          <label>Stroke / outline width<input id="mq-studio-layer-text-stroke-width" type="range" min="0" max="30" value="0"></label>
+        </div>
+      </div>
+
+      <div id="mq-studio-layer-shape-fields" class="mq-studio-layer-section">
+        <div class="mq-studio-two-col">
+          <label>Shape<select id="mq-studio-layer-shape"><option value="rect">Rectangle</option><option value="circle">Circle / ellipse</option><option value="line">Line</option><option value="arrow">Arrow</option><option value="curve">Curved arrow · flowing</option><option value="curvebold">Curved arrow · chunky</option><option value="curvethin">Curved arrow · fine</option><option value="curveswoosh">Curved arrow · swoosh</option><option value="curveloop">Curved arrow · loop</option><option value="burst">Burst / rays</option><option value="brush">Brush swipe</option><option value="underline">Doodle underline</option><option value="bubble">Speech bubble · rounded</option><option value="bubbleoval">Speech bubble · oval</option><option value="bubblecloud">Thought bubble · cloud</option><option value="bubblecomic">Speech bubble · comic</option><option value="bubblehand">Speech bubble · hand-drawn</option><option value="bubbleburst">Speech bubble · shout</option><option value="starburst">Sticker burst</option><option value="sparkle">Sparkle</option><option value="check">Checkmark</option><option value="heart">Heart</option></select></label>
+          <label>Corner radius<input id="mq-studio-layer-radius" type="range" min="0" max="120" value="16"></label>
+        </div>
+        <div class="mq-studio-two-col">
+          <label>Fill colour<input id="mq-studio-layer-fill" type="color" value="#ffffff"></label>
+          <label>Stroke colour<input id="mq-studio-layer-stroke" type="color" value="#ffffff"></label>
+        </div>
+        <label>Border / stroke width<input id="mq-studio-layer-stroke-width" type="range" min="0" max="30" value="0"></label>
+      </div>
+
+      <div id="mq-studio-layer-image-fields" class="mq-studio-layer-section">
+        <label>Replace image<input id="mq-studio-layer-image-file" type="file" accept="image/*"></label>
+        <div class="mq-studio-two-col">
+          <label>Fit<select id="mq-studio-layer-fit"><option value="cover">Cover</option><option value="contain">Contain</option><option value="stretch">Stretch</option></select></label>
+          <label>Border radius<input id="mq-studio-layer-image-radius" type="range" min="0" max="120" value="0"></label>
+        </div>
+        <div class="mq-studio-two-col">
+          <label>Border colour<input id="mq-studio-layer-image-stroke" type="color" value="#ffffff"></label>
+          <label>Border width<input id="mq-studio-layer-image-stroke-width" type="range" min="0" max="30" value="0"></label>
+        </div>
+      </div>
+
+      <div class="mq-studio-layer-toolbar" style="margin-top:10px">
+        <button type="button" class="mq-studio-muted-btn" id="mq-studio-layer-dup">Duplicate</button>
+        <button type="button" class="mq-studio-muted-btn" id="mq-studio-layer-delete">Delete</button><button type="button" class="mq-studio-muted-btn" id="mq-studio-reset-layer-position">Reset position</button>
+        <button type="button" class="mq-studio-muted-btn" id="mq-studio-layer-back">Send backward 1</button>
+        <button type="button" class="mq-studio-muted-btn" id="mq-studio-layer-forward">Bring forward 1</button>
+      </div>
+    </div>
+  </div>
+</div>
+                    <div class="mq-studio-control-card">
+                      <div class="mq-studio-card-title">Photo & export</div>
+                      <div class="mq-studio-two-col"><button type="button" class="mq-studio-muted-btn" id="mq-studio-save-draft">Save design</button><button type="button" class="mq-studio-muted-btn" id="mq-studio-load-draft">Load saved design</button></div>
+                      <p class="mq-studio-tip">Drafts are saved in this browser. Images can be included up to local storage limits.</p>
+                      <label>Project photo<input id="mq-studio-photo" type="file" accept="image/*"></label>
+                      <button type="button" class="mq-studio-muted-btn" id="mq-studio-remove-photo">Remove photo</button>
+                      <label>Export size<select id="mq-studio-size"><option value="square">Square · 1080 × 1080</option><option value="portrait">Feed portrait · 1080 × 1350</option><option value="story">Story / Reel · 1080 × 1920</option><option value="poster">Poster · 1080 × 1620</option><option value="landscape">Yard sign · 1620 × 1080</option></select></label>
+                      <div class="mq-studio-editor-actions"><button type="button" id="mq-studio-download" class="mq-btn mq-btn-primary">↓ Download PNG</button><button type="button" id="mq-studio-copy-caption" class="mq-studio-muted-btn">Copy caption</button></div>
+                      <p class="mq-studio-tip">Your shop name and marketing link are automatically added. Upload a project photo for the most effective result.</p>
+                    </div>
+                  </div>
+                  <div class="mq-studio-preview-wrap"><div class="mq-studio-format-bar" role="group" aria-label="Design canvas size"><label for="mq-studio-quick-size">Canvas format</label><select id="mq-studio-quick-size"><option value="square">Square post · 1080 × 1080</option><option value="portrait">Portrait feed · 1080 × 1350</option><option value="story">Story / Reel · 1080 × 1920</option><option value="poster">Poster · 1080 × 1620</option><option value="landscape">Yard sign · 1620 × 1080</option></select><span id="mq-studio-format-dimensions">1080 × 1080 px</span><button type="button" id="mq-studio-quick-download" class="mq-btn mq-btn-primary" style="padding:12px 20px!important;min-height:44px!important;background:#211d23!important;color:#fff!important;border-radius:10px!important;font-weight:700!important;white-space:nowrap">↓ Download PNG</button></div><div class="mq-studio-quick-colors" aria-label="Design colours"><span>DESIGN COLOURS</span><label>Background <input type="color" id="mq-studio-quick-brand" value="#56314b" title="Main design colour"></label><label>Photo frame <input type="color" id="mq-studio-quick-surface" value="#e9d9c8" title="Secondary panels and photo framing"></label><label>Accent <input type="color" id="mq-studio-quick-accent" value="#d9be97" title="Accent detail"></label><button type="button" id="mq-studio-reset-colors" class="mq-studio-muted-btn" title="Restore the shop's starting colours">Reset colours</button></div><div class="mq-studio-preview-toolbar"><button type="button" id="mq-studio-photo-quick" class="mq-studio-muted-btn">📷 Add / replace project photo</button><button type="button" id="mq-studio-photo-remove-quick" class="mq-studio-muted-btn" title="Remove the template project photo">✕ Remove project photo</button><button type="button" id="mq-studio-direct-image-btn" class="mq-studio-muted-btn">＋ Add movable image</button><button type="button" id="mq-studio-delete-selected" class="mq-studio-muted-btn" title="Delete selected text, button, shape, or image">✕ Delete selected</button><input id="mq-studio-direct-image-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none"><input id="mq-studio-auto-photo-target" type="file" accept="image/png,image/jpeg,image/webp,image/gif" style="display:none"></div><div class="mq-studio-preview-tip">Tip: click and drag the project photo frame, text, buttons, or any other layer. Use corner handles to resize.</div><div id="mq-studio-hoverbar" class="mq-studio-hoverbar"><button type="button" data-action="edit">✎ Edit</button><button type="button" data-action="duplicate">⧉ Duplicate</button><button type="button" data-action="replace">▧ Replace</button><button type="button" data-action="delete">✕ Delete</button></div><canvas id="mq-studio-canvas" width="1080" height="1080" aria-label="Live marketing graphic preview"></canvas><div class="mq-history-toolbar" role="group" aria-label="Design history and saved draft"><button type="button" id="mq-studio-undo" disabled title="Undo (Ctrl+Z)">↶ Undo</button><button type="button" id="mq-studio-redo" disabled title="Redo (Ctrl+Y / Ctrl+Shift+Z)">↷ Redo</button><button type="button" id="mq-studio-quick-save" title="Save this design in this browser">Save draft</button><button type="button" id="mq-studio-quick-load" title="Load the saved design for this template">Load draft</button><span class="mq-history-status" id="mq-studio-history-status" aria-live="polite">Ready</span></div><p>Live preview · The downloaded image exports at full resolution</p></div>
+                </div>
+              </div>
+              <details class="mq-studio-legacy"><summary>More marketing tools & advanced designers <span>⌄</span></summary><p>All your original marketing tools are still available below, including advanced poster controls, standalone QR codes, social captions, and printable materials.</p></details>
+            </section>
             <div class="mq-card mq-sr-card">
               <div onclick="mqToggleMkSection('social')" class="mq-sr-head">
                 <div class="mq-sr-title">📱 Social media posts</div>
@@ -13004,6 +13613,1135 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     el('mq-leads-table').innerHTML = renderLeads(leads, null, true);
   };
 
+
+  // MARKETING STUDIO v3.0 — self-contained and non-destructive; all original
+  // marketing widgets remain available. No new Airtable fields required.
+  const MQ_STUDIO_TEMPLATES = [
+    {id:'launch',title:'Instant Estimates',category:'social',tag:'Announcement',headline:'YOUR DREAM KITCHEN STARTS HERE',sub:'Get a ballpark estimate in minutes — at your convenience.',cta:'GET YOUR ESTIMATE',mode:'editorial'},
+    {id:'quote',title:'Quote While You Relax',category:'social',tag:'Lead generation',headline:'KNOW YOUR PRICE. LOVE YOUR SPACE.',sub:'Explore your kitchen project with an instant online estimate.',cta:'TRY OUR ESTIMATOR',mode:'split'},
+    {id:'premium',title:'The Luxury Edit',category:'social',tag:'Premium style',headline:'BEAUTIFUL KITCHENS. CLEARER PRICING.',sub:'Your next kitchen starts with a simple estimate.',cta:'GET STARTED',mode:'luxury'},
+    {id:'before',title:'Dream Project',category:'social',tag:'Project showcase',headline:'IMAGINE WHAT WE COULD BUILD',sub:'Custom cabinetry designed for the way you live.',cta:'PLAN YOUR PROJECT',mode:'frame'},
+    {id:'poster',title:'Your Next Kitchen',category:'print',tag:'Print poster',headline:'LET’S MAKE ROOM FOR SOMETHING BEAUTIFUL',sub:'Explore a new kitchen with a fast ballpark estimate.',cta:'START HERE',mode:'editorial'},
+    {id:'yard',title:'Another Great Project',category:'print',tag:'Yard sign',headline:'ANOTHER PROJECT WE’RE PROUD OF',sub:'Custom kitchens, cabinetry and millwork.',cta:'SEE WHAT WE CAN BUILD',mode:'split'},
+    {id:'scan',title:'Scan & Estimate',category:'qr',tag:'QR promotion',headline:'SCAN. PLAN. GET INSPIRED.',sub:'Scan the code to explore your next cabinet project.',cta:'INSTANT BALLPARK ESTIMATE',mode:'qr'},
+    {id:'simple',title:'The Minimalist',category:'qr',tag:'QR / counter card',headline:'YOUR NEW KITCHEN IS CLOSER THAN YOU THINK',sub:'Scan to get a quick estimate from our team.',cta:'SCAN TO START',mode:'minimal'},
+  ];
+  let mqStudioPhoto=null, mqStudioLogo=null, mqStudioSelected=null;
+  
+  function mqInitMarketingStudio(shopRecord){
+    const root=document.getElementById('mq-studio');
+    if(!root)return;
+    const shopName=shopRecord.fields['Shop name']||'YOUR CABINET SHOP';
+    const color=shopRecord.fields['Brand colour']||'#56314b';
+    const quoteLink=()=>(_mqCustomPostLink||shopRecord.fields['Marketing link']||`https://widget.midasquote.com/?shop=${shopRecord.fields['Shop token']||''}`);
+    const grid=root.querySelector('#mq-studio-grid'), workspace=root.querySelector('#mq-studio-workspace');
+    const field=id=>root.querySelector('#mq-studio-'+id);
+    // Fullscreen scroll safety: preserve the artwork and prevent background scroll.
+    let mqScrollLock=null;
+    let mqRescueButton=null;
+    function resetStudioScroll(){
+      [workspace,workspace.querySelector('.mq-studio-editor-layout'),workspace.querySelector('.mq-studio-fields'),workspace.querySelector('.mq-studio-preview-wrap')].filter(Boolean).forEach(el=>{el.scrollTop=0;el.scrollLeft=0;});
+      // Scroll scrollable ancestors too; otherwise a scrolled dashboard wrapper
+      // can leave the editor invisible behind a fullscreen-positioned ancestor.
+      for(let el=workspace.parentElement;el;el=el.parentElement){if(el.scrollTop)el.scrollTop=0;}
+      window.scrollTo(0,0);
+    }
+    function lockStudioScroll(){
+      if(mqScrollLock)return;
+      const html=document.documentElement,body=document.body;
+      mqScrollLock={html:html.style.overflow,body:body.style.overflow};
+      html.style.overflow='hidden';body.style.overflow='hidden';
+      if(!mqRescueButton){
+        mqRescueButton=document.createElement('button');
+        mqRescueButton.type='button';
+        mqRescueButton.textContent='↑ Studio top';
+        mqRescueButton.setAttribute('aria-label','Return to the top of the design studio without changing the design');
+        Object.assign(mqRescueButton.style,{position:'fixed',right:'16px',bottom:'16px',zIndex:'2147483647',padding:'12px 17px',borderRadius:'11px',border:'1px solid #cebfcf',background:'#231d27',color:'#fff',font:'700 13px Arial,sans-serif',boxShadow:'0 8px 30px #0004',cursor:'pointer'});
+        mqRescueButton.addEventListener('click',resetStudioScroll);
+        document.body.appendChild(mqRescueButton);
+      }
+      resetStudioScroll();
+    }
+    function unlockStudioScroll(){
+      if(mqScrollLock){document.documentElement.style.overflow=mqScrollLock.html;document.body.style.overflow=mqScrollLock.body;mqScrollLock=null;}
+      if(mqRescueButton){mqRescueButton.remove();mqRescueButton=null;}
+    }
+
+    // Keep the design visible while the owner edits long settings panels.
+    // Dashboard ancestors use overflow rules that break position:sticky;
+    // moving the preview within its own grid row avoids that limitation.
+    const preview=workspace.querySelector('.mq-studio-preview-wrap');
+    const controls=workspace.querySelector('.mq-studio-fields');
+    let previewShift=0, followQueued=false, studioPointerActive=false;
+    function followPreview(){
+      followQueued=false;
+      if(studioPointerActive)return;
+      if(workspace.classList.contains('mq-studio-fullscreen')){previewShift=0;if(preview)preview.style.transform='';return;}
+      if(!preview||!controls||workspace.style.display==='none'||!mqStudioSelected)return;
+      // A narrow window has stacked controls: don't pin the artwork over them.
+      const editor=workspace.querySelector('.mq-studio-editor-layout');
+      if(!editor || getComputedStyle(editor).gridTemplateColumns.trim().split(/\s+/).length<2){
+        previewShift=0;preview.style.transform='';return;
+      }
+      // Determine the preview's natural position by subtracting our own translation.
+      // Use the entire editor as the boundary, not controls.offsetHeight, because
+      // contextual controls change height while selecting different layer types.
+      const rect=preview.getBoundingClientRect();
+      const editorRect=editor.getBoundingClientRect();
+      const naturalTop=rect.top-previewShift;
+      const visiblePreviewHeight=Math.min(preview.offsetHeight, Math.max(220,window.innerHeight-84));
+      const available=Math.max(0,editor.offsetHeight-visiblePreviewHeight);
+      const next=Math.max(0,Math.min(available,88-naturalTop));
+      if(Math.abs(next-previewShift)>0.5){
+        previewShift=next;
+        preview.style.transform=`translate3d(0, ${next}px, 0)`;
+      }
+    }
+    function queuePreviewFollow(){
+      if(followQueued)return;
+      followQueued=true;
+      requestAnimationFrame(followPreview);
+    }
+    if(!root.dataset.previewFollowInstalled){
+      root.dataset.previewFollowInstalled='true';
+      window.addEventListener('scroll',queuePreviewFollow,true);
+      window.addEventListener('resize',queuePreviewFollow);
+      // The selected object's properties panel can grow/shrink without a scroll.
+      // Keep its visible preview position in sync with those changes.
+      if(typeof ResizeObserver!=='undefined'){
+        const observer=new ResizeObserver(queuePreviewFollow);
+        observer.observe(controls);
+        observer.observe(workspace);
+      }
+    }
+
+    const safeColor=(v,fallback)=>/^#[0-9a-f]{6}$/i.test(v||'')?v:(fallback||'#56314b');
+    const FONT_OPTIONS=[
+      ['playfair','Playfair Display'],['cinzel','Cinzel'],['dmserif','DM Serif Display'],['cormorant','Cormorant Garamond'],['abril','Abril Fatface'],['libre','Libre Baskerville'],
+      ['montserrat','Montserrat'],['poppins','Poppins'],['raleway','Raleway'],['manrope','Manrope'],['spartan','League Spartan'],['archivo','Archivo Black'],['oswald','Oswald'],['anton','Anton'],['bebas','Bebas Neue'],['barlow','Barlow Condensed'],
+      ['fredoka','Fredoka'],['marker','Permanent Marker'],['caveat','Caveat'],['georgia','Georgia'],['arial','Arial'],['trebuchet','Trebuchet'],['verdana','Verdana'],['times','Times New Roman']
+    ];
+    const fontFace=(key,fallbackSerif=false)=>({playfair:'"Playfair Display", Georgia, serif',cinzel:'"Cinzel", Georgia, serif',dmserif:'"DM Serif Display", Georgia, serif',cormorant:'"Cormorant Garamond", Georgia, serif',abril:'"Abril Fatface", Georgia, serif',libre:'"Libre Baskerville", Georgia, serif',montserrat:'"Montserrat", Arial, sans-serif',poppins:'"Poppins", Arial, sans-serif',raleway:'"Raleway", Arial, sans-serif',manrope:'"Manrope", Arial, sans-serif',spartan:'"League Spartan", Arial, sans-serif',archivo:'"Archivo Black", Arial, sans-serif',oswald:'"Oswald", Arial, sans-serif',anton:'"Anton", Impact, sans-serif',bebas:'"Bebas Neue", Impact, sans-serif',barlow:'"Barlow Condensed", Arial, sans-serif',fredoka:'"Fredoka", Arial, sans-serif',marker:'"Permanent Marker", "Trebuchet MS", sans-serif',caveat:'"Caveat", "Trebuchet MS", cursive',georgia:'Georgia, serif',arial:'Arial, sans-serif',trebuchet:'"Trebuchet MS", Arial, sans-serif',verdana:'Verdana, Arial, sans-serif',times:'"Times New Roman", Georgia, serif'}[key]||(fallbackSerif?'Georgia, serif':'Arial, sans-serif'));
+    const font=(size,fam,weight=700)=>`${weight} ${Math.round(size)}px ${fontFace(fam)}`;
+    function populateStudioFontSelects(){
+      const selectors=['shop-font','headline-font','sub-font','cta-font','layer-font'];
+      const preferred={'shop-font':'playfair','headline-font':'playfair','sub-font':'montserrat','cta-font':'montserrat','layer-font':'playfair'};
+      let activePicker=null;
+      const closePicker=()=>{if(activePicker){activePicker.menu.hidden=true;activePicker.button.setAttribute('aria-expanded','false');activePicker=null;}};
+      selectors.forEach(id=>{
+        const select=field(id);if(!select||select.dataset.richFontInstalled)return;
+        const current=select.value||preferred[id]||'playfair';
+        select.innerHTML=FONT_OPTIONS.map(([value,label])=>`<option value="${value}">${label}</option>`).join('');
+        select.value=current;select.dataset.richFontInstalled='true';
+        // Keep the original select as the authoritative value for the canvas renderer.
+        // Native option menus cannot consistently style individual fonts across browsers.
+        select.classList.add('mq-font-native');
+        const holder=document.createElement('div');holder.className='mq-rich-font-picker';
+        const button=document.createElement('button');button.type='button';button.className='mq-rich-font-trigger';
+        button.setAttribute('aria-haspopup','listbox');button.setAttribute('aria-expanded','false');
+        const menu=document.createElement('div');menu.className='mq-rich-font-menu';menu.hidden=true;menu.setAttribute('role','listbox');
+        FONT_OPTIONS.forEach(([key,label])=>{
+          const item=document.createElement('button');item.type='button';item.className='mq-rich-font-option';item.dataset.font=key;item.setAttribute('role','option');
+          item.innerHTML=`<span class="mq-rich-font-name"></span><span class="mq-rich-font-sample">Aa Bb Cc 123</span>`;
+          item.querySelector('.mq-rich-font-name').textContent=label;
+          item.querySelector('.mq-rich-font-sample').style.fontFamily=fontFace(key);
+          item.addEventListener('click',ev=>{
+            ev.preventDefault();ev.stopPropagation();select.value=key;
+            select.dispatchEvent(new Event('input',{bubbles:true}));
+            select.dispatchEvent(new Event('change',{bubbles:true}));
+            refresh();closePicker();
+            if(document.fonts?.load)document.fonts.load(`700 28px ${fontFace(key)}`).then(()=>update()).catch(()=>{});
+          });menu.appendChild(item);
+        });
+        const refresh=()=>{
+          const key=select.value;const label=FONT_OPTIONS.find(([k])=>k===key)?.[1]||key;
+          button.innerHTML='';const name=document.createElement('span');name.textContent=label;
+          const sample=document.createElement('span');sample.className='mq-rich-font-trigger-sample';sample.textContent='Abc';sample.style.fontFamily=fontFace(key);
+          button.append(name,sample);
+          menu.querySelectorAll('.mq-rich-font-option').forEach(item=>{item.setAttribute('aria-selected',String(item.dataset.font===key));});
+        };
+        button.addEventListener('click',ev=>{
+          ev.preventDefault();ev.stopPropagation();if(activePicker?.button===button){closePicker();return;}closePicker();refresh();
+          menu.hidden=false;button.setAttribute('aria-expanded','true');activePicker={menu,button};
+        });
+        select.after(holder);holder.append(button,menu);
+        // When the template or layer changes, reflect the newly selected font.
+        // Expose a UI-only refresh for programmatic font assignments when switching layers.
+        select._mqRefreshFont=refresh;
+        select.addEventListener('change',refresh);
+        select.addEventListener('input',refresh);
+        button.addEventListener('focus',refresh);
+        refresh();
+      });
+      if(!root.dataset.fontPickerOutsideInstalled){
+        root.dataset.fontPickerOutsideInstalled='true';
+        document.addEventListener('pointerdown',ev=>{if(activePicker&&!activePicker.button.parentElement.contains(ev.target))closePicker();});
+        document.addEventListener('keydown',ev=>{if(ev.key==='Escape')closePicker();});
+      }
+    }
+    const textWidthWithSpacing=(ctx,txt,spacing=0)=>{txt=String(txt||'');if(!txt)return 0;return ctx.measureText(txt).width+Math.max(0,txt.length-1)*spacing};
+    const wrap=(ctx,txt,maxWidth,maxLines=5,spacing=0)=>{
+      const words=String(txt||'').split(/\s+/).filter(Boolean),lines=[];let current='';
+      for(const word of words){const next=current?current+' '+word:word;if(textWidthWithSpacing(ctx,next,spacing)>maxWidth&&current){lines.push(current);current=word}else current=next}
+      if(current)lines.push(current);return lines.slice(0,maxLines);
+    };
+    const rounded=(ctx,x,y,w,h,r)=>{ctx.beginPath();ctx.roundRect(x,y,w,h,r)};
+    const cover=(ctx,img,x,y,w,h,focal=50)=>{if(!img)return;const ratio=Math.max(w/img.width,h/img.height);const sw=w/ratio,sh=h/ratio;const fx=Math.max(0,Math.min(1,focal/100));ctx.drawImage(img,(img.width-sw)*fx,(img.height-sh)*fx,sw,sh,x,y,w,h)};
+    const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
+    const rangeOutputs={
+      'headline-scale':v=>v+'%','sub-scale':v=>v+'%','cta-scale':v=>v+'%',
+      'headline-spacing':v=>v+'px','sub-spacing':v=>v+'px',
+      'content-x':v=>String(v),'content-y':v=>String(v),'cta-x':v=>String(v),'cta-y':v=>String(v),'url-x':v=>String(v),'url-y':v=>String(v)
+    };
+    function syncRangeLabels(){Object.keys(rangeOutputs).forEach(id=>{const input=field(id),out=field(id+'-out');if(input&&out)out.textContent=rangeOutputs[id](input.value)})}
+    populateStudioFontSelects();
+
+let mqStudioDetached=false;
+let mqStudioCustomLayers=[];
+let mqStudioSelectedLayerId=null;
+let mqStudioLayerCounter=1;
+const layerUid=()=>`lyr_${Date.now().toString(36)}_${(mqStudioLayerCounter++).toString(36)}`;
+const cloneObj=o=>JSON.parse(JSON.stringify(o));
+function defaultTextLayer(){return {id:layerUid(),type:'text',name:`Text ${mqStudioLayerCounter}`,place:'front',x:120,y:120,w:420,h:140,rotation:0,opacity:100,shadowColor:'#000000',shadowBlur:0,shadowX:0,shadowY:0,text:'New text',font:'playfair',align:'left',color:'#ffffff',size:56,spacing:0,fx:'soft'}}
+function defaultShapeLayer(){return {id:layerUid(),type:'shape',name:`Shape ${mqStudioLayerCounter}`,place:'front',x:150,y:150,w:260,h:160,rotation:0,opacity:100,shadowColor:'#000000',shadowBlur:0,shadowX:0,shadowY:0,shape:'rect',radius:16,fill:'#ffffff',stroke:'#ffffff',strokeWidth:0}}
+function defaultArrowLayer(kind='arrow'){return {id:layerUid(),type:'shape',name:kind==='curve'?'Curved arrow':'Arrow',place:'front',x:170,y:240,w:260,h:180,rotation:0,opacity:100,shadowColor:'#000000',shadowBlur:12,shadowX:0,shadowY:6,shape:kind,radius:20,fill:'#ffffff',stroke:'#ffffff',strokeWidth:12}}
+function defaultDoodleLayer(kind='burst'){return {id:layerUid(),type:'shape',name:kind==='underline'?'Underline doodle':'Doodle',place:'front',x:200,y:160,w:240,h:140,rotation:0,opacity:100,shadowColor:'#000000',shadowBlur:0,shadowX:0,shadowY:0,shape:kind,radius:20,fill:'#ffffff',stroke:'#ffffff',strokeWidth:10}}
+function defaultBrushSwipeLayer(){return {id:layerUid(),type:'shape',name:'Brush swipe',place:'front',x:180,y:160,w:420,h:120,rotation:-4,opacity:100,shadowColor:'#000000',shadowBlur:0,shadowX:0,shadowY:0,shape:'brush',radius:24,fill:'#f5d94a',stroke:'#f5d94a',strokeWidth:0}}
+function defaultBubbleLayer(){return {id:layerUid(),type:'shape',name:'Speech bubble',place:'front',x:180,y:180,w:360,h:220,rotation:0,opacity:100,shadowColor:'#000000',shadowBlur:10,shadowX:0,shadowY:6,shape:'bubble',radius:28,fill:'#ffffff',stroke:'#ffffff',strokeWidth:0}}
+function defaultStickerLayer(){return {id:layerUid(),type:'shape',name:'Sticker burst',place:'front',x:180,y:180,w:260,h:260,rotation:-6,opacity:100,shadowColor:'#000000',shadowBlur:12,shadowX:0,shadowY:7,shape:'starburst',radius:20,fill:'#f4d84d',stroke:'#ffffff',strokeWidth:0}}
+function defaultProjectPhotoLayer(t,composition){
+  const landscape=field('size').value==='landscape',portrait=field('size').value==='portrait'||field('size').value==='poster',story=field('size').value==='story';
+  const W=landscape?1620:1080,H=story?1920:portrait?field('size').value==='poster'?1620:1350:1080;
+  const k=Math.min(W/1080,H/1080);
+  let x,y,w,h;
+  if(composition==='window'){x=48;y=H/k*.39;w=W/k-96;h=H/k*.49}
+  else if(composition==='split'){x=W/k*.54;y=0;w=W/k*.46;h=H/k}
+  else if(t.mode==='split'){x=landscape?W/k*.57:W/k*.13;y=landscape?H/k*.13:H/k*.48;w=landscape?W/k*.37:W/k*.74;h=landscape?H/k*.71:H/k*.32}
+  else if(t.mode==='frame'){x=W/k*.07;y=H/k*.07;w=W/k*.86;h=H/k*.42}
+  else return null;
+  return {id:layerUid(),type:'image',projectPhoto:true,name:'Project photo area',place:'front',x:Math.round(x),y:Math.round(y),w:Math.round(w),h:Math.round(h),rotation:0,opacity:100,shadowColor:'#000000',shadowBlur:0,shadowX:0,shadowY:0,fit:'cover',radius:0,stroke:'#ffffff',strokeWidth:0,fill:safeColor(field('quick-surface').value,'#e9d9c8'),image:mqStudioPhoto};
+}
+function projectPhotoLayer(){return mqStudioCustomLayers.find(l=>l.projectPhoto)}
+function makeQrDataUrl(link,size=512){
+  try{
+    window.mqQrGen = window.mqQrGen || MQ_QR_LIB_FACTORY();
+    const qr = window.mqQrGen(0,'M');
+    qr.addData(String(link||quoteLink()||''));
+    qr.make();
+    const count=qr.getModuleCount();
+    const margin=Math.round(size*0.10);
+    const inner=size-margin*2;
+    const cell=inner/count;
+    const c=document.createElement('canvas');
+    c.width=size;c.height=size;
+    const ctx=c.getContext('2d');
+    ctx.fillStyle='#ffffff';ctx.fillRect(0,0,size,size);
+    ctx.fillStyle='#111111';
+    for(let r=0;r<count;r++)for(let col=0;col<count;col++)if(qr.isDark(r,col))ctx.fillRect(Math.round(margin+col*cell),Math.round(margin+r*cell),Math.ceil(cell),Math.ceil(cell));
+    return c.toDataURL('image/png');
+  }catch(err){return ''}
+}
+function defaultQrLayer(){
+  const canvas=field('canvas');
+  const unit=canvas? (canvas._mqUnit||1) : 1;
+  const W=canvas? Math.round(canvas.width/unit):1080;
+  const H=canvas? Math.round(canvas.height/unit):1080;
+  const size=Math.round(Math.min(208,W*.27));
+  const pad=Math.round(Math.max(32,W*.06));
+  const dataUrl=makeQrDataUrl(quoteLink(),640);
+  const img=dataUrl? new Image():null;
+  if(img){ img.onload=()=>{ if(mqStudioSelected?.category==='qr' && mqStudioCustomLayers.some(l=>l.image===img))update(); }; img.onerror=()=>mqShowToast('QR image could not load','error'); img.src=dataUrl; }
+  return {id:layerUid(),type:'image',qrCode:true,name:'QR code',place:'front',x:Math.round(W-size-pad),y:Math.round(H-size-62),w:size,h:size,rotation:0,opacity:100,shadowColor:'#000000',shadowBlur:0,shadowX:0,shadowY:0,fit:'contain',radius:12,stroke:'#ffffff',strokeWidth:10,fill:'#ffffff',image:img,dataUrl};
+}
+function defaultButtonLayer(text){return {id:layerUid(),type:'button',name:'Call to action',place:'front',x:80,y:840,w:330,h:68,rotation:0,opacity:100,shadowColor:'#000000',shadowBlur:0,shadowX:0,shadowY:0,text:text||'GET YOUR ESTIMATE',font:'montserrat',align:'center',color:'#271c29',size:24,spacing:0,fx:'none',fill:'#f2e1ca',radius:12,stroke:'#ffffff',strokeWidth:0}}
+function defaultFrameLayer(){return {id:layerUid(),type:'shape',name:`Border ${mqStudioLayerCounter}`,place:'front',x:48,y:48,w:984,h:984,rotation:0,opacity:100,shadowColor:'#000000',shadowBlur:0,shadowX:0,shadowY:0,shape:'rect',radius:24,fill:'#ffffff',fillOpacity:0,stroke:'#ffffff',strokeWidth:5}}
+function hydrateLayer(layer){const l=cloneObj(layer);if(l.type==='image'&&l.dataUrl){const img=new Image();img.src=l.dataUrl;l.image=img;}return l}
+function currentLayer(){return mqStudioCustomLayers.find(l=>l.id===mqStudioSelectedLayerId)||null}
+// The array is stored back-to-front within each compositor group. The layer
+// panel presents the reverse (topmost first), matching professional editors.
+function studioLayerGroup(layer){return layer.place==='back'?'back':'front'}
+function moveStudioLayer(id,delta){
+ const layer=mqStudioCustomLayers.find(l=>l.id===id);if(!layer)return;
+ const group=studioLayerGroup(layer);
+ const ordered=mqStudioCustomLayers.filter(l=>studioLayerGroup(l)===group);
+ const i=ordered.findIndex(l=>l.id===id),j=i+delta;
+ if(j<0||j>=ordered.length)return;
+ [ordered[i],ordered[j]]=[ordered[j],ordered[i]];
+ const back=group==='back'?ordered:mqStudioCustomLayers.filter(l=>studioLayerGroup(l)==='back');
+ const front=group==='front'?ordered:mqStudioCustomLayers.filter(l=>studioLayerGroup(l)==='front');
+ mqStudioCustomLayers=[...back,...front];
+ mqStudioSelectedLayerId=id;renderLayerList();syncLayerControls();update();
+}
+function dropStudioLayer(sourceId,targetId,before){
+ if(!sourceId||!targetId||sourceId===targetId)return;
+ const source=mqStudioCustomLayers.find(l=>l.id===sourceId);
+ const target=mqStudioCustomLayers.find(l=>l.id===targetId);
+ if(!source||!target)return;
+ // When dragged onto a different group, join that group's compositor pass.
+ const group=studioLayerGroup(target);
+ source.place=group;
+ const visible=mqStudioCustomLayers.filter(l=>studioLayerGroup(l)===group&&l.id!==sourceId).reverse();
+ const targetIndex=visible.findIndex(l=>l.id===targetId);
+ visible.splice(Math.max(0,targetIndex+(before?0:1)),0,source);
+ const reversed=visible.reverse();
+ const other=mqStudioCustomLayers.filter(l=>studioLayerGroup(l)!==group&&l.id!==sourceId);
+ mqStudioCustomLayers=group==='back'?[...reversed,...other]:[...other,...reversed];
+ mqStudioSelectedLayerId=sourceId;renderLayerList();syncLayerControls();update();
+}
+function renderLayerList(){
+ const list=field('layer-list');if(!list)return;
+ list.innerHTML='';let groupLabel='';
+ const ordered=[...mqStudioCustomLayers].reverse();
+ ordered.forEach((layer,idx)=>{
+  const group=studioLayerGroup(layer);
+  if(group!==groupLabel){
+   groupLabel=group;
+   const label=document.createElement('div');label.className='mq-layer-group-label';
+   label.textContent=group==='front'?'FRONT · above template':'BACK · behind template';
+   list.appendChild(label);
+  }
+  const row=document.createElement('div');
+  row.className='mq-studio-layer-item mq-reorderable'+(layer.id===mqStudioSelectedLayerId?' active':'');
+  row.dataset.layerId=layer.id;
+  row.draggable=true;
+  row.title='Drag this row to change its stacking order';
+  const handle=document.createElement('span');handle.className='mq-layer-handle';handle.textContent='⠿';handle.title='Drag to reorder';row.appendChild(handle);
+  const name=document.createElement('button');name.type='button';name.className='mq-layer-name';
+  name.textContent=layer.name||layer.type;name.title='Select '+(layer.name||layer.type);
+  name.onclick=()=>{mqStudioSelectedLayerId=layer.id;syncLayerControls();mqStudioFocus='layer:'+layer.id;update();};row.appendChild(name);
+  const makeButton=(label,title,fn)=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.title=title;b.className='mq-layer-icon-btn';b.onclick=fn;row.appendChild(b);return b;};
+  const members=mqStudioCustomLayers.filter(l=>studioLayerGroup(l)===group);
+  const pos=members.findIndex(l=>l.id===layer.id);
+  const up=makeButton('↑','Bring forward one layer',()=>moveStudioLayer(layer.id,1));up.disabled=pos===members.length-1;
+  const down=makeButton('↓','Send backward one layer',()=>moveStudioLayer(layer.id,-1));down.disabled=pos===0;
+  makeButton(layer.hidden?'◌':'◉',layer.hidden?'Show layer':'Hide layer',()=>{layer.hidden=!layer.hidden;renderLayerList();update()});
+  makeButton(layer.locked?'🔒':'🔓',layer.locked?'Unlock layer':'Lock layer',()=>{layer.locked=!layer.locked;renderLayerList();update()});
+  const remove=makeButton('✕','Delete '+(layer.name||'layer'),()=>deleteStudioLayer(layer.id));remove.classList.add('mq-layer-delete');
+  row.addEventListener('dragstart',e=>{e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',layer.id);row.classList.add('mq-dragging');});
+  row.addEventListener('dragend',()=>{list.querySelectorAll('.mq-drag-over,.mq-dragging').forEach(el=>el.classList.remove('mq-drag-over','mq-dragging'));});
+  row.addEventListener('dragover',e=>{e.preventDefault();e.dataTransfer.dropEffect='move';row.classList.add('mq-drag-over');});
+  row.addEventListener('dragleave',e=>{if(!row.contains(e.relatedTarget))row.classList.remove('mq-drag-over');});
+  row.addEventListener('drop',e=>{e.preventDefault();e.stopPropagation();row.classList.remove('mq-drag-over');const sourceId=e.dataTransfer.getData('text/plain');const rect=row.getBoundingClientRect();const above=e.clientY<rect.top+rect.height/2;dropStudioLayer(sourceId,layer.id,above);});
+  list.appendChild(row);
+ });
+ field('layer-empty').style.display=mqStudioCustomLayers.length?'none':'';
+}
+
+function syncLayerControls(){const body=field('layer-controls-body');const layer=currentLayer();const title=field('context-title');if(title)title.textContent=layer?(layer.name||({text:'Text',button:'Button',image:'Image',shape:'Shape'}[layer.type]||'Object'))+' settings':'Select an object';if(!body)return;body.style.display=layer?'':'none';field('layer-empty').style.display=layer?'none':'';root.querySelectorAll('.mq-studio-layer-section').forEach(el=>el.classList.remove('show'));if(!layer)return;field('layer-name').value=layer.name||'';field('layer-place').value=layer.place||'front';field('layer-x').value=Math.round(layer.x||0);field('layer-y').value=Math.round(layer.y||0);field('layer-w').value=Math.round(layer.w||1);field('layer-h').value=Math.round(layer.h||1);field('layer-opacity').value=layer.opacity==null?100:layer.opacity;field('layer-rotation').value=layer.rotation||0;if(field('rotation-number'))field('rotation-number').value=Number(layer.rotation||0).toFixed(1);field('layer-shadow-color').value=layer.shadowColor||'#000000';field('layer-shadow-blur').value=layer.shadowBlur||0;field('layer-shadow-x').value=layer.shadowX||0;field('layer-shadow-y').value=layer.shadowY||0;
+  if(layer.type==='text'||layer.type==='button'){field('layer-text-fields').classList.add('show');field('layer-text').value=layer.text||'';field('layer-font').value=layer.font||'playfair';field('layer-font')._mqRefreshFont?.();field('layer-align').value=layer.align||'left';field('layer-color').value=layer.color||'#ffffff';field('layer-size').value=layer.size||56;field('layer-spacing').value=layer.spacing||0;if(field('layer-curve'))field('layer-curve').value=layer.curve||0;if(field('curve-value'))field('curve-value').textContent=(Number(layer.curve)||0)>0?'Arch up · '+layer.curve:(Number(layer.curve)||0)<0?'Arch down · '+Math.abs(layer.curve):'Straight · 0';field('layer-fx').value=layer.fx||'none';if(field('layer-style'))field('layer-style').value='custom';if(field('layer-text-stroke-width'))field('layer-text-stroke-width').value=layer.textStrokeWidth||0;}
+  if(layer.type==='shape'||layer.type==='button'){field('layer-shape-fields').classList.add('show');field('layer-shape').value=layer.shape||'rect';field('layer-radius').value=layer.radius||0;field('layer-fill').value=layer.fill||'#ffffff';field('layer-stroke').value=layer.stroke||'#ffffff';field('layer-stroke-width').value=layer.strokeWidth||0;}
+  if(layer.type==='image'){field('layer-image-fields').classList.add('show');field('layer-fit').value=layer.fit||'cover';field('layer-image-radius').value=layer.radius||0;field('layer-image-stroke').value=layer.stroke||'#ffffff';field('layer-image-stroke-width').value=layer.strokeWidth||0;}
+  renderLayerList();
+}
+function applyLayerControls(){const layer=currentLayer();if(!layer)return;layer.name=field('layer-name').value||layer.name;layer.place=field('layer-place').value;layer.x=Number(field('layer-x').value)||0;layer.y=Number(field('layer-y').value)||0;layer.w=Math.max(1,Number(field('layer-w').value)||1);layer.h=Math.max(1,Number(field('layer-h').value)||1);layer.opacity=Number(field('layer-opacity').value)||0;layer.rotation=Number(field('layer-rotation').value)||0;layer.shadowColor=field('layer-shadow-color').value;layer.shadowBlur=Number(field('layer-shadow-blur').value)||0;layer.shadowX=Number(field('layer-shadow-x').value)||0;layer.shadowY=Number(field('layer-shadow-y').value)||0;if(layer.type==='text'||layer.type==='button'){layer.text=field('layer-text').value;layer.font=field('layer-font').value;layer.align=field('layer-align').value;layer.color=field('layer-color').value;layer.size=Number(field('layer-size').value)||56;layer.spacing=Number(field('layer-spacing').value)||0;layer.curve=Number(field('layer-curve')?.value||0)||0;if(field('curve-value'))field('curve-value').textContent=layer.curve>0?'Arch up · '+layer.curve:layer.curve<0?'Arch down · '+Math.abs(layer.curve):'Straight · 0';layer.fx=field('layer-fx').value;layer.textStrokeWidth=Number(field('layer-text-stroke-width')?.value||0)||0;}if(layer.type==='shape'||layer.type==='button'){layer.shape=field('layer-shape').value;layer.radius=Number(field('layer-radius').value)||0;layer.fill=field('layer-fill').value;layer.stroke=field('layer-stroke').value;layer.strokeWidth=Number(field('layer-stroke-width').value)||0;}if(layer.type==='image'){layer.fit=field('layer-fit').value;layer.radius=Number(field('layer-image-radius').value)||0;layer.stroke=field('layer-image-stroke').value;layer.strokeWidth=Number(field('layer-image-stroke-width').value)||0;}renderLayerList();}
+function deleteStudioLayer(id){
+ const target=mqStudioCustomLayers.find(l=>l.id===id);if(!target)return;
+ mqStudioCustomLayers=mqStudioCustomLayers.filter(l=>l.id!==id);
+ if(mqStudioSelectedLayerId===id)mqStudioSelectedLayerId=null;
+ mqStudioFocus=null;syncLayerControls();renderLayerList();update();
+ mqShowToast((target.name||'Layer')+' deleted');
+}
+function addLayer(layer){mqStudioCustomLayers.push(layer);mqStudioSelectedLayerId=layer.id;syncLayerControls();update();}
+    function currentOpts(){
+      return {
+        shopName:field('shop-name').value,shopFont:field('shop-font').value,shopColor:field('shop-color').value,shopScale:Number(field('shop-scale').value),shopSpacing:Number(field('shop-spacing').value),shopX:Number(field('shop-x').value),shopY:Number(field('shop-y').value),logo:mqStudioLogo,logoScale:Number(field('logo-scale').value),composition:field('composition').value,focal:Number(field('focal').value),finish:field('finish').value,overlay:Number(field('overlay').value),accent:field('accent').value,accentColor:field('accent-color').value,
+        emphasis:field('emphasis').value,emphasisColor:field('emphasis-color').value,
+        customLayers:mqStudioCustomLayers,projectPhotoLayer:!!projectPhotoLayer(),detached:mqStudioDetached,
+        headline:field('headline').value,
+        sub:field('subline').value,
+        cta:field('cta').value,
+        color:field('color').value, surface:field('quick-surface').value,
+        photo:mqStudioPhoto,
+        headlineFont:field('headline-font').value,
+        subFont:field('sub-font').value,
+        ctaFont:field('cta-font').value,
+        align:field('align').value,
+        headlineColor:field('headline-color').value,
+        subColor:field('sub-color').value,
+        ctaBg:field('cta-bg').value,
+        ctaColor:field('cta-color').value,
+        headlineFx:field('headline-fx').value,subFx:field('sub-fx').value,brandFx:field('brand-fx').value,ctaFx:field('cta-fx').value,urlFx:field('url-fx').value,fxColor:field('fx-color').value,fxBlur:Number(field('fx-blur').value),fxDistance:Number(field('fx-distance').value),fxAngle:Number(field('fx-angle').value),fxOutline:Number(field('fx-outline').value),headlineFill:field('headline-fill').value,gradientEnd:field('gradient-end').value,headlineBack:field('headline-back').value,backColor:field('back-color').value,backOpacity:Number(field('back-opacity').value),
+        headlineScale:parseFloat(field('headline-scale').value)||100,
+        subScale:parseFloat(field('sub-scale').value)||100,
+        ctaScale:parseFloat(field('cta-scale').value)||100,
+        headlineSpacing:parseFloat(field('headline-spacing').value)||0,
+        subSpacing:parseFloat(field('sub-spacing').value)||0,
+        contentX:parseFloat(field('content-x').value)||0,
+        contentY:parseFloat(field('content-y').value)||0,
+        ctaX:parseFloat(field('cta-x').value)||0,
+        ctaY:parseFloat(field('cta-y').value)||0, urlText:field('url-text').value,urlX:Number(field('url-x').value),urlY:Number(field('url-y').value),urlColor:field('url-color').value,urlScale:Number(field('url-scale').value)
+      };
+    }
+    function drawSpacedText(ctx,text,x,y,spacing=0,align='left'){
+      text=String(text||'');
+      if(!text)return;
+      if(!spacing){ctx.textAlign=align;ctx.fillText(text,x,y);return;}
+      const w=textWidthWithSpacing(ctx,text,spacing);
+      let start=x;
+      if(align==='center')start=x-w/2; else if(align==='right')start=x-w;
+      const chars=[...text];
+      chars.forEach(ch=>{ctx.fillText(ch,start,y);start+=ctx.measureText(ch).width+spacing});
+    }
+    function drawWrappedLines(ctx,lines,x,startY,lineHeight,spacing,align){lines.forEach((line,i)=>drawSpacedText(ctx,line,x,startY+i*lineHeight,spacing,align));}
+    function strokeSpacedText(ctx,text,x,y,spacing=0,align='left'){
+      text=String(text||'');
+      if(!text)return;
+      if(!spacing){ctx.textAlign=align;ctx.strokeText(text,x,y);return;}
+      const w=textWidthWithSpacing(ctx,text,spacing);
+      let start=x;
+      if(align==='center')start=x-w/2; else if(align==='right')start=x-w;
+      const chars=[...text];
+      chars.forEach(ch=>{ctx.strokeText(ch,start,y);start+=ctx.measureText(ch).width+spacing});
+    }
+    function applyTextFx(ctx,effect,color,k){
+      ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetX=0;ctx.shadowOffsetY=0;ctx.lineWidth=0;
+      const options=ctx._mqFxOpts||{}, blur=Math.max(0,Number(options.fxBlur??8))*k, distance=Math.max(0,Number(options.fxDistance??4))*k, angle=(Number(options.fxAngle??90)*Math.PI/180);
+      if(effect==='soft'||effect==='strong'){ctx.shadowColor=color||'#000000';ctx.shadowBlur=blur*(effect==='strong'?1.7:1);ctx.shadowOffsetX=Math.cos(angle)*distance;ctx.shadowOffsetY=Math.sin(angle)*distance;}
+      else if(effect==='glow'){ctx.shadowColor=color||'#000000';ctx.shadowBlur=blur*2;ctx.shadowOffsetY=0;}
+      else if(effect==='outline'){ctx.strokeStyle=color||'#000000';ctx.lineWidth=Math.max(1,Number(options.fxOutline??3))*k;ctx.lineJoin='round';ctx.miterLimit=2;}
+    }
+    function clearTextFx(ctx){ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetX=0;ctx.shadowOffsetY=0;ctx.lineWidth=0;}
+    // "None" is an explicit OFF switch for text shadow and text effect.
+    // Custom shadow enables manual X/Y/Blur sliders with no preset effect.
+    function drawSpacedTextFx(ctx,text,x,y,spacing,align,effect,color,k,layerShadow=null){
+      const effectEnabled=effect!=='none';
+      const useLayerShadow=effectEnabled && layerShadow && ((Number(layerShadow.shadowBlur)||0)>0 || (Number(layerShadow.shadowX)||0)!==0 || (Number(layerShadow.shadowY)||0)!==0);
+      if(effect==='outline'){
+        applyTextFx(ctx,effect,color,k);strokeSpacedText(ctx,text,x,y,spacing,align);clearTextFx(ctx);
+      }else applyTextFx(ctx,effect,color,k);
+      if(useLayerShadow){
+        ctx.shadowColor=layerShadow.shadowColor||'#000000';
+        ctx.shadowBlur=Math.max(0,Number(layerShadow.shadowBlur)||0)*k;
+        ctx.shadowOffsetX=(Number(layerShadow.shadowX)||0)*k;
+        ctx.shadowOffsetY=(Number(layerShadow.shadowY)||0)*k;
+      }
+      drawSpacedText(ctx,text,x,y,spacing,align);clearTextFx(ctx);
+    }
+    function drawWrappedLinesFx(ctx,lines,x,startY,lineHeight,spacing,align,effect,color,k,layerShadow=null){lines.forEach((line,i)=>drawSpacedTextFx(ctx,line,x,startY+i*lineHeight,spacing,align,effect,color,k,layerShadow));}
+
+function applyRawShadow(ctx,color,blur,dx,dy,k){ctx.shadowColor=color||'rgba(0,0,0,.3)';ctx.shadowBlur=(blur||0)*k;ctx.shadowOffsetX=(dx||0)*k;ctx.shadowOffsetY=(dy||0)*k;}
+function clearRawShadow(ctx){ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetX=0;ctx.shadowOffsetY=0;}
+function drawImageFit(ctx,img,x,y,w,h,fit){if(!img)return;if(fit==='stretch'){ctx.drawImage(img,x,y,w,h);return;}if(fit==='contain'){const ratio=Math.min(w/img.width,h/img.height),iw=img.width*ratio,ih=img.height*ratio;ctx.drawImage(img,x+(w-iw)/2,y+(h-ih)/2,iw,ih);return;}cover(ctx,img,x,y,w,h);}
+function drawCurvedStudioText(ctx,layer,x,y,w,h,size,k){
+  const content=String(layer.text||'').replace(/\\s+/g,' ').trim();
+  if(!content)return;
+  const bend=Math.max(-100,Math.min(100,Number(layer.curve)||0));
+  const spacing=(Number(layer.spacing)||0)*k;
+  ctx.font=font(size,layer.font||'playfair',700);
+  const chars=Array.from(content),widths=chars.map(ch=>ctx.measureText(ch).width+spacing);
+  const total=widths.reduce((a,b)=>a+b,0)-spacing;
+  // Arc angle up to about 150 degrees; extra letters automatically flatten slightly.
+  const maxAngle=Math.min(2.6,Math.abs(bend)/100*2.6);
+  const angle=maxAngle*Math.sign(bend);
+  const radius=maxAngle>0.001?Math.max(total/Math.max(maxAngle,.1),size*1.5):1e9;
+  const mid=x+w/2,base=y+h/2+(bend>0?Math.min(h*.24,size*.5): -Math.min(h*.24,size*.5));
+  let cursor=-total/2;
+  chars.forEach((ch,i)=>{
+    const cw=widths[i]-spacing,offset=cursor+cw/2,theta=offset/radius;
+    const cx=mid+radius*Math.sin(theta);
+    const cy=base+(bend>0?1:-1)*radius*(1-Math.cos(theta));
+    ctx.save();ctx.translate(cx,cy);ctx.rotate((bend>0?1:-1)*theta);
+    ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=layer.color||'#ffffff';
+    drawSpacedTextFx(ctx,ch,0,0,0,'center',layer.fx||'none',layer.shadowColor||'#000000',k,layer);
+    if((layer.textStrokeWidth||0)>0){ctx.lineWidth=layer.textStrokeWidth*k;ctx.strokeStyle=layer.stroke||'#ffffff';ctx.strokeText(ch,0,0);}
+    ctx.restore();cursor+=widths[i];
+  });
+}
+function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y=(layer.y||0)*k,w=Math.max(1,(layer.w||1)*k),h=Math.max(1,(layer.h||1)*k),rot=(layer.rotation||0)*Math.PI/180;ctx.save();ctx.globalAlpha=Math.max(0,Math.min(1,(layer.opacity==null?100:layer.opacity)/100));ctx.translate(x+w/2,y+h/2);ctx.rotate(rot);ctx.translate(-(x+w/2),-(y+h/2));applyRawShadow(ctx,layer.shadowColor,layer.shadowBlur,layer.shadowX,layer.shadowY,k);let region=[x,y,w,h];if(layer.type==='shape'){
+  const blur=Math.max(0,Number(layer.shadowBlur)||0);
+  const dx=Number(layer.shadowX)||0,dy=Number(layer.shadowY)||0;
+  const shape=layer.shape||'rect';
+  const sw=Math.max(1,Number(layer.strokeWidth)||0)*k;
+  const buildPath=()=>{
+    ctx.beginPath();
+    if(shape==='circle'){ctx.ellipse(x+w/2,y+h/2,w/2,h/2,0,0,Math.PI*2);return 'fill';}
+    if(shape==='line'){ctx.moveTo(x,y+h);ctx.lineTo(x+w,y);return 'stroke';}
+    if(shape==='rect'){ctx.roundRect(x,y,w,h,(layer.radius||0)*k);return 'fill';}
+    if(shape==='brush'){
+      ctx.moveTo(x+w*0.02,y+h*0.50);ctx.quadraticCurveTo(x+w*0.10,y+h*0.06,x+w*0.28,y+h*0.14);ctx.lineTo(x+w*0.92,y+h*0.08);ctx.quadraticCurveTo(x+w*1.00,y+h*0.10,x+w*0.97,y+h*0.44);ctx.lineTo(x+w*0.95,y+h*0.78);ctx.quadraticCurveTo(x+w*0.88,y+h*0.96,x+w*0.72,y+h*0.88);ctx.lineTo(x+w*0.07,y+h*0.92);ctx.quadraticCurveTo(x-w*0.01,y+h*0.82,x+w*0.02,y+h*0.50);ctx.closePath();return 'fill';}
+    if(shape==='arrow'){
+      const shaft=Math.max(h*0.20,sw*1.6),mid=y+h*0.56,head=w*0.24;ctx.moveTo(x,mid-shaft/2);ctx.lineTo(x+w-head,mid-shaft/2);ctx.lineTo(x+w-head,mid-h*0.18);ctx.lineTo(x+w,mid);ctx.lineTo(x+w-head,mid+h*0.18);ctx.lineTo(x+w-head,mid+shaft/2);ctx.lineTo(x,mid+shaft/2);ctx.closePath();return 'fill';}
+    if(['curve','curvebold','curvethin','curveswoosh','curveloop'].includes(shape)){
+      // A single continuous outlined path. The head is integrated at the end
+      // instead of being a separate disconnected stroke.
+      const thick=shape==='curvebold'?.105:shape==='curvethin'?.025:shape==='curveswoosh'?.075:.055;
+      const cy=shape==='curveloop'?.64:.68;
+      ctx.moveTo(x+w*.12,y+h*.88);
+      if(shape==='curveloop') ctx.bezierCurveTo(x-w*.04,y+h*.12,x+w*.40,y-h*.04,x+w*.52,y+h*.36);
+      else ctx.bezierCurveTo(x+w*.06,y+h*.13,x+w*.55,y+h*.08,x+w*.77,y+h*.32);
+      const endX=shape==='curveloop'?.82:.91;
+      const endY=shape==='curveloop'?.19:.28;
+      // The path makes the shaft; arrowhead joins at its tip on the same path.
+      const tipX=x+w*endX,tipY=y+h*endY;
+      const neckX=x+w*(shape==='curveloop'?.52:.77),neckY=y+h*(shape==='curveloop'?.36:.32);
+      ctx.lineTo(tipX,tipY);
+      const ang=Math.atan2(tipY-neckY,tipX-neckX),hlen=Math.min(w,h)*(shape==='curvebold'?.25:.21),spread=.72;
+      ctx.moveTo(tipX-hlen*Math.cos(ang-spread),tipY-hlen*Math.sin(ang-spread));
+      ctx.lineTo(tipX,tipY);
+      ctx.lineTo(tipX-hlen*Math.cos(ang+spread),tipY-hlen*Math.sin(ang+spread));
+      return 'stroke';}
+    if(shape==='underline'){
+      ctx.moveTo(x+w*0.04,y+h*0.65);ctx.quadraticCurveTo(x+w*0.30,y+h*0.94,x+w*0.52,y+h*0.70);ctx.quadraticCurveTo(x+w*0.72,y+h*0.48,x+w*0.96,y+h*0.62);return 'stroke';}
+    if(['bubble','bubbleoval','bubblecloud','bubblecomic','bubblehand','bubbleburst'].includes(shape)){
+      // One CLOSED silhouette so the tail joins cleanly with the body.
+      if(shape==='bubbleburst'){
+        const cx=x+w/2,cy=y+h*.46,n=12;for(let i=0;i<n*2;i++){const a=-Math.PI/2+i*Math.PI/n,r=i%2?0.36:0.49;const px=cx+Math.cos(a)*w*r,py=cy+Math.sin(a)*h*r;if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);}ctx.closePath();return 'fill';
+      }
+      if(shape==='bubblecloud'){
+        const cx=x+w/2,cy=y+h*.44;for(let i=0;i<=48;i++){const a=i*Math.PI*2/48,r=1+.09*Math.cos(9*a),px=cx+Math.cos(a)*w*.44*r,py=cy+Math.sin(a)*h*.37*r;if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);}ctx.closePath();ctx.moveTo(x+w*.24,y+h*.86);ctx.arc(x+w*.24,y+h*.86,Math.min(w,h)*.05,0,Math.PI*2);ctx.moveTo(x+w*.12,y+h*.97);ctx.arc(x+w*.12,y+h*.97,Math.min(w,h)*.025,0,Math.PI*2);return 'fill';
+      }
+      if(shape==='bubbleoval'){
+        ctx.moveTo(x+w*.88,y+h*.62);ctx.bezierCurveTo(x+w*.76,y+h*.85,x+w*.28,y+h*.85,x+w*.12,y+h*.61);ctx.bezierCurveTo(x-w*.01,y+h*.36,x+w*.12,y+h*.10,x+w*.46,y+h*.10);ctx.bezierCurveTo(x+w*.86,y+h*.07,x+w*.98,y+h*.35,x+w*.88,y+h*.62);ctx.lineTo(x+w*.88,y+h*.91);ctx.lineTo(x+w*.69,y+h*.74);ctx.closePath();return 'fill';
+      }
+      const irregular=shape==='bubblehand',comic=shape==='bubblecomic';
+      const r=Math.min((layer.radius||28)*k,w*.17,h*.18);
+      const left=x+w*.06,top=y+h*.07,right=x+w*.94,bottom=y+h*.77;
+      ctx.moveTo(left+r,top);ctx.lineTo(right-r,top);ctx.quadraticCurveTo(right+(irregular?4*k:0),top,right,top+r);
+      ctx.lineTo(right,bottom-r);ctx.quadraticCurveTo(right,bottom,right-r,bottom);
+      ctx.lineTo(x+w*(comic?.69:.38),bottom);
+      ctx.lineTo(x+w*(comic?.86:.24),y+h*.98);
+      ctx.lineTo(x+w*(comic?.55:.26),bottom);
+      ctx.lineTo(left+r,bottom);ctx.quadraticCurveTo(left,bottom,left,bottom-r);
+      ctx.lineTo(left,top+r);ctx.quadraticCurveTo(left,top,left+r,top);ctx.closePath();return 'fill';
+    }
+    if(shape==='starburst'){
+      const cx=x+w/2,cy=y+h/2,outer=Math.min(w,h)*0.50,inner=outer*0.68,points=18;for(let i=0;i<points*2;i++){const a=-Math.PI/2+i*Math.PI/points;const rad=i%2===0?outer:inner;const px=cx+Math.cos(a)*rad,py=cy+Math.sin(a)*rad;if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);}ctx.closePath();return 'fill';}
+    if(shape==='sparkle'){
+      const cx=x+w/2,cy=y+h/2,rx=w*0.38,ry=h*0.38;ctx.moveTo(cx,cy-ry);ctx.lineTo(cx,cy+ry);ctx.moveTo(cx-rx,cy);ctx.lineTo(cx+rx,cy);ctx.moveTo(cx-rx*0.65,cy-ry*0.65);ctx.lineTo(cx+rx*0.65,cy+ry*0.65);ctx.moveTo(cx+rx*0.65,cy-ry*0.65);ctx.lineTo(cx-rx*0.65,cy+ry*0.65);return 'stroke';}
+    if(shape==='check'){
+      ctx.moveTo(x+w*0.12,y+h*0.56);ctx.lineTo(x+w*0.38,y+h*0.82);ctx.lineTo(x+w*0.88,y+h*0.20);return 'stroke';}
+    if(shape==='heart'){
+      const cx=x+w/2,cy=y+h*0.38;ctx.moveTo(cx,y+h*0.92);ctx.bezierCurveTo(x+w*0.08,y+h*0.64,x+w*0.02,y+h*0.26,x+w*0.26,y+h*0.20);ctx.bezierCurveTo(x+w*0.40,y+h*0.16,cx,y+h*0.30,cx,y+h*0.42);ctx.bezierCurveTo(cx,y+h*0.30,x+w*0.60,y+h*0.16,x+w*0.74,y+h*0.20);ctx.bezierCurveTo(x+w*0.98,y+h*0.26,x+w*0.92,y+h*0.64,cx,y+h*0.92);ctx.closePath();return 'fill';}
+    if(shape==='burst'){
+      const cx=x+w/2,cy=y+h/2,inner=Math.min(w,h)*0.10,outer=Math.min(w,h)*0.48;for(let i=0;i<10;i++){const a=(Math.PI*2/10)*i-Math.PI/2;ctx.moveTo(cx+Math.cos(a)*inner,cy+Math.sin(a)*inner);ctx.lineTo(cx+Math.cos(a)*outer,cy+Math.sin(a)*outer);}return 'stroke';}
+    ctx.roundRect(x,y,w,h,(layer.radius||0)*k);return 'fill';
+  };
+  const mode=buildPath();
+  if(blur>0||dx!==0||dy!==0){ctx.shadowColor=layer.shadowColor||'#000000';ctx.shadowBlur=Math.max(8,blur)*k;ctx.shadowOffsetX=dx*k;ctx.shadowOffsetY=dy*k;}
+  if(mode==='fill'){ctx.fillStyle=layer.fill||'#ffffff';ctx.fill();}
+  else {ctx.strokeStyle=layer.stroke||layer.fill||'#ffffff';ctx.lineWidth=Math.max(shape==='burst'||shape==='underline'||shape.startsWith('curve')||shape==='sparkle'||shape==='check'?6:4,Number(layer.strokeWidth)||0)*k;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke();}
+
+  clearRawShadow(ctx);
+  if(mode==='fill' && (Number(layer.strokeWidth)||0)>0){buildPath();ctx.strokeStyle=layer.stroke||'#ffffff';ctx.lineWidth=sw;ctx.lineJoin='round';ctx.lineCap='round';ctx.stroke();}
+}else if(layer.type==='image'){
+  // Shadow is a separate rounded silhouette OUTSIDE the image clip. The image
+  // and border are then rendered shadow-free so the shadow cannot disappear
+  // behind the photo or get cut off by its rounded-corner clipping path.
+  const blur=Math.max(0,Number(layer.shadowBlur)||0);
+  const dx=Number(layer.shadowX)||0,dy=Number(layer.shadowY)||0;
+  const radius=Math.max(0,Number(layer.radius)||0)*k;
+  clearRawShadow(ctx);
+  if(blur>0||dx!==0||dy!==0){
+    ctx.save();ctx.beginPath();ctx.roundRect(x,y,w,h,radius);
+    ctx.shadowColor=layer.shadowColor||'#000000';
+    ctx.shadowBlur=blur*k;ctx.shadowOffsetX=dx*k;ctx.shadowOffsetY=dy*k;
+    ctx.fillStyle=layer.fill||'#ffffff';ctx.fill();ctx.restore();
+  }
+  ctx.save();ctx.beginPath();ctx.roundRect(x,y,w,h,radius);ctx.clip();
+  if(layer.image && layer.image.complete && layer.image.naturalWidth){drawImageFit(ctx,layer.image,x,y,w,h,layer.fit||'cover');}
+  else if(layer.projectPhoto){ctx.fillStyle=layer.fill||'#e9d9c8';ctx.fillRect(x,y,w,h);ctx.fillStyle='rgba(255,255,255,.16)';ctx.fillRect(x+w*.12,y+h*.14,w*.76,h*.72);}
+  ctx.restore();
+  if((layer.strokeWidth||0)>0){ctx.strokeStyle=layer.stroke||'#ffffff';ctx.lineWidth=(layer.strokeWidth||0)*k;ctx.beginPath();ctx.roundRect(x,y,w,h,radius);ctx.stroke();}
+}else if(layer.type==='button'){ctx.fillStyle=layer.fill||'#f2e1ca';ctx.beginPath();ctx.roundRect(x,y,w,h,Math.min(w/2,h/2,(layer.radius??12)*k));ctx.fill();if((layer.strokeWidth||0)>0){ctx.strokeStyle=layer.stroke||'#ffffff';ctx.lineWidth=layer.strokeWidth*k;ctx.stroke();}clearRawShadow(ctx);ctx.fillStyle=layer.color||'#292234';let size=Math.max(8,(layer.size||24))*k;const space=(layer.spacing||0)*k;const label=String(layer.text||'');ctx.font=font(size,layer.font||'montserrat',700);while(size>9*k && textWidthWithSpacing(ctx,label,space)>w-18*k){size-=k;ctx.font=font(size,layer.font||'montserrat',700);}drawSpacedTextFx(ctx,label,x+w/2,y+h/2+size*.35,space,'center',layer.fx||'none',layer.shadowColor||'#000000',k,layer);if((layer.textStrokeWidth||0)>0){ctx.lineWidth=(layer.textStrokeWidth||0)*k;ctx.strokeStyle=layer.stroke||'#ffffff';ctx.textAlign='center';ctx.textBaseline='alphabetic';ctx.strokeText(label,x+w/2,y+h/2+size*.35);}}else if(layer.type==='text'){const size=Math.max(8,(layer.size||56))*k;if(Math.abs(Number(layer.curve)||0)>0){clearRawShadow(ctx);drawCurvedStudioText(ctx,layer,x,y,w,h,size,k);region=[x,y,w,h];}else{ctx.font=font(size,layer.font||'playfair',700);ctx.fillStyle=layer.color||'#ffffff';const lines=wrap(ctx,String(layer.text||''),w,10,(layer.spacing||0)*k);const lineHeight=size*1.18;const align=layer.align||'left';const tx=align==='left'?x:align==='center'?x+w/2:x+w;drawWrappedLinesFx(ctx,lines,tx,y+size,lineHeight,(layer.spacing||0)*k,align,layer.fx||'none',layer.shadowColor||'#000000',k,layer);if((layer.textStrokeWidth||0)>0){ctx.lineWidth=(layer.textStrokeWidth||0)*k;ctx.strokeStyle=layer.stroke||'#ffffff';ctx.textAlign=align;ctx.textBaseline='alphabetic';lines.forEach((line,i)=>ctx.strokeText(line,tx,y+size+i*lineHeight));}region=[x,y,w,Math.max(h,lines.length*lineHeight+size*.2)];}}
+  clearRawShadow(ctx);ctx.restore();regions.push({id:layer.id,rect:region});if(highlight){ctx.save();ctx.strokeStyle='#38bdf8';ctx.lineWidth=3*k;ctx.setLineDash([12*k,7*k]);ctx.strokeRect(region[0],region[1],region[2],region[3]);ctx.setLineDash([]);[[region[0],region[1]],[region[0]+region[2],region[1]],[region[0],region[1]+region[3]],[region[0]+region[2],region[1]+region[3]]].forEach(([hx,hy])=>{ctx.fillStyle='#fff';ctx.fillRect(hx-9*k,hy-9*k,18*k,18*k);ctx.strokeRect(hx-9*k,hy-9*k,18*k,18*k)});ctx.restore();}}
+    function drawHeadlineWithEmphasis(ctx,lines,x,y,lineHeight,spacing,align,effect,effectColor,k,phrase,phraseColor){
+      phrase=String(phrase||'').trim();
+      if(!phrase){drawWrappedLinesFx(ctx,lines,x,y,lineHeight,spacing,align,effect,effectColor,k);return;}
+      // Split visual styling at phrase matches without altering line breaks.
+      lines.forEach((line,i)=>{
+        const ix=line.toLocaleLowerCase().indexOf(phrase.toLocaleLowerCase());
+        if(ix<0){drawSpacedTextFx(ctx,line,x,y+i*lineHeight,spacing,align,effect,effectColor,k);return;}
+        const pieces=[line.slice(0,ix),line.slice(ix,ix+phrase.length),line.slice(ix+phrase.length)];
+        const fullW=textWidthWithSpacing(ctx,line,spacing);
+        let cursor=align==='center'?x-fullW/2:align==='right'?x-fullW:x;
+        const base=ctx.fillStyle;
+        pieces.forEach((piece,j)=>{
+          if(j===1)ctx.fillStyle=phraseColor;else ctx.fillStyle=base;
+          drawSpacedTextFx(ctx,piece,cursor,y+i*lineHeight,spacing,'left',effect,effectColor,k);
+          cursor+=textWidthWithSpacing(ctx,piece,spacing)+(j<2&&piece.length?spacing:0);
+        });
+        ctx.fillStyle=base;
+      });
+    }
+    function paint(canvas,t,opts={}){
+      const W=canvas.width,H=canvas.height,ctx=canvas.getContext('2d');
+      ctx._mqFxOpts=opts;
+      const k=Math.min(W/1080,H/1080), landscape=W>H, b=safeColor(opts.color||color), hasPhoto=!!opts.photo;
+      const pad=70*k;
+      const surface=safeColor(opts.surface,'#e9d9c8');
+      const customRegions=[];
+      ctx.clearRect(0,0,W,H);ctx.fillStyle='#eee5dd';ctx.fillRect(0,0,W,H);
+      const fill=(c,x,y,w,h)=>{ctx.fillStyle=c;ctx.fillRect(x,y,w,h)};
+      let primary=safeColor(opts.headlineColor,'#ffffff'),secondary=safeColor(opts.subColor,'#eee0e7');
+      if(t.mode==='luxury'){
+        fill(b,0,0,W,H);
+        if(hasPhoto){cover(ctx,opts.photo,0,0,W,H)}
+        else{const g=ctx.createLinearGradient(0,0,W,H);g.addColorStop(0,b);g.addColorStop(1,b);fill(g,0,0,W,H)}
+      }else if(t.mode==='minimal'){
+        fill(b,0,0,W,H);
+        if(hasPhoto){cover(ctx,opts.photo,0,H*.42,W,H*.58);const grad=ctx.createLinearGradient(0,H*.39,0,H*.76);grad.addColorStop(0,surface);grad.addColorStop(1,'rgba(243,236,227,0)');ctx.fillStyle=grad;ctx.fillRect(0,H*.39,W,H*.39)}
+        primary=safeColor(opts.headlineColor,'#382b36');secondary=safeColor(opts.subColor,'#685861');
+      }else if(t.mode==='frame'){
+        fill(b,0,0,W,H);fill(b,30*k,30*k,W-60*k,H-60*k);
+        if(opts.projectPhotoLayer){/* movable frame draws the photo */}
+        else if(hasPhoto){cover(ctx,opts.photo,W*.07,H*.07,W*.86,H*.42);ctx.strokeStyle=surface;ctx.lineWidth=9*k;ctx.strokeRect(W*.07,H*.07,W*.86,H*.42)}
+        else {const sheen=ctx.createLinearGradient(0,0,W,H);sheen.addColorStop(0,'rgba(255,255,255,.12)');sheen.addColorStop(1,'rgba(255,255,255,0)');ctx.fillStyle=sheen;ctx.fillRect(35*k,35*k,W-70*k,H-70*k);ctx.strokeStyle=surface;ctx.lineWidth=3*k;ctx.strokeRect(52*k,52*k,W-104*k,H-104*k)}
+      }else if(t.mode==='split'){
+        fill(b,0,0,W,H);
+        const x=landscape?W*.57:W*.13,y=landscape?H*.13:H*.48,w=landscape?W*.37:W*.74,h=landscape?H*.71:H*.32;
+        if(!opts.projectPhotoLayer)fill(surface,x,y,w,h);
+        if(!opts.projectPhotoLayer&&hasPhoto)cover(ctx,opts.photo,x,y,w,h);
+        else if(!opts.projectPhotoLayer){fill('rgba(255,255,255,.16)',x+w*.10,y+h*.15,w*.8,h*.64)}
+      }else if(t.mode==='editorial'){
+        fill(b,0,0,W,H);
+        if(hasPhoto){cover(ctx,opts.photo,0,0,W,H)}
+        else{ctx.fillStyle='#ffffff12';ctx.beginPath();ctx.arc(W*.85,H*.76,Math.min(W,H)*.34,0,2*Math.PI);ctx.fill()}
+      }else{
+        fill(b,0,0,W,H);
+        if(t.mode==='qr'&&hasPhoto){cover(ctx,opts.photo,0,0,W,H);const grad=ctx.createLinearGradient(0,0,W,0);grad.addColorStop(0,'rgba(25,12,23,.92)');grad.addColorStop(.65,'rgba(25,12,23,.72)');grad.addColorStop(1,'rgba(25,12,23,.54)');ctx.fillStyle=grad;ctx.fillRect(0,0,W,H)}
+        else fill('#ffffff12',26*k,26*k,W-52*k,H-52*k);
+      }
+      // V2.7: genuinely different art-directed layouts, all local Canvas rendering.
+      const composition=opts.composition||'original';
+      const focal=Number.isFinite(opts.focal)?opts.focal:50;
+      if(composition==='cinema'){
+        fill(b,0,0,W,H);
+        if(hasPhoto){cover(ctx,opts.photo,0,0,W,H,focal);const shade=ctx.createLinearGradient(0,0,W*.87,H*.7);shade.addColorStop(0,'rgba(15,10,18,.75)');shade.addColorStop(.55,'rgba(15,10,18,.46)');shade.addColorStop(1,'rgba(15,10,18,.15)');ctx.fillStyle=shade;ctx.fillRect(0,0,W,H)}
+        else fill(b,0,0,W,H);
+      }else if(composition==='split'){
+        fill(b,0,0,W,H);
+        const photoX=W*.54;
+        if(!opts.projectPhotoLayer && hasPhoto)cover(ctx,opts.photo,photoX,0,W-photoX,H,focal);
+        else if(!opts.projectPhotoLayer)fill(surface,photoX,0,W-photoX,H);
+        fill('rgba(32,20,31,.22)',photoX,0,W-photoX,H);
+        fill(b,0,0,photoX, H);
+        fill('#ffffff0d',photoX-5*k,0,5*k,H);
+      }else if(composition==='magazine'){
+        fill(b,0,0,W,H);
+        if(hasPhoto)cover(ctx,opts.photo,0,0,W,H*.54,focal);
+        else fill(b,0,0,W,H*.54);
+        fill(b,0,H*.54,W,H*.46);
+        fill('rgba(255,255,255,.07)',0,H*.54,W,2*k);
+      }else if(composition==='window'){
+        fill(surface,0,0,W,H);
+        fill(b,0,0,W,H);
+        const inset=48*k, imgTop=H*.39, imgH=H*.49;
+        if(!opts.projectPhotoLayer){fill(surface,inset,imgTop,W-2*inset,imgH);if(hasPhoto)cover(ctx,opts.photo,inset,imgTop,W-2*inset,imgH,focal);ctx.strokeStyle='#ffffff75';ctx.lineWidth=3*k;ctx.strokeRect(inset-10*k,imgTop-10*k,W-2*inset+20*k,imgH+20*k);}
+      }
+      mqStudioCustomLayers.filter(layer=>layer.place==='back'&&!layer.hidden).forEach(layer=>drawCustomLayer(ctx,layer,k,customRegions,opts.highlight===('layer:'+layer.id)));
+      // Professional art direction: photographic tonal treatment, architectural
+      // framing and quiet editorial depth. Never place a bar behind a headline.
+      const finish=opts.finish||'cinematic';
+      const accent=safeColor(opts.accentColor,'#d9be97');
+      if(composition==='original' && hasPhoto && (t.mode==='luxury'||t.mode==='editorial')){
+        const alpha=clamp(Number(opts.overlay ?? 46)/100,0,.85);
+        if(finish==='editorial')fill(`rgba(10,13,22,${alpha*.58})`,0,0,W,H);
+        else if(finish==='bold')fill(`rgba(6,5,11,${Math.min(.89,alpha+.25)})`,0,0,W,H);
+        else fill(`rgba(9,8,14,${alpha})`,0,0,W,H);
+      }
+      if(finish==='cinematic'){
+        const shadow=ctx.createLinearGradient(0,0,0,H);
+        shadow.addColorStop(0,'rgba(0,0,0,.20)');shadow.addColorStop(.4,'rgba(0,0,0,0)');shadow.addColorStop(1,'rgba(0,0,0,.37)');
+        if(t.mode!=='minimal'&&t.mode!=='frame'){ctx.fillStyle=shadow;ctx.fillRect(0,0,W,H)}
+      }
+      if(finish==='architect' && !hasPhoto){fill('#ffffff0a',W*.64,0,W*.36,H)}
+      const detail=opts.accent||'none';ctx.strokeStyle=accent;ctx.lineWidth=Math.max(2,2.2*k);
+      if(detail==='frame')ctx.strokeRect(34*k,34*k,W-68*k,H-68*k);
+      else if(detail==='stripe')fill(accent,0,0,8*k,H);
+      else if(detail==='corner'){
+        const q=41*k,l=64*k;
+        [[q,q,1,1],[W-q,q,-1,1],[q,H-q,1,-1],[W-q,H-q,-1,-1]].forEach(([xx,yy,dx,dy])=>{ctx.beginPath();ctx.moveTo(xx+dx*l,yy);ctx.lineTo(xx,yy);ctx.lineTo(xx,yy+dy*l);ctx.stroke()});
+      }
+      const splitVertical=t.mode==='split'&&!landscape;
+      const isFrame=t.mode==='frame';
+      const textWidth=composition==='split'?W*.50-pad*1.3:composition==='window'?W-2*pad:(t.mode==='split'&&landscape)?W*.49-pad*1.3:W-2*pad;
+      const contentShiftX=(opts.contentX||0)*k;
+      const contentShiftY=(opts.contentY||0)*k;
+      const baseTop=(composition==='magazine'?H*.66:composition==='window'?H*.18:composition==='split'?H*.28:(isFrame?(hasPhoto?H*.54:H*.25):splitVertical?H*.15:landscape?H*.22:H*.20))+contentShiftY;
+      const headingLimit=(composition==='magazine'?H*.80:composition==='window'?H*.34:composition==='split'?H*.67:splitVertical?H*.27:(isFrame?H*.76:H*.59))+contentShiftY;
+      const supportMax=(composition==='magazine'?H*.89:composition==='window'?H*.37:composition==='split'?H*.81:splitVertical?H*.42:(isFrame?H*.87:H*.79))+contentShiftY;
+      const align=opts.align||'left';
+      const columnWidth=composition==='split'?W*.52:W;const anchorX=align==='left'?pad+contentShiftX:align==='center'?(columnWidth/2)+contentShiftX:(columnWidth-pad)+contentShiftX;
+      const ruleX=align==='left' ? clamp(anchorX,30*k,W-140*k) : align==='center' ? clamp(anchorX-33.5*k,20*k,W-90*k) : clamp(anchorX-67*k,20*k,W-90*k);
+
+      // Independently controllable shop name / logo branding.
+      ctx.textBaseline='alphabetic';
+      const shopDisplay=String(opts.shopName ?? shopName).trim().slice(0,80);
+      const nameScale=(opts.shopScale||100)/100;
+      const nameSpace=(opts.shopSpacing||0)*k;
+      const nameX=anchorX+(opts.shopX||0)*k, nameY=Math.max(50*k,baseTop-64*k)+(opts.shopY||0)*k;
+      let shopFont=22*k*nameScale;
+      ctx.font=font(shopFont,opts.shopFont||'arial',700);
+      const usable=Math.max(110*k,W-2*pad);
+      while(shopFont>11*k && textWidthWithSpacing(ctx,shopDisplay,nameSpace)>usable){shopFont-=k;ctx.font=font(shopFont,opts.shopFont||'arial',700)}
+      ctx.fillStyle=safeColor(opts.shopColor,primary);
+      if(!opts.detached && opts.logo){
+        const maxW=220*k*(opts.logoScale||100)/100,maxH=100*k*(opts.logoScale||100)/100;
+        const ratio=Math.min(maxW/opts.logo.width,maxH/opts.logo.height);
+        const iw=opts.logo.width*ratio,ih=opts.logo.height*ratio;
+        const lx=align==='center'?nameX-iw/2:align==='right'?nameX-iw:nameX;
+        ctx.drawImage(opts.logo,clamp(lx,10*k,W-iw-10*k),clamp(nameY-ih,10*k,H-ih-10*k),iw,ih);
+      } else if(!opts.detached && shopDisplay)drawSpacedTextFx(ctx,shopDisplay,nameX,nameY,nameSpace,align,opts.brandFx||'none',opts.fxColor||'rgba(0,0,0,.7)',k);
+
+      const title=String(opts.headline||t.headline);
+      const titleScale=(opts.headlineScale||100)/100;
+      const titleSpacing=(opts.headlineSpacing||0)*k;
+      let lines=[],size=(composition==='magazine'?48:composition==='window'?50:composition==='split'?55:66)*k*titleScale,lineHeight;
+      for(;size>=23*k;size-=2*k){ctx.font=font(size,opts.headlineFont||'georgia',700);lines=wrap(ctx,title,textWidth,6,titleSpacing);lineHeight=size*1.15;if(baseTop+(lines.length-1)*lineHeight<=headingLimit)break}
+      ctx.font=font(size,opts.headlineFont||'georgia',700);ctx.fillStyle=primary;
+      if(!opts.detached && opts.headlineBack && opts.headlineBack!=='none'){
+        const panelTop=baseTop-size*.89-22*k, panelHeight=(lines.length-1)*lineHeight+size*1.30+44*k;
+        const panelX=composition==='split'?35*k:35*k, panelW=composition==='split'?Math.max(160*k,columnWidth-50*k):W-70*k;
+        ctx.save();ctx.globalAlpha=Math.max(0,Math.min(1,Number(opts.backOpacity??70)/100));
+        if(opts.headlineBack==='stroke'){ctx.strokeStyle=safeColor(opts.backColor,'#221623');ctx.lineWidth=4*k;ctx.strokeRect(panelX,panelTop,panelW,panelHeight)}
+        else{ctx.fillStyle=safeColor(opts.backColor,'#221623');if(opts.headlineBack==='band')ctx.fillRect(panelX,panelTop,panelW,panelHeight);else{rounded(ctx,panelX,panelTop,panelW,panelHeight,18*k);ctx.fill()}}
+        ctx.restore();
+      }
+      if(opts.headlineFill==='gradient'){
+        const grd=ctx.createLinearGradient(0,baseTop-size,W,baseTop+lines.length*lineHeight);grd.addColorStop(0,primary);grd.addColorStop(1,safeColor(opts.gradientEnd,'#d7b783'));ctx.fillStyle=grd;
+      }
+      if(!opts.detached)drawHeadlineWithEmphasis(ctx,lines,anchorX,baseTop,lineHeight,titleSpacing,align,opts.headlineFx||'none',opts.fxColor||'rgba(0,0,0,.75)',k,opts.emphasis,safeColor(opts.emphasisColor,'#f3d6a4'));
+
+      let subTop=baseTop+lines.length*lineHeight+13*k;
+      const subScale=(opts.subScale||100)/100;
+      const subSpacing=(opts.subSpacing||0)*k;
+      let subSize=27*k*subScale,subLines=[],subLH=36*k;
+      for(;subSize>=15*k;subSize-=k){ctx.font=font(subSize,opts.subFont||'arial',400);subLines=wrap(ctx,String(opts.sub||t.sub),textWidth,4,subSpacing);subLH=subSize*1.35;if(subTop+(subLines.length-1)*subLH<=supportMax)break}
+      ctx.font=font(subSize,opts.subFont||'arial',400);ctx.fillStyle=secondary;
+      if(!opts.detached)drawWrappedLinesFx(ctx,subLines,anchorX,subTop,subLH,subSpacing,align,opts.subFx||'none',opts.fxColor||'rgba(0,0,0,.65)',k);
+
+      const cta=String(opts.cta||t.cta).toUpperCase();
+      let by=(splitVertical?H-143*k:H-157*k)+(opts.ctaY||0)*k;
+      const ctaScale=(opts.ctaScale||100)/100;
+      const ctaH=64*k*ctaScale;
+      if(t.category==='qr')by=(H-150*k)+(opts.ctaY||0)*k; if(composition==='magazine')by=H-96*k+(opts.ctaY||0)*k; if(composition==='window')by=H-108*k+(opts.ctaY||0)*k;
+      const maxCtaWidth=t.category==='qr'?Math.max(190*k,W*.54):textWidth;
+      let ctaSize=21*k*ctaScale;ctx.font=font(ctaSize,opts.ctaFont||'arial',700);
+      while(textWidthWithSpacing(ctx,cta,0)+52*k>maxCtaWidth&&ctaSize>11*k){ctaSize-=k;ctx.font=font(ctaSize,opts.ctaFont||'arial',700)}
+      const bw=Math.min(maxCtaWidth,Math.max(192*k,textWidthWithSpacing(ctx,cta,0)+53*k));
+      let bx=align==='left' ? pad+contentShiftX+(opts.ctaX||0)*k : align==='center' ? (W-bw)/2+contentShiftX+(opts.ctaX||0)*k : (W-pad-bw)+contentShiftX+(opts.ctaX||0)*k;
+      bx=clamp(bx,20*k,W-bw-20*k);
+      by=clamp(by,20*k,H-ctaH-55*k);
+      if(!opts.detached){ctx.fillStyle=safeColor(opts.ctaBg,'#f2e1ca');rounded(ctx,bx,by,bw,ctaH,9*k);ctx.fill();}
+      ctx.fillStyle=safeColor(opts.ctaColor,'#2b2430');ctx.font=font(ctaSize,opts.ctaFont||'arial',700);if(!opts.detached)drawSpacedTextFx(ctx,cta,bx+bw/2,by+(ctaH*.62),0,'center',opts.ctaFx||'none',opts.fxColor||'rgba(0,0,0,.65)',k);
+      ctx.textAlign='left';
+
+      if(t.category==='qr' && !opts.detached && typeof MQ_QR_LIB_FACTORY==='function'){
+        try{const qr=MQ_QR_LIB_FACTORY()(0,'M');qr.addData(quoteLink());qr.make();const n=qr.getModuleCount(),size=Math.min(208*k,W*.27),qx=W-size-pad,qy=H-size-62*k,step=size/n;
+          ctx.fillStyle='#fff';rounded(ctx,qx-17*k,qy-17*k,size+34*k,size+34*k,13*k);ctx.fill();
+          ctx.fillStyle='#171717';for(let r=0;r<n;r++)for(let c=0;c<n;c++)if(qr.isDark(r,c))ctx.fillRect(qx+c*step,qy+r*step,Math.ceil(step),Math.ceil(step));
+        }catch(e){}
+      }
+      // URL is now an independent, editable layer, including on QR promotions.
+      let link=String(opts.urlText||quoteLink().replace(/^https?:\/\//,'')).trim();
+      const urlScale=(opts.urlScale||100)/100;
+      let urlSize=18*k*urlScale;
+      ctx.font=font(urlSize,opts.subFont||'arial',500);
+      const urlX=clamp(anchorX+(opts.urlX||0)*k,18*k,W-18*k);
+      const urlY=clamp(H-35*k+(opts.urlY||0)*k,24*k,H-18*k);
+      const urlMax=(t.category==='qr')?Math.max(145*k,W*.57):W-2*pad;
+      while(ctx.measureText(link).width>urlMax&&urlSize>10*k){urlSize-=k;ctx.font=font(urlSize,opts.subFont||'arial',500)}
+      ctx.fillStyle=safeColor(opts.urlColor,t.mode==='minimal'?'#45323e':'#e8d9dd');
+      if(!opts.detached)drawSpacedTextFx(ctx,link,urlX,urlY,0,align,opts.urlFx||'none',opts.fxColor||'rgba(0,0,0,.65)',k);
+      mqStudioCustomLayers.filter(layer=>layer.place!=='back'&&!layer.hidden).forEach(layer=>drawCustomLayer(ctx,layer,k,customRegions,opts.highlight===('layer:'+layer.id)||(!opts.suppressSelection && mqStudioSelectedLayerId===layer.id)));
+      const brandW=Math.min(W-2*pad, Math.max(220*k, textWidthWithSpacing(ctx,String(shopDisplay||''),nameSpace)+40*k));
+      const brandX=align==='left'?clamp(nameX-10*k,8*k,W-brandW-8*k):align==='center'?clamp(nameX-brandW/2,8*k,W-brandW-8*k):clamp(nameX-brandW+10*k,8*k,W-brandW-8*k);
+      const regions={brand:[brandX,Math.max(8*k,nameY-58*k),brandW,72*k],headline:[pad,Math.max(15*k,baseTop-80*k),W-2*pad,Math.max(100*k,(lines.length+1)*lineHeight)],sub:[pad,subTop-38*k,W-2*pad,Math.max(70*k,(subLines.length+1)*subLH)],cta:[bx-10*k,by-10*k,bw+20*k,ctaH+20*k],url:[clamp(urlX-20*k,8*k,W-220*k),urlY-38*k,Math.min(420*k,W*.76),55*k],photo:[10*k,10*k,W-20*k,H-20*k]};
+      canvas._mqRegions=regions;canvas._mqCustomLayerRegions=customRegions;canvas._mqUnit=k;
+      if(opts.highlight && mqStudioGuide){ctx.save();ctx.strokeStyle='#24a4e2';ctx.lineWidth=2*k;ctx.setLineDash([9*k,7*k]);if(mqStudioGuide.x!=null){ctx.beginPath();ctx.moveTo(mqStudioGuide.x*k,0);ctx.lineTo(mqStudioGuide.x*k,H);ctx.stroke()}if(mqStudioGuide.y!=null){ctx.beginPath();ctx.moveTo(0,mqStudioGuide.y*k);ctx.lineTo(W,mqStudioGuide.y*k);ctx.stroke()}ctx.restore()}
+      // Only show selection hints in live preview (never in exported PNG).
+      if(opts.highlight){
+        const r=regions[opts.highlight];if(r){ctx.save();ctx.strokeStyle='#38bdf8';ctx.lineWidth=4*k;ctx.setLineDash([14*k,8*k]);ctx.strokeRect(...r);ctx.restore()}
+      }
+    }
+    function thumb(t){const canvas=document.createElement('canvas');canvas.width=360;canvas.height=360;paint(canvas,t,{color,surface:'#e9d9c8',photo:mqStudioPhoto,headlineFont:'playfair',subFont:'montserrat',ctaFont:'montserrat',align:'left',headlineColor:'#ffffff',subColor:'#f0e7ee',ctaBg:'#f2e1ca',ctaColor:'#2b2430',headlineFx:'soft',subFx:'soft',brandFx:'soft',ctaFx:'none',urlFx:'soft',fxColor:'#000000',headlineScale:100,subScale:100,ctaScale:100,headlineSpacing:0,subSpacing:0,contentX:0,contentY:0,ctaX:0,ctaY:0});return canvas.toDataURL('image/png')}
+    function renderGallery(filter='all'){
+      grid.innerHTML='';MQ_STUDIO_TEMPLATES.filter(t=>filter==='all'||t.category===filter).forEach(t=>{
+        const btn=document.createElement('button');btn.type='button';btn.className='mq-studio-tile';btn.innerHTML=`<div class="mq-studio-thumb-area"><img class="mq-studio-thumb" alt=""/></div><div class="mq-studio-tile-meta"><span><strong></strong><small></small></span><b aria-hidden="true">↗</b></div>`;
+        btn.querySelector('img').src=thumb(t);btn.querySelector('strong').textContent=t.title;btn.querySelector('small').textContent=t.tag;
+        btn.addEventListener('click',()=>select(t));grid.appendChild(btn);
+      });
+    }
+    let mqStudioFocus=null, mqStudioFocusTimer=null, mqStudioGuide=null;
+    // History is scoped to the current template. Keep browser autosaves conservative: image-heavy
+    // designs can exceed localStorage limits; in that case do not discard the in-memory editing state.
+    let mqHistory=[],mqHistoryIndex=-1,mqHistoryTimer=null,mqDraftTimer=null,mqRestoring=false,mqHistoryTemplateId=null;
+    const historyFormFields=()=>Array.from(root.querySelectorAll('.mq-studio-fields input[id],.mq-studio-fields select[id],.mq-studio-fields textarea[id]')).filter(el=>el.type!=='file' && !el.id.includes('layer-'));
+    function captureStudioState(){
+      if(!mqStudioSelected)return null;
+      const values={};historyFormFields().forEach(el=>values[el.id]=el.value);
+      return {template:mqStudioSelected.id,values,quickSurface:field('quick-surface')?.value||'#e9d9c8',layers:mqStudioCustomLayers.map(l=>{const copy={...l};delete copy.image;return copy}),detached:mqStudioDetached,photo:mqStudioPhoto||null,logo:mqStudioLogo||null,selected:mqStudioSelectedLayerId};
+    }
+    function restoreStudioState(snapshot){
+      if(!snapshot||snapshot.template!==mqStudioSelected?.id)return;
+      mqRestoring=true;
+      try{
+        Object.entries(snapshot.values||{}).forEach(([id,value])=>{const el=document.getElementById(id);if(el&&el.type!=='file')el.value=value});
+        if(field('quick-surface'))field('quick-surface').value=snapshot.quickSurface||'#e9d9c8';
+        mqStudioDetached=!!snapshot.detached;mqStudioPhoto=snapshot.photo||null;mqStudioLogo=snapshot.logo||null;
+        mqStudioCustomLayers=(snapshot.layers||[]).map(l=>{const copy={...l};if(copy.type==='image'){
+          if(l.image && l.image.complete)copy.image=l.image;
+          else if(l.dataUrl){const img=new Image();img.onload=()=>update();img.src=l.dataUrl;copy.image=img;}
+        }return copy;});
+        mqStudioSelectedLayerId=snapshot.selected||null;
+        renderLayerList();syncLayerControls();update();
+      }finally{mqRestoring=false;}
+    }
+    function historyButtons(){const u=field('undo'),r=field('redo');if(u)u.disabled=mqHistoryIndex<=0;if(r)r.disabled=mqHistoryIndex>=mqHistory.length-1;}
+    function commitStudioHistory(){
+      if(mqRestoring||!mqStudioSelected)return;
+      const state=captureStudioState();if(!state)return;
+      // Exclude object identity from equality by comparing relevant serializable fields only.
+      const fingerprint=JSON.stringify({values:state.values,quickSurface:state.quickSurface,layers:state.layers,detached:state.detached,selected:state.selected,photoSrc:state.photo?.src||'',logoSrc:state.logo?.src||''});
+      if(mqHistory[mqHistoryIndex]?.fingerprint===fingerprint)return;
+      mqHistory=mqHistory.slice(0,mqHistoryIndex+1);
+      mqHistory.push({state,fingerprint});if(mqHistory.length>35)mqHistory.shift();
+      mqHistoryIndex=mqHistory.length-1;historyButtons();scheduleDraftSave();
+    }
+    function scheduleStudioHistory(){if(mqRestoring||!mqStudioSelected||studioPointerActive)return;clearTimeout(mqHistoryTimer);mqHistoryTimer=setTimeout(commitStudioHistory,450);}
+    function undoRedo(delta){clearTimeout(mqHistoryTimer);commitStudioHistory();const next=mqHistoryIndex+delta;if(next<0||next>=mqHistory.length)return;mqHistoryIndex=next;restoreStudioState(mqHistory[next].state);historyButtons();scheduleDraftSave();}
+    function serializeDraft(){const state=captureStudioState();if(!state)return null;
+      return {version:1,template:state.template,values:state.values,quickSurface:state.quickSurface,layers:state.layers.map(l=>{const c={...l};if(c.dataUrl&&c.dataUrl.length>200000)delete c.dataUrl;return c}),detached:state.detached};}
+    function draftKey(){return `midasquote_studio_autosave_${shopRecord.id||'shop'}_${mqStudioSelected?.id||'design'}`;}
+    function writeStudioDraft(){if(!mqStudioSelected)return;const status=field('history-status');try{localStorage.setItem(draftKey(),JSON.stringify(serializeDraft()));if(status)status.textContent='Saved in this browser';}catch(err){if(status)status.textContent='Autosave unavailable · use Save draft';}}
+    function scheduleDraftSave(){clearTimeout(mqDraftTimer);const status=field('history-status');if(status)status.textContent='Unsaved changes';mqDraftTimer=setTimeout(writeStudioDraft,1400);}
+    function loadStudioDraft(){const raw=localStorage.getItem(draftKey());if(!raw)return false;
+      try{const saved=JSON.parse(raw);if(saved.template!==mqStudioSelected?.id)return false;const snapshot=captureStudioState();
+        snapshot.values=saved.values||{};snapshot.quickSurface=saved.quickSurface; snapshot.layers=saved.layers||[];
+        snapshot.detached=saved.detached;snapshot.selected=null;restoreStudioState(snapshot);clearTimeout(mqHistoryTimer);commitStudioHistory();return true;
+      }catch(err){return false;}}
+    function resetStudioHistory(){clearTimeout(mqHistoryTimer);clearTimeout(mqDraftTimer);mqHistory=[];mqHistoryIndex=-1;mqHistoryTemplateId=mqStudioSelected?.id;commitStudioHistory();}
+    // Ephemeral per-template drafts: kept only in this dashboard instance, never uploaded.
+    const mqSessionDesigns=new Map();
+    function rememberSessionDesign(){if(!mqStudioSelected)return;clearTimeout(mqHistoryTimer);mqSessionDesigns.set(mqStudioSelected.id,captureStudioState());}
+    function restoreSessionDesign(id){const saved=mqSessionDesigns.get(id);if(!saved)return false;restoreStudioState(saved);mqStudioSelectedLayerId=null;renderLayerList();syncLayerControls();update();resetStudioHistory();return true;}
+
+    function update(forExport=false){if(!mqStudioSelected)return;if(field('quick-brand'))field('quick-brand').value=field('color').value;if(field('quick-accent'))field('quick-accent').value=field('accent-color').value;const quickRemove=field('photo-remove-quick');if(quickRemove){quickRemove.disabled=!mqStudioPhoto;quickRemove.style.opacity=mqStudioPhoto?'1':'.45';quickRemove.title=mqStudioPhoto?'Remove the template project photo':'No project photo to remove';}syncRangeLabels();const canvas=field('canvas');const sizes={square:[1080,1080],portrait:[1080,1350],story:[1080,1920],poster:[1080,1620],landscape:[1620,1080]};const fmt=field('size').value;const quickFmt=field('quick-size');if(quickFmt&&quickFmt.value!==fmt)quickFmt.value=fmt;const dims=sizes[fmt]||sizes.square;if(field('format-dimensions'))field('format-dimensions').textContent=dims.join(' × ')+' px';if(canvas.width!==dims[0])canvas.width=dims[0];if(canvas.height!==dims[1])canvas.height=dims[1];paint(canvas,mqStudioSelected,{...currentOpts(),highlight:forExport?null:mqStudioFocus,suppressSelection:!!forExport});queuePreviewFollow();if(!forExport){root._mqSyncActions?.();scheduleStudioHistory()}}
+    function setDefaults(){
+      field('shop-font').value='playfair';field('shop-color').value=mqStudioSelected && mqStudioSelected.mode==='minimal'?'#382b36':'#ffffff';field('shop-scale').value='100';field('shop-spacing').value='2';field('shop-x').value='0';field('shop-y').value='0';field('logo-scale').value='100';field('composition').value='original';field('focal').value='50';field('finish').value='cinematic';field('overlay').value='46';field('accent').value='none';field('accent-color').value='#d9be97';
+      field('url-text').value='';field('url-x').value='0';field('url-y').value='0';field('url-color').value=mqStudioSelected?.mode==='minimal'?'#45323e':'#e8d9dd';field('url-scale').value='100';
+      field('headline-font').value='playfair';field('sub-font').value='montserrat';field('cta-font').value='montserrat';field('align').value='left';
+      field('headline-color').value='#ffffff';field('sub-color').value=mqStudioSelected && mqStudioSelected.mode==='minimal' ? '#685861' : '#f0e7ee';field('cta-bg').value='#f2e1ca';field('cta-color').value='#2b2430';field('headline-fx').value='soft';field('sub-fx').value='soft';field('brand-fx').value='soft';field('cta-fx').value='none';field('url-fx').value='soft';field('fx-color').value='#000000';field('fx-blur').value='8';field('fx-distance').value='4';field('fx-angle').value='90';field('fx-outline').value='3';field('headline-fill').value='solid';field('gradient-end').value='#d7b783';field('headline-back').value='none';field('back-color').value='#221623';field('back-opacity').value='70';
+      field('emphasis').value='';field('emphasis-color').value='#f3d6a4';field('style-pack').value='custom';
+      field('headline-scale').value='100';field('sub-scale').value='100';field('cta-scale').value='100';field('headline-spacing').value='0';field('sub-spacing').value='0';field('content-x').value='0';field('content-y').value='0';field('cta-x').value='0';field('cta-y').value='0';
+      mqStudioDetached=false;mqStudioCustomLayers=[];mqStudioSelectedLayerId=null;mqStudioGuide=null;renderLayerList();syncLayerControls();syncRangeLabels();
+    }
+    function detachBuiltIns(silent=false){
+      if(mqStudioDetached)return;
+      update(true);
+      const canvas=field('canvas'),regions=canvas._mqRegions||{},unit=canvas._mqUnit||1;
+      const layerFrom=(key,text,size,fontKey,color,fx)=>{const r=regions[key];if(!r||!text)return null;return {...defaultTextLayer(),name:key==='brand'?'Shop name':key==='headline'?'Headline':key==='sub'?'Supporting text':'Website',text,font:fontKey||'montserrat',color:color||'#ffffff',fx:fx||'none',x:Math.round(r[0]/unit),y:Math.round(r[1]/unit),w:Math.round(r[2]/unit),h:Math.round(r[3]/unit),size:size||40,align:'left'};};
+      const additions=[
+        layerFrom('brand',field('shop-name').value,22*Number(field('shop-scale').value)/100,field('shop-font').value,field('shop-color').value,field('brand-fx').value),
+        layerFrom('headline',field('headline').value,55*Number(field('headline-scale').value)/100,field('headline-font').value,field('headline-color').value,field('headline-fx').value),
+        layerFrom('sub',field('subline').value,27*Number(field('sub-scale').value)/100,field('sub-font').value,field('sub-color').value,field('sub-fx').value),
+        layerFrom('url',field('url-text').value||quoteLink().replace(/^https?:\/\//,''),18*Number(field('url-scale').value)/100,field('sub-font').value,field('url-color').value,field('url-fx').value)
+      ].filter(Boolean);
+      const cr=regions.cta;
+      if(cr){const b=defaultButtonLayer(field('cta').value);b.x=Math.round(cr[0]/unit);b.y=Math.round(cr[1]/unit);b.w=Math.round(cr[2]/unit);b.h=Math.round(cr[3]/unit);b.fill=field('cta-bg').value;b.color=field('cta-color').value;b.font=field('cta-font').value;additions.push(b);}
+      if(mqStudioLogo){const layer={id:layerUid(),type:'image',name:'Shop logo',place:'front',x:80,y:70,w:240,h:100,rotation:0,opacity:100,shadowColor:'#000000',shadowBlur:0,shadowX:0,shadowY:0,fit:'contain',radius:0,stroke:'#ffffff',strokeWidth:0,image:mqStudioLogo,dataUrl:mqStudioLogo.src};additions.push(layer);}
+      if(mqStudioSelected && mqStudioSelected.category==='qr'){additions.push(defaultQrLayer());}
+      mqStudioDetached=true;mqStudioCustomLayers.push(...additions);mqStudioSelectedLayerId=null;renderLayerList();syncLayerControls();update();if(!silent)mqShowToast('Everything is freely movable');
+    }
+    function select(t){mqStudioSelected=t;field('edit-title').textContent=t.title;if(field('template-select'))field('template-select').value=t.id;field('shop-name').value=shopName;field('headline').value=t.headline;field('subline').value=t.sub;field('cta').value=t.cta;field('color').value=safeColor(color);field('quick-brand').value=safeColor(color);field('quick-surface').value='#e9d9c8';field('quick-accent').value='#d9be97';field('size').value=t.id==='yard'?'landscape':t.category==='print'?'poster':'square';setDefaults();field('composition').value=t.id==='premium'?'cinema':t.id==='yard'?'split':t.id==='before'?'original':t.id==='poster'?'window':'original';field('finish').value=t.mode==='luxury'?'bold':t.mode==='frame'?'editorial':t.category==='print'?'architect':'cinematic';field('accent').value=t.mode==='frame'?'frame':t.mode==='luxury'?'corner':t.id==='yard'?'stripe':'none';if(t.mode==='minimal'){field('headline-color').value='#382b36';field('sub-color').value='#685861'}workspace.style.display='flex';workspace.classList.add('mq-studio-fullscreen','mq-studio-canvas-first');lockStudioScroll();workspace.classList.remove('mq-studio-property-mode','mq-studio-show-layers');if(field('layers-toggle'))field('layers-toggle').textContent='☷ All layers';previewShift=0;preview.style.transform='';update(true);detachBuiltIns(true);const photoArea=defaultProjectPhotoLayer(t,field('composition').value);if(photoArea){mqStudioCustomLayers.unshift(photoArea);renderLayerList();update();}resetStudioHistory();requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      // Browser chooses the actual scrollable ancestor (in Webflow .mq-content has overflow:visible).
+      // scrollIntoView works on the document and nested scrollers, unlike manually altering .mq-content.
+      if(workspace.classList.contains('mq-studio-fullscreen'))return;
+      workspace.scrollIntoView({behavior:'auto',block:'start',inline:'nearest'});
+      const rect=workspace.getBoundingClientRect();
+      if(rect.top>140 || rect.top<0){
+        // Fallback for Webflow dashboard wrappers with unusual scroll chaining.
+        const parents=[];for(let parent=workspace.parentElement;parent;parent=parent.parentElement){
+          const cs=getComputedStyle(parent);if(/auto|scroll/.test(cs.overflowY)&&parent.scrollHeight>parent.clientHeight+5)parents.push(parent);
+        }
+        if(parents.length){const target=parents[0],t=workspace.getBoundingClientRect(),r=target.getBoundingClientRect();target.scrollTop+=t.top-r.top-18;}
+        else window.scrollBy({top:rect.top-96,behavior:'auto'});
+      }
+    }));}
+    if(!root.dataset.studioInitialized){
+      root.dataset.studioInitialized='true';
+      const templateSwitcher=field('template-select');
+      if(templateSwitcher){
+        MQ_STUDIO_TEMPLATES.forEach(t=>{const option=document.createElement('option');option.value=t.id;option.textContent=t.title;templateSwitcher.appendChild(option)});
+        templateSwitcher.addEventListener('change',()=>{
+          const next=MQ_STUDIO_TEMPLATES.find(t=>t.id===templateSwitcher.value);
+          if(!next || next.id===mqStudioSelected?.id)return;
+          rememberSessionDesign();
+          select(next);
+          restoreSessionDesign(next.id);
+        });
+      }
+
+      field('quick-size').addEventListener('change',()=>{field('size').value=field('quick-size').value;update();});
+      root.querySelectorAll('[data-studio-filter]').forEach(btn=>btn.addEventListener('click',()=>{root.querySelectorAll('[data-studio-filter]').forEach(b=>b.classList.toggle('active',b===btn));renderGallery(btn.dataset.studioFilter)}));
+      ['shop-name','shop-font','shop-color','shop-scale','shop-spacing','shop-x','shop-y','logo-scale','composition','focal','finish','overlay','accent','accent-color','headline','emphasis','emphasis-color','subline','cta','color','size','headline-font','sub-font','cta-font','align','headline-color','sub-color','cta-bg','cta-color','headline-fx','sub-fx','brand-fx','cta-fx','url-fx','fx-color','fx-blur','fx-distance','fx-angle','fx-outline','headline-fill','gradient-end','headline-back','back-color','back-opacity','headline-scale','sub-scale','cta-scale','headline-spacing','sub-spacing','content-x','content-y','cta-x','cta-y','url-text','url-x','url-y','url-color','url-scale'].forEach(id=>{
+        const evt = ['headline-scale','sub-scale','cta-scale','headline-spacing','sub-spacing','content-x','content-y','cta-x','cta-y','color','headline-color','sub-color','cta-bg','cta-color'].includes(id) ? 'input' : 'input';
+        field(id).addEventListener(evt,update);
+        if(field(id).tagName==='SELECT')field(id).addEventListener('change',update);
+      });
+      const focusRegion=(id)=>{
+        if(id.startsWith('shop-')||id.startsWith('logo'))return 'brand';
+        if(id.startsWith('headline-')||id==='headline')return 'headline';
+        if(id.startsWith('sub-')||id==='subline')return 'sub';
+        if(id.startsWith('cta-')||id==='cta')return 'cta';
+        if(id.startsWith('url-'))return 'url';
+        if(id==='photo'||id==='remove-photo'||id==='overlay')return 'photo';
+        return null;
+      };
+      const markFocus=e=>{
+        const id=e.target?.id?.replace(/^mq-studio-/,'');if(!id)return;
+        mqStudioFocus=focusRegion(id);
+        root.querySelectorAll('.mq-studio-control-card').forEach(c=>c.classList.toggle('mq-studio-card-active',c.contains(e.target)));
+        clearTimeout(mqStudioFocusTimer);update();
+        mqStudioFocusTimer=setTimeout(()=>{mqStudioFocus=null;root.querySelectorAll('.mq-studio-card-active').forEach(c=>c.classList.remove('mq-studio-card-active'));update()},1600);
+      };
+      root.querySelector('.mq-studio-fields').addEventListener('focusin',markFocus);
+      root.querySelector('.mq-studio-fields').addEventListener('input',markFocus);
+      field('logo').addEventListener('change',e=>{const file=e.target.files?.[0];if(!file)return;if(!file.type.startsWith('image/'))return;const url=URL.createObjectURL(file);const img=new Image();img.onload=()=>{URL.revokeObjectURL(url);mqStudioLogo=img;update()};img.onerror=()=>{URL.revokeObjectURL(url);mqShowToast('Could not load logo','error')};img.src=url});
+      field('photo').addEventListener('change',e=>{const file=e.target.files&&e.target.files[0];if(!file)return;if(!file.type.startsWith('image/'))return;const blob=URL.createObjectURL(file);const image=new Image();image.onload=()=>{URL.revokeObjectURL(blob);mqStudioPhoto=image;const photoArea=projectPhotoLayer();if(photoArea){photoArea.image=image;photoArea.dataUrl=image.src;}update()};image.onerror=()=>{URL.revokeObjectURL(blob);mqShowToast('Could not read image','error')};image.src=blob});
+      const removeProjectPhoto=()=>{mqStudioPhoto=null;const photoArea=projectPhotoLayer();if(photoArea){photoArea.image=null;delete photoArea.dataUrl;}field('photo').value='';update();mqShowToast('Project photo removed');};
+      field('remove-photo').addEventListener('click',removeProjectPhoto);
+      field('photo-remove-quick').addEventListener('click',removeProjectPhoto);
+      field('back').addEventListener('click',()=>{unlockStudioScroll();workspace.style.display='none';workspace.classList.remove('mq-studio-fullscreen');previewShift=0;preview.style.transform='';root.scrollIntoView({behavior:'smooth',block:'start'})});
+      field('quick-download').addEventListener('click',()=>field('download').click());
+      field('download').addEventListener('click',()=>{update(true);const a=document.createElement('a');a.href=field('canvas').toDataURL('image/png');a.download=(shopName+'-'+mqStudioSelected.id+'-'+field('size').value).toLowerCase().replace(/[^a-z0-9-]+/g,'-')+'.png';a.click();update()});
+      const stylePacks={
+        luxe:{composition:'magazine',finish:'editorial',color:'#513541','headline-font':'playfair','shop-font':'cinzel','sub-font':'montserrat','cta-font':'montserrat','headline-color':'#fffaf2','sub-color':'#f6ebdf','cta-bg':'#e8cba1','cta-color':'#281d25','emphasis-color':'#e8cba1',accent:'corner','accent-color':'#d9b67c','headline-fx':'none','overlay':'28'},
+        night:{composition:'cinema',finish:'bold',color:'#261b29','headline-font':'cinzel','shop-font':'montserrat','sub-font':'montserrat','cta-font':'montserrat','headline-color':'#ffffff','sub-color':'#f3edef','cta-bg':'#ffffff','cta-color':'#191519','emphasis-color':'#e6c58f',accent:'none','headline-fx':'strong','overlay':'68'},
+        modern:{composition:'window',finish:'architect',color:'#263d3b','headline-font':'montserrat','shop-font':'montserrat','sub-font':'poppins','cta-font':'montserrat','headline-color':'#ffffff','sub-color':'#f2f3ed','cta-bg':'#f1eee4','cta-color':'#263d3b','emphasis-color':'#a8d3c1',accent:'frame','accent-color':'#f1eee4','headline-fx':'none','overlay':'10'},
+        bold:{composition:'split',finish:'bold',color:'#381b29','headline-font':'bebas','shop-font':'oswald','sub-font':'poppins','cta-font':'oswald','headline-color':'#ffffff','sub-color':'#fff2f3','cta-bg':'#e9bb66','cta-color':'#211a21','emphasis-color':'#e9bb66',accent:'stripe','accent-color':'#e9bb66','headline-fx':'soft','overlay':'42'},
+        warm:{composition:'original',finish:'editorial',color:'#67544c','headline-font':'cormorant','shop-font':'playfair','sub-font':'poppins','cta-font':'poppins','headline-color':'#ffffff','sub-color':'#fff7ef','cta-bg':'#f2dfc4','cta-color':'#382b23','emphasis-color':'#ffe0a7',accent:'none','headline-fx':'soft','overlay':'48'}
+      };
+      field('apply-pack').addEventListener('click',()=>{
+        const pack=stylePacks[field('style-pack').value];if(!pack)return;
+        Object.entries(pack).forEach(([key,value])=>{const input=field(key);if(input)input.value=value});
+        update();mqShowToast('Style pack applied');
+      });
+      const saveKey=()=>`midasquote_studio_draft_v4_${shopRecord.id||'shop'}_${mqStudioSelected?.id||'design'}`;
+      field('undo').addEventListener('click',()=>undoRedo(-1));
+      field('redo').addEventListener('click',()=>undoRedo(1));
+      field('quick-save').addEventListener('click',()=>{clearTimeout(mqDraftTimer);writeStudioDraft();mqShowToast('Design saved in this browser');});
+      field('quick-load').addEventListener('click',()=>{if(loadStudioDraft())mqShowToast('Saved design restored');else mqShowToast('No autosaved draft for this template','error');});
+      root.addEventListener('keydown',e=>{if(!mqStudioSelected||!workspace||workspace.style.display==='none')return;
+        const target=e.target;const inEditor=target?.matches?.('input,textarea,select,[contenteditable="true"]');
+        if(inEditor)return;const mod=e.ctrlKey||e.metaKey;
+        if(mod&&e.key.toLowerCase()==='z'){e.preventDefault();undoRedo(e.shiftKey?1:-1)}
+        if(mod&&e.key.toLowerCase()==='y'){e.preventDefault();undoRedo(1)}
+      });
+      field('save-draft').addEventListener('click',()=>{
+        if(!mqStudioSelected)return;
+        try{
+          const values={};root.querySelectorAll('.mq-studio-fields input[id],.mq-studio-fields select[id],.mq-studio-fields textarea[id]').forEach(input=>{if(input.type!=='file')values[input.id.replace('mq-studio-','')]=input.value});
+          const layers=mqStudioCustomLayers.map(layer=>{const copy=cloneObj(layer);delete copy.image;return copy;});
+          localStorage.setItem(saveKey(),JSON.stringify({values,layers,detached:mqStudioDetached}));mqShowToast('Design settings saved in this browser');
+        }catch(err){mqShowToast('Could not save design in this browser','error')}
+      });
+      field('load-draft').addEventListener('click',()=>{
+        try{
+          const raw=localStorage.getItem(saveKey());if(!raw){mqShowToast('No saved design for this template','error');return}
+          const parsed=JSON.parse(raw);const values=parsed.values||parsed;Object.entries(values).forEach(([key,value])=>{const input=field(key);if(input&&input.type!=='file')input.value=value});
+          mqStudioDetached=!!parsed.detached;mqStudioCustomLayers=(parsed.layers||[]).map(hydrateLayer);mqStudioSelectedLayerId=mqStudioCustomLayers[0]?.id||null;renderLayerList();syncLayerControls();
+          update();mqShowToast('Saved design settings loaded');
+        }catch(err){mqShowToast('Could not load saved settings','error')}
+      });
+if(field('detach'))field('detach').addEventListener('click',()=>{if(mqStudioDetached){mqShowToast('Elements are already independent layers');return;}detachBuiltIns(false);});
+field('add-text-layer').addEventListener('click',()=>addLayer(defaultTextLayer()));
+field('add-shape-layer').addEventListener('click',()=>addLayer(defaultShapeLayer()));
+if(field('add-arrow-layer'))field('add-arrow-layer').addEventListener('click',()=>addLayer(defaultArrowLayer('arrow')));
+if(field('add-doodle-layer'))field('add-doodle-layer').addEventListener('click',()=>addLayer(defaultDoodleLayer('burst')));
+if(field('add-swipe-layer'))field('add-swipe-layer').addEventListener('click',()=>addLayer(defaultBrushSwipeLayer()));
+if(field('add-bubble-layer'))field('add-bubble-layer').addEventListener('click',()=>addLayer(defaultBubbleLayer()));
+if(field('add-sticker-layer'))field('add-sticker-layer').addEventListener('click',()=>addLayer(defaultStickerLayer()));
+if(field('add-oval-bubble'))field('add-oval-bubble').addEventListener('click',()=>{const l=defaultBubbleLayer();l.shape='bubbleoval';l.name='Oval speech bubble';addLayer(l);});
+if(field('add-chunky-arrow'))field('add-chunky-arrow').addEventListener('click',()=>{const l=defaultArrowLayer('curvebold');l.name='Chunky curved arrow';addLayer(l);});
+field('add-frame-layer').addEventListener('click',()=>addLayer(defaultFrameLayer()));
+field('add-image-layer-btn').addEventListener('click',()=>field('add-image-layer-input').click());
+if(field('layer-style'))field('layer-style').addEventListener('change',()=>{const layer=currentLayer();if(!layer||!(layer.type==='text'||layer.type==='button'))return;const preset=field('layer-style').value;const presets={custom:null,luxury:{font:'abril',size:64,spacing:0,fx:'soft',textStrokeWidth:0,color:'#fff8ef'},bold:{font:'anton',size:74,spacing:1,fx:'strong',textStrokeWidth:0,color:'#ffffff'},marker:{font:'marker',size:54,spacing:0,fx:'none',textStrokeWidth:0,color:'#111111'},story:{font:'spartan',size:68,spacing:1,fx:'strong',textStrokeWidth:0,color:'#ffffff'},caption:{font:'manrope',size:34,spacing:0,fx:'soft',textStrokeWidth:0,color:'#ffffff'},sticker:{font:'anton',size:82,spacing:1,fx:'none',textStrokeWidth:6,color:'#111111'},handwritten:{font:'caveat',size:66,spacing:0,fx:'soft',textStrokeWidth:0,color:'#ffffff'}};const cfg=presets[preset];if(!cfg)return;Object.assign(layer,cfg);syncLayerControls();update();});
+      if(field('direct-image-btn'))field('direct-image-btn').addEventListener('click',()=>field('direct-image-input').click());
+      field('photo-quick').addEventListener('click',()=>field('photo').click());
+      
+const onMovableImage=e=>{const file=e.target.files?.[0];if(!file)return;if(!file.type.startsWith('image/')){mqShowToast('Please choose an image','error');return;}const reader=new FileReader();reader.onerror=()=>mqShowToast('Image file could not be read','error');reader.onload=()=>{const img=new Image();img.onerror=()=>mqShowToast('Image could not be loaded','error');img.onload=()=>{const cv=field('canvas'),k=cv._mqUnit||1;const ratio=img.naturalWidth/img.naturalHeight;const w=Math.min(520,Math.max(180,cv.width/k*.42));const newLayer={id:layerUid(),type:'image',name:`Image ${mqStudioLayerCounter}`,place:'front',x:Math.round(cv.width/k*.24),y:Math.round(cv.height/k*.28),w:Math.round(w),h:Math.round(w/ratio),rotation:0,opacity:100,shadowColor:'#000000',shadowBlur:0,shadowX:0,shadowY:0,fit:'contain',radius:0,stroke:'#ffffff',strokeWidth:0,dataUrl:String(reader.result),image:img};addLayer(newLayer);mqStudioSelectedLayerId=newLayer.id;syncLayerControls();update();mqShowToast('Movable image added — drag or resize it on the preview');};img.src=String(reader.result);};reader.readAsDataURL(file);e.target.value='';};field('add-image-layer-input').addEventListener('change',onMovableImage);field('direct-image-input').addEventListener('change',onMovableImage);
+// Fine rotation control: buttons and numeric entry share the same selected layer.
+function setStudioRotation(next){const layer=currentLayer();if(!layer)return;const n=Math.max(-180,Math.min(180,Math.round(Number(next)*10)/10));if(!Number.isFinite(n))return;layer.rotation=n;field('layer-rotation').value=String(n);field('rotation-number').value=n.toFixed(1);update();}
+if(field('rotation-minus'))field('rotation-minus').addEventListener('click',e=>{const l=currentLayer();if(l)setStudioRotation((Number(l.rotation)||0)-(e.shiftKey?.1:1));});
+if(field('rotation-plus'))field('rotation-plus').addEventListener('click',e=>{const l=currentLayer();if(l)setStudioRotation((Number(l.rotation)||0)+(e.shiftKey?.1:1));});
+if(field('rotation-number'))field('rotation-number').addEventListener('change',e=>setStudioRotation(e.target.value));
+if(field('layer-rotation'))field('layer-rotation').addEventListener('input',()=>{if(field('rotation-number'))field('rotation-number').value=Number(field('layer-rotation').value).toFixed(1);});
+['layer-name','layer-place','layer-x','layer-y','layer-w','layer-h','layer-opacity','layer-rotation','layer-shadow-color','layer-shadow-blur','layer-shadow-x','layer-shadow-y','layer-text','layer-font','layer-align','layer-color','layer-size','layer-spacing','layer-curve','layer-fx','layer-style','layer-text-stroke-width','layer-shape','layer-radius','layer-fill','layer-stroke','layer-stroke-width','layer-fit','layer-image-radius','layer-image-stroke','layer-image-stroke-width'].forEach(id=>{const el=field(id);if(!el)return;el.addEventListener('input',()=>{applyLayerControls();if(id==='layer-rotation'&&field('rotation-number'))field('rotation-number').value=Number(field('layer-rotation').value).toFixed(1);update();});if(el.tagName==='SELECT')el.addEventListener('change',()=>{applyLayerControls();update();});});
+field('layer-image-file').addEventListener('change',e=>{const layer=currentLayer();const file=e.target.files&&e.target.files[0];if(!layer||layer.type!=='image'||!file)return;const reader=new FileReader();reader.onload=()=>{const img=new Image();img.onload=()=>{layer.dataUrl=reader.result;layer.image=img;update();};img.src=reader.result;};reader.readAsDataURL(file);e.target.value='';});
+field('layer-delete').addEventListener('click',()=>deleteStudioLayer(mqStudioSelectedLayerId));field('reset-layer-position').addEventListener('click',()=>{const l=currentLayer();if(!l)return;const c=field('canvas'),k=c._mqUnit||1;const cw=c.width/k,ch=c.height/k;l.x=Math.round(Math.max(18,(cw-(l.w||200))/2));l.y=Math.round(Math.max(18,(ch-(l.h||50))/2));l.rotation=0;l.hidden=false;l.locked=false;syncLayerControls();update();mqShowToast('Layer returned to the centre');});if(field('delete-selected'))field('delete-selected').addEventListener('click',()=>{if(mqStudioSelectedLayerId)deleteStudioLayer(mqStudioSelectedLayerId);else mqShowToast('Select an element first','error')});
+field('layer-dup').addEventListener('click',()=>{const layer=currentLayer();if(!layer)return;const copy=hydrateLayer({...cloneObj(layer),id:layerUid(),name:(layer.name||layer.type)+' copy',x:(layer.x||0)+24,y:(layer.y||0)+24});mqStudioCustomLayers.push(copy);mqStudioSelectedLayerId=copy.id;syncLayerControls();update();});
+field('layer-back').addEventListener('click',()=>moveStudioLayer(mqStudioSelectedLayerId,-1));
+field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSelectedLayerId,1));
+      field('copy-caption').addEventListener('click',()=>{const caption=[field('headline').value,field('subline').value,field('cta').value+': '+quoteLink()].join('\n\n');if(navigator.clipboard?.writeText)navigator.clipboard.writeText(caption).then(()=>mqShowToast('Caption copied')).catch(()=>mqShowToast('Could not copy caption','error'));else mqShowToast('Clipboard not available','error')});
+      const canvas=field('canvas');
+      let inlineEditor=null;
+      function closeInlineEditor(commit=true){
+        if(!inlineEditor)return;
+        const editor=inlineEditor,layer=mqStudioCustomLayers.find(l=>l.id===editor.dataset.layerId);
+        if(layer){layer.text=commit?editor.value:editor.dataset.originalText;mqStudioSelectedLayerId=layer.id;syncLayerControls();update();}
+        editor.remove();inlineEditor=null;
+      }
+      function editLayerInline(layer){
+        if(!layer||!(layer.type==='text'||layer.type==='button')||layer.locked)return;
+        closeInlineEditor(true);
+        const region=(canvas._mqCustomLayerRegions||[]).find(r=>r.id===layer.id)?.rect;
+        if(!region)return;
+        mqStudioSelectedLayerId=layer.id;
+        const r=canvas.getBoundingClientRect(),wr=preview.getBoundingClientRect();
+        const sx=r.width/canvas.width,sy=r.height/canvas.height;
+        const editor=document.createElement('textarea');editor.className='mq-studio-inline-editor';editor.dataset.layerId=layer.id;editor.dataset.originalText=layer.text||'';
+        editor.value=layer.text||'';
+        // Keep editing beside the actual canvas, never beside the controls at
+        // the top of the fullscreen studio. Use viewport-fixed positioning.
+        const vw=document.documentElement.clientWidth,vh=document.documentElement.clientHeight;
+        const editorW=Math.min(330,Math.max(210,vw*.28));
+        const editorH=92;
+        editor.style.position='fixed';
+        editor.style.left=Math.max(8,Math.min(vw-editorW-12,r.right+14))+'px';
+        if(r.right+editorW+20>vw){editor.style.left=Math.max(8,r.left-editorW-14)+'px';}
+        editor.style.top=Math.max(10,Math.min(vh-editorH-12,r.top+Math.min(region[1]*sy,Math.max(0,r.height-100))))+'px';
+        editor.style.width=editorW+'px';editor.style.height=editorH+'px';
+        editor.style.fontFamily=fontFace(layer.font||'arial');editor.style.fontSize='20px';
+        document.body.appendChild(editor);inlineEditor=editor;editor.focus();editor.select();
+        // Redraw on every keystroke, not only after Enter.
+        editor.addEventListener('input',()=>{const selected=mqStudioCustomLayers.find(l=>l.id===editor.dataset.layerId);if(selected){selected.text=editor.value;update();}});
+        editor.addEventListener('keydown',e=>{if(e.key==='Escape'){e.stopPropagation();closeInlineEditor(false);}else if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();closeInlineEditor(true);}});
+        editor.addEventListener('blur',()=>{if(inlineEditor===editor)closeInlineEditor(true)});
+      }
+      const showPropertyMode=()=>{workspace.classList.remove('mq-studio-canvas-first');workspace.classList.add('mq-studio-property-mode');previewShift=0;preview.style.transform='';requestAnimationFrame(queuePreviewFollow);};
+      field('quick-text').addEventListener('click',()=>{const layer=defaultTextLayer();const cv=field('canvas'),unit=cv._mqUnit||1;layer.x=Math.round(Math.max(20,(cv.width/unit-layer.w)/2));layer.y=Math.round(Math.max(20,(cv.height/unit-layer.h)/2));addLayer(layer);editLayerInline(layer);});
+      field('quick-shape').addEventListener('click',()=>{addLayer(defaultShapeLayer());showPropertyMode();});
+      if(field('quick-arrow'))field('quick-arrow').addEventListener('click',()=>{addLayer(defaultArrowLayer('arrow'));showPropertyMode();});
+      if(field('quick-doodle'))field('quick-doodle').addEventListener('click',()=>{addLayer(defaultBrushSwipeLayer());showPropertyMode();});
+      if(field('quick-bubble'))field('quick-bubble').addEventListener('click',()=>{addLayer(defaultBubbleLayer());showPropertyMode();});
+      if(field('quick-sticker'))field('quick-sticker').addEventListener('click',()=>{addLayer(defaultStickerLayer());showPropertyMode();});
+      field('layers-toggle').addEventListener('click',()=>{
+        const beforeRotation=new Map(mqStudioCustomLayers.map(layer=>[layer.id,Number(layer.rotation)||0]));
+        workspace.classList.toggle('mq-studio-show-layers');
+        field('layers-toggle').textContent=workspace.classList.contains('mq-studio-show-layers')?'✕ Hide layers':'☷ All layers';
+        // Showing/hiding the list is a UI-only action: it must never alter artwork.
+        mqStudioCustomLayers.forEach(layer=>{if(beforeRotation.has(layer.id))layer.rotation=beforeRotation.get(layer.id)});
+        syncLayerControls();
+        update();
+        requestAnimationFrame(queuePreviewFollow);
+      });
+      field('properties-toggle').addEventListener('click',()=>{if(workspace.classList.contains('mq-studio-property-mode')){workspace.classList.remove('mq-studio-property-mode');workspace.classList.add('mq-studio-canvas-first');}else showPropertyMode();requestAnimationFrame(queuePreviewFollow);});
+      field('settings-toggle').addEventListener('click',()=>{workspace.classList.toggle('mq-studio-canvas-first');workspace.classList.remove('mq-studio-property-mode');previewShift=0;preview.style.transform='';requestAnimationFrame(queuePreviewFollow);});
+      canvas.addEventListener('dblclick',e=>{
+        const hit=regionAt(canvasPoint(e));
+        if(!hit?.startsWith('layer:'))return;
+        const layer=mqStudioCustomLayers.find(l=>l.id===hit.slice(6));
+        if(!layer||layer.hidden||layer.locked)return;
+        // Always select the item and reveal only its relevant properties.
+        mqStudioSelectedLayerId=layer.id;
+        showPropertyMode();
+        syncLayerControls();
+        update();
+        // Let the fullscreen columns finish laying out before placing the
+        // inline editor beside the canvas (otherwise it can jump).
+        if(layer.type==='text'||layer.type==='button'){
+          requestAnimationFrame(()=>editLayerInline(layer));
+        }else if(layer.type==='shape'){
+          requestAnimationFrame(()=>field('layer-shape')?.focus({preventScroll:true}));
+        }else if(layer.type==='image'){
+          requestAnimationFrame(()=>field('layer-fit')?.focus({preventScroll:true}));
+        }
+      });
+      const clampField=(id,val)=>{const el=field(id);if(!el)return;const min=Number(el.min||-9999),max=Number(el.max||9999);el.value=String(Math.round(clamp(val,min,max)));};
+      const canvasPoint=e=>{const rect=canvas.getBoundingClientRect();return {x:(e.clientX-rect.left)*(canvas.width/rect.width),y:(e.clientY-rect.top)*(canvas.height/rect.height)}};
+      const regionAt=pt=>{const custom=(canvas._mqCustomLayerRegions||[]).slice().reverse();for(const item of custom){const layer=mqStudioCustomLayers.find(l=>l.id===item.id);if(!layer||layer.hidden||layer.locked)continue;const r=item.rect;const radius=18*(canvas._mqUnit||1);if(layer.id===mqStudioSelectedLayerId){const corners=[['nw',r[0],r[1]],['ne',r[0]+r[2],r[1]],['sw',r[0],r[1]+r[3]],['se',r[0]+r[2],r[1]+r[3]]];for(const [side,x,y] of corners){if(Math.abs(pt.x-x)<radius&&Math.abs(pt.y-y)<radius)return 'resize:'+item.id+':'+side}}if(pt.x>=r[0]&&pt.x<=r[0]+r[2]&&pt.y>=r[1]&&pt.y<=r[1]+r[3])return 'layer:'+item.id;}if(mqStudioDetached)return null;const regions=canvas._mqRegions||{};const order=['cta','url','headline','sub','brand'];for(const key of order){const r=regions[key];if(!r)continue; if(pt.x>=r[0]&&pt.x<=r[0]+r[2]&&pt.y>=r[1]&&pt.y<=r[1]+r[3])return key;}return null;};
+      // Fixed selected-object toolbar. Never follows the pointer or overlaps the art.
+      const hoverbar=field('hoverbar');
+      const actionHost=preview.querySelector('.mq-studio-preview-tip');
+      if(actionHost&&hoverbar){actionHost.parentNode.insertBefore(hoverbar,actionHost);}
+      hoverbar.classList.add('mq-studio-fixed-actions');
+      hoverbar.style.cssText='position:relative!important;inset:auto!important;left:auto!important;top:auto!important;transform:none!important;display:flex!important;width:100%!important;max-width:100%!important;box-sizing:border-box!important;align-items:center!important;justify-content:center!important;flex-wrap:wrap!important;gap:8px!important;margin:4px 0 8px!important;z-index:2!important;background:#f8f6f8!important;border:1px solid #e4dae5!important;box-shadow:none!important;padding:8px!important;border-radius:12px!important';
+      const selectionLabel=document.createElement('span');
+      selectionLabel.className='mq-studio-action-label';
+      selectionLabel.style.cssText='flex:0 0 100%;width:100%;min-width:0;text-align:center;color:#382b40;font:700 12px Arial,sans-serif;padding:0 8px';
+      hoverbar.insertBefore(selectionLabel,hoverbar.firstChild);
+      hoverbar.querySelectorAll('button[data-action]').forEach(btn=>{btn.style.flex='0 0 auto';btn.style.minWidth='0';});
+      function syncFixedActions(){
+        const layer=mqStudioCustomLayers.find(l=>l.id===mqStudioSelectedLayerId&&!l.hidden);
+        selectionLabel.textContent=layer?'Selected: '+(layer.name||layer.type):'Select an object to edit';
+        hoverbar.querySelectorAll('button[data-action]').forEach(button=>{
+          button.disabled=!layer;
+          button.style.opacity=layer?'1':'.40';
+          button.style.cursor=layer?'pointer':'not-allowed';
+        });
+        const replace=hoverbar.querySelector('[data-action=replace]');
+        if(replace)replace.style.display=layer?.type==='image'?'inline-flex':'none';
+      }
+      root._mqSyncActions=syncFixedActions;
+      const hideHover=()=>{}; // Compatibility with pointer handlers; no hover state to hide.
+      const duplicateLayer=id=>{const layer=mqStudioCustomLayers.find(l=>l.id===id);if(!layer)return;const copy=hydrateLayer({...cloneObj(layer),id:layerUid(),name:(layer.name||layer.type)+' copy',x:(layer.x||0)+24,y:(layer.y||0)+24});mqStudioCustomLayers.push(copy);mqStudioSelectedLayerId=copy.id;syncLayerControls();update();};
+      hoverbar.addEventListener('click',e=>{
+        const button=e.target.closest('button[data-action]');
+        const id=mqStudioSelectedLayerId;
+        const layer=mqStudioCustomLayers.find(l=>l.id===id);
+        if(!button||!layer)return;
+        const action=button.dataset.action;
+        if(action==='delete'){deleteStudioLayer(id);}
+        else if(action==='duplicate'){duplicateLayer(id);}
+        else if(action==='replace'&&layer.type==='image'){field('layer-image-file').click();}
+        else if(action==='edit'){
+          showPropertyMode();syncLayerControls();
+          if(layer.type==='text'||layer.type==='button')editLayerInline(layer);
+          else if(layer.type==='image'){ /* Image Edit shows contextual image properties; Replace opens the file chooser. */ }
+          else field('layer-fill').focus();
+        }
+        syncFixedActions();update();
+      });
+      let drag=null;
+      canvas.style.cursor='grab';
+      canvas.addEventListener('pointerdown',e=>{
+        if(!mqStudioSelected)return;
+        studioPointerActive=true;
+        const part=regionAt(canvasPoint(e));
+        if(!part){studioPointerActive=false;mqStudioSelectedLayerId=null;syncLayerControls();update();syncFixedActions();return;}
+        const pt=canvasPoint(e);
+        if(part.startsWith('resize:')){
+          const [,layerId,corner]=part.split(':');const layer=mqStudioCustomLayers.find(l=>l.id===layerId);if(!layer)return;
+          drag={part,kind:'resize',layerId,corner,start:pt,vals:{x:layer.x,y:layer.y,w:layer.w,h:layer.h}};
+          canvas.setPointerCapture(e.pointerId);e.preventDefault();return;
+        }
+        if(part.startsWith('layer:')){
+          const layer=mqStudioCustomLayers.find(l=>'layer:'+l.id===part);if(!layer)return;
+          mqStudioSelectedLayerId=layer.id;
+          drag={part,start:pt,startClient:{x:e.clientX,y:e.clientY},rect:canvas.getBoundingClientRect(),canvasW:canvas.width,canvasH:canvas.height,layerId:layer.id,wasMoved:false,vals:{x:Number(layer.x)||0,y:Number(layer.y)||0}};
+          mqStudioFocus=part;
+        }else{
+          drag={part,start:pt,unit:canvas._mqUnit||1,vals:{shopX:Number(field('shop-x').value)||0,shopY:Number(field('shop-y').value)||0,contentX:Number(field('content-x').value)||0,contentY:Number(field('content-y').value)||0,ctaX:Number(field('cta-x').value)||0,ctaY:Number(field('cta-y').value)||0,urlX:Number(field('url-x').value)||0,urlY:Number(field('url-y').value)||0}};
+          mqStudioFocus=part;
+        }
+        syncFixedActions();update();canvas.setPointerCapture(e.pointerId);canvas.style.cursor='grabbing';e.preventDefault();
+      });
+      canvas.addEventListener('pointermove',e=>{const pt=drag?.rect?{x:(e.clientX-drag.rect.left)*(drag.canvasW/drag.rect.width),y:(e.clientY-drag.rect.top)*(drag.canvasH/drag.rect.height)}:canvasPoint(e);const hover=drag?null:regionAt(pt);canvas.style.cursor=drag?'grabbing':hover?.startsWith('resize:')?'nwse-resize':(hover?'grab':'default');if(!drag)return; if(drag.startClient && !drag.wasMoved){if(Math.hypot(e.clientX-drag.startClient.x,e.clientY-drag.startClient.y)<7)return;drag.wasMoved=true;}
+        if(drag.kind==='resize'){const layer=mqStudioCustomLayers.find(l=>l.id===drag.layerId);if(!layer)return;const dx=pt.x-drag.start.x,dy=pt.y-drag.start.y;const w=drag.corner.includes('w')?drag.vals.w-dx:drag.vals.w+dx;const h=drag.corner.includes('n')?drag.vals.h-dy:drag.vals.h+dy;layer.w=Math.round(Math.max(25,w));layer.h=Math.round(Math.max(25,h));layer.x=Math.round(drag.corner.includes('w')?drag.vals.x+drag.vals.w-layer.w:drag.vals.x);layer.y=Math.round(drag.corner.includes('n')?drag.vals.y+drag.vals.h-layer.h:drag.vals.y);update();return;}
+        if(String(drag.part).startsWith('layer:')){const layer=mqStudioCustomLayers.find(l=>l.id===drag.layerId);if(!layer)return;
+          let x=(drag.vals.x||0)+(pt.x-drag.start.x),y=(drag.vals.y||0)+(pt.y-drag.start.y);mqStudioGuide=null;
+          // Snap to canvas center or edges within 12 design pixels.
+          const width=canvas.width/(canvas._mqUnit||1),height=canvas.height/(canvas._mqUnit||1);
+          const snapX=[0,(width-layer.w)/2,width-layer.w],snapY=[0,(height-layer.h)/2,height-layer.h];
+          for(const sx of snapX)if(Math.abs(x-sx)<12){x=sx;mqStudioGuide={...(mqStudioGuide||{}),x:sx===0?0:sx===width-layer.w?width:width/2};break}
+          for(const sy of snapY)if(Math.abs(y-sy)<12){y=sy;mqStudioGuide={...(mqStudioGuide||{}),y:sy===0?0:sy===height-layer.h?height:height/2};break}
+          const maxX=Math.max(0,canvas.width/(canvas._mqUnit||1)-Math.min(layer.w,canvas.width/(canvas._mqUnit||1)));const maxY=Math.max(0,canvas.height/(canvas._mqUnit||1)-Math.min(layer.h,canvas.height/(canvas._mqUnit||1)));layer.x=Math.round(Math.max(0,Math.min(maxX,x)));layer.y=Math.round(Math.max(0,Math.min(maxY,y)));if(Math.abs(pt.x-drag.start.x)>4||Math.abs(pt.y-drag.start.y)>4)drag.wasMoved=true;update();return;}
+        const dx=(pt.x-drag.start.x)/(drag.unit||1),dy=(pt.y-drag.start.y)/(drag.unit||1);
+        if(drag.part==='brand'){clampField('shop-x',drag.vals.shopX+dx);clampField('shop-y',drag.vals.shopY+dy);}else if(drag.part==='cta'){clampField('cta-x',drag.vals.ctaX+dx);clampField('cta-y',drag.vals.ctaY+dy);}else if(drag.part==='url'){clampField('url-x',drag.vals.urlX+dx);clampField('url-y',drag.vals.urlY+dy);}else{clampField('content-x',drag.vals.contentX+dx);clampField('content-y',drag.vals.contentY+dy);}update();});
+      const endDrag=e=>{const completed=drag;studioPointerActive=false;if(completed){mqStudioGuide=null;drag=null;canvas.style.cursor='default';if(canvas.hasPointerCapture && e.pointerId!=null){try{canvas.releasePointerCapture(e.pointerId);}catch(err){}} if(completed.layerId){syncLayerControls();/* Properties are opened explicitly using Selected object options, so the canvas never jumps on click. */}clearTimeout(mqStudioFocusTimer); mqStudioFocusTimer=setTimeout(()=>{mqStudioFocus=null;update();},900);update();queuePreviewFollow();}};
+      canvas.tabIndex=0;canvas.addEventListener('keydown',e=>{if((e.key==='Delete'||e.key==='Backspace')&&mqStudioSelectedLayerId){e.preventDefault();deleteStudioLayer(mqStudioSelectedLayerId);}});
+      canvas.addEventListener('pointerup',endDrag);canvas.addEventListener('pointercancel',endDrag);canvas.addEventListener('pointerleave',e=>{if(!drag)canvas.style.cursor='default';});
+    }
+    if(!root.dataset.quickColorsInstalled){root.dataset.quickColorsInstalled='1';
+      field('quick-brand').addEventListener('input',e=>{field('color').value=e.target.value;update()});
+      field('quick-surface').addEventListener('input',()=>update());
+      field('quick-accent').addEventListener('input',e=>{field('accent-color').value=e.target.value;update()});
+      field('reset-colors').addEventListener('click',()=>{field('quick-brand').value=safeColor(color);field('color').value=safeColor(color);field('quick-surface').value='#e9d9c8';field('quick-accent').value='#d9be97';field('accent-color').value='#d9be97';update()});
+    }
+    renderGallery(root.querySelector('[data-studio-filter].active')?.dataset.studioFilter||'all');if(mqStudioSelected)update();
+  }
+
   // ============================================================
   // MARKETING KIT
   // ============================================================
@@ -13175,6 +14913,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
 
     const quoteLink = _mqCustomPostLink || defaultQuoteLink;
     const socialPosts = buildSocialPosts(quoteLink);
+    mqInitMarketingStudio(shopRecord);
 
     const dmTemplate = `Hi [Name]! Just wanted to let you know ${shopName} now has an instant online quote tool if you ever want a quick ballpark on a future project — no need to wait for a callback. Here's the link if you ever want to check it out: ${quoteLink}`;
 
