@@ -13969,25 +13969,16 @@ function seededStudioLayers(t){
   const shapeLayer=(name,x,y,w,h,fill,shape='rect',radius=18,place='front',stroke='#ffffff',strokeWidth=0)=>({id:layerUid(),type:'shape',name,place,x,y,w,h,rotation:0,opacity:100,shadowColor:'#000000',shadowBlur:0,shadowX:0,shadowY:0,shape,radius,fill,stroke,strokeWidth});
   const imageLayer=(name,x,y,w,h,radius=18,useDefaultPhoto=true)=>({id:layerUid(),type:'image',name,place:'front',x,y,w,h,rotation:0,opacity:100,shadowColor:'#000000',shadowBlur:12,shadowX:0,shadowY:7,fit:'cover',radius,stroke:'#ffffff',strokeWidth:6,fill:'#d9d2c7',image:useDefaultPhoto?(mqStudioPhoto||null):null,dataUrl:useDefaultPhoto?(mqStudioPhoto?.src||''):''});
   if(t.id==='yardbefore'){
-    layers.push(shapeLayer('Sign background',0,0,1620,1080,'#6b1830','rect',0,'back'));
-    layers.push(shapeLayer('Top banner',0,0,1620,150,'#202027','rect',0));
-    layers.push(textLayer('Headline','BEFORE  &  AFTER',130,34,1360,84,66,'#ffffff','oswald','center','none'));
-    layers.push(shapeLayer('Photo stage',46,176,1528,686,'#efe7dc','rect',18,'front','#dbc58e',0));
-    layers.push(shapeLayer('Before label background',86,168,620,56,'#202027','round',18));
-    layers.push(shapeLayer('After label background',914,168,620,56,'#202027','round',18));
-    layers.push(textLayer('Before label','BEFORE',120,177,552,40,34,'#ffffff','oswald','center','none'));
-    layers.push(textLayer('After label','AFTER',948,177,552,40,34,'#ffffff','oswald','center','none'));
-    layers.push(shapeLayer('Before panel',86,242,620,518,'#d9d2c7','rect',18,'front','#ffffff',4));
-    layers.push(shapeLayer('After panel',914,242,620,518,'#d9d2c7','rect',18,'front','#ffffff',4));
-    layers.push(imageLayer('Before photo — click Replace',94,250,604,502,16,false));
-    layers.push(imageLayer('After photo — click Replace',922,250,604,502,16,false));
-    layers.push(shapeLayer('Center divider',786,250,48,502,'#c9a24b','round',24));
-    layers.push(textLayer('Before prompt','UPLOAD\nBEFORE PHOTO',186,430,420,120,34,'#6b5f53','oswald','center','none'));
-    layers.push(textLayer('After prompt','UPLOAD\nAFTER PHOTO',1014,430,420,120,34,'#6b5f53','oswald','center','none'));
-    layers.push(textLayer('Tip line','Use “Replace” on each panel — or use the top project photo button to fill both panels.',130,786,1360,36,20,'#6f6155','montserrat','center','none'));
-    layers.push(shapeLayer('Bottom brand band',0,892,1620,188,'#202027','rect',0));
-    layers.push(textLayer('Shop name',String(shopName).toUpperCase(),74,926,1480,56,48,'#ffffff','montserrat','center','none'));
-    layers.push(textLayer('Website',quoteLink().replace(/^https?:\/\//,''),210,990,1200,40,24,'#dcc58b','montserrat','center','none'));
+    // Minimal two-photo yard sign: the photo slots are separate, editable layers.
+    layers.push(shapeLayer('Sign background',0,0,1620,1080,'#202027','rect',0,'back'));
+    layers.push(imageLayer('Before photo',0,0,810,890,0,false));
+    layers.push(imageLayer('After photo',810,0,810,890,0,false));
+    // This title deliberately overlaps the photos, like the supplied reference.
+    layers.push(shapeLayer('Title plaque',532,18,556,138,'#202027','round',22));
+    layers.push(textLayer('Before & After title','BEFORE & AFTER',570,54,480,66,63,'#ffffff','oswald','center','none'));
+    layers.push(shapeLayer('Footer band',0,890,1620,190,'#202027','rect',0));
+    layers.push(textLayer('Shop name',String(shopName).toUpperCase(),100,934,1420,74,52,'#ffffff','montserrat','center','none'));
+    layers.push(textLayer('Website',quoteLink().replace(/^https?:\/\//,''),210,1003,1200,40,25,'#dcc58b','montserrat','center','none'));
   }
   if(t.id.startsWith('ys-')){
     const classic=t.id.slice(3);
@@ -14567,7 +14558,7 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
       const caption=(txt,y=286,c='#fff')=>`<text x="28" y="${y}" font-family="Arial,sans-serif" font-size="17" font-weight="700" fill="${c}">${esc(String(txt||'').slice(0,44))}</text>`;
       let body='';
       if(id==='yardbefore'){
-        body=`<rect width="540" height="360" fill="#202027"/>${copy('BEFORE & AFTER',270,46,490,36,35,'#fff','middle',23)}<rect y="62" width="540" height="224" fill="#eee4d8"/><rect x="20" y="91" width="240" height="173" rx="6" fill="#d9d2c7" stroke="#fff" stroke-width="5"/><rect x="280" y="91" width="240" height="173" rx="6" fill="#d9d2c7" stroke="#fff" stroke-width="5"/><rect x="265" y="90" width="10" height="176" rx="4" fill="#c9a24b"/>${copy('BEFORE',140,82,220,30,23,'#292830','middle')}${copy('AFTER',400,82,220,30,23,'#292830','middle')}${copy('ADD PHOTO',140,190,220,28,22,'#8e8278','middle')}${copy('ADD PHOTO',400,190,220,28,22,'#8e8278','middle')}<rect y="287" width="540" height="73" fill="#202027"/>${copy(shop,270,322,520,28,23,'#fff','middle',37)}<text x="270" y="346" text-anchor="middle" font-size="13" font-family="Arial" fill="#e5c77c">YOUR WEBSITE</text>`;
+        body=`${photo(0,0,270,292)}${photo(270,0,270,292)}<rect x="177" y="10" width="186" height="48" rx="8" fill="#202027"/>${copy('BEFORE & AFTER',270,41,184,28,24,'#fff','middle',20)}<rect y="292" width="540" height="68" fill="#202027"/>${copy(shop,270,323,520,27,22,'#fff','middle',34)}<text x="270" y="345" text-anchor="middle" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#e5c77c">YOUR WEBSITE</text>`;
       }else if(isClassic){
         if(classic==='band')body=`${photo(0,55,540,240)}<rect width="540" height="69" fill="#182334"/><rect y="284" width="540" height="76" fill="#182334"/>${copy(shop,270,43,510,30,23,'#fff','middle',35)}${copy(t.headline,270,326,500,26,23,'#fff','middle',34)}`;
         else if(['cta','estate'].includes(classic))body=`${photo(0,0,540,232)}<rect y="232" width="540" height="128" fill="${classic==='cta'?'#14233a':'#f8f5f0'}"/><rect y="229" width="540" height="6" fill="${accent}"/>${copy(t.headline,26,272,490,31,27,classic==='cta'?'#fff':'#25242a','start',32)}${caption(shop,334,classic==='cta'?'#eadfcf':'#27252a')}`;
