@@ -771,9 +771,9 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       `
     },
     marketing: {
-      title: 'Marketing Kit',
+      title: 'Design Studio',
       body: `
-        <p>Ready-made assets to help you promote your quote tool — share these however makes sense for your shop.</p>
+        <p>Create and customize graphics, posts, posters and QR promotions for your business.</p>
       `
     },
   };
@@ -1616,7 +1616,7 @@ window.logoutMember = async function () {
           <div class="mq-nav-item" onclick="mqNav('showroom',this)"><span class="mq-nav-icon">🖼️</span> Showroom</div>
           <div class="mq-nav-section">Launch &amp; Grow</div>
           <div class="mq-nav-item" onclick="mqNav('embed',this)"><span class="mq-nav-icon">🔗</span> Embed code</div>
-          <div class="mq-nav-item" onclick="mqNav('marketing',this)"><span class="mq-nav-icon">📣</span> Marketing Kit</div>
+          <div class="mq-nav-item" onclick="mqNav('marketing',this)"><span class="mq-nav-icon">📣</span> Design Studio</div>
           <div class="mq-nav-item" onclick="mqNav('proposals',this)"><span class="mq-nav-icon">📄</span> Proposals</div>
           <div class="mq-nav-section">Account</div>
           <div class="mq-nav-item" onclick="mqNav('billing',this)"><span class="mq-nav-icon">💳</span> Account</div>
@@ -2941,12 +2941,25 @@ window.logoutMember = async function () {
  #mq-page-marketing #mq-studio-workspace.mq-studio-fullscreen .mq-studio-preview-wrap{height:auto!important;overflow:visible!important}
  #mq-page-marketing #mq-studio-workspace.mq-studio-fullscreen .mq-studio-preview-wrap canvas{max-height:45dvh!important}
 }
+
+/* Design Studio creative hub: original tools remain fully functional. */
+#mq-page-marketing .mq-creative-hub{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:0 0 20px}
+#mq-page-marketing .mq-creative-choice{display:flex;align-items:center;gap:12px;text-align:left;border:1px solid #e4d9e2;background:#fff;border-radius:14px;padding:17px 14px;cursor:pointer;color:#2c2432;min-width:0;box-shadow:0 5px 16px #3021350a}
+#mq-page-marketing .mq-creative-choice:hover,#mq-page-marketing .mq-creative-choice:focus-visible{border-color:#aa7a95;background:#faf6f9;outline:2px solid transparent;box-shadow:0 0 0 2px #ddc5d3}
+#mq-page-marketing .mq-creative-choice>span:nth-child(2){flex:1;min-width:0}
+#mq-page-marketing .mq-creative-choice strong{display:block;font-size:14px;line-height:1.3}
+#mq-page-marketing .mq-creative-choice small{display:block;font-size:11px;color:#776d79;line-height:1.45;margin-top:6px}
+#mq-page-marketing .mq-creative-emoji{font-size:25px;flex:0 0 auto}
+#mq-page-marketing .mq-studio-mobile-notice{display:none;border:1px solid #e0cf9c;border-radius:12px;background:#fff8e9;color:#5d4826;padding:14px 15px;font-size:13px;line-height:1.55;margin:0 0 16px}
+#mq-page-marketing .mq-studio-mobile-notice button{display:inline-block;border:1px solid #aa873a;border-radius:8px;padding:8px 11px;background:#fff;color:#5a4110;font-weight:700;margin:10px 0 0;cursor:pointer}
+@media(max-width:980px){#mq-page-marketing .mq-creative-hub{grid-template-columns:1fr 1fr}}
+@media(max-width:680px){#mq-page-marketing .mq-creative-hub{grid-template-columns:1fr}#mq-page-marketing .mq-studio-mobile-notice{display:block}#mq-page-marketing #mq-studio-workspace:not(.mq-studio-phone-allowed){display:none!important}#mq-page-marketing #mq-studio-workspace.mq-studio-phone-allowed{display:flex!important}}
 </style>
           <!-- MARKETING KIT -->
           <div class="mq-page mq-sr-tab" id="mq-page-marketing">
             <button class="mq-help-btn" onclick="mqShowHelp('marketing')"><span class="mq-help-badge">?</span> Need help?</button>
-            <div class="mq-page-title">Marketing Kit</div>
-            <div class="mq-page-sub">Ready-made copy to help you promote your new quote widget — personalized with your shop's link</div>
+            <div class="mq-page-title">Design Studio</div>
+            <div class="mq-page-sub">Create professional ads, posters, social graphics and QR designs for your business — all customizable</div>
 
             <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;margin-bottom:1.25rem">
               <label class="mq-label" style="display:block;margin-bottom:6px">Link to use across everything below</label>
@@ -2961,6 +2974,18 @@ window.logoutMember = async function () {
             <!-- MARKETING STUDIO v2.2: Visual template gallery and enhanced design editor. Legacy tools preserved below. -->
             <section id="mq-studio" class="mq-studio">
               <div class="mq-studio-hero"><div><span class="mq-studio-kicker">✦ YOUR CREATIVE WORKSPACE</span><h2>Design work worth showing off.</h2><p>Art-directed ads for cabinet shops. Choose a composition, fine-tune your branding, and export beautifully.</p></div><span class="mq-studio-hero-star">✳</span></div>
+              <div class="mq-creative-hub" aria-label="Choose your creative tool">
+                <button type="button" class="mq-creative-choice" id="mq-creative-open-design">
+                  <span class="mq-creative-emoji" aria-hidden="true">🎨</span><span><strong>Design Studio</strong><small>Social posts, promotions, posters, QR designs and editable yard-sign templates</small></span><span aria-hidden="true">→</span>
+                </button>
+                <button type="button" class="mq-creative-choice" id="mq-creative-open-yard">
+                  <span class="mq-creative-emoji" aria-hidden="true">🪧</span><span><strong>Yard Sign & Poster Designer</strong><small>Open the original specialized sign designer, including its styles and print controls</small></span><span aria-hidden="true">→</span>
+                </button>
+                <button type="button" class="mq-creative-choice" id="mq-creative-open-qr">
+                  <span class="mq-creative-emoji" aria-hidden="true">▦</span><span><strong>QR Promotions</strong><small>Browse ready-made QR templates inside Design Studio</small></span><span aria-hidden="true">→</span>
+                </button>
+              </div>
+              <div class="mq-studio-mobile-notice" role="note">📱 <strong>Design Studio works best on a tablet or desktop.</strong> You can explore templates on your phone, but precise editing (dragging, resizing and rotating) is easier on a larger screen. <button type="button" id="mq-studio-mobile-continue">Continue on phone anyway</button></div>
               <div class="mq-studio-nav" role="group" aria-label="Filter templates"><button type="button" class="active" data-studio-filter="all">All designs</button><button type="button" data-studio-filter="social">Social posts</button><button type="button" data-studio-filter="print">Posters & signs</button><button type="button" data-studio-filter="qr">QR promotions</button></div>
               <div class="mq-studio-grid" id="mq-studio-grid"></div>
               <div id="mq-studio-workspace" class="mq-studio-workspace" style="display:none">
@@ -3181,7 +3206,7 @@ window.logoutMember = async function () {
                   <div class="mq-studio-preview-wrap"><div class="mq-studio-format-bar" role="group" aria-label="Design canvas size"><label for="mq-studio-quick-size">Canvas format</label><select id="mq-studio-quick-size"><option value="square">Square post · 1080 × 1080</option><option value="portrait">Portrait feed · 1080 × 1350</option><option value="story">Story / Reel · 1080 × 1920</option><option value="poster">Poster · 1080 × 1620</option><option value="landscape">Yard sign · 1620 × 1080</option></select><span id="mq-studio-format-dimensions">1080 × 1080 px</span><button type="button" id="mq-studio-quick-download" class="mq-btn mq-btn-primary" style="padding:12px 20px!important;min-height:44px!important;background:#211d23!important;color:#fff!important;border-radius:10px!important;font-weight:700!important;white-space:nowrap">↓ Download PNG</button></div><div class="mq-studio-quick-colors" aria-label="Design colours"><span>DESIGN COLOURS</span><label>Background <input type="color" id="mq-studio-quick-brand" value="#56314b" title="Main design colour"></label><label>Photo frame <input type="color" id="mq-studio-quick-surface" value="#e9d9c8" title="Secondary panels and photo framing"></label><label>Accent <input type="color" id="mq-studio-quick-accent" value="#d9be97" title="Accent detail"></label><button type="button" id="mq-studio-reset-colors" class="mq-studio-muted-btn" title="Restore the shop's starting colours">Reset colours</button></div><div class="mq-studio-preview-toolbar"><button type="button" id="mq-studio-photo-quick" class="mq-studio-muted-btn">📷 Add / replace project photo</button><button type="button" id="mq-studio-photo-remove-quick" class="mq-studio-muted-btn" title="Remove the template project photo">✕ Remove project photo</button><button type="button" id="mq-studio-direct-image-btn" class="mq-studio-muted-btn">＋ Add movable image</button><button type="button" id="mq-studio-delete-selected" class="mq-studio-muted-btn" title="Delete selected text, button, shape, or image">✕ Delete selected</button><input id="mq-studio-direct-image-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none"><input id="mq-studio-auto-photo-target" type="file" accept="image/png,image/jpeg,image/webp,image/gif" style="display:none"></div><div class="mq-studio-preview-tip">Tip: click and drag the project photo frame, text, buttons, or any other layer. Use corner handles to resize.</div><div id="mq-studio-hoverbar" class="mq-studio-hoverbar"><button type="button" data-action="edit">✎ Edit</button><button type="button" data-action="duplicate">⧉ Duplicate</button><button type="button" data-action="replace">▧ Replace</button><button type="button" data-action="delete">✕ Delete</button></div><canvas id="mq-studio-canvas" width="1080" height="1080" aria-label="Live marketing graphic preview"></canvas><div class="mq-history-toolbar" role="group" aria-label="Design history and saved draft"><button type="button" id="mq-studio-undo" disabled title="Undo (Ctrl+Z)">↶ Undo</button><button type="button" id="mq-studio-redo" disabled title="Redo (Ctrl+Y / Ctrl+Shift+Z)">↷ Redo</button><button type="button" id="mq-studio-quick-save" title="Save this design in this browser">Save draft</button><button type="button" id="mq-studio-quick-load" title="Load the saved design for this template">Load draft</button><span class="mq-history-status" id="mq-studio-history-status" aria-live="polite">Ready</span></div><p>Live preview · The downloaded image exports at full resolution</p></div>
                 </div>
               </div>
-              <details class="mq-studio-legacy"><summary>More marketing tools & advanced designers <span>⌄</span></summary><p>All your original marketing tools are still available below, including advanced poster controls, standalone QR codes, social captions, and printable materials.</p></details>
+              <details class="mq-studio-legacy"><summary>Original marketing tools & specialty designers <span>⌄</span></summary><p>All your original marketing tools are still available below, including advanced poster controls, standalone QR codes, social captions, and printable materials.</p></details>
             </section>
             <div class="mq-card mq-sr-card">
               <div onclick="mqToggleMkSection('social')" class="mq-sr-head">
@@ -3257,6 +3282,26 @@ window.logoutMember = async function () {
                   <div class="mq-pd-template-thumb" data-template="bold-modern" onclick="mqPdSelectTemplate('bold-modern',this)" style="cursor:pointer;border:2px solid #e5e7eb;border-radius:8px;padding:6px;text-align:center;width:84px">
                     <div style="width:100%;height:50px;border-radius:5px;background:linear-gradient(90deg,#1a3a6b 45%,#666 47%)"></div>
                     <div style="font-size:10.5px;margin-top:4px;font-weight:600">Bold Modern</div>
+                  </div>
+                  <div class="mq-pd-template-thumb" data-template="premium-frame" onclick="mqPdSelectTemplate('premium-frame',this)" style="cursor:pointer;border:2px solid #e5e7eb;border-radius:8px;padding:6px;text-align:center;width:84px">
+                    <div style="width:100%;height:50px;border-radius:5px;background:#171717;position:relative;border:1px solid #c9a24b">
+                      <div style="position:absolute;right:6px;top:6px;bottom:6px;width:36px;border-radius:3px;background:#d7d7d7"></div>
+                      <div style="position:absolute;left:8px;top:8px;width:20px;height:3px;background:#c9a24b"></div>
+                      <div style="position:absolute;left:8px;top:16px;width:28px;height:10px;background:#f5f5f5;opacity:.9"></div>
+                    </div>
+                    <div style="font-size:10.5px;margin-top:4px;font-weight:600">Premium Frame</div>
+                  </div>
+                  <div class="mq-pd-template-thumb" data-template="estate-clean" onclick="mqPdSelectTemplate('estate-clean',this)" style="cursor:pointer;border:2px solid #e5e7eb;border-radius:8px;padding:6px;text-align:center;width:84px">
+                    <div style="width:100%;height:50px;border-radius:5px;background:linear-gradient(#bfc9d4 0 64%,#fff 64% 100%);position:relative">
+                      <div style="position:absolute;left:0;right:0;top:31px;height:3px;background:#c9a24b"></div>
+                    </div>
+                    <div style="font-size:10.5px;margin-top:4px;font-weight:600">Estate Clean</div>
+                  </div>
+                  <div class="mq-pd-template-thumb" data-template="cta-strip" onclick="mqPdSelectTemplate('cta-strip',this)" style="cursor:pointer;border:2px solid #e5e7eb;border-radius:8px;padding:6px;text-align:center;width:84px">
+                    <div style="width:100%;height:50px;border-radius:5px;background:linear-gradient(#b8b8b8 0 56%,#0f1f34 56% 100%);position:relative">
+                      <div style="position:absolute;left:7px;right:7px;bottom:8px;height:8px;border-radius:999px;background:#c9a24b"></div>
+                    </div>
+                    <div style="font-size:10.5px;margin-top:4px;font-weight:600">CTA Strip</div>
                   </div>
                 </div>
               </div>
@@ -14443,7 +14488,14 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
       if(mqStudioSelected && mqStudioSelected.category==='qr'){additions.push(defaultQrLayer());}
       mqStudioDetached=true;mqStudioCustomLayers.push(...additions);mqStudioSelectedLayerId=null;renderLayerList();syncLayerControls();update();if(!silent)mqShowToast('Everything is freely movable');
     }
-    function select(t){mqStudioSelected=t;field('edit-title').textContent=t.title;if(field('template-select'))field('template-select').value=t.id;field('shop-name').value=shopName;field('headline').value=t.headline;field('subline').value=t.sub;field('cta').value=t.cta;field('color').value=safeColor(color);field('quick-brand').value=safeColor(color);field('quick-surface').value='#e9d9c8';field('quick-accent').value='#d9be97';field('size').value=t.id==='yard'?'landscape':t.category==='print'?'poster':'square';setDefaults();field('composition').value=t.id==='premium'?'cinema':t.id==='yard'?'split':t.id==='before'?'original':t.id==='poster'?'window':'original';field('finish').value=t.mode==='luxury'?'bold':t.mode==='frame'?'editorial':t.category==='print'?'architect':'cinematic';field('accent').value=t.mode==='frame'?'frame':t.mode==='luxury'?'corner':t.id==='yard'?'stripe':'none';if(t.mode==='minimal'){field('headline-color').value='#382b36';field('sub-color').value='#685861'}workspace.style.display='flex';workspace.classList.add('mq-studio-fullscreen','mq-studio-canvas-first');lockStudioScroll();workspace.classList.remove('mq-studio-property-mode','mq-studio-show-layers');if(field('layers-toggle'))field('layers-toggle').textContent='☷ All layers';previewShift=0;preview.style.transform='';update(true);detachBuiltIns(true);const photoArea=defaultProjectPhotoLayer(t,field('composition').value);if(photoArea){mqStudioCustomLayers.unshift(photoArea);renderLayerList();update();}resetStudioHistory();requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    function select(t){
+      if(window.matchMedia('(max-width:680px)').matches&&!workspace.classList.contains('mq-studio-phone-allowed')){
+        const note=document.querySelector('#mq-page-marketing .mq-studio-mobile-notice');
+        note?.scrollIntoView({block:'center',behavior:'smooth'});
+        mqShowToast('For precise editing, use a tablet or desktop. Or tap Continue on phone anyway.');
+        return;
+      }
+      mqStudioSelected=t;field('edit-title').textContent=t.title;if(field('template-select'))field('template-select').value=t.id;field('shop-name').value=shopName;field('headline').value=t.headline;field('subline').value=t.sub;field('cta').value=t.cta;field('color').value=safeColor(color);field('quick-brand').value=safeColor(color);field('quick-surface').value='#e9d9c8';field('quick-accent').value='#d9be97';field('size').value=t.id==='yard'?'landscape':t.category==='print'?'poster':'square';setDefaults();field('composition').value=t.id==='premium'?'cinema':t.id==='yard'?'split':t.id==='before'?'original':t.id==='poster'?'window':'original';field('finish').value=t.mode==='luxury'?'bold':t.mode==='frame'?'editorial':t.category==='print'?'architect':'cinematic';field('accent').value=t.mode==='frame'?'frame':t.mode==='luxury'?'corner':t.id==='yard'?'stripe':'none';if(t.mode==='minimal'){field('headline-color').value='#382b36';field('sub-color').value='#685861'}workspace.style.display='flex';workspace.classList.add('mq-studio-fullscreen','mq-studio-canvas-first');lockStudioScroll();workspace.classList.remove('mq-studio-property-mode','mq-studio-show-layers');if(field('layers-toggle'))field('layers-toggle').textContent='☷ All layers';previewShift=0;preview.style.transform='';update(true);detachBuiltIns(true);const photoArea=defaultProjectPhotoLayer(t,field('composition').value);if(photoArea){mqStudioCustomLayers.unshift(photoArea);renderLayerList();update();}resetStudioHistory();requestAnimationFrame(()=>requestAnimationFrame(()=>{
       // Browser chooses the actual scrollable ancestor (in Webflow .mq-content has overflow:visible).
       // scrollIntoView works on the document and nested scrollers, unlike manually altering .mq-content.
       if(workspace.classList.contains('mq-studio-fullscreen'))return;
@@ -14460,6 +14512,32 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
     }));}
     if(!root.dataset.studioInitialized){
       root.dataset.studioInitialized='true';
+      // Cohesive tool landing. The original sign editor stays intact (no data migration).
+      const jumpToOriginalSign=()=>{
+        // Exit any fullscreen editor first so the old sign controls are visible.
+        if(workspace.classList.contains('mq-studio-fullscreen')){
+          workspace.classList.remove('mq-studio-fullscreen','mq-studio-property-mode','mq-studio-canvas-first');
+          workspace.style.display='none';unlockStudioScroll();
+        }
+        const body=document.getElementById('mq-mk-body-poster');
+        if(body&&body.style.display==='none'&&typeof window.mqToggleMkSection==='function')window.mqToggleMkSection('poster');
+        if(typeof window.mqPdSetOrientation==='function')window.mqPdSetOrientation('landscape');
+        document.getElementById('mq-pd-outer-card')?.scrollIntoView({block:'start',behavior:'smooth'});
+      };
+      document.getElementById('mq-creative-open-yard')?.addEventListener('click',jumpToOriginalSign);
+      document.getElementById('mq-creative-open-design')?.addEventListener('click',()=>{
+        root.querySelector('[data-studio-filter="all"]')?.click();
+        root.querySelector('.mq-studio-nav')?.scrollIntoView({block:'start',behavior:'smooth'});
+      });
+      document.getElementById('mq-creative-open-qr')?.addEventListener('click',()=>{
+        root.querySelector('[data-studio-filter="qr"]')?.click();
+        root.querySelector('.mq-studio-nav')?.scrollIntoView({block:'start',behavior:'smooth'});
+      });
+      document.getElementById('mq-studio-mobile-continue')?.addEventListener('click',()=>{
+        workspace.classList.add('mq-studio-phone-allowed');
+        const button=document.getElementById('mq-studio-mobile-continue');
+        if(button)button.textContent='Phone editing enabled';
+      });
       const templateSwitcher=field('template-select');
       if(templateSwitcher){
         MQ_STUDIO_TEMPLATES.forEach(t=>{const option=document.createElement('option');option.value=t.id;option.textContent=t.title;templateSwitcher.appendChild(option)});
@@ -16460,11 +16538,182 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
           }
         }
 
+
+        function drawPremiumFrame() {
+          const W = pdCanvas.width, H = pdCanvas.height;
+          pdCtx.clearRect(0, 0, W, H);
+          const isPortrait = pdOrientation === 'portrait';
+          const textMode = el('mq-pd-text-mode')?.value || 'text';
+          const tagline = el('mq-pd-tagline')?.value || '';
+          const accentColor = el('mq-pd-accent-color')?.value || '#c9a24b';
+          const bgColor = el('mq-pd-bg-color')?.value || '#111111';
+          const bgColor2 = el('mq-pd-bg-color2')?.value || '#2b2b2b';
+          const bgGradient = el('mq-pd-bg-gradient')?.checked || false;
+          const tc = pdGetTextControls();
+          pdFillBackground(W, H, bgColor, bgColor2, bgGradient);
+          pdCtx.strokeStyle = accentColor;
+          pdCtx.lineWidth = Math.max(4, Math.round(Math.min(W,H)*0.004));
+          pdCtx.strokeRect(24,24,W-48,H-48);
+          pdCtx.strokeStyle = 'rgba(255,255,255,0.18)';
+          pdCtx.lineWidth = 2;
+          pdCtx.strokeRect(40,40,W-80,H-80);
+
+          let photoX, photoY, photoW, photoH, textX, textY, textW;
+          if (isPortrait) {
+            photoX = 72; photoY = 180; photoW = W - 144; photoH = H * 0.42;
+            textX = 86; textY = photoY + photoH + 48; textW = W - 172;
+          } else {
+            textX = 74; textY = 84; textW = W * 0.34;
+            photoW = W * 0.48; photoH = H - 144; photoX = W - photoW - 72; photoY = 72;
+          }
+          pdCtx.save();
+          pdCtx.shadowColor = 'rgba(0,0,0,0.30)'; pdCtx.shadowBlur = 18; pdCtx.shadowOffsetY = 8;
+          pdCtx.fillStyle = '#ffffff';
+          pdCtx.beginPath(); pdCtx.roundRect(photoX-10, photoY-10, photoW+20, photoH+20, 24); pdCtx.fill();
+          pdCtx.restore();
+          pdCtx.save();
+          pdCtx.beginPath(); pdCtx.roundRect(photoX, photoY, photoW, photoH, 20); pdCtx.clip();
+          pdDrawPhotoInRect(pdPhotoImage, photoX, photoY, photoW, photoH);
+          pdCtx.restore();
+          pdCtx.strokeStyle = accentColor; pdCtx.lineWidth = 4;
+          pdCtx.beginPath(); pdCtx.roundRect(photoX, photoY, photoW, photoH, 20); pdCtx.stroke();
+
+          pdCtx.textAlign = isPortrait ? 'center' : 'left';
+          pdSetTextShadow();
+          const preFont = `600 ${Math.round((isPortrait?30:28)*tc.preMult)}px -apple-system, sans-serif`;
+          const nameFont = `900 ${Math.round((isPortrait?72:64)*tc.nameMult)}px -apple-system, sans-serif`;
+          const tagFont = `500 ${Math.round((isPortrait?30:26)*tc.tagMult)}px -apple-system, sans-serif`;
+          const textColor = el('mq-pd-name-color')?.value || '#ffffff';
+          const cx = isPortrait ? W/2 : textX;
+          let cy = textY + 24 + tc.offsetPct * H;
+          pdCtx.font = preFont; pdCtx.fillStyle = tc.preColor || '#e5d6b8';
+          pdCtx.fillText((tc.preText || '').toUpperCase(), cx, cy);
+          cy += (isPortrait?52:46) * tc.lineMult;
+          pdCtx.fillStyle = accentColor; pdCtx.fillRect(isPortrait ? W*0.32 : textX, cy-18, isPortrait ? W*0.36 : 120, 4);
+          cy += (isPortrait?44:36) * tc.lineMult;
+          if (textMode === 'logo' && pdOwnLogoImage) {
+            const maxLogoW = isPortrait ? W*0.45 : textW*0.92;
+            const maxLogoH = isPortrait ? 160 : H*0.16;
+            const ratio = pdOwnLogoImage.width / pdOwnLogoImage.height;
+            let lw = maxLogoW, lh = lw/ratio; if (lh > maxLogoH) { lh = maxLogoH; lw = lh*ratio; }
+            pdCtx.drawImage(pdOwnLogoImage, (isPortrait ? W/2 - lw/2 : textX), cy, lw, lh); cy += lh + 24;
+          } else if (textMode === 'logo') {
+            pdCtx.font = '500 28px -apple-system, sans-serif'; pdCtx.fillStyle = '#d1d5db';
+            pdCtx.fillText('Upload a logo above', cx, cy+20); cy += 56;
+          } else {
+            pdCtx.font = nameFont; pdCtx.fillStyle = textColor;
+            pdWrapText(pdShopName, nameFont, textW).forEach(l => { pdCtx.fillText(l, cx, cy); cy += (isPortrait?74:68) * tc.lineMult; });
+          }
+          if (tagline) {
+            cy += (isPortrait?12:8) * tc.lineMult;
+            pdCtx.font = tagFont; pdCtx.fillStyle = tc.tagColor || '#ececec';
+            pdWrapText(tagline, tagFont, textW).forEach(l => { pdCtx.fillText(l, cx, cy); cy += (isPortrait?46:42) * tc.lineMult; });
+          }
+          pdClearShadow();
+          const qb = pdGetQrButtonSettings();
+          const photoCx = photoX + photoW/2, photoCy = photoY + photoH/2;
+          if (qb.qrEnabled) pdDrawQrCode(photoCx, photoCy + qb.qrOffsetPct * H, (isPortrait?210:190) * qb.qrSizeMult);
+          if (qb.btnEnabled) pdDrawGetQuoteButton(photoCx, photoY + photoH - 72 + qb.btnOffsetPct * H, accentColor);
+        }
+
+        function drawEstateClean() {
+          const W = pdCanvas.width, H = pdCanvas.height;
+          pdCtx.clearRect(0, 0, W, H);
+          const isPortrait = pdOrientation === 'portrait';
+          const textMode = el('mq-pd-text-mode')?.value || 'text';
+          const tagline = el('mq-pd-tagline')?.value || '';
+          const shapeColor = el('mq-pd-shape-color')?.value || '#ffffff';
+          const accentColor = el('mq-pd-accent-color')?.value || '#c9a24b';
+          const tc = pdGetTextControls();
+          const photoH = isPortrait ? H*0.58 : H*0.68;
+          pdDrawPhotoInRect(pdPhotoImage, 0, 0, W, photoH);
+          pdCtx.fillStyle = shapeColor; pdCtx.fillRect(0, photoH, W, H-photoH);
+          pdCtx.fillStyle = accentColor; pdCtx.fillRect(0, photoH-5, W, 10);
+          pdCtx.fillStyle = '#ffffff'; pdCtx.fillRect(0, 0, W, 22);
+
+          let leftX = 70, topY = photoH + 74 + tc.offsetPct * H;
+          const rightBoxW = isPortrait ? W*0.28 : W*0.24;
+          const rightX = W - rightBoxW - 60;
+          const textW = rightX - leftX - 34;
+          pdCtx.textAlign = 'left';
+          pdSetTextShadow();
+          const preFont = `600 ${Math.round((isPortrait?28:24)*tc.preMult)}px -apple-system, sans-serif`;
+          const nameFont = `900 ${Math.round((isPortrait?64:54)*tc.nameMult)}px -apple-system, sans-serif`;
+          const tagFont = `500 ${Math.round((isPortrait?28:24)*tc.tagMult)}px -apple-system, sans-serif`;
+          pdCtx.font = preFont; pdCtx.fillStyle = tc.preColor || '#6b6b6b';
+          pdCtx.fillText(tc.preText, leftX, topY); topY += (isPortrait?48:42) * tc.lineMult;
+          if (textMode === 'logo' && pdOwnLogoImage) {
+            const maxLogoW = textW, maxLogoH = isPortrait ? 130 : 110;
+            const ratio = pdOwnLogoImage.width / pdOwnLogoImage.height; let lw=maxLogoW, lh=lw/ratio; if(lh>maxLogoH){lh=maxLogoH; lw=lh*ratio;}
+            pdCtx.drawImage(pdOwnLogoImage, leftX, topY, lw, lh); topY += lh + 18;
+          } else if (textMode === 'logo') {
+            pdCtx.font='500 26px -apple-system, sans-serif'; pdCtx.fillStyle='#9ca3af'; pdCtx.fillText('Upload a logo above', leftX, topY+20); topY += 56;
+          } else {
+            pdCtx.font = nameFont; pdCtx.fillStyle = el('mq-pd-name-color')?.value || '#111111';
+            pdWrapText(pdShopName, nameFont, textW).forEach(l => { pdCtx.fillText(l, leftX, topY); topY += (isPortrait?64:56) * tc.lineMult; });
+          }
+          if (tagline) {
+            topY += 6 * tc.lineMult;
+            pdCtx.font = tagFont; pdCtx.fillStyle = tc.tagColor || '#4b4b4b';
+            pdWrapText(tagline, tagFont, textW).forEach(l => { pdCtx.fillText(l, leftX, topY); topY += (isPortrait?42:38) * tc.lineMult; });
+          }
+          pdClearShadow();
+          const qb = pdGetQrButtonSettings();
+          const qrCx = rightX + rightBoxW/2;
+          const qrCy = photoH + (H-photoH)*0.40 + qb.qrOffsetPct * H;
+          if (qb.qrEnabled) pdDrawQrCode(qrCx, qrCy, (isPortrait?170:160) * qb.qrSizeMult);
+          if (qb.btnEnabled) pdDrawGetQuoteButton(qrCx, H - 78 + qb.btnOffsetPct * H, accentColor);
+        }
+
+        function drawCtaStrip() {
+          const W = pdCanvas.width, H = pdCanvas.height;
+          pdCtx.clearRect(0, 0, W, H);
+          const textMode = el('mq-pd-text-mode')?.value || 'text';
+          const tagline = el('mq-pd-tagline')?.value || '';
+          const shapeColor = el('mq-pd-shape-color')?.value || '#0f1f34';
+          const shapeColor2 = el('mq-pd-shape-color2')?.value || '#213a5b';
+          const useGradient = el('mq-pd-shape-gradient')?.checked || false;
+          const accentColor = el('mq-pd-accent-color')?.value || '#c9a24b';
+          const tc = pdGetTextControls();
+          pdDrawPhotoInRect(pdPhotoImage,0,0,W,H);
+          pdCtx.fillStyle = 'rgba(0,0,0,0.18)'; pdCtx.fillRect(0,0,W,H);
+          const stripH = H*0.30;
+          if (useGradient) { const g=pdCtx.createLinearGradient(0,H-stripH,W,H-stripH); g.addColorStop(0,shapeColor); g.addColorStop(1,shapeColor2); pdCtx.fillStyle=g; }
+          else pdCtx.fillStyle = shapeColor;
+          pdCtx.fillRect(0,H-stripH,W,stripH);
+          pdCtx.fillStyle = accentColor; pdCtx.fillRect(0,H-stripH-8,W,8);
+          pdCtx.fillStyle = 'rgba(255,255,255,0.92)'; pdCtx.fillRect(0,0,W,26);
+
+          pdCtx.textAlign = 'left'; pdSetTextShadow();
+          const leftX = 62, baseY = H-stripH+70 + tc.offsetPct * H;
+          const textW = W*0.56;
+          let cy=baseY;
+          pdCtx.font = `700 ${Math.round(28*tc.preMult)}px -apple-system, sans-serif`; pdCtx.fillStyle = tc.preColor || '#d9d9d9';
+          pdCtx.fillText((tc.preText || '').toUpperCase(), leftX, cy); cy += 44*tc.lineMult;
+          if (textMode === 'logo' && pdOwnLogoImage) {
+            const maxLogoW=textW, maxLogoH=120; const ratio=pdOwnLogoImage.width/pdOwnLogoImage.height; let lw=maxLogoW*.72, lh=lw/ratio; if(lh>maxLogoH){lh=maxLogoH; lw=lh*ratio;} pdCtx.drawImage(pdOwnLogoImage,leftX,cy,lw,lh); cy += lh + 18;
+          } else if (textMode === 'logo') {
+            pdCtx.font='500 26px -apple-system, sans-serif'; pdCtx.fillStyle='#d1d5db'; pdCtx.fillText('Upload a logo above', leftX, cy+20); cy += 54;
+          } else {
+            const nameFont = `900 ${Math.round(58*tc.nameMult)}px -apple-system, sans-serif`; pdCtx.font=nameFont; pdCtx.fillStyle=el('mq-pd-name-color')?.value || '#ffffff';
+            pdWrapText(pdShopName,nameFont,textW).forEach(l=>{pdCtx.fillText(l,leftX,cy); cy += 58*tc.lineMult;});
+          }
+          if(tagline){ cy += 4*tc.lineMult; pdCtx.font=`500 ${Math.round(24*tc.tagMult)}px -apple-system, sans-serif`; pdCtx.fillStyle=tc.tagColor || '#e5e7eb'; pdWrapText(tagline,pdCtx.font,textW).forEach(l=>{pdCtx.fillText(l,leftX,cy); cy += 34*tc.lineMult;}); }
+          pdClearShadow();
+          const qb = pdGetQrButtonSettings();
+          const rightCx = W*0.82;
+          if (qb.qrEnabled) pdDrawQrCode(rightCx, H-stripH/2 - 10 + qb.qrOffsetPct * H, 176 * qb.qrSizeMult);
+          if (qb.btnEnabled) pdDrawGetQuoteButton(W*0.50, H - 58 + qb.btnOffsetPct * H, accentColor);
+        }
+
         function drawPosterDesigner() {
           if (pdTemplate === 'diamond-arrow') drawDiamondArrow();
           else if (pdTemplate === 'ornate-divider') drawOrnateDivider();
           else if (pdTemplate === 'circular-badge') drawCircularBadge();
           else if (pdTemplate === 'bold-modern') drawBoldModern();
+          else if (pdTemplate === 'premium-frame') drawPremiumFrame();
+          else if (pdTemplate === 'estate-clean') drawEstateClean();
+          else if (pdTemplate === 'cta-strip') drawCtaStrip();
           else drawCurvedSplit();
         }
         window._mqRedrawPosterDesigner = () => { signLink = getSignLink(); drawPosterDesigner(); };
@@ -16482,14 +16731,16 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
           const shapeInput2 = el('mq-pd-shape-color2');
           const accentInput = el('mq-pd-accent-color');
           if (bgInput) {
-            if (tpl === 'diamond-arrow' || tpl === 'circular-badge') bgInput.value = '#111111';
+            if (tpl === 'diamond-arrow' || tpl === 'circular-badge' || tpl === 'premium-frame') bgInput.value = '#111111';
+            else if (tpl === 'cta-strip') bgInput.value = '#0f1f34';
             else bgInput.value = '#ffffff';
           }
           // A second colour for whichever gradient checkbox someone turns
           // on — chosen to actually look like a deliberate two-tone blend
           // for this specific style, not just a random pairing.
           if (bgInput2) {
-            if (tpl === 'diamond-arrow' || tpl === 'circular-badge') bgInput2.value = '#2b2b2b';
+            if (tpl === 'diamond-arrow' || tpl === 'circular-badge' || tpl === 'premium-frame') bgInput2.value = '#2b2b2b';
+            else if (tpl === 'cta-strip') bgInput2.value = '#213a5b';
             else bgInput2.value = '#f0f0f0';
           }
           if (shapeInput && accentInput) {
@@ -16497,12 +16748,18 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
             else if (tpl === 'ornate-divider') { shapeInput.value = '#6b4226'; accentInput.value = '#8a5a3a'; }
             else if (tpl === 'circular-badge') { shapeInput.value = '#c9a24b'; accentInput.value = '#c9a24b'; }
             else if (tpl === 'bold-modern') { shapeInput.value = '#1a3a6b'; accentInput.value = '#c9a24b'; }
+            else if (tpl === 'premium-frame') { shapeInput.value = '#171717'; accentInput.value = '#c9a24b'; }
+            else if (tpl === 'estate-clean') { shapeInput.value = '#ffffff'; accentInput.value = '#c9a24b'; }
+            else if (tpl === 'cta-strip') { shapeInput.value = '#0f1f34'; accentInput.value = '#c9a24b'; }
             else { shapeInput.value = '#1a3a6b'; accentInput.value = '#c9a24b'; }
           }
           if (shapeInput2) {
             if (tpl === 'diamond-arrow') shapeInput2.value = '#8a6d2b';
             else if (tpl === 'ornate-divider') shapeInput2.value = '#3d2814';
             else if (tpl === 'circular-badge') shapeInput2.value = '#8a6d2b';
+            else if (tpl === 'premium-frame') shapeInput2.value = '#2b2b2b';
+            else if (tpl === 'estate-clean') shapeInput2.value = '#f4f4f4';
+            else if (tpl === 'cta-strip') shapeInput2.value = '#213a5b';
             else if (tpl === 'bold-modern') shapeInput2.value = '#378ADD';
             else shapeInput2.value = '#378ADD';
           }
@@ -16514,6 +16771,7 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
             if (tpl === 'diamond-arrow') { preColorInput.value = '#e5e7eb'; tagColorInput.value = '#e5e7eb'; }
             else if (tpl === 'circular-badge') { preColorInput.value = '#f0f0f0'; tagColorInput.value = '#e0e0e0'; }
             else if (tpl === 'bold-modern') { preColorInput.value = '#d0d0d0'; tagColorInput.value = '#d0d0d0'; }
+            else if (tpl === 'premium-frame' || tpl === 'cta-strip') { preColorInput.value = '#e7d6b3'; tagColorInput.value = '#ececec'; }
             else { preColorInput.value = '#6b6b6b'; tagColorInput.value = '#4b4b4b'; }
           }
           // Shop name colour is independent of shape colour (its own picker
@@ -16525,7 +16783,7 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
           // general black default.
           const nameColorInput = el('mq-pd-name-color');
           if (nameColorInput) {
-            if (tpl === 'diamond-arrow' || tpl === 'circular-badge' || tpl === 'bold-modern') nameColorInput.value = '#ffffff';
+            if (tpl === 'diamond-arrow' || tpl === 'circular-badge' || tpl === 'bold-modern' || tpl === 'premium-frame' || tpl === 'cta-strip') nameColorInput.value = '#ffffff';
             else nameColorInput.value = '#1a1a1a';
           }
           drawPosterDesigner();
