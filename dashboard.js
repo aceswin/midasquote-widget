@@ -2941,6 +2941,19 @@ window.logoutMember = async function () {
  #mq-page-marketing #mq-studio-workspace.mq-studio-fullscreen .mq-studio-preview-wrap{height:auto!important;overflow:visible!important}
  #mq-page-marketing #mq-studio-workspace.mq-studio-fullscreen .mq-studio-preview-wrap canvas{max-height:45dvh!important}
 }
+
+/* Design Studio creative hub: original tools remain fully functional. */
+#mq-page-marketing .mq-creative-hub{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:0 0 20px}
+#mq-page-marketing .mq-creative-choice{display:flex;align-items:center;gap:12px;text-align:left;border:1px solid #e4d9e2;background:#fff;border-radius:14px;padding:17px 14px;cursor:pointer;color:#2c2432;min-width:0;box-shadow:0 5px 16px #3021350a}
+#mq-page-marketing .mq-creative-choice:hover,#mq-page-marketing .mq-creative-choice:focus-visible{border-color:#aa7a95;background:#faf6f9;outline:2px solid transparent;box-shadow:0 0 0 2px #ddc5d3}
+#mq-page-marketing .mq-creative-choice>span:nth-child(2){flex:1;min-width:0}
+#mq-page-marketing .mq-creative-choice strong{display:block;font-size:14px;line-height:1.3}
+#mq-page-marketing .mq-creative-choice small{display:block;font-size:11px;color:#776d79;line-height:1.45;margin-top:6px}
+#mq-page-marketing .mq-creative-emoji{font-size:25px;flex:0 0 auto}
+#mq-page-marketing .mq-studio-mobile-notice{display:none;border:1px solid #e0cf9c;border-radius:12px;background:#fff8e9;color:#5d4826;padding:14px 15px;font-size:13px;line-height:1.55;margin:0 0 16px}
+#mq-page-marketing .mq-studio-mobile-notice button{display:inline-block;border:1px solid #aa873a;border-radius:8px;padding:8px 11px;background:#fff;color:#5a4110;font-weight:700;margin:10px 0 0;cursor:pointer}
+@media(max-width:980px){#mq-page-marketing .mq-creative-hub{grid-template-columns:1fr 1fr}}
+@media(max-width:680px){#mq-page-marketing .mq-creative-hub{grid-template-columns:1fr}#mq-page-marketing .mq-studio-mobile-notice{display:block}#mq-page-marketing #mq-studio-workspace:not(.mq-studio-phone-allowed){display:none!important}#mq-page-marketing #mq-studio-workspace.mq-studio-phone-allowed{display:flex!important}}
 </style>
           <!-- MARKETING KIT -->
           <div class="mq-page mq-sr-tab" id="mq-page-marketing">
@@ -2961,6 +2974,18 @@ window.logoutMember = async function () {
             <!-- MARKETING STUDIO v2.2: Visual template gallery and enhanced design editor. Legacy tools preserved below. -->
             <section id="mq-studio" class="mq-studio">
               <div class="mq-studio-hero"><div><span class="mq-studio-kicker">✦ YOUR CREATIVE WORKSPACE</span><h2>Design work worth showing off.</h2><p>Art-directed ads for cabinet shops. Choose a composition, fine-tune your branding, and export beautifully.</p></div><span class="mq-studio-hero-star">✳</span></div>
+              <div class="mq-creative-hub" aria-label="Choose your creative tool">
+                <button type="button" class="mq-creative-choice" id="mq-creative-open-design">
+                  <span class="mq-creative-emoji" aria-hidden="true">🎨</span><span><strong>Design Studio</strong><small>Social posts, promotions, posters, QR designs and editable yard-sign templates</small></span><span aria-hidden="true">→</span>
+                </button>
+                <button type="button" class="mq-creative-choice" id="mq-creative-open-yard">
+                  <span class="mq-creative-emoji" aria-hidden="true">🪧</span><span><strong>Yard Sign & Poster Designer</strong><small>Open the original specialized sign designer, including its styles and print controls</small></span><span aria-hidden="true">→</span>
+                </button>
+                <button type="button" class="mq-creative-choice" id="mq-creative-open-qr">
+                  <span class="mq-creative-emoji" aria-hidden="true">▦</span><span><strong>QR Promotions</strong><small>Browse ready-made QR templates inside Design Studio</small></span><span aria-hidden="true">→</span>
+                </button>
+              </div>
+              <div class="mq-studio-mobile-notice" role="note">📱 <strong>Design Studio works best on a tablet or desktop.</strong> You can explore templates on your phone, but precise editing (dragging, resizing and rotating) is easier on a larger screen. <button type="button" id="mq-studio-mobile-continue">Continue on phone anyway</button></div>
               <div class="mq-studio-nav" role="group" aria-label="Filter templates"><button type="button" class="active" data-studio-filter="all">All designs</button><button type="button" data-studio-filter="social">Social posts</button><button type="button" data-studio-filter="print">Posters & signs</button><button type="button" data-studio-filter="qr">QR promotions</button></div>
               <div class="mq-studio-grid" id="mq-studio-grid"></div>
               <div id="mq-studio-workspace" class="mq-studio-workspace" style="display:none">
@@ -3181,7 +3206,7 @@ window.logoutMember = async function () {
                   <div class="mq-studio-preview-wrap"><div class="mq-studio-format-bar" role="group" aria-label="Design canvas size"><label for="mq-studio-quick-size">Canvas format</label><select id="mq-studio-quick-size"><option value="square">Square post · 1080 × 1080</option><option value="portrait">Portrait feed · 1080 × 1350</option><option value="story">Story / Reel · 1080 × 1920</option><option value="poster">Poster · 1080 × 1620</option><option value="landscape">Yard sign · 1620 × 1080</option></select><span id="mq-studio-format-dimensions">1080 × 1080 px</span><button type="button" id="mq-studio-quick-download" class="mq-btn mq-btn-primary" style="padding:12px 20px!important;min-height:44px!important;background:#211d23!important;color:#fff!important;border-radius:10px!important;font-weight:700!important;white-space:nowrap">↓ Download PNG</button></div><div class="mq-studio-quick-colors" aria-label="Design colours"><span>DESIGN COLOURS</span><label>Background <input type="color" id="mq-studio-quick-brand" value="#56314b" title="Main design colour"></label><label>Photo frame <input type="color" id="mq-studio-quick-surface" value="#e9d9c8" title="Secondary panels and photo framing"></label><label>Accent <input type="color" id="mq-studio-quick-accent" value="#d9be97" title="Accent detail"></label><button type="button" id="mq-studio-reset-colors" class="mq-studio-muted-btn" title="Restore the shop's starting colours">Reset colours</button></div><div class="mq-studio-preview-toolbar"><button type="button" id="mq-studio-photo-quick" class="mq-studio-muted-btn">📷 Add / replace project photo</button><button type="button" id="mq-studio-photo-remove-quick" class="mq-studio-muted-btn" title="Remove the template project photo">✕ Remove project photo</button><button type="button" id="mq-studio-direct-image-btn" class="mq-studio-muted-btn">＋ Add movable image</button><button type="button" id="mq-studio-delete-selected" class="mq-studio-muted-btn" title="Delete selected text, button, shape, or image">✕ Delete selected</button><input id="mq-studio-direct-image-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none"><input id="mq-studio-auto-photo-target" type="file" accept="image/png,image/jpeg,image/webp,image/gif" style="display:none"></div><div class="mq-studio-preview-tip">Tip: click and drag the project photo frame, text, buttons, or any other layer. Use corner handles to resize.</div><div id="mq-studio-hoverbar" class="mq-studio-hoverbar"><button type="button" data-action="edit">✎ Edit</button><button type="button" data-action="duplicate">⧉ Duplicate</button><button type="button" data-action="replace">▧ Replace</button><button type="button" data-action="delete">✕ Delete</button></div><canvas id="mq-studio-canvas" width="1080" height="1080" aria-label="Live marketing graphic preview"></canvas><div class="mq-history-toolbar" role="group" aria-label="Design history and saved draft"><button type="button" id="mq-studio-undo" disabled title="Undo (Ctrl+Z)">↶ Undo</button><button type="button" id="mq-studio-redo" disabled title="Redo (Ctrl+Y / Ctrl+Shift+Z)">↷ Redo</button><button type="button" id="mq-studio-quick-save" title="Save this design in this browser">Save draft</button><button type="button" id="mq-studio-quick-load" title="Load the saved design for this template">Load draft</button><span class="mq-history-status" id="mq-studio-history-status" aria-live="polite">Ready</span></div><p>Live preview · The downloaded image exports at full resolution</p></div>
                 </div>
               </div>
-              <details class="mq-studio-legacy"><summary>More marketing tools & advanced designers <span>⌄</span></summary><p>All your original marketing tools are still available below, including advanced poster controls, standalone QR codes, social captions, and printable materials.</p></details>
+              <details class="mq-studio-legacy"><summary>Original marketing tools & specialty designers <span>⌄</span></summary><p>All your original marketing tools are still available below, including advanced poster controls, standalone QR codes, social captions, and printable materials.</p></details>
             </section>
             <div class="mq-card mq-sr-card">
               <div onclick="mqToggleMkSection('social')" class="mq-sr-head">
@@ -14443,7 +14468,14 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
       if(mqStudioSelected && mqStudioSelected.category==='qr'){additions.push(defaultQrLayer());}
       mqStudioDetached=true;mqStudioCustomLayers.push(...additions);mqStudioSelectedLayerId=null;renderLayerList();syncLayerControls();update();if(!silent)mqShowToast('Everything is freely movable');
     }
-    function select(t){mqStudioSelected=t;field('edit-title').textContent=t.title;if(field('template-select'))field('template-select').value=t.id;field('shop-name').value=shopName;field('headline').value=t.headline;field('subline').value=t.sub;field('cta').value=t.cta;field('color').value=safeColor(color);field('quick-brand').value=safeColor(color);field('quick-surface').value='#e9d9c8';field('quick-accent').value='#d9be97';field('size').value=t.id==='yard'?'landscape':t.category==='print'?'poster':'square';setDefaults();field('composition').value=t.id==='premium'?'cinema':t.id==='yard'?'split':t.id==='before'?'original':t.id==='poster'?'window':'original';field('finish').value=t.mode==='luxury'?'bold':t.mode==='frame'?'editorial':t.category==='print'?'architect':'cinematic';field('accent').value=t.mode==='frame'?'frame':t.mode==='luxury'?'corner':t.id==='yard'?'stripe':'none';if(t.mode==='minimal'){field('headline-color').value='#382b36';field('sub-color').value='#685861'}workspace.style.display='flex';workspace.classList.add('mq-studio-fullscreen','mq-studio-canvas-first');lockStudioScroll();workspace.classList.remove('mq-studio-property-mode','mq-studio-show-layers');if(field('layers-toggle'))field('layers-toggle').textContent='☷ All layers';previewShift=0;preview.style.transform='';update(true);detachBuiltIns(true);const photoArea=defaultProjectPhotoLayer(t,field('composition').value);if(photoArea){mqStudioCustomLayers.unshift(photoArea);renderLayerList();update();}resetStudioHistory();requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    function select(t){
+      if(window.matchMedia('(max-width:680px)').matches&&!workspace.classList.contains('mq-studio-phone-allowed')){
+        const note=document.querySelector('#mq-page-marketing .mq-studio-mobile-notice');
+        note?.scrollIntoView({block:'center',behavior:'smooth'});
+        mqShowToast('For precise editing, use a tablet or desktop. Or tap Continue on phone anyway.');
+        return;
+      }
+      mqStudioSelected=t;field('edit-title').textContent=t.title;if(field('template-select'))field('template-select').value=t.id;field('shop-name').value=shopName;field('headline').value=t.headline;field('subline').value=t.sub;field('cta').value=t.cta;field('color').value=safeColor(color);field('quick-brand').value=safeColor(color);field('quick-surface').value='#e9d9c8';field('quick-accent').value='#d9be97';field('size').value=t.id==='yard'?'landscape':t.category==='print'?'poster':'square';setDefaults();field('composition').value=t.id==='premium'?'cinema':t.id==='yard'?'split':t.id==='before'?'original':t.id==='poster'?'window':'original';field('finish').value=t.mode==='luxury'?'bold':t.mode==='frame'?'editorial':t.category==='print'?'architect':'cinematic';field('accent').value=t.mode==='frame'?'frame':t.mode==='luxury'?'corner':t.id==='yard'?'stripe':'none';if(t.mode==='minimal'){field('headline-color').value='#382b36';field('sub-color').value='#685861'}workspace.style.display='flex';workspace.classList.add('mq-studio-fullscreen','mq-studio-canvas-first');lockStudioScroll();workspace.classList.remove('mq-studio-property-mode','mq-studio-show-layers');if(field('layers-toggle'))field('layers-toggle').textContent='☷ All layers';previewShift=0;preview.style.transform='';update(true);detachBuiltIns(true);const photoArea=defaultProjectPhotoLayer(t,field('composition').value);if(photoArea){mqStudioCustomLayers.unshift(photoArea);renderLayerList();update();}resetStudioHistory();requestAnimationFrame(()=>requestAnimationFrame(()=>{
       // Browser chooses the actual scrollable ancestor (in Webflow .mq-content has overflow:visible).
       // scrollIntoView works on the document and nested scrollers, unlike manually altering .mq-content.
       if(workspace.classList.contains('mq-studio-fullscreen'))return;
@@ -14460,6 +14492,32 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
     }));}
     if(!root.dataset.studioInitialized){
       root.dataset.studioInitialized='true';
+      // Cohesive tool landing. The original sign editor stays intact (no data migration).
+      const jumpToOriginalSign=()=>{
+        // Exit any fullscreen editor first so the old sign controls are visible.
+        if(workspace.classList.contains('mq-studio-fullscreen')){
+          workspace.classList.remove('mq-studio-fullscreen','mq-studio-property-mode','mq-studio-canvas-first');
+          workspace.style.display='none';unlockStudioScroll();
+        }
+        const body=document.getElementById('mq-mk-body-poster');
+        if(body&&body.style.display==='none'&&typeof window.mqToggleMkSection==='function')window.mqToggleMkSection('poster');
+        if(typeof window.mqPdSetOrientation==='function')window.mqPdSetOrientation('landscape');
+        document.getElementById('mq-pd-outer-card')?.scrollIntoView({block:'start',behavior:'smooth'});
+      };
+      document.getElementById('mq-creative-open-yard')?.addEventListener('click',jumpToOriginalSign);
+      document.getElementById('mq-creative-open-design')?.addEventListener('click',()=>{
+        root.querySelector('[data-studio-filter="all"]')?.click();
+        root.querySelector('.mq-studio-nav')?.scrollIntoView({block:'start',behavior:'smooth'});
+      });
+      document.getElementById('mq-creative-open-qr')?.addEventListener('click',()=>{
+        root.querySelector('[data-studio-filter="qr"]')?.click();
+        root.querySelector('.mq-studio-nav')?.scrollIntoView({block:'start',behavior:'smooth'});
+      });
+      document.getElementById('mq-studio-mobile-continue')?.addEventListener('click',()=>{
+        workspace.classList.add('mq-studio-phone-allowed');
+        const button=document.getElementById('mq-studio-mobile-continue');
+        if(button)button.textContent='Phone editing enabled';
+      });
       const templateSwitcher=field('template-select');
       if(templateSwitcher){
         MQ_STUDIO_TEMPLATES.forEach(t=>{const option=document.createElement('option');option.value=t.id;option.textContent=t.title;templateSwitcher.appendChild(option)});
