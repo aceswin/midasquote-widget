@@ -2979,7 +2979,7 @@ window.logoutMember = async function () {
                   <span class="mq-creative-emoji" aria-hidden="true">🎨</span><span><strong>Design Studio</strong><small>Social posts, promotions, posters, QR designs and fully movable yard-sign templates</small></span><span aria-hidden="true">→</span>
                 </button>
                 <button type="button" class="mq-creative-choice" id="mq-creative-open-yard">
-                  <span class="mq-creative-emoji" aria-hidden="true">🪧</span><span><strong>Yard Sign & Poster Designer</strong><small>Open the original specialized sign designer, including its styles and print controls</small></span><span aria-hidden="true">→</span>
+                  <span class="mq-creative-emoji" aria-hidden="true">🪧</span><span><strong>Yard Sign Templates</strong><small>Open editable signs in the fullscreen Design Studio — with layers, drag-and-drop and photo replacement</small></span><span aria-hidden="true">→</span>
                 </button>
                 <button type="button" class="mq-creative-choice" id="mq-creative-open-qr">
                   <span class="mq-creative-emoji" aria-hidden="true">▦</span><span><strong>QR Promotions</strong><small>Browse ready-made QR templates inside Design Studio</small></span><span aria-hidden="true">→</span>
@@ -13699,6 +13699,19 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     {id:'yardfinance',title:'Financing Available',category:'yard',tag:'Financing sign',headline:'FINANCING NOW AVAILABLE',sub:'Beautiful projects with comfortable monthly payments.',cta:'ASK ABOUT FINANCING',mode:'split'},
     {id:'yardbooking',title:'Now Booking',category:'yard',tag:'Booking sign',headline:'NOW BOOKING UPCOMING PROJECTS',sub:'Reserve your spot for custom kitchens, cabinetry and millwork.',cta:'BOOK A CONSULT',mode:'split'},
     {id:'yardshowroom',title:'Online Showroom',category:'yard',tag:'Showroom sign',headline:'VISIT OUR ONLINE SHOWROOM',sub:'Browse styles, colours and ideas without lifting a finger.',cta:'BROWSE OUR SHOWROOM',mode:'split'},
+    {id:'ys-curved',title:'Curved Split',category:'yard',tag:'Classic sign · fully editable',headline:'ANOTHER PROJECT BY',sub:'Custom kitchens & millwork',cta:'SEE OUR WORK',mode:'split'},
+    {id:'ys-diamond',title:'Diamond Arrow',category:'yard',tag:'Luxury sign · fully editable',headline:'QUALITY YOU CAN SEE',sub:'Custom cabinetry built to last',cta:'GET AN ESTIMATE',mode:'split'},
+    {id:'ys-ornate',title:'Ornate Divider',category:'yard',tag:'Classic sign · fully editable',headline:'CRAFTED FOR YOUR HOME',sub:'Beautiful custom cabinetry',cta:'VIEW OUR WORK',mode:'split'},
+    {id:'ys-badge',title:'Circular Badge',category:'yard',tag:'Signature sign · fully editable',headline:'ANOTHER PROJECT BY',sub:'Proudly built by our team',cta:'SEE OUR WORK',mode:'split'},
+    {id:'ys-modern',title:'Bold Modern',category:'yard',tag:'High-contrast sign · fully editable',headline:'WE BUILD BEAUTIFUL SPACES',sub:'Cabinetry, kitchens & millwork',cta:'GET A FREE ESTIMATE',mode:'split'},
+    {id:'ys-premium',title:'Premium Frame',category:'yard',tag:'Premium sign · fully editable',headline:'DESIGNED TO IMPRESS',sub:'Beautiful cabinetry made for you',cta:'EXPLORE OUR WORK',mode:'split'},
+    {id:'ys-estate',title:'Estate Clean',category:'yard',tag:'Clean sign · fully editable',headline:'ANOTHER PROJECT COMPLETED',sub:'Custom kitchens & cabinetry',cta:'DISCOVER MORE',mode:'split'},
+    {id:'ys-cta',title:'CTA Strip',category:'yard',tag:'Bold promo · fully editable',headline:'YOUR DREAM KITCHEN STARTS HERE',sub:'Custom cabinets and millwork',cta:'SCAN FOR A QUOTE',mode:'split'},
+    {id:'ys-ribbon',title:'Luxury Ribbon',category:'yard',tag:'Elegant sign · fully editable',headline:'PROUDLY CRAFTED',sub:'Custom kitchens & millwork',cta:'DISCOVER OUR WORK',mode:'split'},
+    {id:'ys-corner',title:'Corner Card',category:'yard',tag:'Photo-forward sign · fully editable',headline:'BUILT WITH PRIDE',sub:'Thoughtful design. Fine craftsmanship.',cta:'GET AN ESTIMATE',mode:'split'},
+    {id:'ys-showcase',title:'Split Showcase',category:'yard',tag:'Two-column sign · fully editable',headline:'ANOTHER BEAUTIFUL PROJECT',sub:'Crafted to fit your home',cta:'VIEW OUR WORK',mode:'split'},
+    {id:'ys-band',title:'Headline Band',category:'yard',tag:'Roadside sign · fully editable',headline:'CUSTOM KITCHENS & CABINETRY',sub:'Made for your home',cta:'CONTACT US',mode:'split'},
+
     {id:'scan',title:'Scan & Estimate',category:'qr',tag:'QR promotion',headline:'SCAN. PLAN. GET INSPIRED.',sub:'Scan the code to explore your next cabinet project.',cta:'INSTANT BALLPARK ESTIMATE',mode:'qr'},
     {id:'simple',title:'The Minimalist',category:'qr',tag:'QR / counter card',headline:'YOUR NEW KITCHEN IS CLOSER THAN YOU THINK',sub:'Scan to get a quick estimate from our team.',cta:'SCAN TO START',mode:'minimal'},
   ];
@@ -13939,15 +13952,56 @@ function seededStudioLayers(t){
   const shapeLayer=(name,x,y,w,h,fill,shape='rect',radius=18,place='front',stroke='#ffffff',strokeWidth=0)=>({id:layerUid(),type:'shape',name,place,x,y,w,h,rotation:0,opacity:100,shadowColor:'#000000',shadowBlur:0,shadowX:0,shadowY:0,shape,radius,fill,stroke,strokeWidth});
   const imageLayer=(name,x,y,w,h,radius=18)=>({id:layerUid(),type:'image',name,place:'front',x,y,w,h,rotation:0,opacity:100,shadowColor:'#000000',shadowBlur:12,shadowX:0,shadowY:7,fit:'cover',radius,stroke:'#ffffff',strokeWidth:6,fill:'#d9d2c7',image:mqStudioPhoto||null,dataUrl:mqStudioPhoto?.src||''});
   if(t.id==='yardbefore'){
-    layers.push(shapeLayer('Before panel',52,184,738,656,'#e6ddd2'));
-    layers.push(shapeLayer('After panel',830,184,738,656,'#e6ddd2'));
-    layers.push(imageLayer('Before photo',52,184,738,656,18));
-    layers.push(imageLayer('After photo',830,184,738,656,18));
-    layers.push(shapeLayer('Center divider',800,176,20,670,'#c9a24b','rect',12));
-    layers.push(textLayer('Before label','BEFORE',112,90,220,56,42,'#ffffff','oswald','left','strong'));
-    layers.push(textLayer('After label','AFTER',1288,90,220,56,42,'#ffffff','oswald','right','strong'));
-    layers.push(textLayer('Replace note left','Click this panel then choose Replace image',118,760,600,40,24,'#fff8ee','montserrat','left','soft'));
-    layers.push(textLayer('Replace note right','Click this panel then choose Replace image',902,760,600,40,24,'#fff8ee','montserrat','left','soft'));
+    layers.push(shapeLayer('Title banner',0,0,1620,160,'#202027','rect',0));
+    layers.push(textLayer('Headline','BEFORE  &  AFTER',130,38,1360,82,64,'#ffffff','oswald','center','none'));
+    layers.push(shapeLayer('Photo backing',30,192,1560,684,'#ede8e0','rect',14));
+    layers.push(shapeLayer('Before panel',52,218,730,624,'#e6ddd2'));
+    layers.push(shapeLayer('After panel',838,218,730,624,'#e6ddd2'));
+    layers.push(imageLayer('Before photo — click Replace',52,218,730,624,16));
+    layers.push(imageLayer('After photo — click Replace',838,218,730,624,16));
+    layers.push(shapeLayer('Center divider',802,218,16,624,'#c9a24b','rect',0));
+    layers.push(shapeLayer('Before label background',52,155,730,66,'#202027','rect',0));
+    layers.push(textLayer('Before label','BEFORE',85,168,640,52,44,'#ffffff','oswald','center','none'));
+    layers.push(shapeLayer('After label background',838,155,730,66,'#202027','rect',0));
+    layers.push(textLayer('After label','AFTER',870,168,650,52,44,'#ffffff','oswald','center','none'));
+    layers.push(shapeLayer('Bottom brand band',0,890,1620,190,'#202027','rect',0));
+    layers.push(textLayer('Shop name',String(shopName).toUpperCase(),74,918,1480,65,52,'#ffffff','montserrat','center','none'));
+    layers.push(textLayer('Website',quoteLink().replace(/^https?:\/\//,''),210,996,1200,44,26,'#dcc58b','montserrat','center','none'));
+  }
+  if(t.id.startsWith('ys-')){
+    const classic=t.id.slice(3);
+    const photoLeft=['modern','showcase','curved','corner','estate','cta'].includes(classic);
+    const dark=['diamond','badge','premium','ribbon','modern','showcase','band','cta'].includes(classic);
+    const bg=dark?'#17171b':'#f9f7f2',fg=dark?'#ffffff':'#191c25',accent=dark?'#d8ad54':'#986f43';
+    layers.push(shapeLayer('Sign background',0,0,1620,1080,bg,'rect',0,'back'));
+    if(classic==='band'){
+      layers.push(imageLayer('Project photo — replace',0,220,1620,650,0));
+      layers.push(shapeLayer('Top brand band',0,0,1620,230,'#182334','rect',0));
+      layers.push(shapeLayer('Bottom callout',0,862,1620,218,'#182334','rect',0));
+      layers.push(textLayer('Brand title',String(shopName).toUpperCase(),90,72,1440,98,68,'#ffffff','oswald','center','none'));
+      layers.push(textLayer('Big message',t.headline,140,899,1340,80,60,'#ffffff','oswald','center','none'));
+    }else if(classic==='cta'||classic==='estate'){
+      layers.push(imageLayer('Project photo — replace',0,0,1620,716,0));
+      layers.push(shapeLayer('Bottom panel',0,716,1620,364,classic==='estate'?'#f8f5f0':'#14233a','rect',0));
+      layers.push(shapeLayer('Accent rule',0,710,1620,12,accent,'rect',0));
+      layers.push(textLayer('Headline',t.headline,76,752,1460,74,62,classic==='estate'?'#1a1c21':'#ffffff','oswald','left','none'));
+      layers.push(textLayer('Shop name',String(shopName).toUpperCase(),76,858,1480,60,45,classic==='estate'?'#1a1c21':'#ffffff','montserrat','left','none'));
+      layers.push(textLayer('Call to action',t.cta,76,968,1450,54,36,accent,'montserrat','left','none'));
+    }else{
+      if(photoLeft){layers.push(imageLayer('Project photo — replace',0,0,850,1080,0));layers.push(shapeLayer('Brand panel',850,0,770,1080,bg,'rect',0));}
+      else{layers.push(shapeLayer('Brand panel',0,0,740,1080,bg,'rect',0));layers.push(imageLayer('Project photo — replace',740,0,880,1080,0));}
+      const left=photoLeft?900:54,panelW=photoLeft?640:620;
+      if(['premium','diamond'].includes(classic))layers.push(shapeLayer('Gold frame',left+25,58,panelW-60,920,'#ffffff','rect',0,'front',accent,7));
+      if(classic==='badge'){
+        layers.push({...defaultStickerLayer(),name:'Brand badge',shape:'starburst',x:left+150,y:72,w:300,h:300,fill:accent,strokeWidth:0,shadowBlur:0});
+      }
+      if(classic==='ribbon')layers.push({...defaultBrushSwipeLayer(),name:'Gold banner',x:left+22,y:80,w:panelW-90,h:100,fill:accent,rotation:-5});
+      layers.push(textLayer('Headline',t.headline,left+35,315,panelW-80,200,68,fg,'oswald','left','none'));
+      layers.push(shapeLayer('Accent line',left+35,555,220,9,accent,'rect',0));
+      layers.push(textLayer('Shop name',String(shopName).toUpperCase(),left+35,594,panelW-80,185,47,fg,'montserrat','left','none'));
+      layers.push(textLayer('Supporting line',t.sub,left+35,795,panelW-80,100,29,fg,'montserrat','left','none'));
+      layers.push(textLayer('Call to action',t.cta,left+35,965,panelW-80,60,32,accent,'oswald','left','none'));
+    }
   }
   if(t.id==='yardfinance'){
     layers.push({id:layerUid(),type:'shape',name:'Finance sticker',place:'front',x:1240,y:56,w:270,h:270,rotation:-8,opacity:100,shadowColor:'#000000',shadowBlur:12,shadowX:0,shadowY:7,shape:'starburst',radius:20,fill:'#f4d84d',stroke:'#ffffff',strokeWidth:0});
@@ -14563,7 +14617,7 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
         mqShowToast('For precise editing, use a tablet or desktop. Or tap Continue on phone anyway.');
         return;
       }
-      mqStudioSelected=t;field('edit-title').textContent=t.title;if(field('template-select'))field('template-select').value=t.id;field('shop-name').value=shopName;field('headline').value=t.headline;field('subline').value=t.sub;field('cta').value=t.cta;field('color').value=safeColor(color);field('quick-brand').value=safeColor(color);field('quick-surface').value='#e9d9c8';field('quick-accent').value='#d9be97';field('size').value=mqStudioDefaultSize(t);setDefaults();field('composition').value=t.id==='premium'?'cinema':mqStudioIsYard(t)?'split':t.id==='before'?'original':t.id==='poster'?'window':'original';if(t.id==='yardbefore')field('composition').value='original';field('finish').value=t.mode==='luxury'?'bold':t.mode==='frame'?'editorial':(mqStudioIsYard(t)||t.category==='print')?'architect':'cinematic';field('accent').value=t.mode==='frame'?'frame':t.mode==='luxury'?'corner':mqStudioIsYard(t)?'stripe':'none';if(t.mode==='minimal'){field('headline-color').value='#382b36';field('sub-color').value='#685861'}if(t.id==='yardfinance'){field('cta-bg').value='#f4d84d';field('cta-color').value='#211a21';field('headline-color').value='#ffffff';field('sub-color').value='#fff5df';field('accent-color').value='#f4d84d';}if(t.id==='yardshowroom'){field('cta').value='BROWSE OUR SHOWROOM';field('headline-color').value='#ffffff';field('sub-color').value='#fff5df';field('accent-color').value='#c9a24b';}workspace.style.display='flex';workspace.classList.add('mq-studio-fullscreen','mq-studio-canvas-first');lockStudioScroll();workspace.classList.remove('mq-studio-property-mode','mq-studio-show-layers');if(field('layers-toggle'))field('layers-toggle').textContent='☷ All layers';previewShift=0;preview.style.transform='';update(true);detachBuiltIns(true);const photoArea=mqStudioUsesDefaultPhoto(t)?defaultProjectPhotoLayer(t,field('composition').value):null;if(photoArea){mqStudioCustomLayers.unshift(photoArea);}const seededLayers=seededStudioLayers(t);if(seededLayers.length){mqStudioCustomLayers.push(...seededLayers);}renderLayerList();update();resetStudioHistory();requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      mqStudioSelected=t;field('edit-title').textContent=t.title;if(field('template-select'))field('template-select').value=t.id;field('shop-name').value=shopName;field('headline').value=t.headline;field('subline').value=t.sub;field('cta').value=t.cta;field('color').value=safeColor(color);field('quick-brand').value=safeColor(color);field('quick-surface').value='#e9d9c8';field('quick-accent').value='#d9be97';field('size').value=mqStudioDefaultSize(t);setDefaults();field('composition').value=t.id==='premium'?'cinema':mqStudioIsYard(t)?'split':t.id==='before'?'original':t.id==='poster'?'window':'original';if(t.id==='yardbefore'||t.id.startsWith('ys-'))field('composition').value='original';field('finish').value=t.mode==='luxury'?'bold':t.mode==='frame'?'editorial':(mqStudioIsYard(t)||t.category==='print')?'architect':'cinematic';field('accent').value=t.mode==='frame'?'frame':t.mode==='luxury'?'corner':mqStudioIsYard(t)?'stripe':'none';if(t.mode==='minimal'){field('headline-color').value='#382b36';field('sub-color').value='#685861'}if(t.id==='yardfinance'){field('cta-bg').value='#f4d84d';field('cta-color').value='#211a21';field('headline-color').value='#ffffff';field('sub-color').value='#fff5df';field('accent-color').value='#f4d84d';}if(t.id==='yardshowroom'){field('cta').value='BROWSE OUR SHOWROOM';field('headline-color').value='#ffffff';field('sub-color').value='#fff5df';field('accent-color').value='#c9a24b';}workspace.style.display='flex';workspace.classList.add('mq-studio-fullscreen','mq-studio-canvas-first');lockStudioScroll();workspace.classList.remove('mq-studio-property-mode','mq-studio-show-layers');if(field('layers-toggle'))field('layers-toggle').textContent='☷ All layers';previewShift=0;preview.style.transform='';update(true);if(t.id==='yardbefore'||t.id.startsWith('ys-')){mqStudioDetached=true;}else{detachBuiltIns(true);}const photoArea=(t.id==='yardbefore'||t.id.startsWith('ys-'))?null:(mqStudioUsesDefaultPhoto(t)?defaultProjectPhotoLayer(t,field('composition').value):null);if(photoArea){mqStudioCustomLayers.unshift(photoArea);}const seededLayers=seededStudioLayers(t);if(seededLayers.length){mqStudioCustomLayers.push(...seededLayers);}renderLayerList();update();resetStudioHistory();requestAnimationFrame(()=>requestAnimationFrame(()=>{
       // Browser chooses the actual scrollable ancestor (in Webflow .mq-content has overflow:visible).
       // scrollIntoView works on the document and nested scrollers, unlike manually altering .mq-content.
       if(workspace.classList.contains('mq-studio-fullscreen'))return;
@@ -14592,7 +14646,7 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
         if(typeof window.mqPdSetOrientation==='function')window.mqPdSetOrientation('landscape');
         document.getElementById('mq-pd-outer-card')?.scrollIntoView({block:'start',behavior:'smooth'});
       };
-      document.getElementById('mq-creative-open-yard')?.addEventListener('click',jumpToOriginalSign);
+      document.getElementById('mq-creative-open-yard')?.addEventListener('click',()=>{root.querySelector('[data-studio-filter="yard"]')?.click();root.querySelector('.mq-studio-nav')?.scrollIntoView({block:'start',behavior:'smooth'});});
       document.getElementById('mq-creative-open-design')?.addEventListener('click',()=>{
         root.querySelector('[data-studio-filter="all"]')?.click();
         root.querySelector('.mq-studio-nav')?.scrollIntoView({block:'start',behavior:'smooth'});
