@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>MidasQuote — Quote Before You Draw</title>
+<style>
+:root{
+  --bg:#0b0b0b; --panel:#121212; --panel2:#181818; --ink:#f8f6f0; --muted:#b9b4aa;
+  --gold:#e1a51f; --gold2:#ffd45c; --cream:#f7f1e5; --dark:#18130b; --line:#2b2b2b;
+  --max:1180px; --r:22px;
+}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--ink);line-height:1.5}
+a{color:inherit;text-decoration:none}.wrap{width:min(var(--max),calc(100% - 36px));margin:auto}
+nav{position:sticky;top:0;z-index:10;background:rgba(11,11,11,.88);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,.08)}
+.navin{height:72px;display:flex;align-items:center;justify-content:space-between;gap:24px}.logo{display:inline-flex;align-items:center;line-height:0}.logoimg{display:block;height:67px;width:auto;max-width:min(54vw,420px)}.foot .logoimg{height:56px;max-width:min(48vw,320px)}
+.navlinks{display:flex;align-items:center;gap:24px;color:#d7d3cc;font-size:14px}.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:999px;padding:14px 20px;font-weight:800;border:1px solid transparent;transition:.2s}.btn.gold{background:linear-gradient(135deg,var(--gold2),var(--gold));color:#18120a;box-shadow:0 10px 32px rgba(225,165,31,.34)}.btn.out{border-color:#4c4639;background:#15130f;color:#fff}.btn:hover{transform:translateY(-1px)}
+.hero{padding:38px 0 64px;background:radial-gradient(circle at 75% 5%,rgba(216,170,63,.14),transparent 32%),linear-gradient(180deg,#0b0b0b,#0e0d0b)}
+.eyebrow{display:inline-flex;gap:8px;align-items:center;padding:8px 12px;border:1px solid #3c3424;background:#15120c;border-radius:999px;color:#e4c470;font-weight:800;font-size:13px;letter-spacing:.02em}
+.hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:58px;align-items:center}.hero h1{font-size:clamp(52px,7vw,92px);line-height:.92;letter-spacing:-.055em;margin:20px 0 22px;max-width:800px}.hero h1 em{font-style:normal;color:var(--gold2)}
+.lead{font-size:21px;color:#d4d0c8;max-width:720px}.hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}.proof{display:flex;gap:22px;flex-wrap:wrap;margin-top:26px;color:#aaa49a;font-size:13px}.proof b{color:#fff}
+.browser{background:#ece9e2;border-radius:24px;overflow:hidden;box-shadow:0 34px 90px rgba(0,0,0,.58);transform:rotate(1deg);border:1px solid #3b3323}.browser-top{height:44px;background:#d8d4cb;display:flex;align-items:center;gap:7px;padding:0 15px}.dot{width:10px;height:10px;border-radius:50%;background:#999}.screen{padding:24px;background:linear-gradient(180deg,#fff,#f6f1e7);color:#1c1b18;min-height:490px}.screen-head{display:flex;justify-content:space-between;align-items:center}.mini-logo{font-weight:900}.mini-logo span{color:#bd8d26}.step{font-size:12px;color:#777}.quote-card{margin-top:28px;background:#fff;border:1px solid #ddd5c7;border-radius:18px;padding:22px}.quote-card h3{margin:0 0 6px;font-size:17px}.option-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}.opt{padding:12px;border:1px solid #d5ccbd;border-radius:11px;font-size:13px}.opt.active{border:2px solid #c3922d;background:#fff8e7}.range{margin-top:18px;background:#16130f;color:#fff;border-radius:16px;padding:20px}.range small{color:#c8c0b2}.range strong{display:block;font-size:34px;color:#f1cf73;margin-top:4px}
+.section{padding:92px 0}.cream{background:var(--cream);color:#17140f}.section h2{font-size:clamp(38px,5vw,64px);line-height:1;letter-spacing:-.045em;margin:0 0 18px}.sub{font-size:19px;color:#aaa49a;max-width:760px}.cream .sub{color:#686156}.center{text-align:center}.center .sub{margin-inline:auto}.image-copy{position:relative;z-index:2;}.image-copy h2{color:#f4c44f;}.image-copy .sub{color:#fff;}
+.problem{display:grid;grid-template-columns:.92fr 1.08fr;gap:50px;align-items:start}.timeline{border-left:2px solid #d5c8af;margin-top:16px;padding-left:26px}.timeline div{padding:5px 0 23px;font-size:20px}.timeline div:last-child{color:#8c2b20;font-weight:850}.punch{font-size:31px;line-height:1.18;font-weight:900;margin-top:30px;color:#211d16}.goldword{color:#a8750c}
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:42px}.way{border-radius:22px;padding:28px;border:1px solid #2b2b2b;background:#111}.way.new{border-color:#8b6726;background:linear-gradient(180deg,#19150e,#111)}.tag{font-size:12px;font-weight:900;letter-spacing:.12em;color:#a9a39a}.way.new .tag{color:#e8c66e}.flow{margin-top:18px;display:grid;gap:10px}.flow div{padding:12px 14px;border-radius:12px;background:#1b1b1b;color:#ddd}.way.new .flow div{background:#221d13}.bigline{margin-top:24px;font-size:29px;font-weight:950;text-align:center;color:var(--gold2)}
+.usecases{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;margin-top:40px}.case{background:#fff;border:1px solid #e0d8ca;border-radius:20px;padding:28px;min-height:260px;box-shadow:0 14px 36px rgba(55,40,15,.08)}.case .num{font-weight:900;color:#b27c13;font-size:13px}.case h3{font-size:28px;line-height:1.05;margin:12px 0}.case p{color:#61594e}.quote{background:#17130d;color:#f3d078;padding:10px 12px;border-radius:10px;display:inline-block;margin:10px 0;font-weight:800}
+.demo{background:linear-gradient(135deg,#15120d,#0d0d0d);border:1px solid #5a4521;border-radius:30px;padding:38px;display:grid;grid-template-columns:1fr .85fr;gap:34px;align-items:center}.demo h2{margin-bottom:15px}.fakebox{background:#f5efe3;color:#18140d;border-radius:20px;padding:22px}.fakebox .price{font-size:42px;font-weight:950;color:#9b6e14}.fakebox ul{padding-left:18px;color:#625b50}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:40px}.stepcard{background:#151515;border:1px solid #2e2e2e;border-radius:18px;padding:23px}.stepcard b{display:block;color:var(--gold2);font-size:26px;font-weight:900;margin-bottom:12px}.stepcard h3{font-size:22px;margin:0 0 8px;color:#f8f6f0;font-weight:800}.stepcard p{color:#cfc8bc;margin:0}
+.dashboard{display:grid;grid-template-columns:.8fr 1.2fr;gap:34px;align-items:center}.dashboard .punch{color:#f2ede4}.dashboard .punch .goldword{color:var(--gold2)}.leadcard{background:#f4efe5;color:#15120d;border-radius:22px;padding:22px;box-shadow:0 24px 60px rgba(0,0,0,.25)}.leadtop{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #d8d0c1;padding-bottom:12px}.leadname{font-weight:950;font-size:22px}.status{background:#e9f3e3;color:#28571f;padding:6px 9px;border-radius:999px;font-size:12px;font-weight:800}.leadgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}.leadgrid div{background:#fff;border-radius:12px;padding:12px}.leadgrid small{display:block;color:#7d7468}.leadgrid strong{font-size:18px}.result{background:#16130e;color:#f4cd66!important}.result small{color:#c5b28b!important}
+.featuregroups{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:38px}.fg{border:1px solid #ded5c4;border-radius:20px;padding:28px;background:#fff;box-shadow:0 14px 36px rgba(55,40,15,.08)}.fg h3{font-size:27px;line-height:1.05;margin-top:0}.fg p{color:#645c51}.extras{margin-top:20px;padding:20px;border-radius:16px;background:#e9dfcc;color:#4d463c}
+.pro{display:grid;grid-template-columns:1fr 1fr;gap:34px;align-items:center}.proposal{background:#f7f2e8;color:#18140d;border-radius:20px;padding:24px}.proposal-head{display:flex;justify-content:space-between;border-bottom:1px solid #d6cebf;padding-bottom:14px}.lineitem{display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px dashed #d9d1c3}.total{display:flex;justify-content:space-between;font-size:25px;font-weight:950;padding-top:18px}.testimonial{max-width:900px;margin:auto;text-align:center}.testimonial blockquote{font-family:Georgia,"Times New Roman",serif;font-size:31px;line-height:1.4;margin:24px 0;color:#29241d;font-weight:700;letter-spacing:-.01em;}.who{color:#5c5449;font-weight:600}.who b{color:#17140f}.pricing{display:grid;grid-template-columns:1fr .9fr;gap:40px;align-items:center}.pricebox{background:#fff;color:#16130e;border-radius:26px;padding:30px}.money{font-size:70px;line-height:.9;font-weight:950;letter-spacing:-.05em}.money span{font-size:18px;color:#6b6459;letter-spacing:0}.pricebox ul{list-style:none;padding:0;margin:24px 0}.pricebox li{padding:7px 0}.pricebox li:before{content:'✓';color:#9c731f;font-weight:900;margin-right:9px}
+.final{padding:110px 0;text-align:center;background:radial-gradient(circle at 50% 0,rgba(216,170,63,.17),transparent 38%),#0b0b0b}.final h2{max-width:900px;margin:0 auto 20px}.final p{max-width:710px;margin:0 auto 28px;color:#bdb7ad;font-size:20px}
+footer{padding:28px 0;border-top:1px solid #242424;color:#8d8980;font-size:13px}.foot{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}
+
+/* Strong text shadows for headline/value copy over image-backed sections */
+.bigline,
+.dashboard h2,
+.dashboard .sub,
+.dashboard .punch,
+.section h2,
+.pro h2,
+.testimonial h3,
+.pricing h2,
+.final h2,
+.final p {
+}
+
+/* Keep light sections from looking muddy */
+.cream h2,
+.cream .sub,
+.cream .punch,
+.cream .bigline {
+}
+
+/* Extra punch on key image-backed statements */
+.bigline {
+}
+.dashboard h2,
+.dashboard .sub,
+.dashboard .punch {
+}
+
+/* Contrast audit: keep text readable against each section background */
+.cream .testimonial blockquote { color:#29241d; }
+.cream .testimonial .who { color:#5c5449; }
+.cream .testimonial .who b { color:#17140f; }
+.cream .bigline { color:#8a5d05; }
+.pricing .punch { color:#f2ede4; }
+.pricing .sub { color:#c7c1b7; }
+.pro .sub, .demo .sub { color:#c7c1b7; }
+.section:not(.cream) > .wrap > .center > .sub { color:#c7c1b7; }
+
+
+/* Mobile navigation */
+.menu-toggle{display:none;width:44px;height:44px;border:1px solid #4c4639;border-radius:12px;background:#15130f;color:#fff;align-items:center;justify-content:center;cursor:pointer;padding:0;}
+.menu-toggle span{display:block;width:22px;height:2px;background:#f8f6f0;border-radius:2px;transition:.2s;}
+.menu-toggle span+span{margin-top:5px;}
+.mobile-menu{display:none;position:absolute;top:72px;left:0;right:0;background:rgba(11,11,11,.98);border-bottom:1px solid rgba(255,255,255,.1);padding:14px 18px 18px;box-shadow:0 18px 40px rgba(0,0,0,.35);}
+.mobile-menu.open{display:block;}
+.mobile-menu a{display:block;padding:13px 12px;border-radius:10px;color:#eee9df;font-size:15px;font-weight:700;}
+.mobile-menu a:hover{background:#18150f;color:var(--gold2);}
+.mobile-menu .mobile-cta{margin-top:8px;text-align:center;background:linear-gradient(135deg,var(--gold2),var(--gold));color:#18120a;}
+.mobile-menu .mobile-cta:hover{color:#18120a;background:linear-gradient(135deg,var(--gold2),var(--gold));}
+
+@media(max-width:900px){.hero-grid,.problem,.demo,.dashboard,.pro,.pricing{grid-template-columns:1fr}.compare,.usecases,.featuregroups{grid-template-columns:1fr}.steps{grid-template-columns:1fr 1fr}.browser{transform:none}.navlinks{display:none}.menu-toggle{display:flex;flex-direction:column}.hero{padding-top:38px}.section{padding:70px 0}}
+@media(max-width:560px){.wrap{width:min(100% - 24px,var(--max))}.steps{grid-template-columns:1fr}.hero h1{font-size:54px}.lead{font-size:18px}.section h2{font-size:42px}.demo{padding:24px}.money{font-size:58px}.hero-actions .btn{width:100%}.proof{display:grid;gap:7px}.logoimg{height:74px;max-width:calc(100vw - 110px)}
+}
+/* Mobile-friendly image overlay treatment: darkens background images without text shadows */
+.image-overlay{position:relative;isolation:isolate;}
+.image-overlay::before{content:"";position:absolute;inset:0;background:rgba(0,0,0,.42);z-index:-1;pointer-events:none;}
+.image-overlay.overlay-light::before{background:rgba(0,0,0,.28);}
+.image-overlay.overlay-strong::before{background:rgba(0,0,0,.88);}
+/* Keep content above overlays */
+.image-overlay > *{position:relative;z-index:1;}
+
+
+/* Free Demo / freemium offer */
+.keepfree{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:42px}
+.keepcard{border-radius:22px;padding:30px;border:1px solid #ded5c4;background:#fff;color:#17140f;box-shadow:0 14px 36px rgba(55,40,15,.08)}
+.keepcard.full{background:#151515;color:#f8f6f0;border-color:#55421f}
+.keepcard .tag{margin-bottom:12px}
+.keepcard.full .tag{color:var(--gold2)}
+.keepcard h3{font-size:30px;line-height:1.05;margin:0 0 12px}
+.keepcard p{color:#645c51;margin:0 0 18px}
+.keepcard.full p{color:#cfc8bc}
+.keeplist{list-style:none;padding:0;margin:20px 0 0}
+.keeplist li{padding:8px 0;border-bottom:1px solid rgba(0,0,0,.08);font-size:15px}
+.keepcard.full .keeplist li{border-bottom-color:rgba(255,255,255,.08)}
+.keeplist li:last-child{border-bottom:0}
+.keeplist .yes::before{content:'✓';font-weight:900;color:#9c731f;margin-right:9px}
+.keepcard.full .keeplist .yes::before{color:var(--gold2)}
+.keeplist .lock::before{content:'—';font-weight:900;color:#8b8174;margin-right:9px}
+.keepprice{font-size:46px;font-weight:950;letter-spacing:-.04em;margin-top:20px}
+.keepprice span{font-size:15px;font-weight:700;letter-spacing:0;color:#6b6459}
+.keepcard.full .keepprice span{color:#bdb7ad}
+.keep-note{margin-top:24px;padding:18px 20px;border-radius:16px;background:#e9dfcc;color:#4d463c;font-weight:700;text-align:center}
+.keep-cta{margin-top:28px;text-align:center}
+.keep-cta h3{font-size:32px;margin:0 0 10px}
+.keep-cta p{max-width:720px;margin:0 auto 18px;color:#686156}
+
+/* Pricing: Free Demo vs Full */
+.pricing-intro{text-align:center;max-width:820px;margin:0 auto 40px}
+.pricing-intro .sub{margin-inline:auto}
+.pricegrid{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:stretch}
+.pricebox.freebox{border:1px solid #d9d1c3;background:#f7f1e5}
+.pricebox.fullbox{border:2px solid #b78925;position:relative}
+.price-badge{display:inline-block;padding:7px 11px;border-radius:999px;background:#16130f;color:var(--gold2);font-size:12px;font-weight:900;letter-spacing:.08em;margin-bottom:16px}
+.pricebox h3{font-size:28px;line-height:1.05;margin:0 0 8px}
+.pricebox .desc{color:#655e53;margin-bottom:18px}
+.pricebox .restrictions{margin-top:14px;padding-top:14px;border-top:1px solid #e3dccf;color:#786f62;font-size:14px}
+.pricebox .restrictions b{color:#4d463c}
+
+/* FAQ */
+.faq-sales{max-width:820px;margin:42px auto 0}
+.faq-sales details{border-bottom:1px solid rgba(255,255,255,.18);padding:18px 0}
+.faq-sales summary{cursor:pointer;font-weight:900;font-size:18px;list-style:none;color:#fff}
+.faq-sales summary::-webkit-details-marker{display:none}
+.faq-sales summary::after{content:'+';float:right;color:var(--gold2)}
+.faq-sales details[open] summary::after{content:'–'}
+.faq-sales p{margin:10px 0 0;color:#c7c1b7;line-height:1.7}
+
+@media(max-width:900px){
+  .keepfree,.pricegrid{grid-template-columns:1fr}
+}
+
+
+/* MidasQuote Pro: private quoting and proposals */
+#mqpro-title{color:#4774ff;}
+.mqpro-lead{font-size:clamp(20px,2.1vw,24px);line-height:1.5;color:var(--ink);margin:22px 0 16px;}
+.mqpro-shared{color:var(--gold2);font-size:22px;font-weight:800;margin:26px 0 8px;}
+.mqpro-detail{color:#c7c1b7;font-size:17px;margin:0;}
+.mqpro-caption{color:#e8c66e;font-size:16px;text-align:center;margin:18px 0 0;}
+.mqpro-subtitle{color:var(--gold2);font-size:clamp(24px,3vw,34px);line-height:1.2;margin:44px 0 24px;}
+.mqpro-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;}
+.mqpro-card{background:#151515;border:1px solid #453820;border-radius:18px;padding:24px;min-width:0;}
+.mqpro-icon{display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;border-radius:10px;background:#282113;color:var(--gold2);font-size:24px;margin-bottom:16px;}
+.mqpro-card h3{font-size:21px;line-height:1.2;margin:0 0 12px;color:var(--ink);}
+.mqpro-card p{font-size:16px;line-height:1.6;margin:0;color:#c7c1b7;}
+@media(max-width:900px){.mqpro-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
+@media(max-width:560px){.mqpro-grid{grid-template-columns:1fr;}.mqpro-card{padding:22px;}.mqpro-subtitle{margin-top:32px;}.pro .proposal{padding:20px;}.pro .proposal-head{gap:12px;flex-wrap:wrap;}.pro .lineitem{gap:16px;}.pro .lineitem b{white-space:nowrap;}}
+
+/* MidasQuote Pro demo button */
+#midasquote-pro .btn.mqpro-test{background:#4774ff;color:#fff;border-color:#4774ff;box-shadow:0 10px 30px rgba(71,116,255,.25);}
+#midasquote-pro .btn.mqpro-test:hover{background:#365fe0;border-color:#365fe0;}
+#midasquote-pro .btn.mqpro-test:focus-visible{outline:3px solid #fff;outline-offset:4px;}
+.problem .problem-payoff{grid-column:1 / -1;margin-top:0;}
+
+/* --- New: platform positioning and feature showcase --- */
+.navlinks>a:not(.btn){white-space:nowrap}
+.platform-intro{background:linear-gradient(180deg,#10100f 0%,#15120d 100%);border-block:1px solid #2d281c}
+.platform-heading{max-width:860px;margin:0 auto 35px;text-align:center}
+.platform-heading h2 em{font-style:normal;color:var(--gold2)}
+.platform-heading .sub{margin-inline:auto}
+.free-feature-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+.free-feature{border:1px solid #51452d;background:#1c1914;border-radius:24px;overflow:hidden;min-width:0;box-shadow:0 24px 60px rgba(0,0,0,.22)}
+.free-feature .content{padding:29px 30px 32px}
+.tool-tier{display:inline-block;font-weight:900;font-size:11px;letter-spacing:.12em;text-transform:uppercase;border-radius:99px;padding:8px 11px;background:#3c3119;color:#f5d781;margin-bottom:14px}
+.free-feature h3{font-size:clamp(27px,3vw,37px);line-height:1.05;margin:0 0 12px;letter-spacing:-.035em}
+.free-feature p{color:#d2c9b9;margin:0 0 23px;font-size:16px;line-height:1.6}
+.free-feature-media{min-height:300px;position:relative;overflow:hidden;background:#171412}
+.free-feature-media.quote-demo{display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 60% 20%,#73511b 0,#18140d 62%);padding:34px}
+.free-feature-media .quote-sample{width:100%;max-width:370px;background:#faf6ed;color:#18130c;padding:26px;border-radius:19px;box-shadow:0 24px 45px #0008}
+.quote-sample .sample-top{font-size:12px;font-weight:900;letter-spacing:.08em;color:#876114}
+.quote-sample h4{margin:12px 0 8px;font-size:22px}
+.quote-sample small{color:#6c665d}
+.quote-sample .sample-estimate{background:#19150e;color:#ffda68;padding:19px;border-radius:12px;margin-top:20px;font-size:28px;font-weight:900}
+.design-media{padding:24px 30px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;align-items:center;background:radial-gradient(circle at 48% 25%,#483719,#19150f 72%)}
+.design-media img{display:block;width:100%;height:245px;object-fit:cover;border-radius:10px;box-shadow:0 14px 30px #0009;transform:rotate(-5deg)}
+.design-media img:nth-child(2){height:290px;transform:translateY(-7px) rotate(1deg);z-index:1}
+.design-media img:nth-child(3){transform:rotate(6deg)}
+.tool-footnote{margin-top:25px;text-align:center;color:#c8bda9;font-size:14px}
+.showroom-feature{background:#f8f3e8;color:#201b15}
+.showroom-layout{display:grid;grid-template-columns:.9fr 1.1fr;gap:48px;align-items:center}
+.showroom-copy h2{margin:6px 0 19px}.showroom-copy p{font-size:19px;color:#554d44;line-height:1.65}
+.showroom-points{padding:0;margin:25px 0;list-style:none;display:grid;gap:14px}
+.showroom-points li{position:relative;padding-left:30px;font-weight:700;color:#38332c}
+.showroom-points li:before{content:'✓';position:absolute;left:0;color:#a47611;font-weight:950}
+.showroom-shot{border-radius:22px;overflow:hidden;background:#fff;box-shadow:0 30px 65px #45341b3b;border:1px solid #d9cfbd}
+.showroom-shot img{display:block;width:100%;height:auto}
+.showroom-caption{padding:12px 16px;background:#f0e9df;font-size:12px;font-weight:800;color:#645a4d;letter-spacing:.02em}
+.premium-linkbar{background:#1c1710;border-block:1px solid #463821;padding:25px 0}
+.premium-linkbar .wrap{display:flex;align-items:center;justify-content:space-between;gap:25px;flex-wrap:wrap}
+.premium-linkbar h3{font-size:23px;margin:0 0 4px}.premium-linkbar p{color:#c9c0b2;margin:0;font-size:15px}
+@media(max-width:900px){.free-feature-grid,.showroom-layout{grid-template-columns:1fr}.showroom-layout{gap:30px}.free-feature-media{min-height:230px}}
+@media(max-width:560px){.free-feature .content{padding:23px}.design-media{padding:18px;gap:8px}.design-media img{height:195px}.design-media img:nth-child(2){height:232px}.premium-linkbar .btn{width:100%}}
+
+</style>
+</head>
+<body>
+<nav>
+  <div class="wrap navin">
+    <a class="logo" href="#top" aria-label="MidasQuote home"><img class="logoimg" src="https://cdn.shopify.com/s/files/1/0680/5910/3421/files/midasquote-logo.png?v=1791822746" alt="MidasQuote"></a>
+    <div class="navlinks">
+      <a href="#how">How it works</a>
+      <a href="#free-tools">Free tools</a><a href="#showroom">Showroom</a><a href="#demo">Demo</a>
+      <a href="#pricing">Pricing</a>
+      <a href="https://www.midasquote.com/login">Log in</a>
+      <a class="btn gold" href="https://www.midasquote.com/quote">Get a test quote</a>
+    </div>
+    <button class="menu-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+  <div class="mobile-menu" id="mobile-menu">
+    <a href="#how">How it works</a>
+    <a href="#free-tools">Free tools</a><a href="#showroom">Showroom</a><a href="#demo">Demo</a>
+    <a href="#pricing">Pricing</a>
+    <a href="https://www.midasquote.com/login">Log in</a>
+    <a class="mobile-cta" href="https://www.midasquote.com/quote">Get a test quote</a>
+  </div>
+</nav>
+
+<header class="hero image-overlay overlay-light" id="top"><div class="wrap hero-grid"><div><div class="eyebrow">Built for cabinet and countertop shops</div><h1>Instant quotes aren’t just for <em>big box stores anymore. </em></h1><p class="lead">Give your customers instant ballpark estimates using your pricing. Start with a free estimator and a free Design Studio, then unlock a website Showroom and MidasQuote Pro when you’re ready.</p><div class="hero-actions"><a class="btn gold" href="https://www.midasquote.com/quote">Get a test quote</a><a class="btn out" href="https://www.midasquote.com/pricing">Build My Free Estimator</a></div><div class="proof"><span><b>5-minute</b> quotes*</span><span><b>Your</b> pricing</span><span><b>30 days</b> full access</span><span><b>Free estimator</b> forever</span><span><b>Free Design Studio</b> forever</span><span><b>Countertops only</b> option</span></div></div>
+<div class="browser"><div class="browser-top"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div><div class="screen"><div class="screen-head"><div class="mini-logo">MIDAS<span>QUOTE</span></div><div class="step">PROJECT 4 OF 6</div></div><div class="quote-card"><h3>Choose your door style</h3><div class="option-grid"><div class="opt active">Shaker</div><div class="opt">Slab</div><div class="opt">Raised Panel</div><div class="opt">Thermofoil</div></div><h3>Countertops</h3><div class="option-grid"><div class="opt active">Laminate</div><div class="opt">Quartz</div><div class="opt">Granite</div></div><div class="range"><small>YOUR BALLPARK RANGE</small><strong>$21,000 – $25,000</strong><small>Based on this shop’s pricing.</small></div></div></div></div></div></header>
+
+<section class="section platform-intro" id="free-tools" aria-labelledby="free-tools-title">
+  <div class="wrap">
+    <div class="platform-heading"><div class="eyebrow">START WITH THE FREE TOOLS</div>
+      <h2 id="free-tools-title">More than quoting. <em>More ways to grow.</em></h2>
+      <p class="sub">Build your pricing tool. Create your next promotion. Both free to use, with no monthly subscription required for the free versions.</p>
+    </div>
+    <div class="free-feature-grid">
+      <article class="free-feature">
+        <div class="free-feature-media quote-demo"><div class="quote-sample"><span class="sample-top">INSTANT BALLPARK ESTIMATE</span><h4>Your pricing. Their project.</h4><small>Kitchen · Shaker doors · Quartz counters</small><div class="sample-estimate">$21,000 – $25,000</div></div></div>
+        <div class="content"><div class="tool-tier">Free to use forever</div><h3>Your own quote generator.</h3><p>Stop spending hours quoting jobs before you know the budget works. Customers can get ballpark pricing straight from your website, based on what your shop actually charges.</p><a class="btn gold" href="https://www.midasquote.com/pricing">Build my free estimator</a></div>
+      </article>
+      <article class="free-feature">
+        <div class="free-feature-media design-media" aria-label="Promotional designs created in MidasQuote Design Studio">
+          <img src="assets/design-kitchen-square.png" alt="Kitchen project promotional graphic made in Design Studio" loading="lazy">
+          <img src="assets/design-quote-story.png" alt="MidasQuote Design Studio promotional story design" loading="lazy">
+          <img src="assets/design-financing-square.png" alt="Cabinet shop financing promotional graphic created in Design Studio" loading="lazy">
+        </div>
+        <div class="content"><div class="tool-tier">Free forever</div><h3>Meet Design Studio.</h3><p>Create professional social posts, promotions, posters and QR-code ads for your shop — right inside MidasQuote. Your designs, your branding, no graphic designer required.</p><a class="btn gold" href="https://www.midasquote.com/pricing">Start creating free</a></div>
+      </article>
+    </div>
+    <p class="tool-footnote">After the initial 30 days, the free estimator keeps calculating quotes, but displays DEMO branding, hides uploaded images and disables new image uploads. Design Studio remains free.</p>
+  </div>
+</section>
+<section class="section showroom-feature" id="showroom" aria-labelledby="showroom-title">
+ <div class="wrap showroom-layout">
+   <div class="showroom-copy"><div class="eyebrow">WEBSITE SHOWROOM · PAID PLAN</div><h2 id="showroom-title">Give your website a showroom. <span class="goldword">Without building one.</span></h2>
+     <p>You've already done the beautiful work. Now make it effortless for customers to discover it. MidasQuote Showroom gives you a polished gallery to showcase kitchens, cabinetry, finishes and materials on your own website.</p>
+     <ul class="showroom-points"><li>Turn your project photos into an elegant product and inspiration gallery</li><li>Keep your showroom fresh as you complete new jobs</li><li>Let visitors browse your work before they contact you</li><li>Display it on your website without commissioning a custom gallery</li></ul>
+     <a class="btn gold" href="https://www.midasquote.com/pricing">Explore plans with Showroom</a>
+   </div>
+   <div class="showroom-shot"><img src="assets/showroom-example.png" loading="lazy" alt="Example of a cabinet showroom page with a collection of kitchen project photographs"><div class="showroom-caption">EXAMPLE SHOWROOM · A CUSTOM-BRANDED PRODUCT CATALOGUE</div></div>
+ </div>
+</section>
+<div class="premium-linkbar"><div class="wrap"><div><h3>Need detailed quotes and polished proposals, too?</h3><p>MidasQuote Pro is there when you're ready to upgrade from ballparks to full quotes.</p></div><a class="btn out" href="#midasquote-pro">Explore MidasQuote Pro ↓</a></div></div>
+<section class="section cream"><div class="wrap problem"><div><h2>Why are you drawing a kitchen before you know they can afford it?</h2><p class="sub">The price was always going to be too high. It just took you three hours to find out.</p></div><div class="timeline"><div>Customer calls.</div><div>You measure.</div><div>You draw.</div><div>You price it.</div><div>“That’s more than we wanted to spend.”</div></div><div class="punch problem-payoff"><span class="goldword">MidasQuote finds that out first.</span></div></div></section>
+
+<section class="section image-overlay overlay-strong"><div class="wrap"><div class="center image-copy"><h2>From 2–3 hour quotes to 5-minute ballparks.</h2><p class="sub">Same customer. Same project. A smarter order of operations.</p></div><div class="compare"><div class="way"><div class="tag">THE OLD WAY</div><div class="flow"><div>Customer contacts you</div><div>Measure the job</div><div>Draw the project</div><div>Prepare the quote</div><div>Find out if the price works</div></div></div><div class="way new"><div class="tag">THE MIDASQUOTE WAY</div><div class="flow"><div>Customer contacts you</div><div>Give them a ballpark</div><div>Find out if the price works</div><div>Then measure and draw</div><div>Focus on the customers who said yes</div></div></div></div><div class="bigline">Do the expensive work after they approve the inexpensive quote.</div></div></section>
+
+<section class="section cream"><div class="wrap"><div class="center"><h2>Use it wherever the quote starts.</h2><p class="sub">On your website. At the front counter. In the customer’s home. With a contractor who needs a number now.</p></div><div class="usecases"><article class="case"><div class="num">01 — WEBSITE</div><h3>Your website can give the quote.</h3><p>Replace the usual <b>Get a Quote → Contact Form</b> with a button that actually gives them one.</p><p>They measure. They choose what they want. They get a ballpark based on <b>your pricing</b>.</p><p><b>If the range works, you get the lead. If it doesn’t, you didn’t lift a finger.</b></p></article><article class="case"><div class="num">02 — WALK-INS</div><h3>Give walk-ins a number before they walk out.</h3><div class="quote">“What would a 15-foot kitchen cost?”</div><p>Open MidasQuote. Pick their options. Give them a ballpark or straight quote in minutes.</p><p><b>If the price works, keep going.</b></p></article><article class="case"><div class="num">03 — IN-HOME MEASURES</div><h3>Don’t spend three hours finding out you’re $15,000 apart.</h3><p>Measure the kitchen. Choose their options. Give them a ballpark.</p><p>If they’re good with the range, do the detailed quote. If they’re not, you’re done.</p><p><b>You found out in minutes instead of hours.</b></p></article><article class="case"><div class="num">04 — DESIGNERS + CONTRACTORS</div><h3>Stop making designers wait for pricing.</h3><p>Your contractors and designers can run ballparks or straight quotes using your rates. Their client gets a number. Their project keeps moving.</p><p><b>You aren’t dropping everything to prepare another quote.</b></p></article></div></div></section>
+
+<section class="section image-overlay overlay-strong" id="midasquote-pro" aria-labelledby="mqpro-title">
+  <div class="wrap">
+    <div class="pro">
+      <div>
+        <div class="eyebrow">MIDASQUOTE PRO</div>
+        <h2 id="mqpro-title">Not just ballparks. Real quotes, too.</h2>
+        <p class="mqpro-lead">Your customers get simple ballpark estimates. You get the full picture.</p>
+        <p class="sub">MidasQuote Pro is your private quoting tool. See the actual quote price alongside the ballpark range. Include detailed items and entire project types hidden from your customer widget, fine-tune your pricing, and turn your quote into a professional, branded proposal.</p>
+        <p class="mqpro-shared">One pricing system. Two different experiences.</p>
+        <p class="mqpro-detail">Keep the customer widget simple. Give your team the extra details and private project types they need — using the pricing you’ve already set up.</p>
+        <div class="hero-actions"><a class="btn mqpro-test" href="https://widget.midasquote.com/pro?shop=maple-stone-cabinetry-yd6za" target="_blank" rel="noopener noreferrer">Test MidasQuote Pro</a><a class="btn out" href="https://www.midasquote.com/pricing">Build My Free Estimator</a></div>
+      </div>
+      <div>
+        <div class="proposal">
+          <div class="proposal-head"><b>MIDASQUOTE PROPOSAL</b><span>#1048</span></div>
+          <div class="lineitem"><span>Cabinetry</span><b>$18,740</b></div>
+          <div class="lineitem"><span>Quartz countertops</span><b>$4,860</b></div>
+          <div class="lineitem"><span>Accessories</span><b>$1,340</b></div>
+          <div class="lineitem"><span>Installation</span><b>$2,900</b></div>
+          <div class="total"><span>Total</span><span>$27,840</span></div>
+        </div>
+        <p class="mqpro-caption">Your pricing. More detail. A professional proposal ready to send.</p>
+      </div>
+    </div>
+    <h3 class="mqpro-subtitle">Your pricing. Your details. Your final quote.</h3>
+    <div class="mqpro-grid">
+      <article class="mqpro-card">
+        <div class="mqpro-icon" aria-hidden="true">✎</div>
+        <h3>See the actual price</h3>
+        <p>View the calculated quote price alongside the ballpark range.</p>
+      </article>
+      <article class="mqpro-card">
+        <div class="mqpro-icon" aria-hidden="true">◈</div>
+        <h3>More detail. More accurate quotes.</h3>
+        <p>Include items like finished cabinet ends and other details customers wouldn’t know to select.</p>
+      </article>
+      <article class="mqpro-card">
+        <div class="mqpro-icon" aria-hidden="true">⚙</div>
+        <h3>Private project types</h3>
+        <p>Quote work internally with entire project types available only in Pro.</p>
+      </article>
+      <article class="mqpro-card">
+        <div class="mqpro-icon" aria-hidden="true">＋</div>
+        <h3>Professional proposals</h3>
+        <p>Fine-tune your quote, add custom line items, and create a branded proposal ready to send.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="section image-overlay" id="demo"><div class="wrap"><div class="demo"><div><div class="eyebrow">SEE IT LIVE</div><h2>Pretend you’re the customer.</h2><p class="sub">Price a kitchen on our demo cabinet shop and see exactly what your customers would see.</p><div class="hero-actions"><a class="btn gold" href="https://www.midasquote.com/quote">Get a Fake Kitchen Quote</a><a class="btn out" href="https://www.midasquote.com/pricing">Build My Free Estimator</a></div></div><div class="fakebox"><small>DEMO QUOTE</small><div class="price">$21K–$25K</div><ul><li>Shaker doors</li><li>White melamine</li><li>Quartz counters</li><li>Garbage pullout</li></ul><b>Get the price question out of the way before you start drawing.</b></div></div></div></section>
+
+<section class="section cream" id="how"><div class="wrap"><div class="center"><h2>Your pricing. Your products. Your estimator.</h2><p class="sub">Set it up around the way your shop already prices work.</p></div><div class="steps"><div class="stepcard"><b>01</b><h3>Teach it your pricing</h3><p>Use the pricing wizard to work backwards from what you already charge.</p></div><div class="stepcard"><b>02</b><h3>Add what you sell</h3><p>Doors. Materials. Accessories. Specialty items. Whatever your shop offers.</p></div><div class="stepcard"><b>03</b><h3>Make it yours</h3><p>Add your logo, colours, photos and project types.</p></div><div class="stepcard"><b>04</b><h3>Put it to work</h3><p>Add it to your website or use it yourself in the shop.</p></div></div><div class="bigline">That’s it. Start giving ballparks.</div></div></section>
+
+<section class="section cream">
+  <div class="wrap">
+    <div class="center">
+      <h2>Build it once. Keep it forever.</h2>
+      <p class="sub">Your first 30 days unlock the full estimator experience. After that, keep calculating quotes in free Demo mode forever — and keep creating in Design Studio for free, too.</p>
+    </div>
+
+    <div class="keepfree">
+      <div class="keepcard full">
+        <div class="tag">YOUR FIRST 30 DAYS</div>
+        <h3>See the finished version.</h3>
+        <p>Use everything. Set it up properly. Put your own work in it. See exactly what your customers would see.</p>
+        <ul class="keeplist">
+          <li class="yes">Your own product and project images</li>
+          <li class="yes">No DEMO watermark</li>
+          <li class="yes">MidasQuote Pro</li>
+          <li class="yes">Unlimited ballpark quotes</li>
+          <li class="yes">Free Design Studio</li>
+          <li class="yes">Lead capture and email quotes</li>
+          <li class="yes">Financing estimates</li>
+        </ul>
+        <div class="keepprice">$0 <span>for 30 days</span></div>
+      </div>
+
+      <div class="keepcard">
+        <div class="tag">AFTER 30 DAYS</div>
+        <h3>Keep the part that matters.</h3>
+        <p>Your estimator keeps working. Your setup stays intact. Keep adjusting it until you have your numbers exactly where you want them.</p>
+        <ul class="keeplist">
+          <li class="yes">Your pricing stays</li>
+          <li class="yes">Design Studio stays free</li>
+          <li class="yes">Your products and options stay</li>
+          <li class="yes">Quotes still calculate with no limit</li>
+          <li class="yes">Lead capture and email quotes still work</li>
+          <li class="yes">Financing estimates still work</li>
+          <li class="lock">Images are hidden and replaced by placeholders</li>
+          <li class="lock">DEMO watermark appears</li>
+          <li class="lock">Image uploads are locked</li>
+          <li class="lock">MidasQuote Pro and Showroom uploads require a paid plan</li>
+        </ul>
+        <div class="keepprice">$0 <span>forever</span></div>
+      </div>
+    </div>
+
+    <div class="keep-note">Your setup stays. Upgrade later to restore estimator images, remove the DEMO watermark and unlock paid tools.</div>
+
+    <div class="keep-cta">
+      <h3>Upgrade when you’re ready for your polished, branded experience.</h3>
+      <p>Remove the DEMO watermark. Restore images and uploads. Unlock Showroom and MidasQuote Pro.</p>
+      <a class="btn gold" href="https://www.midasquote.com/pricing">Build My Free Estimator</a>
+    </div>
+  </div>
+</section>
+
+<section class="section image-overlay overlay-strong"><div class="wrap dashboard"><div><h2>Wake up to customers who already know the price range.</h2><p class="sub">Every completed quote can land in your dashboard with the project details and ballpark attached.</p><p class="punch">You don’t start with “What’s your budget?”<br><span class="goldword">They already saw the number.</span></p></div><div class="leadcard"><div class="leadtop"><div class="leadname">New Kitchen Lead</div><div class="status">BALLPARK ACCEPTED</div></div><div class="leadgrid"><div><small>Customer</small><strong>Sarah M.</strong></div><div><small>Project</small><strong>Kitchen</strong></div><div><small>Cabinet style</small><strong>Shaker</strong></div><div><small>Material</small><strong>Painted MDF</strong></div><div class="result"><small>Ballpark</small><strong>$21K–$25K</strong></div><div><small>Status</small><strong>Wants consultation</strong></div></div></div></div></section>
+
+<section class="section cream"><div class="wrap"><div class="center"><h2>It’s your shop. Build it your way.</h2><p class="sub">You don’t need another generic estimator. MidasQuote is built around the products, pricing and work you already sell.</p></div><div class="featuregroups"><div class="fg"><h3>Price what you actually sell</h3><p>Cabinets. Countertops. Refacing. Repainting. Restaining. Specialty items. Custom project types.</p></div><div class="fg"><h3>Make it look like your shop</h3><p>Your logo. Your colours. Your products. Your photos. Your pricing.</p></div><div class="fg"><h3>Use it everywhere</h3><p>Website visitors. Walk-ins. In-home measures. Contractors. Designers. Your phone.</p></div></div><div class="extras"><b>And yes — all the other stuff is included too.</b> Lead capture. Financing links. Unlimited quotes. A free Design Studio for marketing graphics and QR promotions. Paid-plan upgrades for Showroom and MidasQuote Pro.</div></div></section>
+  
+
+
+<section class="section cream"><div class="wrap testimonial"><div class="eyebrow">WHY I BUILT IT</div><h2>I built it because I needed it.</h2><blockquote>“I use MidasQuote almost every day in our own shop to get fast ballparks before I even draw anything. It saves us around 20 hours of quoting each month.”</blockquote><div class="who"><b>Jordan Sales</b><br>Cabinet maker first. MidasQuote guy second.</div></div></section>
+
+
+<section class="section image-overlay overlay-strong" id="pricing">
+  <div class="wrap">
+    <div class="pricing-intro">
+      <h2>Start free. Stay free if you want.</h2>
+      <p class="sub">Get full estimator access for 30 days. Then keep quoting in Free Demo mode forever, or upgrade to remove restrictions and unlock Showroom and MidasQuote Pro. Design Studio stays free.</p>
+    </div>
+
+    <div class="pricegrid">
+      <div class="pricebox freebox">
+        <div class="price-badge">FREE DEMO</div>
+        <h3>Keep quoting.</h3>
+        <div class="money">$0 <span>forever</span></div>
+        <p class="desc">The numbers still work. Keep building and refining your estimator for as long as you want.</p>
+        <ul>
+          <li>Your pricing and products</li>
+          <li>Unlimited ballpark calculations</li>
+          <li>Free Design Studio</li>
+          <li>Lead capture + email quotes</li>
+          <li>Financing estimates</li>
+          <li>Keep editing your setup</li>
+        </ul>
+        <div class="restrictions"><b>Demo mode:</b> images are hidden, a DEMO watermark is shown, image uploads are locked and MidasQuote Pro is unavailable.</div>
+        <a class="btn out" style="width:100%;margin-top:20px" href="https://www.midasquote.com/pricing">Build My Free Estimator</a>
+      </div>
+
+      <div class="pricebox fullbox">
+        <div class="price-badge">FIRST 30 DAYS FREE</div>
+        <h3>Make it customer-ready.</h3>
+        <div class="money">$29 <span>CAD / month</span></div>
+        <p class="desc">The version you actually want on your website.</p>
+        <ul>
+          <li>Everything in Free Demo</li>
+          <li>Your own product + project images</li>
+          <li>No DEMO watermark</li>
+          <li>Unlimited image uploads</li>
+          <li>MidasQuote Pro</li>
+          <li>Website Showroom and image uploads</li>
+          <li>Branded proposals</li>
+          <li>Free lifetime tech support</li>
+        </ul>
+        <a class="btn gold" style="width:100%" href="https://www.midasquote.com/pricing">Build My Estimator</a>
+      </div>
+    </div>
+
+    <div class="faq-sales">
+      <details>
+        <summary>What happens after the 30-day free trial?</summary>
+        <p>You are never automatically charged. Your estimator simply switches to Free Demo mode. Your pricing, products, calculations, lead capture, email quotes and financing estimates keep working. Your images are hidden, a DEMO watermark appears, image uploads lock and paid tools including Showroom uploads and MidasQuote Pro are unavailable. Design Studio stays free. Upgrade anytime and the full version comes back.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<section class="final image-overlay overlay-light"><div class="wrap"><h2>Find out if the price works before you draw the job.</h2><p>Give customers a ballpark first. Save the measuring, drawings and detailed quotes for the customers who already said yes to the range.</p><a class="btn gold" href="https://www.midasquote.com/pricing">Build My Estimator Free</a><div class="proof" style="justify-content:center"><span><b>30 days</b> full estimator access</span><span><b>No card</b> required</span><span><b>Free quoting + Design Studio</b> forever</span><p>*Quotes may take longer than 5 minutes in some cases</p></div></div></section>
+
+<footer><div class="wrap foot"><a class="logo" href="#top" aria-label="MidasQuote home"><img class="logoimg" src="https://cdn.shopify.com/s/files/1/0680/5910/3421/files/midasquote-logo.png?v=1791822746" alt="MidasQuote"></a><div style="display:flex;gap:18px;flex-wrap:wrap;align-items:center"><a href="https://www.midasquote.com/login" style="color:#d7d3cc">Shop Login</a><div>© 2026 MidasQuote · Built for cabinet shops</div></div></div></footer>
+
+<script>
+(function(){
+  const toggle=document.querySelector('.menu-toggle');
+  const menu=document.getElementById('mobile-menu');
+  if(!toggle||!menu) return;
+  function closeMenu(){
+    menu.classList.remove('open');
+    toggle.setAttribute('aria-expanded','false');
+    toggle.setAttribute('aria-label','Open menu');
+  }
+  toggle.addEventListener('click',function(event){
+    event.stopPropagation();
+    const isOpen=menu.classList.toggle('open');
+    toggle.setAttribute('aria-expanded',String(isOpen));
+    toggle.setAttribute('aria-label',isOpen?'Close menu':'Open menu');
+  });
+
+  menu.addEventListener('click',function(event){
+    event.stopPropagation();
+  });
+
+  document.addEventListener('click',function(){
+    if(menu.classList.contains('open')) closeMenu();
+  });
+
+  menu.querySelectorAll('a').forEach(function(link){link.addEventListener('click',closeMenu);});
+  window.addEventListener('resize',function(){if(window.innerWidth>900) closeMenu();});
+})();
+</script>
+</body>
+</html>
