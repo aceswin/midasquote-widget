@@ -1426,9 +1426,6 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         #midasquote-dashboard .mq-help-btn{top:-13px}
         #midasquote-dashboard #mq-plan-banner > div{max-width:100%}
         #midasquote-dashboard .mq-spec-scroll-arrow{display:none!important}
-        #midasquote-dashboard #mq-pd-sticky-preview{top:auto!important;bottom:14px!important;right:14px!important;max-width:300px!important;width:auto!important;padding:10px!important;height:auto!important}
-        #midasquote-dashboard #mq-pd-sticky-preview canvas{width:260px!important;height:auto!important;margin-bottom:8px!important}
-        #midasquote-dashboard #mq-pd-sticky-preview button{font-size:13px!important;padding:8px!important;width:100%!important}
         #midasquote-dashboard .mq-topbar{padding:8px 1rem}
         #midasquote-dashboard .mq-topbar-brand{font-size:14px}
         #midasquote-dashboard .mq-card{padding:1.25rem}
@@ -1680,17 +1677,32 @@ window.logoutMember = async function () {
           <!-- SHOP INFO -->
           <div class="mq-page" id="mq-page-shop">
             <button class="mq-help-btn" onclick="mqShowHelp('shop')"><span class="mq-help-badge">?</span> Need help?</button>
-            <div class="mq-page-title">Shop info</div>
-            <div class="mq-page-sub">This info appears on your widget and in emails to customers</div>
+            <div class="mq-page-title">Shop settings <span class="mq-shop-page-dot">●</span></div>
+            <div class="mq-page-sub">Everything that makes MidasQuote feel like your shop — in one place.</div>
             ${mqTrainingVideoBlockHTML('shop')}
             <div id="mq-shop-msg"></div>
 
-            <div class="mq-card">
-              <div class="mq-card-title" onclick="mqToggleShopSection('business')" style="cursor:pointer;user-select:none">
+
+            <div class="mq-shop-workspace" id="mq-shop-workspace">
+              <aside class="mq-shop-nav" aria-label="Shop settings navigation">
+                <div class="mq-shop-nav-caption">YOUR WORKSPACE</div>
+                <button type="button" class="mq-shop-nav-item is-active" aria-current="true" data-shop-panel="business" onclick="mqSelectShopPanel('business')"><span class="mq-shop-nav-icon">▣</span><span><b>Business details</b><small>Name, contact & currency</small></span><span class="mq-shop-nav-arrow">›</span></button>
+                <button type="button" class="mq-shop-nav-item" data-shop-panel="branding" onclick="mqSelectShopPanel('branding')"><span class="mq-shop-nav-icon">◈</span><span><b>Branding</b><small>Logo & colors</small></span><span class="mq-shop-nav-arrow">›</span></button>
+                <button type="button" class="mq-shop-nav-item" data-shop-panel="widgettext" onclick="mqSelectShopPanel('widgettext')"><span class="mq-shop-nav-icon">✎</span><span><b>Quote settings</b><small>Ranges & customer text</small></span><span class="mq-shop-nav-arrow">›</span></button>
+                <button type="button" class="mq-shop-nav-item" data-shop-panel="leads" onclick="mqSelectShopPanel('leads')"><span class="mq-shop-nav-icon">✉</span><span><b>Leads & contacts</b><small>Notifications & bookings</small></span><span class="mq-shop-nav-arrow">›</span></button>
+                <button type="button" class="mq-shop-nav-item" data-shop-panel="financing" onclick="mqSelectShopPanel('financing')"><span class="mq-shop-nav-icon">◇</span><span><b>Financing</b><small>Offers & extras</small></span><span class="mq-shop-nav-arrow">›</span></button>
+                <button type="button" class="mq-shop-nav-item" data-shop-panel="access" onclick="mqSelectShopPanel('access')"><span class="mq-shop-nav-icon">♙</span><span><b>Access & privacy</b><small>Visitor permissions</small></span><span class="mq-shop-nav-arrow">›</span></button>
+                <button type="button" class="mq-shop-nav-item" data-shop-panel="layout" onclick="mqSelectShopPanel('layout')"><span class="mq-shop-nav-icon">▤</span><span><b>Widget layout</b><small>Customer experience</small></span><span class="mq-shop-nav-arrow">›</span></button>
+                <button type="button" class="mq-shop-nav-item" data-shop-panel="tabs" onclick="mqSelectShopPanel('tabs')"><span class="mq-shop-nav-icon">☷</span><span><b>Estimator tabs</b><small>Visible quote options</small></span><span class="mq-shop-nav-arrow">›</span></button>
+                <div class="mq-shop-nav-foot"><span class="mq-shop-nav-foot-dot"></span> Changes autosave as you edit</div>
+              </aside>
+              <div class="mq-shop-panels" id="mq-shop-panels">
+            <div class="mq-card mq-shop-panel is-active" data-shop-section="business">
+              <div class="mq-card-title" style="cursor:default;user-select:none">
                 <span id="mq-shopsec-business-chevron" style="font-size:11px;color:#6b7280;display:inline-block;transition:transform 0.15s">▶</span>
                 🏢 Business info
               </div>
-              <div id="mq-shopsec-business-body" style="display:none">
+              <div id="mq-shopsec-business-body" style="display:block">
               <div class="mq-grid2">
                 <div class="mq-field"><label class="mq-label">Shop name</label><input type="text" id="mq-shop-name"/></div>
                 <div class="mq-field"><label class="mq-label">Phone number</label><input type="tel" id="mq-shop-phone"/></div>
@@ -1714,12 +1726,12 @@ window.logoutMember = async function () {
               </div>
             </div>
 
-            <div class="mq-card">
-              <div class="mq-card-title" onclick="mqToggleShopSection('branding')" style="cursor:pointer;user-select:none">
+            <div class="mq-card mq-shop-panel" data-shop-section="branding">
+              <div class="mq-card-title" style="cursor:default;user-select:none">
                 <span id="mq-shopsec-branding-chevron" style="font-size:11px;color:#6b7280;display:inline-block;transition:transform 0.15s">▶</span>
                 🎨 Branding
               </div>
-              <div id="mq-shopsec-branding-body" style="display:none">
+              <div id="mq-shopsec-branding-body" style="display:block">
               <div class="mq-grid2" style="margin-bottom:1rem">
                 <div class="mq-field"><label class="mq-label">Brand colour</label>
                   <div style="display:flex;align-items:center;gap:8px">
@@ -1789,12 +1801,12 @@ window.logoutMember = async function () {
               </div>
             </div>
 
-            <div class="mq-card">
-              <div class="mq-card-title" onclick="mqToggleShopSection('widgettext')" style="cursor:pointer;user-select:none">
+            <div class="mq-card mq-shop-panel" data-shop-section="widgettext">
+              <div class="mq-card-title" style="cursor:default;user-select:none">
                 <span id="mq-shopsec-widgettext-chevron" style="font-size:11px;color:#6b7280;display:inline-block;transition:transform 0.15s">▶</span>
                 📝 Widget text &amp; quote settings
               </div>
-              <div id="mq-shopsec-widgettext-body" style="display:none">
+              <div id="mq-shopsec-widgettext-body" style="display:block">
               <div class="mq-grid2" style="margin-bottom:1rem">
                 <div class="mq-field">
                   <label class="mq-label">Quote range — low (% below estimate)</label>
@@ -1825,12 +1837,12 @@ window.logoutMember = async function () {
               </div>
             </div>
 
-            <div class="mq-card">
-              <div class="mq-card-title" onclick="mqToggleShopSection('leads')" style="cursor:pointer;user-select:none">
+            <div class="mq-card mq-shop-panel" data-shop-section="leads">
+              <div class="mq-card-title" style="cursor:default;user-select:none">
                 <span id="mq-shopsec-leads-chevron" style="font-size:11px;color:#6b7280;display:inline-block;transition:transform 0.15s">▶</span>
                 📩 Leads &amp; consultations
               </div>
-              <div id="mq-shopsec-leads-body" style="display:none">
+              <div id="mq-shopsec-leads-body" style="display:block">
               <div class="mq-field" style="margin-bottom:1rem">
                 <label class="mq-label">Lead notify email</label>
                 <input type="email" id="mq-shop-email"/>
@@ -1859,12 +1871,12 @@ window.logoutMember = async function () {
               </div>
             </div>
 
-            <div class="mq-card">
-              <div class="mq-card-title" onclick="mqToggleShopSection('financing')" style="cursor:pointer;user-select:none">
+            <div class="mq-card mq-shop-panel" data-shop-section="financing">
+              <div class="mq-card-title" style="cursor:default;user-select:none">
                 <span id="mq-shopsec-financing-chevron" style="font-size:11px;color:#6b7280;display:inline-block;transition:transform 0.15s">▶</span>
                 💳 Financing &amp; extras
               </div>
-              <div id="mq-shopsec-financing-body" style="display:none">
+              <div id="mq-shopsec-financing-body" style="display:block">
               <div class="mq-toggle-row" style="margin-bottom:1rem">
                 <div>
                   <div style="font-size:13px;font-weight:500;color:#111">We offer financing</div>
@@ -1905,12 +1917,12 @@ window.logoutMember = async function () {
               </div>
             </div>
 
-            <div class="mq-card">
-              <div class="mq-card-title" onclick="mqToggleShopSection('access')" style="cursor:pointer;user-select:none">
+            <div class="mq-card mq-shop-panel" data-shop-section="access">
+              <div class="mq-card-title" style="cursor:default;user-select:none">
                 <span id="mq-shopsec-access-chevron" style="font-size:11px;color:#6b7280;display:inline-block;transition:transform 0.15s">▶</span>
                 🔒 Widget access
               </div>
-              <div id="mq-shopsec-access-body" style="display:none">
+              <div id="mq-shopsec-access-body" style="display:block">
               <div class="mq-toggle-row" style="margin-bottom:0">
                 <div>
                   <div style="font-size:13px;font-weight:500;color:#111">Require a password to use the widget</div>
@@ -1932,12 +1944,12 @@ window.logoutMember = async function () {
               </div>
             </div>
 
-            <div class="mq-card">
-              <div class="mq-card-title" onclick="mqToggleShopSection('layout')" style="cursor:pointer;user-select:none">
+            <div class="mq-card mq-shop-panel" data-shop-section="layout">
+              <div class="mq-card-title" style="cursor:default;user-select:none">
                 <span id="mq-shopsec-layout-chevron" style="font-size:11px;color:#6b7280;display:inline-block;transition:transform 0.15s">▶</span>
                 🎛️ Widget layout
               </div>
-              <div id="mq-shopsec-layout-body" style="display:none">
+              <div id="mq-shopsec-layout-body" style="display:block">
               <div class="mq-hint" style="display:block;margin-bottom:1rem">Choose how your widget feels to customers. This applies to your embedded widget and your standalone widget link everywhere at once — there's nothing to re-paste. MidasQuote Pro isn't affected — it always keeps its standard layout.</div>
               <div style="display:flex;gap:12px;flex-wrap:wrap">
                 <div id="mq-layout-classic" onclick="mqSetWidgetLayout('Classic')" style="flex:1;min-width:230px;border:2px solid #e5e7eb;border-radius:10px;padding:1rem;cursor:pointer">
@@ -1955,12 +1967,12 @@ window.logoutMember = async function () {
               </div>
             </div>
 
-            <div class="mq-card">
-              <div class="mq-card-title" onclick="mqToggleShopSection('tabs')" style="cursor:pointer;user-select:none">
+            <div class="mq-card mq-shop-panel" data-shop-section="tabs">
+              <div class="mq-card-title" style="cursor:default;user-select:none">
                 <span id="mq-shopsec-tabs-chevron" style="font-size:11px;color:#6b7280;display:inline-block;transition:transform 0.15s">▶</span>
                 🗂️ Estimator tabs
               </div>
-              <div id="mq-shopsec-tabs-body" style="display:none">
+              <div id="mq-shopsec-tabs-body" style="display:block">
               <div class="mq-hint" style="display:block;margin-bottom:1rem">Choose which quote tabs show on your widget. Whatever's left automatically shifts over to fill the space — at least one tab must stay visible.</div>
               <div class="mq-toggle-row" style="margin-bottom:1rem">
                 <div>
@@ -1986,6 +1998,8 @@ window.logoutMember = async function () {
                 Apply to MidasQuote Pro too
               </label>
               <div class="mq-hint" style="display:block;margin-top:4px">Unchecked, MidasQuote Pro always keeps showing all three tabs regardless of what's hidden above.</div>
+              </div>
+            </div>
               </div>
             </div>
           </div>
@@ -2587,6 +2601,8 @@ window.logoutMember = async function () {
   .mq-studio-tile{background:#fff;border:1px solid #e9e6e9;border-radius:13px;padding:9px;text-align:left;cursor:pointer;box-shadow:0 3px 18px rgba(32,26,41,.04);transition:transform .2s,border-color .2s,box-shadow .2s;color:inherit}
   .mq-studio-tile:hover,.mq-studio-tile:focus-visible{transform:translateY(-3px);border-color:#a98caa;box-shadow:0 10px 28px rgba(32,26,41,.12);outline:none}
   .mq-studio-thumb{display:block;width:100%;height:175px;object-fit:cover;border-radius:8px;background:#eee8e9}
+  #mq-studio .mq-studio-yard-card .mq-studio-tile-meta strong{font-size:14px!important;line-height:1.25!important}
+  #mq-studio .mq-studio-yard-card .mq-studio-tile-meta small{font-size:11px!important}
   #mq-studio .mq-studio-yard-card .mq-studio-thumb-area{height:auto!important;aspect-ratio:3 / 2!important;background:#efe9e5!important;overflow:hidden!important;border-radius:9px!important}
   #mq-studio .mq-studio-yard-card .mq-studio-thumb{display:block!important;width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;object-fit:fill!important;border-radius:0!important}
   #mq-studio .mq-studio-yard-card{border-color:#e4ded7!important;box-shadow:0 4px 16px rgba(39,30,25,.09)!important}
@@ -2958,6 +2974,30 @@ window.logoutMember = async function () {
 #mq-page-marketing .mq-studio-mobile-notice button{display:inline-block;border:1px solid #aa873a;border-radius:8px;padding:8px 11px;background:#fff;color:#5a4110;font-weight:700;margin:10px 0 0;cursor:pointer}
 @media(max-width:980px){#mq-page-marketing .mq-creative-hub{grid-template-columns:1fr 1fr}}
 @media(max-width:680px){#mq-page-marketing .mq-creative-hub{grid-template-columns:1fr}#mq-page-marketing .mq-studio-mobile-notice{display:block}#mq-page-marketing #mq-studio-workspace:not(.mq-studio-phone-allowed){display:none!important}#mq-page-marketing #mq-studio-workspace.mq-studio-phone-allowed{display:flex!important}}
+
+/* MidasQuote Settings Workspace — scoped to Shop Info only */
+#midasquote-dashboard #mq-page-shop .mq-shop-page-dot{font-size:9px;color:#c09a43;vertical-align:middle}
+#midasquote-dashboard #mq-page-shop .mq-shop-workspace{display:grid;grid-template-columns:240px minmax(0,1fr);gap:20px;align-items:start;margin-top:18px}
+#midasquote-dashboard #mq-page-shop .mq-shop-nav{position:sticky;top:18px;background:#fff;border:1px solid #e4e7eb;border-radius:17px;padding:12px;box-shadow:0 10px 30px rgba(17,24,39,.035)}
+#midasquote-dashboard #mq-page-shop .mq-shop-nav-caption{font-size:10px;letter-spacing:1.3px;font-weight:800;color:#9399a4;padding:12px 13px 14px}
+#midasquote-dashboard #mq-page-shop .mq-shop-nav-item{width:100%;display:flex;align-items:center;gap:11px;text-align:left;border:1px solid transparent;background:transparent;border-radius:11px;padding:11px 10px;margin:2px 0;cursor:pointer;color:#394150;transition:background .15s,border-color .15s,transform .15s;font-family:inherit}
+#midasquote-dashboard #mq-page-shop .mq-shop-nav-item:hover{background:#f7f8fa}
+#midasquote-dashboard #mq-page-shop .mq-shop-nav-item.is-active{background:#f5f1e9;border-color:#dfd2b6;color:#171717}
+#midasquote-dashboard #mq-page-shop .mq-shop-nav-icon{display:grid;place-items:center;width:30px;height:30px;flex-shrink:0;border-radius:8px;background:#f1f3f5;color:#46505d;font-size:17px}
+#midasquote-dashboard #mq-page-shop .is-active .mq-shop-nav-icon{background:#171717;color:#f7d572}
+#midasquote-dashboard #mq-page-shop .mq-shop-nav-item>span:nth-child(2){min-width:0;flex:1}
+#midasquote-dashboard #mq-page-shop .mq-shop-nav-item b{display:block;font-size:12px;line-height:1.35;font-weight:750}
+#midasquote-dashboard #mq-page-shop .mq-shop-nav-item small{display:block;margin-top:3px;font-size:10px;line-height:1.35;font-weight:450;color:#828995}
+#midasquote-dashboard #mq-page-shop .mq-shop-nav-arrow{font-size:18px;color:#9da4ae}
+#midasquote-dashboard #mq-page-shop .mq-shop-nav-foot{font-size:10px;color:#6b7280;display:flex;gap:7px;align-items:center;margin:16px 10px 6px;padding-top:14px;border-top:1px solid #eef0f2}
+#midasquote-dashboard #mq-page-shop .mq-shop-nav-foot-dot{width:6px;height:6px;border-radius:50%;background:#4ba483;flex-shrink:0}
+#midasquote-dashboard #mq-page-shop .mq-shop-panel{display:none;margin:0!important;background:#fff;border:1px solid #e3e6ec;border-radius:18px;padding:28px;box-shadow:0 16px 36px rgba(17,24,39,.035)}
+#midasquote-dashboard #mq-page-shop .mq-shop-panel.is-active{display:block}
+#midasquote-dashboard #mq-page-shop .mq-shop-panel>.mq-card-title{font-size:19px;font-weight:800;letter-spacing:-.35px;border-bottom:1px solid #eef0f3;margin:0 0 25px;padding-bottom:20px;line-height:1.35}
+#midasquote-dashboard #mq-page-shop .mq-shop-panel>.mq-card-title [id$="-chevron"]{display:none!important}
+#midasquote-dashboard #mq-page-shop .mq-shop-panel .mq-field>input:not([type="checkbox"]):not([type="radio"]):not([type="color"]),#midasquote-dashboard #mq-page-shop .mq-shop-panel .mq-field>select,#midasquote-dashboard #mq-page-shop .mq-shop-panel .mq-field>textarea{border-radius:10px;border-color:#d9dee6;min-height:42px}
+#midasquote-dashboard #mq-page-shop .mq-shop-panel .mq-label{font-weight:700;color:#343b47;font-size:12px}
+@media(max-width:950px){#midasquote-dashboard #mq-page-shop .mq-shop-workspace{grid-template-columns:1fr;gap:12px}#midasquote-dashboard #mq-page-shop .mq-shop-nav{position:static;display:flex;overflow-x:auto;gap:6px;padding:8px;scrollbar-width:thin}#midasquote-dashboard #mq-page-shop .mq-shop-nav-caption,#midasquote-dashboard #mq-page-shop .mq-shop-nav-foot,#midasquote-dashboard #mq-page-shop .mq-shop-nav-arrow,#midasquote-dashboard #mq-page-shop .mq-shop-nav-item small{display:none}#midasquote-dashboard #mq-page-shop .mq-shop-nav-item{flex:0 0 auto;width:auto;white-space:nowrap;margin:0;padding:9px 12px}#midasquote-dashboard #mq-page-shop .mq-shop-nav-item b{font-size:12px}#midasquote-dashboard #mq-page-shop .mq-shop-nav-icon{width:24px;height:24px;font-size:14px}#midasquote-dashboard #mq-page-shop .mq-shop-panel{padding:20px}}
 </style>
           <!-- MARKETING KIT -->
           <div class="mq-page mq-sr-tab" id="mq-page-marketing">
@@ -3252,277 +3292,6 @@ window.logoutMember = async function () {
                 <button class="mq-btn mq-btn-primary" id="mq-mk-download-btn" style="width:100%;max-width:280px">⬇️ Download graphic (PNG)</button>
               </div>
               </div>
-            </div>
-
-            <div class="mq-card mq-sr-card" id="mq-pd-outer-card">
-              <div onclick="mqToggleMkSection('poster')" class="mq-sr-head">
-                <div class="mq-sr-title">🎨 Custom Poster & Sign Designer</div>
-                <span id="mq-mk-arrow-poster" class="mq-sr-chev">▼</span>
-              </div>
-              <div id="mq-mk-body-poster" class="mq-sr-body" style="display:none">
-              <p style="font-size:13px;color:var(--text-mid);margin-bottom:1rem">Pick a style, add your own project photo, and download a print-ready poster or yard sign — pick "Landscape" below for a yard sign.</p>
-
-              <div class="mq-field" style="margin-bottom:12px">
-                <label class="mq-label">Style</label>
-                <div style="display:flex;gap:10px;flex-wrap:wrap">
-                  <div class="mq-pd-template-thumb selected" data-template="curved-split" onclick="mqPdSelectTemplate('curved-split',this)" style="cursor:pointer;border:2px solid #1a1a1a;border-radius:8px;padding:6px;text-align:center;width:84px">
-                    <div style="width:100%;height:50px;border-radius:5px;background:linear-gradient(120deg,#fff 45%,#1a3a6b 55%)"></div>
-                    <div style="font-size:10.5px;margin-top:4px;font-weight:600">Curved Split</div>
-                  </div>
-                  <div class="mq-pd-template-thumb" data-template="diamond-arrow" onclick="mqPdSelectTemplate('diamond-arrow',this)" style="cursor:pointer;border:2px solid #e5e7eb;border-radius:8px;padding:6px;text-align:center;width:84px">
-                    <div style="width:100%;height:50px;border-radius:5px;background:linear-gradient(100deg,#111 45%,#c9a24b 47%,#8a6d2b 49%,#333 52%)"></div>
-                    <div style="font-size:10.5px;margin-top:4px;font-weight:600">Diamond Arrow</div>
-                  </div>
-                  <div class="mq-pd-template-thumb" data-template="ornate-divider" onclick="mqPdSelectTemplate('ornate-divider',this)" style="cursor:pointer;border:2px solid #e5e7eb;border-radius:8px;padding:6px;text-align:center;width:84px">
-                    <div style="width:100%;height:50px;border-radius:50%/20%;background:linear-gradient(#fff 45%,#8a5a3a 47%)"></div>
-                    <div style="font-size:10.5px;margin-top:4px;font-weight:600">Ornate Divider</div>
-                  </div>
-                  <div class="mq-pd-template-thumb" data-template="circular-badge" onclick="mqPdSelectTemplate('circular-badge',this)" style="cursor:pointer;border:2px solid #e5e7eb;border-radius:8px;padding:6px;text-align:center;width:84px">
-                    <div style="width:100%;height:50px;border-radius:5px;background:#3a3a3a;position:relative">
-                      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:26px;height:26px;border-radius:50%;border:2px solid #c9a24b"></div>
-                    </div>
-                    <div style="font-size:10.5px;margin-top:4px;font-weight:600">Circular Badge</div>
-                  </div>
-                  <div class="mq-pd-template-thumb" data-template="bold-modern" onclick="mqPdSelectTemplate('bold-modern',this)" style="cursor:pointer;border:2px solid #e5e7eb;border-radius:8px;padding:6px;text-align:center;width:84px">
-                    <div style="width:100%;height:50px;border-radius:5px;background:linear-gradient(90deg,#1a3a6b 45%,#666 47%)"></div>
-                    <div style="font-size:10.5px;margin-top:4px;font-weight:600">Bold Modern</div>
-                  </div>
-                  <div class="mq-pd-template-thumb" data-template="premium-frame" onclick="mqPdSelectTemplate('premium-frame',this)" style="cursor:pointer;border:2px solid #e5e7eb;border-radius:8px;padding:6px;text-align:center;width:84px">
-                    <div style="width:100%;height:50px;border-radius:5px;background:#171717;position:relative;border:1px solid #c9a24b">
-                      <div style="position:absolute;right:6px;top:6px;bottom:6px;width:36px;border-radius:3px;background:#d7d7d7"></div>
-                      <div style="position:absolute;left:8px;top:8px;width:20px;height:3px;background:#c9a24b"></div>
-                      <div style="position:absolute;left:8px;top:16px;width:28px;height:10px;background:#f5f5f5;opacity:.9"></div>
-                    </div>
-                    <div style="font-size:10.5px;margin-top:4px;font-weight:600">Premium Frame</div>
-                  </div>
-                  <div class="mq-pd-template-thumb" data-template="estate-clean" onclick="mqPdSelectTemplate('estate-clean',this)" style="cursor:pointer;border:2px solid #e5e7eb;border-radius:8px;padding:6px;text-align:center;width:84px">
-                    <div style="width:100%;height:50px;border-radius:5px;background:linear-gradient(#bfc9d4 0 64%,#fff 64% 100%);position:relative">
-                      <div style="position:absolute;left:0;right:0;top:31px;height:3px;background:#c9a24b"></div>
-                    </div>
-                    <div style="font-size:10.5px;margin-top:4px;font-weight:600">Estate Clean</div>
-                  </div>
-                  <div class="mq-pd-template-thumb" data-template="cta-strip" onclick="mqPdSelectTemplate('cta-strip',this)" style="cursor:pointer;border:2px solid #e5e7eb;border-radius:8px;padding:6px;text-align:center;width:84px">
-                    <div style="width:100%;height:50px;border-radius:5px;background:linear-gradient(#b8b8b8 0 56%,#0f1f34 56% 100%);position:relative">
-                      <div style="position:absolute;left:7px;right:7px;bottom:8px;height:8px;border-radius:999px;background:#c9a24b"></div>
-                    </div>
-                    <div style="font-size:10.5px;margin-top:4px;font-weight:600">CTA Strip</div>
-                  </div>
-                  <div class="mq-pd-template-thumb" data-template="luxury-ribbon" onclick="mqPdSelectTemplate('luxury-ribbon',this)" style="cursor:pointer;border:2px solid #e5e7eb;border-radius:8px;padding:6px;text-align:center;width:84px">
-                    <div style="width:100%;height:50px;border-radius:5px;background:linear-gradient(135deg,#3d3d3d 0 70%,#c9a24b 70% 100%);position:relative">
-                      <div style="position:absolute;left:6px;top:7px;width:28px;height:16px;background:rgba(0,0,0,.55);border-radius:3px"></div>
-                    </div>
-                    <div style="font-size:10.5px;margin-top:4px;font-weight:600">Luxury Ribbon</div>
-                  </div>
-                  <div class="mq-pd-template-thumb" data-template="corner-card" onclick="mqPdSelectTemplate('corner-card',this)" style="cursor:pointer;border:2px solid #e5e7eb;border-radius:8px;padding:6px;text-align:center;width:84px">
-                    <div style="width:100%;height:50px;border-radius:5px;background:#b9c2cc;position:relative">
-                      <div style="position:absolute;left:5px;bottom:5px;width:36px;height:22px;background:#fff;border-radius:4px;box-shadow:0 2px 6px rgba(0,0,0,.18)"></div>
-                    </div>
-                    <div style="font-size:10.5px;margin-top:4px;font-weight:600">Corner Card</div>
-                  </div>
-                  <div class="mq-pd-template-thumb" data-template="split-showcase" onclick="mqPdSelectTemplate('split-showcase',this)" style="cursor:pointer;border:2px solid #e5e7eb;border-radius:8px;padding:6px;text-align:center;width:84px">
-                    <div style="width:100%;height:50px;border-radius:5px;background:linear-gradient(90deg,#bababa 0 55%,#0f1f34 55% 100%);position:relative">
-                      <div style="position:absolute;right:7px;top:7px;width:18px;height:3px;background:#c9a24b"></div>
-                      <div style="position:absolute;right:7px;top:13px;width:26px;height:10px;background:rgba(255,255,255,.85)"></div>
-                    </div>
-                    <div style="font-size:10.5px;margin-top:4px;font-weight:600">Split Showcase</div>
-                  </div>
-                  <div class="mq-pd-template-thumb" data-template="headline-band" onclick="mqPdSelectTemplate('headline-band',this)" style="cursor:pointer;border:2px solid #e5e7eb;border-radius:8px;padding:6px;text-align:center;width:84px">
-                    <div style="width:100%;height:50px;border-radius:5px;background:#b7b7b7;position:relative">
-                      <div style="position:absolute;left:0;right:0;top:0;height:16px;background:#111827"></div>
-                      <div style="position:absolute;left:6px;right:20px;top:6px;height:4px;background:#fff;opacity:.9"></div>
-                    </div>
-                    <div style="font-size:10.5px;margin-top:4px;font-weight:600">Headline Band</div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="mq-field" style="margin-bottom:12px">
-                <label class="mq-label">Orientation</label>
-                <div style="display:flex;gap:8px">
-                  <button class="mq-btn mq-btn-sm" id="mq-pd-orient-portrait" onclick="mqPdSetOrientation('portrait')">📱 Portrait — poster</button>
-                  <button class="mq-btn mq-btn-sm" id="mq-pd-orient-landscape" onclick="mqPdSetOrientation('landscape')">🖥️ Landscape — yard sign</button>
-                </div>
-              </div>
-
-              <div class="mq-grid2">
-                <div class="mq-field">
-                  <label class="mq-label">Project photo</label>
-                  <button class="mq-btn mq-btn-sm" onclick="document.getElementById('mq-pd-photo-input').click()">📤 Upload photo</button>
-                  <input type="file" id="mq-pd-photo-input" accept="image/*" style="display:none"/>
-                </div>
-                <div class="mq-field">
-                  <label class="mq-label">Text or your logo?</label>
-                  <select id="mq-pd-text-mode" onchange="mqPdTextModeChanged()">
-                    <option value="text">Text (shop name + tagline)</option>
-                    <option value="logo">My own logo image</option>
-                  </select>
-                </div>
-              </div>
-
-              <div class="mq-field" id="mq-pd-logo-upload-wrap" style="display:none;margin-bottom:12px">
-                <label class="mq-label">Logo image</label>
-                <button class="mq-btn mq-btn-sm" onclick="document.getElementById('mq-pd-logo-input').click()">📤 Upload logo</button>
-                <input type="file" id="mq-pd-logo-input" accept="image/*" style="display:none"/>
-                <p style="font-size:11px;color:#9ca3af;margin-top:4px">This is separate from your Shop Info logo — upload whatever image you want to appear here specifically.</p>
-                <label class="mq-label" style="margin-top:10px;display:block">Logo size</label>
-                <input type="range" id="mq-pd-logo-size" min="50" max="250" value="100" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:100%"/>
-              </div>
-
-              <div class="mq-field" style="margin-bottom:12px">
-                <label class="mq-label">Tagline</label>
-                <input type="text" id="mq-pd-tagline" value="Custom Kitchens & Millwork" maxlength="60" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()"/>
-              </div>
-
-              <div class="mq-field" style="margin-bottom:12px">
-                <label class="mq-label">Badge text <span style="font-weight:400;color:#9ca3af;text-transform:none">(Circular Badge style only — independent of your shop name)</span></label>
-                <input type="text" id="mq-pd-badge-text" placeholder="e.g. DR" maxlength="4" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()"/>
-              </div>
-
-              <div class="mq-card" style="padding:0;overflow:hidden;margin-bottom:1rem">
-                <div onclick="mqPdToggleColorSection()" style="display:flex;align-items:center;justify-content:space-between;padding:14px;cursor:pointer;background:#f9fafb">
-                  <div style="font-size:13px;font-weight:700;color:#374151">🎨 Colours &amp; Text Style</div>
-                  <span id="mq-pd-color-section-arrow" style="font-size:13px;color:#9ca3af;transition:transform 0.2s">▼</span>
-                </div>
-                <div id="mq-pd-color-section-body" style="padding:14px">
-                  <div class="mq-grid2">
-                    <div class="mq-field">
-                      <label class="mq-label">Background colour</label>
-                      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-                        <input type="color" id="mq-pd-bg-color" value="#ffffff" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
-                        <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#6b7280;cursor:pointer">
-                          <input type="checkbox" id="mq-pd-bg-gradient" onchange="mqPdToggleGradientColor2('mq-pd-bg-color2-wrap',this.checked)" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> Gradient
-                        </label>
-                        <span id="mq-pd-bg-color2-wrap" style="display:none">
-                          <input type="color" id="mq-pd-bg-color2" value="#f0f0f0" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
-                        </span>
-                      </div>
-                      <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#6b7280;margin-top:8px;cursor:pointer">
-                        <input type="checkbox" id="mq-pd-bg-image-enabled" onchange="mqPdBgImageToggled()" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> Use an image instead
-                      </label>
-                      <div id="mq-pd-bg-image-upload-wrap" style="display:none;margin-top:6px">
-                        <button class="mq-btn mq-btn-sm" onclick="document.getElementById('mq-pd-bg-image-input').click()">📤 Upload background image</button>
-                        <input type="file" id="mq-pd-bg-image-input" accept="image/*" style="display:none"/>
-                        <div style="margin-top:8px">
-                          <button class="mq-btn mq-btn-sm" onclick="mqPdLoadTextureLibrary()">🧱 Or choose from our texture library</button>
-                          <div id="mq-pd-texture-grid" style="display:none;margin-top:8px;max-height:180px;overflow-y:auto;grid-template-columns:repeat(4,1fr);gap:6px"></div>
-                        </div>
-                        <div style="margin-top:10px;padding-top:10px;border-top:1px solid #e5e7eb">
-                          <label class="mq-label" style="display:block;margin-bottom:6px">Overlay <span style="font-weight:400;color:#9ca3af;text-transform:none">(darken/tint the image so your text stays readable)</span></label>
-                          <div style="display:flex;gap:8px;align-items:center">
-                            <input type="color" id="mq-pd-bg-overlay-color" value="#000000" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
-                            <input type="range" id="mq-pd-bg-overlay-opacity" min="0" max="90" value="0" oninput="mqPdOverlayOpacityChanged()" style="flex:1"/>
-                            <span id="mq-pd-bg-overlay-opacity-val" style="font-size:11px;color:#6b7280;width:32px;text-align:right">0%</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="mq-field">
-                      <label class="mq-label">Shape colour</label>
-                      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-                        <input type="color" id="mq-pd-shape-color" value="#1a3a6b" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
-                        <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#6b7280;cursor:pointer">
-                          <input type="checkbox" id="mq-pd-shape-gradient" onchange="mqPdToggleGradientColor2('mq-pd-shape-color2-wrap',this.checked)" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> Gradient
-                        </label>
-                        <span id="mq-pd-shape-color2-wrap" style="display:none">
-                          <input type="color" id="mq-pd-shape-color2" value="#378ADD" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
-                        </span>
-                      </div>
-                    </div>
-                    <div class="mq-field">
-                      <label class="mq-label">Shop name colour <span style="font-weight:400;color:#9ca3af;text-transform:none">(independent of the shape colour above)</span></label>
-                      <input type="color" id="mq-pd-name-color" value="#1a1a1a" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
-                    </div>
-                  </div>
-
-                  <div class="mq-field" style="margin-top:12px">
-                    <label class="mq-label">Accent line colour</label>
-                    <input type="color" id="mq-pd-accent-color" value="#c9a24b" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
-                  </div>
-
-                  <div style="border-top:1px solid #e5e7eb;margin:14px 0 0;padding-top:14px">
-                    <div class="mq-field" style="margin-bottom:12px">
-                      <label class="mq-label">"Another project by" text</label>
-                      <input type="text" id="mq-pd-pre-text" value="Another project by" maxlength="40" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()"/>
-                    </div>
-                    <div class="mq-grid2">
-                      <div class="mq-field">
-                        <label class="mq-label">"Another project by" colour</label>
-                        <input type="color" id="mq-pd-pre-color" value="#6b6b6b" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
-                      </div>
-                      <div class="mq-field">
-                        <label class="mq-label">Tagline colour</label>
-                        <input type="color" id="mq-pd-tag-color" value="#4b4b4b" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
-                      </div>
-                    </div>
-                    <label style="display:flex;align-items:center;gap:6px;font-size:13px;margin-top:10px;cursor:pointer">
-                      <input type="checkbox" id="mq-pd-text-shadow" onchange="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> Add drop shadow to all text
-                    </label>
-                  </div>
-                </div>
-              </div>
-
-              <div class="mq-card" style="background:#f9fafb;padding:14px;margin-bottom:1rem">
-                <div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.05em">Text size &amp; layout</div>
-                <div class="mq-grid2" style="margin-bottom:8px">
-                  <div class="mq-field">
-                    <label class="mq-label">"Another project by" size</label>
-                    <input type="range" id="mq-pd-size-pre" min="50" max="280" value="100" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:100%"/>
-                  </div>
-                  <div class="mq-field">
-                    <label class="mq-label">Shop name size</label>
-                    <input type="range" id="mq-pd-size-name" min="50" max="280" value="100" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:100%"/>
-                  </div>
-                </div>
-                <div class="mq-grid2" style="margin-bottom:8px">
-                  <div class="mq-field">
-                    <label class="mq-label">Tagline size</label>
-                    <input type="range" id="mq-pd-size-tag" min="50" max="280" value="100" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:100%"/>
-                  </div>
-                  <div class="mq-field">
-                    <label class="mq-label">Space between lines</label>
-                    <input type="range" id="mq-pd-line-spacing" min="60" max="180" value="100" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:100%"/>
-                  </div>
-                </div>
-                <div class="mq-field">
-                  <label class="mq-label">Move whole text block up / down</label>
-                  <input type="range" id="mq-pd-text-offset" min="-100" max="100" value="0" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:100%"/>
-                </div>
-              </div>
-
-              <div class="mq-card" style="background:#f9fafb;padding:14px;margin-bottom:1rem">
-                <div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.05em">QR code &amp; quote button <span style="font-weight:400;text-transform:none;color:#9ca3af">(both optional)</span></div>
-                <label style="display:flex;align-items:center;gap:6px;font-size:13px;margin-bottom:10px;cursor:pointer">
-                  <input type="checkbox" id="mq-pd-qr-enabled" onchange="mqPdQrToggled()" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> Add a QR code onto the photo
-                </label>
-                <div id="mq-pd-qr-controls-wrap" style="display:none;margin-bottom:12px">
-                  <div class="mq-grid2">
-                    <div class="mq-field">
-                      <label class="mq-label">QR code size</label>
-                      <input type="range" id="mq-pd-qr-size" min="50" max="220" value="100" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:100%"/>
-                    </div>
-                    <div class="mq-field">
-                      <label class="mq-label">QR code position (up/down)</label>
-                      <input type="range" id="mq-pd-qr-position" min="-100" max="100" value="0" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:100%"/>
-                    </div>
-                  </div>
-                </div>
-                <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
-                  <input type="checkbox" id="mq-pd-btn-enabled" onchange="mqPdBtnToggled()" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> Add a "Get a Free Quote" button
-                </label>
-                <div id="mq-pd-btn-controls-wrap" style="display:none;margin-top:10px">
-                  <div class="mq-field">
-                    <label class="mq-label">Button position (up/down)</label>
-                    <input type="range" id="mq-pd-btn-position" min="-100" max="100" value="0" oninput="window._mqRedrawPosterDesigner && window._mqRedrawPosterDesigner()" style="width:100%"/>
-                  </div>
-                </div>
-              </div>
-              </div>
-
-              <div style="display:none;position:fixed;top:90px;right:30px;max-width:480px;z-index:50;text-align:center;background:#fff;padding:12px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.2)" id="mq-pd-sticky-preview">
-                <canvas id="mq-pd-canvas" width="1080" height="1620" onclick="mqPdOpenZoom()" style="width:auto;height:300px;border-radius:10px;display:block;margin:0 auto 10px;box-shadow:0 6px 24px rgba(0,0,0,0.18);cursor:zoom-in" title="Tap to zoom"></canvas>
-                <button class="mq-btn mq-btn-primary" id="mq-pd-download-btn" style="width:100%;display:block;margin:0 auto">⬇️ Download (PNG)</button>
-              </div>
-
             </div>
 
             <div class="mq-card mq-sr-card">
@@ -8408,6 +8177,22 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     showMsg('mq-shop-msg', `✓ ${label} reset to the MidasQuote default.`);
   };
 
+  window.mqSelectShopPanel = function(key) {
+    const workspace = document.getElementById('mq-shop-workspace');
+    if (!workspace) return;
+    const panel = workspace.querySelector('.mq-shop-panel[data-shop-section="' + key + '"]');
+    if (!panel) return;
+    workspace.querySelectorAll('.mq-shop-panel').forEach(p => p.classList.toggle('is-active', p === panel));
+    workspace.querySelectorAll('.mq-shop-nav-item').forEach(b => {
+      const active = b.dataset.shopPanel === key;
+      b.classList.toggle('is-active', active);
+      b.setAttribute('aria-current', active ? 'true' : 'false');
+    });
+    const body = document.getElementById('mq-shopsec-' + key + '-body');
+    if (body) body.style.display = 'block';
+    const activeNav = workspace.querySelector('.mq-shop-nav-item.is-active');
+    if (activeNav && window.innerWidth <= 950) activeNav.scrollIntoView({block:'nearest',inline:'nearest',behavior:'smooth'});
+  };
   window.mqToggleShopSection = function(key) {
     const body = el('mq-shopsec-' + key + '-body');
     const chevron = el('mq-shopsec-' + key + '-chevron');
@@ -8417,6 +8202,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     if (chevron) chevron.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(90deg)';
   };
   window.mqOpenShopSection = function(key) {
+    if (document.getElementById('mq-shop-workspace')) window.mqSelectShopPanel(key);
     const body = el('mq-shopsec-' + key + '-body');
     const chevron = el('mq-shopsec-' + key + '-chevron');
     if (!body) return;
@@ -13745,7 +13531,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       return studioCoverImages.get(url);
     }
     function studioCoverForTemplate(t,index=0){
-      if(t.id==='yardbefore')return index===0?'repainting':'kitchen';
+      if(t.id==='yardbefore')return index===0?'commercial':'kitchen';
       if(t.id==='yardshowroom')return 'kitchen';
       if(t.id==='yardfinance')return 'kitchen';
       if(t.id==='yardbooking')return 'commercial';
@@ -14587,11 +14373,11 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
         const r=regions[opts.highlight];if(r){ctx.save();ctx.strokeStyle='#38bdf8';ctx.lineWidth=4*k;ctx.setLineDash([14*k,8*k]);ctx.strokeRect(...r);ctx.restore()}
       }
     }
-    function thumb(t){
-      const svgData=customStudioThumbSvg(t);
+    function thumb(t, coverData=null){
+      const svgData=customStudioThumbSvg(t, coverData);
       if(svgData)return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svgData);
       const canvas=document.createElement('canvas');canvas.width=360;canvas.height=360;paint(canvas,t,{color,surface:'#e9d9c8',photo:mqStudioPhoto,headlineFont:'playfair',subFont:'montserrat',ctaFont:'montserrat',align:'left',headlineColor:'#ffffff',subColor:'#f0e7ee',ctaBg:'#f2e1ca',ctaColor:'#2b2430',headlineFx:'soft',subFx:'soft',brandFx:'soft',ctaFx:'none',urlFx:'soft',fxColor:'#000000',headlineScale:100,subScale:100,ctaScale:100,headlineSpacing:0,subSpacing:0,contentX:0,contentY:0,ctaX:0,ctaY:0});return canvas.toDataURL('image/png')}
-    function customStudioThumbSvg(t){
+    function customStudioThumbSvg(t,coverData=null){
       if(t.category!=='yard')return '';
       // Purpose-built, landscape previews. Each preview follows its editable
       // sign's major blocks rather than using a one-size-fits-all mockup.
@@ -14603,16 +14389,26 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
       const darkBg=dark?'#17171b':'#f9f7f2', darkFg=dark?'#fff':'#25242a', accent=dark?'#d8ad54':'#986f43';
       const shop=esc((shopName||'YOUR CABINET SHOP').toUpperCase());
       const fmt=(v,max=25)=>{let words=String(v||'').toUpperCase().split(/\s+/), lines=[''];for(const word of words){const i=lines.length-1; if((lines[i]+' '+word).trim().length>max&&lines[i]&&lines.length<3)lines.push(word);else lines[i]=(lines[i]+' '+word).trim();}return lines.map(esc)};
-      const copy=(txt,x,y,maxW,lineH=40,size=31,fill='#fff',anchor='start',maxChars=23)=>fmt(txt,maxChars).map((ln,i)=>`<text x="${x}" y="${y+i*lineH}" text-anchor="${anchor}" font-family="Impact,Arial,sans-serif" font-weight="900" font-size="${size}" fill="${fill}">${ln}</text>`).join('');
+      // Gallery typography is deliberately quieter than printable artwork.
+      // Fit by both character count and available region to avoid cropped words.
+      const copy=(txt,x,y,maxW,lineH=40,size=31,fill='#fff',anchor='start',maxChars=23)=>{
+        const safeSize=Math.min(size*0.67,Math.max(10,(maxW-12)/Math.min(maxChars,28)*1.75));
+        const safeLineH=Math.min(lineH,Math.max(15,safeSize*1.3));
+        return fmt(txt,Math.max(8,Math.min(maxChars,Math.floor((maxW-12)/(safeSize*0.6))))).map((ln,i)=>`<text x="${x}" y="${y+i*safeLineH}" text-anchor="${anchor}" font-family="Arial,sans-serif" font-weight="800" font-size="${safeSize.toFixed(1)}" fill="${fill}">${ln}</text>`).join('');
+      };
       const header='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 360" width="540" height="360">';
       const defs=`<defs><linearGradient id="cab" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#eae0d1"/><stop offset=".5" stop-color="#bcaa97"/><stop offset="1" stop-color="#655c56"/></linearGradient><linearGradient id="soft" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#faf7f2"/><stop offset="1" stop-color="#e8dbcb"/></linearGradient></defs>`;
-      const photo=(x,y,w,h)=>`<svg x="${x}" y="${y}" width="${w}" height="${h}" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice"><rect width="400" height="300" fill="url(#cab)"/><rect x="25" y="56" width="116" height="138" rx="3" fill="#f1ede6"/><rect x="257" y="56" width="116" height="138" rx="3" fill="#f1ede6"/><rect x="152" y="69" width="94" height="126" fill="#b09e89"/><rect x="18" y="194" width="364" height="22" fill="#fffaf4"/><rect x="18" y="216" width="364" height="55" fill="#ede5dc"/><rect x="102" y="198" width="197" height="16" fill="#c1b3a2"/><rect x="110" y="212" width="180" height="57" fill="#90765e"/><path d="M110 234H290M201 216V268" stroke="#d5bfa6" stroke-width="2"/><circle cx="70" cy="95" r="5" fill="#8b755e"/><circle cx="323" cy="95" r="5" fill="#8b755e"/><path d="M55 205V170C55 150 84 150 84 170V201" stroke="#74685f" stroke-width="5" fill="none"/><circle cx="192" cy="33" r="13" fill="#fff0d8" opacity=".95"/></svg>`;
+      const photo=(x,y,w,h,index=0)=>{
+        const src=coverData?.[index] || coverData?.[0];
+        if(src)return `<svg x="${x}" y="${y}" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid slice"><image href="${src}" x="0" y="0" width="${w}" height="${h}" preserveAspectRatio="xMidYMid slice"/></svg>`;
+        return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="url(#cab)"/>`;
+      };
       const framed=(x,y,w,h,color='#fff')=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="5" fill="none" stroke="${color}" stroke-width="3"/>`;
       const strip=(txt,bg='#eee3d3',fg='#251e1c')=>`<rect x="24" y="300" width="492" height="42" rx="7" fill="${bg}"/>${copy(txt,270,328,480,32,21,fg,'middle',33)}`;
       const caption=(txt,y=286,c='#fff')=>`<text x="28" y="${y}" font-family="Arial,sans-serif" font-size="17" font-weight="700" fill="${c}">${esc(String(txt||'').slice(0,44))}</text>`;
       let body='';
       if(id==='yardbefore'){
-        body=`${photo(0,0,270,292)}${photo(270,0,270,292)}<rect x="177" y="10" width="186" height="48" rx="8" fill="#202027"/>${copy('BEFORE & AFTER',270,41,184,28,24,'#fff','middle',20)}<rect y="292" width="540" height="68" fill="#202027"/>${copy(shop,270,323,520,27,22,'#fff','middle',34)}<text x="270" y="345" text-anchor="middle" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#e5c77c">YOUR WEBSITE</text>`;
+        body=`${photo(0,0,270,292)}${photo(270,0,270,292,1)}<rect x="177" y="10" width="186" height="48" rx="8" fill="#202027"/>${copy('BEFORE & AFTER',270,41,184,28,24,'#fff','middle',20)}<rect y="292" width="540" height="68" fill="#202027"/>${copy(shop,270,323,520,27,22,'#fff','middle',34)}<text x="270" y="345" text-anchor="middle" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#e5c77c">YOUR WEBSITE</text>`;
       }else if(isClassic){
         if(classic==='band')body=`${photo(0,55,540,240)}<rect width="540" height="69" fill="#182334"/><rect y="284" width="540" height="76" fill="#182334"/>${copy(shop,270,43,510,30,23,'#fff','middle',35)}${copy(t.headline,270,326,500,26,23,'#fff','middle',34)}`;
         else if(['cta','estate'].includes(classic))body=`${photo(0,0,540,232)}<rect y="232" width="540" height="128" fill="${classic==='cta'?'#14233a':'#f8f5f0'}"/><rect y="229" width="540" height="6" fill="${accent}"/>${copy(t.headline,26,272,490,31,27,classic==='cta'?'#fff':'#25242a','start',32)}${caption(shop,334,classic==='cta'?'#eadfcf':'#27252a')}`;
@@ -14639,7 +14435,25 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
     function renderGallery(filter='all'){
       grid.innerHTML='';MQ_STUDIO_TEMPLATES.filter(t=>filter==='all'||t.category===filter).forEach(t=>{
         const btn=document.createElement('button');btn.type='button';btn.className='mq-studio-tile';btn.innerHTML=`<div class="mq-studio-thumb-area"><img class="mq-studio-thumb" alt=""/></div><div class="mq-studio-tile-meta"><span><strong></strong><small></small></span><b aria-hidden="true">↗</b></div>`;
-        if(t.category==='yard')btn.classList.add('mq-studio-yard-card');btn.querySelector('img').src=thumb(t);btn.querySelector('strong').textContent=t.title;btn.querySelector('small').textContent=t.tag;
+        if(t.category==='yard')btn.classList.add('mq-studio-yard-card');
+        const preview=btn.querySelector('img');
+        preview.src=thumb(t);
+        if(t.category==='yard'){
+          const kinds=t.id==='yardbefore'?[studioCoverForTemplate(t,0),studioCoverForTemplate(t,1)]:[studioCoverForTemplate(t,0)];
+          Promise.all(kinds.map(studioLoadCover)).then(images=>{
+            if(!btn.isConnected||images.some(img=>!img))return;
+            const coverData=images.map(img=>{
+              const cv=document.createElement('canvas');cv.width=480;cv.height=360;
+              const ctx=cv.getContext('2d');
+              const ratio=Math.max(cv.width/img.naturalWidth,cv.height/img.naturalHeight);
+              const dw=img.naturalWidth*ratio,dh=img.naturalHeight*ratio;
+              ctx.drawImage(img,(cv.width-dw)/2,(cv.height-dh)/2,dw,dh);
+              try{return cv.toDataURL('image/jpeg',0.76);}catch{return null;}
+            });
+            preview.src=thumb(t,coverData);
+          }).catch(()=>{});
+        }
+        btn.querySelector('strong').textContent=t.title;btn.querySelector('small').textContent=t.tag;
         btn.addEventListener('click',()=>select(t));grid.appendChild(btn);
       });
     }
@@ -14748,18 +14562,6 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
     }));}
     if(!root.dataset.studioInitialized){
       root.dataset.studioInitialized='true';
-      // Cohesive tool landing. The original sign editor stays intact (no data migration).
-      const jumpToOriginalSign=()=>{
-        // Exit any fullscreen editor first so the old sign controls are visible.
-        if(workspace.classList.contains('mq-studio-fullscreen')){
-          workspace.classList.remove('mq-studio-fullscreen','mq-studio-property-mode','mq-studio-canvas-first');
-          workspace.style.display='none';unlockStudioScroll();
-        }
-        const body=document.getElementById('mq-mk-body-poster');
-        if(body&&body.style.display==='none'&&typeof window.mqToggleMkSection==='function')window.mqToggleMkSection('poster');
-        if(typeof window.mqPdSetOrientation==='function')window.mqPdSetOrientation('landscape');
-        document.getElementById('mq-pd-outer-card')?.scrollIntoView({block:'start',behavior:'smooth'});
-      };
       document.getElementById('mq-creative-open-yard')?.addEventListener('click',()=>{root.querySelector('[data-studio-filter="yard"]')?.click();root.querySelector('.mq-studio-nav')?.scrollIntoView({block:'start',behavior:'smooth'});});
       document.getElementById('mq-creative-open-design')?.addEventListener('click',()=>{
         root.querySelector('[data-studio-filter="all"]')?.click();
@@ -15040,7 +14842,9 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
           const snapX=[0,(width-layer.w)/2,width-layer.w],snapY=[0,(height-layer.h)/2,height-layer.h];
           for(const sx of snapX)if(Math.abs(x-sx)<12){x=sx;mqStudioGuide={...(mqStudioGuide||{}),x:sx===0?0:sx===width-layer.w?width:width/2};break}
           for(const sy of snapY)if(Math.abs(y-sy)<12){y=sy;mqStudioGuide={...(mqStudioGuide||{}),y:sy===0?0:sy===height-layer.h?height:height/2};break}
-          const maxX=Math.max(0,canvas.width/(canvas._mqUnit||1)-Math.min(layer.w,canvas.width/(canvas._mqUnit||1)));const maxY=Math.max(0,canvas.height/(canvas._mqUnit||1)-Math.min(layer.h,canvas.height/(canvas._mqUnit||1)));layer.x=Math.round(Math.max(0,Math.min(maxX,x)));layer.y=Math.round(Math.max(0,Math.min(maxY,y)));if(Math.abs(pt.x-drag.start.x)>4||Math.abs(pt.y-drag.start.y)>4)drag.wasMoved=true;update();return;}
+          // Allow layers to extend beyond any canvas edge; the canvas naturally crops the exported result.
+          // Positions remain editable numerically even when the item is completely off-canvas.
+          layer.x=Math.round(x);layer.y=Math.round(y);if(Math.abs(pt.x-drag.start.x)>4||Math.abs(pt.y-drag.start.y)>4)drag.wasMoved=true;update();return;}
         const dx=(pt.x-drag.start.x)/(drag.unit||1),dy=(pt.y-drag.start.y)/(drag.unit||1);
         if(drag.part==='brand'){clampField('shop-x',drag.vals.shopX+dx);clampField('shop-y',drag.vals.shopY+dy);}else if(drag.part==='cta'){clampField('cta-x',drag.vals.ctaX+dx);clampField('cta-y',drag.vals.ctaY+dy);}else if(drag.part==='url'){clampField('url-x',drag.vals.urlX+dx);clampField('url-y',drag.vals.urlY+dy);}else{clampField('content-x',drag.vals.contentX+dx);clampField('content-y',drag.vals.contentY+dy);}update();});
       const endDrag=e=>{const completed=drag;studioPointerActive=false;if(completed){mqStudioGuide=null;drag=null;canvas.style.cursor='default';if(canvas.hasPointerCapture && e.pointerId!=null){try{canvas.releasePointerCapture(e.pointerId);}catch(err){}} if(completed.layerId){syncLayerControls();/* Properties are opened explicitly using Selected object options, so the canvas never jumps on click. */}clearTimeout(mqStudioFocusTimer); mqStudioFocusTimer=setTimeout(()=>{mqStudioFocus=null;update();},900);update();queuePreviewFollow();}};
@@ -15201,12 +15005,6 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
     const opening = body.style.display === 'none';
     body.style.display = opening ? 'block' : 'none';
     if (arrow) arrow.style.transform = opening ? 'rotate(0deg)' : 'rotate(-90deg)';
-    // Collapsing/expanding a section doesn't scroll the page, so the
-    // Poster Designer's floating preview needs its own explicit re-check
-    // here too — it can't rely on the scroll-based observer alone.
-    if (typeof window._mqPdUpdateStickyVisibility === 'function') {
-      window._mqPdUpdateStickyVisibility();
-    }
   };
 
   function initMarketingKit(shopRecord) {
@@ -16021,1385 +15819,7 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
       }
     }
 
-    // signLink is used by both the QR poster above and the Poster Designer
-    // below — declared here, outside any one feature's own block, so it's
-    // never at risk of going undeclared if one of those features' own
-    // canvas doesn't exist on the page. getSignLink() mirrors the QR
-    // poster's own getQrLink() above: read _mqCustomPostLink fresh rather
-    // than trusting a value snapshotted once at init, since the Marketing
-    // link can change after this ran (see _mqRedrawPosterDesigner below).
-    function getSignLink() {
-      return _mqCustomPostLink || defaultQuoteLink;
-    }
-    let signLink = getSignLink();
 
-      // ── Custom Poster & Sign Designer ──────────────────────────────────
-      // Deliberately its own self-contained canvas system rather than
-      // reusing the QR poster's helper functions, since those are scoped to
-      // that canvas's own context. First template: "Curved Split" — a
-      // smooth S-curve dividing a text/logo panel from a photo panel, in
-      // both portrait (poster) and landscape (yard sign) orientations.
-      // More template styles get added onto this same pattern later.
-      const pdCanvas = el('mq-pd-canvas');
-      if (pdCanvas) {
-        const pdCtx = pdCanvas.getContext('2d');
-        let pdOrientation = 'portrait';
-        let pdTemplate = 'curved-split';
-        let pdPhotoImage = null;
-        let pdOwnLogoImage = null; // uploaded specifically here, not shop info's logo
-        let pdBgImage = null; // optional uploaded background texture/image
-        const pdShopName = shopRecord.fields['Shop name'] || 'Your Shop';
-
-        function pdWrapText(text, font, maxWidth) {
-          pdCtx.font = font;
-          const words = text.split(' ');
-          const lines = [];
-          let line = '';
-          words.forEach(word => {
-            const test = line ? line + ' ' + word : word;
-            if (pdCtx.measureText(test).width > maxWidth && line) { lines.push(line); line = word; }
-            else line = test;
-          });
-          if (line) lines.push(line);
-          return lines;
-        }
-
-        // Reads the shared text size/spacing/position controls once per
-        // draw — same five values used by every template, so a slider
-        // dragged here consistently affects whichever style is selected.
-        // Turns on a soft drop shadow for whatever text gets drawn next —
-        // called right before a template's text-drawing section, and
-        // cleared right after, so it never accidentally applies to the
-        // photo, QR code, or button too.
-        function pdSetTextShadow() {
-          if (el('mq-pd-text-shadow')?.checked) {
-            pdCtx.shadowColor = 'rgba(0,0,0,0.45)';
-            pdCtx.shadowBlur = 8;
-            pdCtx.shadowOffsetX = 2;
-            pdCtx.shadowOffsetY = 3;
-          }
-        }
-        function pdClearShadow() {
-          pdCtx.shadowColor = 'transparent';
-          pdCtx.shadowBlur = 0;
-          pdCtx.shadowOffsetX = 0;
-          pdCtx.shadowOffsetY = 0;
-        }
-
-        function pdGetTextControls() {
-          return {
-            preMult: (parseInt(el('mq-pd-size-pre')?.value,10)||100)/100,
-            nameMult: (parseInt(el('mq-pd-size-name')?.value,10)||100)/100,
-            tagMult: (parseInt(el('mq-pd-size-tag')?.value,10)||100)/100,
-            lineMult: (parseInt(el('mq-pd-line-spacing')?.value,10)||100)/100,
-            offsetPct: (parseInt(el('mq-pd-text-offset')?.value,10)||0)/100,
-            preText: el('mq-pd-pre-text')?.value ?? '',
-            preColor: el('mq-pd-pre-color')?.value || '#6b6b6b',
-            tagColor: el('mq-pd-tag-color')?.value || '#4b4b4b'
-          };
-        }
-
-        // Reads the shared QR-code/quote-button settings once per draw.
-        function pdGetQrButtonSettings() {
-          return {
-            qrEnabled: el('mq-pd-qr-enabled')?.checked || false,
-            qrSizeMult: (parseInt(el('mq-pd-qr-size')?.value,10)||100)/100,
-            qrOffsetPct: (parseInt(el('mq-pd-qr-position')?.value,10)||0)/100,
-            btnEnabled: el('mq-pd-btn-enabled')?.checked || false,
-            btnOffsetPct: (parseInt(el('mq-pd-btn-position')?.value,10)||0)/100
-          };
-        }
-
-        // Draws a QR code centered at (cx, cy) — a white rounded card with a
-        // subtle shadow, same look as the existing yard sign's QR code.
-        // Silently does nothing if there's no quote link yet or the QR
-        // library hasn't loaded, same fallback used elsewhere.
-        function pdDrawQrCode(cx, cy, size) {
-          if (!signLink || !window.mqQrGen) return;
-          try {
-            const qr = window.mqQrGen(0, 'M');
-            qr.addData(signLink);
-            qr.make();
-            const count = qr.getModuleCount();
-            const cardPad = size * 0.09;
-            const x = cx - size/2, y = cy - size/2;
-            const cell = size / count;
-
-            pdCtx.save();
-            pdCtx.shadowColor = 'rgba(0,0,0,0.35)';
-            pdCtx.shadowBlur = 22;
-            pdCtx.shadowOffsetY = 6;
-            pdCtx.fillStyle = '#ffffff';
-            pdCtx.beginPath();
-            pdCtx.roundRect(x - cardPad, y - cardPad, size + cardPad*2, size + cardPad*2, 16);
-            pdCtx.fill();
-            pdCtx.restore();
-
-            pdCtx.fillStyle = '#1a1a1a';
-            for (let row = 0; row < count; row++) {
-              for (let col = 0; col < count; col++) {
-                if (qr.isDark(row, col)) pdCtx.fillRect(x + col*cell, y + row*cell, cell+0.5, cell+0.5);
-              }
-            }
-          } catch(e) {}
-        }
-
-        // Draws a rounded "Get a Free Quote" pill button centered at (cx, cy).
-        // Fills the whole canvas background — an uploaded image if the shop
-        // turned that on, otherwise whatever solid colour or gradient the
-        // colour pickers are set to. Centralized here since several
-        // templates need the exact same background-fill behavior.
-        function pdFillBackground(W, H, bgColor, bgColor2, bgGradient) {
-          const useImage = el('mq-pd-bg-image-enabled')?.checked && pdBgImage;
-          if (useImage) {
-            pdDrawPhotoInRect(pdBgImage, 0, 0, W, H);
-            // Optional colour overlay so text stays readable on busy
-            // textures/photos — any colour, not just black or white.
-            const overlayOpacity = (parseInt(el('mq-pd-bg-overlay-opacity')?.value,10)||0)/100;
-            if (overlayOpacity > 0) {
-              const overlayColor = el('mq-pd-bg-overlay-color')?.value || '#000000';
-              const hex = overlayColor.replace('#','');
-              const r = parseInt(hex.substring(0,2),16), g = parseInt(hex.substring(2,4),16), b = parseInt(hex.substring(4,6),16);
-              pdCtx.fillStyle = `rgba(${r},${g},${b},${overlayOpacity})`;
-              pdCtx.fillRect(0, 0, W, H);
-            }
-            return;
-          }
-          if (bgGradient) {
-            const isPortrait = pdOrientation === 'portrait';
-            const g = isPortrait ? pdCtx.createLinearGradient(0,0,0,H) : pdCtx.createLinearGradient(0,0,W,0);
-            g.addColorStop(0, bgColor); g.addColorStop(1, bgColor2);
-            pdCtx.fillStyle = g;
-          } else {
-            pdCtx.fillStyle = bgColor;
-          }
-          pdCtx.fillRect(0, 0, W, H);
-        }
-
-        function pdDrawGetQuoteButton(cx, cy, color) {
-          const w = 340, h = 84;
-          pdCtx.save();
-          pdCtx.shadowColor = 'rgba(0,0,0,0.3)';
-          pdCtx.shadowBlur = 16;
-          pdCtx.shadowOffsetY = 4;
-          pdCtx.fillStyle = color;
-          pdCtx.beginPath();
-          pdCtx.roundRect(cx - w/2, cy - h/2, w, h, h/2);
-          pdCtx.fill();
-          pdCtx.restore();
-          pdCtx.fillStyle = pdMutedTextColorFor(color) === '#5b5b5b' ? '#1a1a1a' : '#ffffff';
-          pdCtx.font = '700 34px -apple-system, sans-serif';
-          pdCtx.textAlign = 'center'; pdCtx.textBaseline = 'middle';
-          pdCtx.fillText('Get a Free Quote', cx, cy + 2);
-          pdCtx.textBaseline = 'alphabetic';
-        }
-
-        function pdShade(hex, percent) {
-          try {
-            hex = hex.replace('#','');
-            let r = parseInt(hex.substring(0,2),16), g = parseInt(hex.substring(2,4),16), b = parseInt(hex.substring(4,6),16);
-            const amt = Math.round(2.55 * percent);
-            r = Math.max(0, Math.min(255, r + amt)); g = Math.max(0, Math.min(255, g + amt)); b = Math.max(0, Math.min(255, b + amt));
-            return `rgb(${r},${g},${b})`;
-          } catch(e) { return hex; }
-        }
-
-        // Picks a readable dark or light grey for secondary text based on
-        // how light or dark the chosen background actually is — since a
-        // hardcoded grey tuned for white would disappear on a dark
-        // background someone picks, and vice versa.
-        function pdMutedTextColorFor(hex) {
-          try {
-            hex = hex.replace('#','');
-            const r = parseInt(hex.substring(0,2),16), g = parseInt(hex.substring(2,4),16), b = parseInt(hex.substring(4,6),16);
-            const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-            return luminance > 0.55 ? '#5b5b5b' : '#d4d4d4';
-          } catch(e) { return '#6b6b6b'; }
-        }
-
-        function pdDrawPhotoInRect(img, x, y, w, h) {
-          if (!img) {
-            pdCtx.fillStyle = '#e5e7eb';
-            pdCtx.fillRect(x, y, w, h);
-            pdCtx.fillStyle = '#9ca3af';
-            pdCtx.font = '500 32px -apple-system, sans-serif';
-            pdCtx.textAlign = 'center';
-            pdCtx.textBaseline = 'middle';
-            pdCtx.fillText('Upload a photo above', x + w/2, y + h/2);
-            pdCtx.textBaseline = 'alphabetic';
-            return;
-          }
-          const imgRatio = img.width / img.height;
-          const areaRatio = w / h;
-          let dw, dh, dx, dy;
-          if (imgRatio > areaRatio) { dh = h; dw = h * imgRatio; dx = x - (dw - w)/2; dy = y; }
-          else { dw = w; dh = w / imgRatio; dx = x; dy = y - (dh - h)/2; }
-          pdCtx.drawImage(img, dx, dy, dw, dh);
-        }
-
-        function drawCurvedSplit() {
-          const W = pdCanvas.width, H = pdCanvas.height;
-          pdCtx.clearRect(0, 0, W, H);
-          const isPortrait = pdOrientation === 'portrait';
-          const textMode = el('mq-pd-text-mode')?.value || 'text';
-          const tagline = el('mq-pd-tagline')?.value || '';
-          const shapeColor = el('mq-pd-shape-color')?.value || '#1a3a6b';
-          const shapeColor2 = el('mq-pd-shape-color2')?.value || pdShade(shapeColor, -30);
-          const useGradient = el('mq-pd-shape-gradient')?.checked || false;
-          const accentColor = el('mq-pd-accent-color')?.value || '#c9a24b';
-          const bgColor = el('mq-pd-bg-color')?.value || '#ffffff';
-          const bgColor2 = el('mq-pd-bg-color2')?.value || pdShade(bgColor, -25);
-          const bgGradient = el('mq-pd-bg-gradient')?.checked || false;
-          const bandHalf = isPortrait ? H*0.014 : W*0.010;
-          const tc = pdGetTextControls();
-
-          pdFillBackground(W, H, bgColor, bgColor2, bgGradient);
-
-          // Photo zone, clipped to the curve
-          pdCtx.save();
-          pdCtx.beginPath();
-          if (isPortrait) {
-            const splitY = H * 0.46;
-            pdCtx.moveTo(0, splitY);
-            pdCtx.bezierCurveTo(W*0.35, splitY - H*0.07, W*0.65, splitY + H*0.07, W, splitY);
-            pdCtx.lineTo(W, H); pdCtx.lineTo(0, H); pdCtx.closePath();
-          } else {
-            const splitX = W * 0.42;
-            pdCtx.moveTo(splitX, 0);
-            pdCtx.bezierCurveTo(splitX - W*0.06, H*0.35, splitX + W*0.06, H*0.65, splitX, H);
-            pdCtx.lineTo(W, H); pdCtx.lineTo(W, 0); pdCtx.closePath();
-          }
-          pdCtx.clip();
-          if (isPortrait) pdDrawPhotoInRect(pdPhotoImage, 0, H*0.32, W, H*0.74);
-          else pdDrawPhotoInRect(pdPhotoImage, W*0.28, 0, W*0.75, H);
-          pdCtx.restore();
-
-          // The customizable colored "shape" — a filled curved ribbon
-          // sitting right along the boundary between the text panel and the
-          // photo, solid or gradient depending on the controls above.
-          pdCtx.save();
-          pdCtx.beginPath();
-          if (isPortrait) {
-            const splitY = H * 0.46;
-            pdCtx.moveTo(0, splitY - bandHalf);
-            pdCtx.bezierCurveTo(W*0.35, splitY - H*0.07 - bandHalf, W*0.65, splitY + H*0.07 - bandHalf, W, splitY - bandHalf);
-            pdCtx.lineTo(W, splitY + bandHalf);
-            pdCtx.bezierCurveTo(W*0.65, splitY + H*0.07 + bandHalf, W*0.35, splitY - H*0.07 + bandHalf, 0, splitY + bandHalf);
-            pdCtx.closePath();
-          } else {
-            const splitX = W * 0.42;
-            pdCtx.moveTo(splitX - bandHalf, 0);
-            pdCtx.bezierCurveTo(splitX - W*0.06 - bandHalf, H*0.35, splitX + W*0.06 - bandHalf, H*0.65, splitX - bandHalf, H);
-            pdCtx.lineTo(splitX + bandHalf, H);
-            pdCtx.bezierCurveTo(splitX + W*0.06 + bandHalf, H*0.65, splitX - W*0.06 + bandHalf, H*0.35, splitX + bandHalf, 0);
-            pdCtx.closePath();
-          }
-          if (useGradient) {
-            const grad = isPortrait
-              ? pdCtx.createLinearGradient(0, H*0.35, 0, H*0.58)
-              : pdCtx.createLinearGradient(W*0.30, 0, W*0.54, 0);
-            grad.addColorStop(0, shapeColor);
-            grad.addColorStop(1, shapeColor2);
-            pdCtx.fillStyle = grad;
-          } else {
-            pdCtx.fillStyle = shapeColor;
-          }
-          pdCtx.fill();
-          pdCtx.restore();
-
-          // Thin accent line right along the outer edge of that ribbon
-          pdCtx.save();
-          pdCtx.strokeStyle = accentColor;
-          pdCtx.lineWidth = 5;
-          pdCtx.beginPath();
-          if (isPortrait) {
-            const splitY = H * 0.46;
-            pdCtx.moveTo(0, splitY - bandHalf);
-            pdCtx.bezierCurveTo(W*0.35, splitY - H*0.07 - bandHalf, W*0.65, splitY + H*0.07 - bandHalf, W, splitY - bandHalf);
-          } else {
-            const splitX = W * 0.42;
-            pdCtx.moveTo(splitX - bandHalf, 0);
-            pdCtx.bezierCurveTo(splitX - W*0.06 - bandHalf, H*0.35, splitX + W*0.06 - bandHalf, H*0.65, splitX - bandHalf, H);
-          }
-          pdCtx.stroke();
-          pdCtx.restore();
-
-          // Text / logo panel
-          pdCtx.textAlign = 'center';
-          if (textMode === 'logo' && pdOwnLogoImage) {
-            const logoSizeMult = (parseInt(el('mq-pd-logo-size')?.value,10)||100)/100;
-            const maxLogoW = (isPortrait ? W*0.55 : W*0.30) * logoSizeMult;
-            const maxLogoH = (isPortrait ? H*0.30 : H*0.5) * logoSizeMult;
-            const logoRatio = pdOwnLogoImage.width / pdOwnLogoImage.height;
-            let lw = maxLogoW, lh = lw / logoRatio;
-            if (lh > maxLogoH) { lh = maxLogoH; lw = lh * logoRatio; }
-            const lx = isPortrait ? (W - lw)/2 : (W*0.42 - lw)/2 - W*0.02;
-            const ly = isPortrait ? (H*0.46 - lh)/2 + H*0.02 : (H - lh)/2;
-            pdCtx.drawImage(pdOwnLogoImage, lx, ly, lw, lh);
-          } else if (textMode === 'logo') {
-            pdCtx.fillStyle = '#9ca3af';
-            pdCtx.font = '500 32px -apple-system, sans-serif';
-            pdCtx.fillText('Upload a logo above', isPortrait ? W/2 : W*0.21, isPortrait ? H*0.24 : H*0.5);
-          } else {
-            pdSetTextShadow();
-            const preFont = `500 ${Math.round((isPortrait?38:34)*tc.preMult)}px Georgia, serif`;
-            const nameFont = `800 ${Math.round((isPortrait?76:64)*tc.nameMult)}px -apple-system, sans-serif`;
-            const tagFont = `500 ${Math.round((isPortrait?32:28)*tc.tagMult)}px -apple-system, sans-serif`;
-            const centerX = isPortrait ? W/2 : W*0.21;
-            let cy = (isPortrait ? H*0.12 : H*0.26) + tc.offsetPct * H;
-
-            pdCtx.font = preFont;
-            pdCtx.fillStyle = tc.preColor;
-            pdCtx.fillText(tc.preText, centerX, cy);
-            // Deliberately generous gap here — this was the "too congested"
-            // spot, sitting right between the small intro line and the big
-            // shop name below it.
-            cy += (isPortrait ? 130 : 110) * tc.lineMult;
-
-            pdCtx.font = nameFont;
-            pdCtx.fillStyle = el('mq-pd-name-color')?.value || '#1a1a1a';
-            const nameLines = pdWrapText(pdShopName, nameFont, isPortrait ? W*0.85 : W*0.36);
-            nameLines.forEach(line => { pdCtx.fillText(line, centerX, cy); cy += (isPortrait?86:72) * tc.lineMult; });
-
-            if (tagline) {
-              cy += (isPortrait ? 34 : 24) * tc.lineMult;
-              pdCtx.font = tagFont;
-              pdCtx.fillStyle = tc.tagColor;
-              const tagLines = pdWrapText(tagline, tagFont, isPortrait ? W*0.8 : W*0.34);
-              tagLines.forEach(line => { pdCtx.fillText(line, centerX, cy); cy += (isPortrait?58:50) * tc.lineMult; });
-            }
-          }
-
-          // Optional QR code + "Get a Free Quote" button, centered in the
-          // photo area — both independently toggleable, off by default.
-          pdClearShadow();
-          const qb = pdGetQrButtonSettings();
-          const photoCx = isPortrait ? W/2 : W*0.28 + (W*0.75)/2;
-          const photoCy = isPortrait ? H*0.32 + (H*0.74)/2 : H/2;
-          if (qb.qrEnabled) {
-            pdDrawQrCode(photoCx, photoCy + qb.qrOffsetPct * H, 260 * qb.qrSizeMult);
-          }
-          if (qb.btnEnabled) {
-            pdDrawGetQuoteButton(photoCx, (isPortrait ? H*0.32 + H*0.74 : H) - 90 + qb.btnOffsetPct * H, shapeColor);
-          }
-        }
-
-        function drawDiamondArrow() {
-          const W = pdCanvas.width, H = pdCanvas.height;
-          pdCtx.clearRect(0, 0, W, H);
-          const isPortrait = pdOrientation === 'portrait';
-          const textMode = el('mq-pd-text-mode')?.value || 'text';
-          const tagline = el('mq-pd-tagline')?.value || '';
-          const shapeColor = el('mq-pd-shape-color')?.value || '#1a3a6b';
-          const useGradient = el('mq-pd-shape-gradient')?.checked || false;
-          const accentColor = el('mq-pd-accent-color')?.value || '#c9a24b';
-          const accentColor2 = el('mq-pd-shape-color2')?.value || pdShade(accentColor, -35);
-          const bgColor = el('mq-pd-bg-color')?.value || '#111111';
-          const bgColor2 = el('mq-pd-bg-color2')?.value || pdShade(bgColor, -25);
-          const bgGradient = el('mq-pd-bg-gradient')?.checked || false;
-          const tc = pdGetTextControls();
-
-          pdFillBackground(W, H, bgColor, bgColor2, bgGradient);
-
-          // Photo zone, clipped to an angular arrow-point boundary instead
-          // of a curve.
-          pdCtx.save();
-          pdCtx.beginPath();
-          if (isPortrait) {
-            const splitY = H * 0.46, pointDepth = H * 0.05;
-            pdCtx.moveTo(0, splitY + pointDepth);
-            pdCtx.lineTo(W*0.5, splitY - pointDepth);
-            pdCtx.lineTo(W, splitY + pointDepth);
-            pdCtx.lineTo(W, H); pdCtx.lineTo(0, H); pdCtx.closePath();
-          } else {
-            const splitX = W * 0.44, pointDepth = W * 0.05;
-            pdCtx.moveTo(splitX + pointDepth, 0);
-            pdCtx.lineTo(splitX - pointDepth, H*0.5);
-            pdCtx.lineTo(splitX + pointDepth, H);
-            pdCtx.lineTo(W, H); pdCtx.lineTo(W, 0); pdCtx.closePath();
-          }
-          pdCtx.clip();
-          if (isPortrait) pdDrawPhotoInRect(pdPhotoImage, 0, H*0.32, W, H*0.74);
-          else pdDrawPhotoInRect(pdPhotoImage, W*0.30, 0, W*0.75, H);
-          pdCtx.restore();
-
-          // Coloured accent stripe right along the point, plus a second
-          // thinner line for depth — the customizable "shape" element here.
-          pdCtx.save();
-          pdCtx.beginPath();
-          if (isPortrait) {
-            const splitY = H * 0.46, pointDepth = H * 0.05, stripeW = H*0.012;
-            pdCtx.moveTo(0, splitY + pointDepth - stripeW);
-            pdCtx.lineTo(W*0.5, splitY - pointDepth - stripeW);
-            pdCtx.lineTo(W, splitY + pointDepth - stripeW);
-            pdCtx.lineTo(W, splitY + pointDepth + stripeW);
-            pdCtx.lineTo(W*0.5, splitY - pointDepth + stripeW);
-            pdCtx.lineTo(0, splitY + pointDepth + stripeW);
-            pdCtx.closePath();
-          } else {
-            const splitX = W * 0.44, pointDepth = W * 0.05, stripeW = W*0.009;
-            pdCtx.moveTo(splitX + pointDepth - stripeW, 0);
-            pdCtx.lineTo(splitX - pointDepth - stripeW, H*0.5);
-            pdCtx.lineTo(splitX + pointDepth - stripeW, H);
-            pdCtx.lineTo(splitX + pointDepth + stripeW, H);
-            pdCtx.lineTo(splitX - pointDepth + stripeW, H*0.5);
-            pdCtx.lineTo(splitX + pointDepth + stripeW, 0);
-            pdCtx.closePath();
-          }
-          if (useGradient) {
-            const grad = isPortrait
-              ? pdCtx.createLinearGradient(0, H*0.35, 0, H*0.58)
-              : pdCtx.createLinearGradient(W*0.34, 0, W*0.56, 0);
-            grad.addColorStop(0, accentColor);
-            grad.addColorStop(1, accentColor2);
-            pdCtx.fillStyle = grad;
-          } else {
-            pdCtx.fillStyle = accentColor;
-          }
-          pdCtx.fill();
-          pdCtx.restore();
-
-          // Text / logo panel
-          pdCtx.textAlign = 'center';
-          if (textMode === 'logo' && pdOwnLogoImage) {
-            const logoSizeMult = (parseInt(el('mq-pd-logo-size')?.value,10)||100)/100;
-            const maxLogoW = (isPortrait ? W*0.55 : W*0.30) * logoSizeMult;
-            const maxLogoH = (isPortrait ? H*0.30 : H*0.5) * logoSizeMult;
-            const logoRatio = pdOwnLogoImage.width / pdOwnLogoImage.height;
-            let lw = maxLogoW, lh = lw / logoRatio;
-            if (lh > maxLogoH) { lh = maxLogoH; lw = lh * logoRatio; }
-            const lx = isPortrait ? (W - lw)/2 : (W*0.44 - lw)/2;
-            const ly = isPortrait ? (H*0.46 - lh)/2 : (H - lh)/2;
-            pdCtx.drawImage(pdOwnLogoImage, lx, ly, lw, lh);
-          } else if (textMode === 'logo') {
-            pdCtx.fillStyle = '#6b6b6b';
-            pdCtx.font = '500 32px -apple-system, sans-serif';
-            pdCtx.fillText('Upload a logo above', isPortrait ? W/2 : W*0.22, isPortrait ? H*0.24 : H*0.5);
-          } else {
-            pdSetTextShadow();
-            const preFont = `italic 500 ${Math.round((isPortrait?38:34)*tc.preMult)}px Georgia, serif`;
-            const nameFont = `800 ${Math.round((isPortrait?72:60)*tc.nameMult)}px -apple-system, sans-serif`;
-            const tagFont = `500 ${Math.round((isPortrait?32:28)*tc.tagMult)}px -apple-system, sans-serif`;
-            const centerX = isPortrait ? W/2 : W*0.22;
-            let cy = (isPortrait ? H*0.12 : H*0.26) + tc.offsetPct * H;
-
-            pdCtx.font = preFont;
-            pdCtx.fillStyle = tc.preColor;
-            pdCtx.fillText(tc.preText, centerX, cy);
-            cy += (isPortrait ? 130 : 110) * tc.lineMult;
-
-            pdCtx.font = nameFont;
-            pdCtx.fillStyle = el('mq-pd-name-color')?.value || '#1a1a1a';
-            const nameLines = pdWrapText(pdShopName, nameFont, isPortrait ? W*0.85 : W*0.38);
-            nameLines.forEach(line => { pdCtx.fillText(line, centerX, cy); cy += (isPortrait?82:68) * tc.lineMult; });
-
-            if (tagline) {
-              cy += (isPortrait ? 34 : 24) * tc.lineMult;
-              pdCtx.font = tagFont;
-              pdCtx.fillStyle = tc.tagColor;
-              const tagLines = pdWrapText(tagline, tagFont, isPortrait ? W*0.8 : W*0.36);
-              tagLines.forEach(line => { pdCtx.fillText(line, centerX, cy); cy += (isPortrait?58:50) * tc.lineMult; });
-            }
-          }
-
-          pdClearShadow();
-          const qb = pdGetQrButtonSettings();
-          const photoCx = isPortrait ? W/2 : W*0.30 + (W*0.75)/2;
-          const photoCy = isPortrait ? H*0.32 + (H*0.74)/2 : H/2;
-          if (qb.qrEnabled) {
-            pdDrawQrCode(photoCx, photoCy + qb.qrOffsetPct * H, 260 * qb.qrSizeMult);
-          }
-          if (qb.btnEnabled) {
-            pdDrawGetQuoteButton(photoCx, (isPortrait ? H*0.32 + H*0.74 : H) - 90 + qb.btnOffsetPct * H, shapeColor);
-          }
-        }
-
-        function drawOrnateDivider() {
-          const W = pdCanvas.width, H = pdCanvas.height;
-          pdCtx.clearRect(0, 0, W, H);
-          const isPortrait = pdOrientation === 'portrait';
-          const textMode = el('mq-pd-text-mode')?.value || 'text';
-          const tagline = el('mq-pd-tagline')?.value || '';
-          const shapeColor = el('mq-pd-shape-color')?.value || '#8a5a3a';
-          const accentColor = el('mq-pd-accent-color')?.value || '#8a5a3a';
-          const bgColor = el('mq-pd-bg-color')?.value || '#ffffff';
-          const bgColor2 = el('mq-pd-bg-color2')?.value || pdShade(bgColor, -20);
-          const bgGradient = el('mq-pd-bg-gradient')?.checked || false;
-          const tc = pdGetTextControls();
-
-          pdFillBackground(W, H, bgColor, bgColor2, bgGradient);
-
-          // Photo sits in a simple rounded panel, not a curve/angle — this
-          // template's character comes from the ornate line-and-diamond
-          // dividers around the text instead of the shape boundary itself.
-          const photoY = isPortrait ? H*0.50 : 0;
-          const photoX = isPortrait ? 0 : W*0.48;
-          const photoW = isPortrait ? W : W*0.52;
-          const photoH = isPortrait ? H*0.50 : H;
-          pdCtx.save();
-          pdCtx.beginPath();
-          pdCtx.rect(photoX, photoY, photoW, photoH);
-          pdCtx.clip();
-          pdDrawPhotoInRect(pdPhotoImage, photoX, photoY, photoW, photoH);
-          pdCtx.restore();
-
-          pdCtx.textAlign = 'center';
-          const centerX = isPortrait ? W/2 : W*0.24;
-          const textTop = isPortrait ? H*0.10 : H*0.14;
-          const dividerW = isPortrait ? W*0.28 : W*0.16;
-
-          function ornateDivider(y) {
-            pdCtx.strokeStyle = accentColor;
-            pdCtx.lineWidth = 3;
-            pdCtx.beginPath();
-            pdCtx.moveTo(centerX - dividerW, y); pdCtx.lineTo(centerX - 14, y);
-            pdCtx.moveTo(centerX + 14, y); pdCtx.lineTo(centerX + dividerW, y);
-            pdCtx.stroke();
-            pdCtx.save();
-            pdCtx.translate(centerX, y);
-            pdCtx.rotate(Math.PI/4);
-            pdCtx.fillStyle = accentColor;
-            pdCtx.fillRect(-7, -7, 14, 14);
-            pdCtx.restore();
-          }
-
-          if (textMode === 'logo' && pdOwnLogoImage) {
-            const logoSizeMult = (parseInt(el('mq-pd-logo-size')?.value,10)||100)/100;
-            const maxLogoW = (isPortrait ? W*0.55 : W*0.34) * logoSizeMult, maxLogoH = (isPortrait ? H*0.32 : H*0.5) * logoSizeMult;
-            const ratio = pdOwnLogoImage.width / pdOwnLogoImage.height;
-            let lw = maxLogoW, lh = lw/ratio;
-            if (lh > maxLogoH) { lh = maxLogoH; lw = lh*ratio; }
-            pdCtx.drawImage(pdOwnLogoImage, centerX - lw/2, textTop, lw, lh);
-          } else if (textMode === 'logo') {
-            pdCtx.fillStyle = '#9ca3af';
-            pdCtx.font = '500 30px -apple-system, sans-serif';
-            pdCtx.fillText('Upload a logo above', centerX, textTop + 40);
-          } else {
-            pdSetTextShadow();
-            const preFont = `500 ${Math.round((isPortrait?34:30)*tc.preMult)}px -apple-system, sans-serif`;
-            const nameFont = `700 ${Math.round((isPortrait?66:54)*tc.nameMult)}px Georgia, serif`;
-            const tagFont = `500 ${Math.round((isPortrait?28:24)*tc.tagMult)}px -apple-system, sans-serif`;
-            let cy = textTop + tc.offsetPct * H;
-
-            ornateDivider(cy); cy += (isPortrait ? 60 : 50) * tc.lineMult;
-            pdCtx.font = preFont; pdCtx.fillStyle = tc.preColor;
-            pdCtx.fillText(tc.preText, centerX, cy); cy += (isPortrait ? 90 : 76) * tc.lineMult;
-
-            pdCtx.font = nameFont; pdCtx.fillStyle = el('mq-pd-name-color')?.value || '#1a1a1a';
-            const nameLines = pdWrapText(pdShopName, nameFont, isPortrait ? W*0.82 : W*0.36);
-            nameLines.forEach(l => { pdCtx.fillText(l, centerX, cy); cy += (isPortrait?74:62) * tc.lineMult; });
-            cy += (isPortrait ? 20 : 14) * tc.lineMult;
-            ornateDivider(cy); cy += (isPortrait ? 50 : 42) * tc.lineMult;
-
-            if (tagline) {
-              pdCtx.font = tagFont; pdCtx.fillStyle = tc.tagColor;
-              pdWrapText(tagline, tagFont, isPortrait ? W*0.75 : W*0.32).forEach(l => { pdCtx.fillText(l, centerX, cy); cy += (isPortrait?54:46) * tc.lineMult; });
-            }
-          }
-
-          pdClearShadow();
-          const qb = pdGetQrButtonSettings();
-          const photoCx = photoX + photoW/2, photoCy = photoY + photoH/2;
-          if (qb.qrEnabled) {
-            pdDrawQrCode(photoCx, photoCy + qb.qrOffsetPct * H, 240 * qb.qrSizeMult);
-          }
-          if (qb.btnEnabled) {
-            pdDrawGetQuoteButton(photoCx, photoY + photoH - 90 + qb.btnOffsetPct * H, shapeColor);
-          }
-        }
-
-        function drawCircularBadge() {
-          const W = pdCanvas.width, H = pdCanvas.height;
-          pdCtx.clearRect(0, 0, W, H);
-          const textMode = el('mq-pd-text-mode')?.value || 'text';
-          const tagline = el('mq-pd-tagline')?.value || '';
-          const badgeText = (el('mq-pd-badge-text')?.value || '').trim();
-          const shapeColor = el('mq-pd-shape-color')?.value || '#c9a24b';
-          const shapeColor2 = el('mq-pd-shape-color2')?.value || pdShade(shapeColor, -30);
-          const useGradient = el('mq-pd-shape-gradient')?.checked || false;
-          const bgColor = el('mq-pd-bg-color')?.value || '#1a1a1a';
-          const tc = pdGetTextControls();
-
-          // Photo fills the whole canvas here, darkened for legibility —
-          // the badge and text sit right on top of it.
-          pdDrawPhotoInRect(pdPhotoImage, 0, 0, W, H);
-          pdCtx.globalAlpha = 0.55;
-          pdCtx.fillStyle = bgColor;
-          pdCtx.fillRect(0, 0, W, H);
-          pdCtx.globalAlpha = 1;
-
-          const cx = W/2, cy = H*0.42, r = Math.min(W,H) * 0.20;
-          pdCtx.save();
-          pdCtx.beginPath();
-          pdCtx.arc(cx, cy, r, 0, Math.PI*2);
-          pdCtx.clip();
-          if (textMode === 'logo' && pdOwnLogoImage) {
-            pdDrawPhotoInRect(pdOwnLogoImage, cx-r, cy-r, r*2, r*2);
-          } else {
-            pdCtx.fillStyle = '#1a1a1a';
-            pdCtx.fillRect(cx-r, cy-r, r*2, r*2);
-            pdCtx.fillStyle = shapeColor;
-            // Badge text is independent of the shop name — type anything
-            // (initials, a symbol, whatever) via the "Badge text" field
-            // above, or leave it blank to fall back to auto-initials.
-            const displayText = badgeText || (pdShopName.match(/\b\w/g) || ['D']).slice(0,2).join('').toUpperCase();
-            pdCtx.font = `800 ${Math.round(r*0.9*tc.nameMult)}px -apple-system, sans-serif`;
-            pdCtx.textAlign = 'center'; pdCtx.textBaseline = 'middle';
-            pdCtx.fillText(displayText, cx, cy + r*0.08);
-            pdCtx.textBaseline = 'alphabetic';
-          }
-          pdCtx.restore();
-
-          pdCtx.save();
-          pdCtx.beginPath();
-          pdCtx.arc(cx, cy, r, 0, Math.PI*2);
-          pdCtx.lineWidth = 6;
-          if (useGradient) {
-            const g = pdCtx.createLinearGradient(cx-r, cy-r, cx+r, cy+r);
-            g.addColorStop(0, shapeColor); g.addColorStop(1, shapeColor2);
-            pdCtx.strokeStyle = g;
-          } else pdCtx.strokeStyle = shapeColor;
-          pdCtx.stroke();
-          pdCtx.restore();
-
-          pdCtx.textAlign = 'center';
-          pdSetTextShadow();
-          const preFont = `500 ${Math.round(30*tc.preMult)}px -apple-system, sans-serif`;
-          const nameFont = `800 ${Math.round(52*tc.nameMult)}px -apple-system, sans-serif`;
-          const tagFont = `500 ${Math.round(24*tc.tagMult)}px -apple-system, sans-serif`;
-          let ty = cy + r + 70 + tc.offsetPct * H;
-          pdCtx.font = preFont; pdCtx.fillStyle = tc.preColor;
-          pdCtx.fillText(tc.preText, cx, ty); ty += 58 * tc.lineMult;
-          pdCtx.font = nameFont; pdCtx.fillStyle = el('mq-pd-name-color')?.value || '#1a1a1a';
-          pdWrapText(pdShopName, nameFont, W*0.85).forEach(l => { pdCtx.fillText(l, cx, ty); ty += 58 * tc.lineMult; });
-          if (tagline) {
-            ty += 14 * tc.lineMult;
-            pdCtx.font = tagFont; pdCtx.fillStyle = tc.tagColor;
-            pdWrapText(tagline, tagFont, W*0.8).forEach(l => { pdCtx.fillText(l, cx, ty); ty += 46 * tc.lineMult; });
-          }
-
-          pdClearShadow();
-          const qb = pdGetQrButtonSettings();
-          if (qb.qrEnabled) {
-            pdDrawQrCode(cx, ty + 130 + qb.qrOffsetPct * H, 220 * qb.qrSizeMult);
-          }
-          if (qb.btnEnabled) {
-            pdDrawGetQuoteButton(cx, H - 90 + qb.btnOffsetPct * H, shapeColor);
-          }
-        }
-
-        function drawBoldModern() {
-          const W = pdCanvas.width, H = pdCanvas.height;
-          pdCtx.clearRect(0, 0, W, H);
-          const isPortrait = pdOrientation === 'portrait';
-          const textMode = el('mq-pd-text-mode')?.value || 'text';
-          const tagline = el('mq-pd-tagline')?.value || '';
-          const shapeColor = el('mq-pd-shape-color')?.value || '#1a3a6b';
-          const shapeColor2 = el('mq-pd-shape-color2')?.value || pdShade(shapeColor, -35);
-          const useGradient = el('mq-pd-shape-gradient')?.checked || false;
-          const accentColor = el('mq-pd-accent-color')?.value || '#c9a24b';
-          const tc = pdGetTextControls();
-
-          // A hard, flat rectangular split — no curve or angle at all. This
-          // template's identity is bold, uncluttered geometry instead.
-          const splitAt = isPortrait ? H*0.58 : W*0.46;
-          if (useGradient) {
-            const g = isPortrait ? pdCtx.createLinearGradient(0,0,0,splitAt) : pdCtx.createLinearGradient(0,0,splitAt,0);
-            g.addColorStop(0, shapeColor); g.addColorStop(1, shapeColor2);
-            pdCtx.fillStyle = g;
-          } else pdCtx.fillStyle = shapeColor;
-          if (isPortrait) pdCtx.fillRect(0, 0, W, splitAt); else pdCtx.fillRect(0, 0, splitAt, H);
-
-          // Clip the photo to its own half of the canvas before drawing —
-          // pdDrawPhotoInRect deliberately overflows to "cover" its target
-          // box (same idea as CSS background-size:cover), which every other
-          // template already contains with its own clip path. This was the
-          // one template drawing the photo with no clip at all, so that
-          // intentional overflow was free to bleed straight into the
-          // colour panel next to it.
-          pdCtx.save();
-          pdCtx.beginPath();
-          if (isPortrait) pdCtx.rect(0, splitAt, W, H - splitAt);
-          else pdCtx.rect(splitAt, 0, W - splitAt, H);
-          pdCtx.clip();
-          if (isPortrait) pdDrawPhotoInRect(pdPhotoImage, 0, splitAt, W, H - splitAt);
-          else pdDrawPhotoInRect(pdPhotoImage, splitAt, 0, W - splitAt, H);
-          pdCtx.restore();
-
-          pdCtx.fillStyle = accentColor;
-          if (isPortrait) pdCtx.fillRect(0, splitAt - 3, W, 6); else pdCtx.fillRect(splitAt - 3, 0, 6, H);
-
-          pdCtx.textAlign = 'center';
-          const centerX = isPortrait ? W/2 : W*0.20;
-          const textColor = pdMutedTextColorFor(shapeColor) === '#5b5b5b' ? '#1a1a1a' : '#ffffff';
-          const mutedColor = textColor === '#ffffff' ? '#d0d0d0' : '#555555';
-
-          if (textMode === 'logo' && pdOwnLogoImage) {
-            const logoSizeMult = (parseInt(el('mq-pd-logo-size')?.value,10)||100)/100;
-            const maxLogoW = (isPortrait ? W*0.55 : splitAt*0.75) * logoSizeMult, maxLogoH = (isPortrait ? splitAt*0.6 : H*0.5) * logoSizeMult;
-            const ratio = pdOwnLogoImage.width / pdOwnLogoImage.height;
-            let lw = maxLogoW, lh = lw/ratio;
-            if (lh > maxLogoH) { lh = maxLogoH; lw = lh*ratio; }
-            pdCtx.drawImage(pdOwnLogoImage, centerX-lw/2, (isPortrait?splitAt:H)/2 - lh/2, lw, lh);
-          } else if (textMode === 'logo') {
-            pdCtx.fillStyle = mutedColor;
-            pdCtx.font = '500 28px -apple-system, sans-serif';
-            pdCtx.fillText('Upload a logo above', centerX, isPortrait ? splitAt/2 : H/2);
-          } else {
-            pdSetTextShadow();
-            const preFont = `700 ${Math.round((isPortrait?32:28)*tc.preMult)}px -apple-system, sans-serif`;
-            const nameFont = `900 ${Math.round((isPortrait?70:56)*tc.nameMult)}px -apple-system, sans-serif`;
-            const tagFont = `500 ${Math.round((isPortrait?28:24)*tc.tagMult)}px -apple-system, sans-serif`;
-            let cy = (isPortrait ? splitAt*0.26 : H*0.30) + tc.offsetPct * H;
-            pdCtx.font = preFont; pdCtx.fillStyle = tc.preColor;
-            pdCtx.fillText(tc.preText.toUpperCase(), centerX, cy); cy += (isPortrait?66:56) * tc.lineMult;
-            pdCtx.font = nameFont; pdCtx.fillStyle = el('mq-pd-name-color')?.value || textColor;
-            pdWrapText(pdShopName, nameFont, isPortrait ? W*0.85 : splitAt*0.85).forEach(l => { pdCtx.fillText(l, centerX, cy); cy += (isPortrait?76:64) * tc.lineMult; });
-            if (tagline) {
-              cy += (isPortrait ? 20 : 14) * tc.lineMult;
-              pdCtx.font = tagFont; pdCtx.fillStyle = tc.tagColor;
-              pdWrapText(tagline, tagFont, isPortrait ? W*0.8 : splitAt*0.8).forEach(l => { pdCtx.fillText(l, centerX, cy); cy += (isPortrait?50:44) * tc.lineMult; });
-            }
-          }
-
-          pdClearShadow();
-          const qb = pdGetQrButtonSettings();
-          const photoCx = isPortrait ? W/2 : splitAt + (W-splitAt)/2;
-          const photoCy = isPortrait ? splitAt + (H-splitAt)/2 : H/2;
-          if (qb.qrEnabled) {
-            pdDrawQrCode(photoCx, photoCy + qb.qrOffsetPct * H, 250 * qb.qrSizeMult);
-          }
-          if (qb.btnEnabled) {
-            pdDrawGetQuoteButton(photoCx, H - 90 + qb.btnOffsetPct * H, shapeColor);
-          }
-        }
-
-
-        function drawPremiumFrame() {
-          const W = pdCanvas.width, H = pdCanvas.height;
-          pdCtx.clearRect(0, 0, W, H);
-          const isPortrait = pdOrientation === 'portrait';
-          const textMode = el('mq-pd-text-mode')?.value || 'text';
-          const tagline = el('mq-pd-tagline')?.value || '';
-          const accentColor = el('mq-pd-accent-color')?.value || '#c9a24b';
-          const bgColor = el('mq-pd-bg-color')?.value || '#111111';
-          const bgColor2 = el('mq-pd-bg-color2')?.value || '#2b2b2b';
-          const bgGradient = el('mq-pd-bg-gradient')?.checked || false;
-          const tc = pdGetTextControls();
-          pdFillBackground(W, H, bgColor, bgColor2, bgGradient);
-          pdCtx.strokeStyle = accentColor;
-          pdCtx.lineWidth = Math.max(4, Math.round(Math.min(W,H)*0.004));
-          pdCtx.strokeRect(24,24,W-48,H-48);
-          pdCtx.strokeStyle = 'rgba(255,255,255,0.18)';
-          pdCtx.lineWidth = 2;
-          pdCtx.strokeRect(40,40,W-80,H-80);
-
-          let photoX, photoY, photoW, photoH, textX, textY, textW;
-          if (isPortrait) {
-            photoX = 72; photoY = 180; photoW = W - 144; photoH = H * 0.42;
-            textX = 86; textY = photoY + photoH + 48; textW = W - 172;
-          } else {
-            textX = 74; textY = 84; textW = W * 0.34;
-            photoW = W * 0.48; photoH = H - 144; photoX = W - photoW - 72; photoY = 72;
-          }
-          pdCtx.save();
-          pdCtx.shadowColor = 'rgba(0,0,0,0.30)'; pdCtx.shadowBlur = 18; pdCtx.shadowOffsetY = 8;
-          pdCtx.fillStyle = '#ffffff';
-          pdCtx.beginPath(); pdCtx.roundRect(photoX-10, photoY-10, photoW+20, photoH+20, 24); pdCtx.fill();
-          pdCtx.restore();
-          pdCtx.save();
-          pdCtx.beginPath(); pdCtx.roundRect(photoX, photoY, photoW, photoH, 20); pdCtx.clip();
-          pdDrawPhotoInRect(pdPhotoImage, photoX, photoY, photoW, photoH);
-          pdCtx.restore();
-          pdCtx.strokeStyle = accentColor; pdCtx.lineWidth = 4;
-          pdCtx.beginPath(); pdCtx.roundRect(photoX, photoY, photoW, photoH, 20); pdCtx.stroke();
-
-          pdCtx.textAlign = isPortrait ? 'center' : 'left';
-          pdSetTextShadow();
-          const preFont = `600 ${Math.round((isPortrait?30:28)*tc.preMult)}px -apple-system, sans-serif`;
-          const nameFont = `900 ${Math.round((isPortrait?72:64)*tc.nameMult)}px -apple-system, sans-serif`;
-          const tagFont = `500 ${Math.round((isPortrait?30:26)*tc.tagMult)}px -apple-system, sans-serif`;
-          const textColor = el('mq-pd-name-color')?.value || '#ffffff';
-          const cx = isPortrait ? W/2 : textX;
-          let cy = textY + 24 + tc.offsetPct * H;
-          pdCtx.font = preFont; pdCtx.fillStyle = tc.preColor || '#e5d6b8';
-          pdCtx.fillText((tc.preText || '').toUpperCase(), cx, cy);
-          cy += (isPortrait?52:46) * tc.lineMult;
-          pdCtx.fillStyle = accentColor; pdCtx.fillRect(isPortrait ? W*0.32 : textX, cy-18, isPortrait ? W*0.36 : 120, 4);
-          cy += (isPortrait?44:36) * tc.lineMult;
-          if (textMode === 'logo' && pdOwnLogoImage) {
-            const maxLogoW = isPortrait ? W*0.45 : textW*0.92;
-            const maxLogoH = isPortrait ? 160 : H*0.16;
-            const ratio = pdOwnLogoImage.width / pdOwnLogoImage.height;
-            let lw = maxLogoW, lh = lw/ratio; if (lh > maxLogoH) { lh = maxLogoH; lw = lh*ratio; }
-            pdCtx.drawImage(pdOwnLogoImage, (isPortrait ? W/2 - lw/2 : textX), cy, lw, lh); cy += lh + 24;
-          } else if (textMode === 'logo') {
-            pdCtx.font = '500 28px -apple-system, sans-serif'; pdCtx.fillStyle = '#d1d5db';
-            pdCtx.fillText('Upload a logo above', cx, cy+20); cy += 56;
-          } else {
-            pdCtx.font = nameFont; pdCtx.fillStyle = textColor;
-            pdWrapText(pdShopName, nameFont, textW).forEach(l => { pdCtx.fillText(l, cx, cy); cy += (isPortrait?74:68) * tc.lineMult; });
-          }
-          if (tagline) {
-            cy += (isPortrait?12:8) * tc.lineMult;
-            pdCtx.font = tagFont; pdCtx.fillStyle = tc.tagColor || '#ececec';
-            pdWrapText(tagline, tagFont, textW).forEach(l => { pdCtx.fillText(l, cx, cy); cy += (isPortrait?46:42) * tc.lineMult; });
-          }
-          pdClearShadow();
-          const qb = pdGetQrButtonSettings();
-          const photoCx = photoX + photoW/2, photoCy = photoY + photoH/2;
-          if (qb.qrEnabled) pdDrawQrCode(photoCx, photoCy + qb.qrOffsetPct * H, (isPortrait?210:190) * qb.qrSizeMult);
-          if (qb.btnEnabled) pdDrawGetQuoteButton(photoCx, photoY + photoH - 72 + qb.btnOffsetPct * H, accentColor);
-        }
-
-        function drawEstateClean() {
-          const W = pdCanvas.width, H = pdCanvas.height;
-          pdCtx.clearRect(0, 0, W, H);
-          const isPortrait = pdOrientation === 'portrait';
-          const textMode = el('mq-pd-text-mode')?.value || 'text';
-          const tagline = el('mq-pd-tagline')?.value || '';
-          const shapeColor = el('mq-pd-shape-color')?.value || '#ffffff';
-          const accentColor = el('mq-pd-accent-color')?.value || '#c9a24b';
-          const tc = pdGetTextControls();
-          const photoH = isPortrait ? H*0.58 : H*0.68;
-          pdDrawPhotoInRect(pdPhotoImage, 0, 0, W, photoH);
-          pdCtx.fillStyle = shapeColor; pdCtx.fillRect(0, photoH, W, H-photoH);
-          pdCtx.fillStyle = accentColor; pdCtx.fillRect(0, photoH-5, W, 10);
-          pdCtx.fillStyle = '#ffffff'; pdCtx.fillRect(0, 0, W, 22);
-
-          let leftX = 70, topY = photoH + 74 + tc.offsetPct * H;
-          const rightBoxW = isPortrait ? W*0.28 : W*0.24;
-          const rightX = W - rightBoxW - 60;
-          const textW = rightX - leftX - 34;
-          pdCtx.textAlign = 'left';
-          pdSetTextShadow();
-          const preFont = `600 ${Math.round((isPortrait?28:24)*tc.preMult)}px -apple-system, sans-serif`;
-          const nameFont = `900 ${Math.round((isPortrait?64:54)*tc.nameMult)}px -apple-system, sans-serif`;
-          const tagFont = `500 ${Math.round((isPortrait?28:24)*tc.tagMult)}px -apple-system, sans-serif`;
-          pdCtx.font = preFont; pdCtx.fillStyle = tc.preColor || '#6b6b6b';
-          pdCtx.fillText(tc.preText, leftX, topY); topY += (isPortrait?48:42) * tc.lineMult;
-          if (textMode === 'logo' && pdOwnLogoImage) {
-            const maxLogoW = textW, maxLogoH = isPortrait ? 130 : 110;
-            const ratio = pdOwnLogoImage.width / pdOwnLogoImage.height; let lw=maxLogoW, lh=lw/ratio; if(lh>maxLogoH){lh=maxLogoH; lw=lh*ratio;}
-            pdCtx.drawImage(pdOwnLogoImage, leftX, topY, lw, lh); topY += lh + 18;
-          } else if (textMode === 'logo') {
-            pdCtx.font='500 26px -apple-system, sans-serif'; pdCtx.fillStyle='#9ca3af'; pdCtx.fillText('Upload a logo above', leftX, topY+20); topY += 56;
-          } else {
-            pdCtx.font = nameFont; pdCtx.fillStyle = el('mq-pd-name-color')?.value || '#111111';
-            pdWrapText(pdShopName, nameFont, textW).forEach(l => { pdCtx.fillText(l, leftX, topY); topY += (isPortrait?64:56) * tc.lineMult; });
-          }
-          if (tagline) {
-            topY += 6 * tc.lineMult;
-            pdCtx.font = tagFont; pdCtx.fillStyle = tc.tagColor || '#4b4b4b';
-            pdWrapText(tagline, tagFont, textW).forEach(l => { pdCtx.fillText(l, leftX, topY); topY += (isPortrait?42:38) * tc.lineMult; });
-          }
-          pdClearShadow();
-          const qb = pdGetQrButtonSettings();
-          const qrCx = rightX + rightBoxW/2;
-          const qrCy = photoH + (H-photoH)*0.40 + qb.qrOffsetPct * H;
-          if (qb.qrEnabled) pdDrawQrCode(qrCx, qrCy, (isPortrait?170:160) * qb.qrSizeMult);
-          if (qb.btnEnabled) pdDrawGetQuoteButton(qrCx, H - 78 + qb.btnOffsetPct * H, accentColor);
-        }
-
-        function drawCtaStrip() {
-          const W = pdCanvas.width, H = pdCanvas.height;
-          pdCtx.clearRect(0, 0, W, H);
-          const textMode = el('mq-pd-text-mode')?.value || 'text';
-          const tagline = el('mq-pd-tagline')?.value || '';
-          const shapeColor = el('mq-pd-shape-color')?.value || '#0f1f34';
-          const shapeColor2 = el('mq-pd-shape-color2')?.value || '#213a5b';
-          const useGradient = el('mq-pd-shape-gradient')?.checked || false;
-          const accentColor = el('mq-pd-accent-color')?.value || '#c9a24b';
-          const tc = pdGetTextControls();
-          pdDrawPhotoInRect(pdPhotoImage,0,0,W,H);
-          pdCtx.fillStyle = 'rgba(0,0,0,0.18)'; pdCtx.fillRect(0,0,W,H);
-          const stripH = H*0.30;
-          if (useGradient) { const g=pdCtx.createLinearGradient(0,H-stripH,W,H-stripH); g.addColorStop(0,shapeColor); g.addColorStop(1,shapeColor2); pdCtx.fillStyle=g; }
-          else pdCtx.fillStyle = shapeColor;
-          pdCtx.fillRect(0,H-stripH,W,stripH);
-          pdCtx.fillStyle = accentColor; pdCtx.fillRect(0,H-stripH-8,W,8);
-          pdCtx.fillStyle = 'rgba(255,255,255,0.92)'; pdCtx.fillRect(0,0,W,26);
-
-          pdCtx.textAlign = 'left'; pdSetTextShadow();
-          const leftX = 62, baseY = H-stripH+70 + tc.offsetPct * H;
-          const textW = W*0.56;
-          let cy=baseY;
-          pdCtx.font = `700 ${Math.round(28*tc.preMult)}px -apple-system, sans-serif`; pdCtx.fillStyle = tc.preColor || '#d9d9d9';
-          pdCtx.fillText((tc.preText || '').toUpperCase(), leftX, cy); cy += 44*tc.lineMult;
-          if (textMode === 'logo' && pdOwnLogoImage) {
-            const maxLogoW=textW, maxLogoH=120; const ratio=pdOwnLogoImage.width/pdOwnLogoImage.height; let lw=maxLogoW*.72, lh=lw/ratio; if(lh>maxLogoH){lh=maxLogoH; lw=lh*ratio;} pdCtx.drawImage(pdOwnLogoImage,leftX,cy,lw,lh); cy += lh + 18;
-          } else if (textMode === 'logo') {
-            pdCtx.font='500 26px -apple-system, sans-serif'; pdCtx.fillStyle='#d1d5db'; pdCtx.fillText('Upload a logo above', leftX, cy+20); cy += 54;
-          } else {
-            const nameFont = `900 ${Math.round(58*tc.nameMult)}px -apple-system, sans-serif`; pdCtx.font=nameFont; pdCtx.fillStyle=el('mq-pd-name-color')?.value || '#ffffff';
-            pdWrapText(pdShopName,nameFont,textW).forEach(l=>{pdCtx.fillText(l,leftX,cy); cy += 58*tc.lineMult;});
-          }
-          if(tagline){ cy += 4*tc.lineMult; pdCtx.font=`500 ${Math.round(24*tc.tagMult)}px -apple-system, sans-serif`; pdCtx.fillStyle=tc.tagColor || '#e5e7eb'; pdWrapText(tagline,pdCtx.font,textW).forEach(l=>{pdCtx.fillText(l,leftX,cy); cy += 34*tc.lineMult;}); }
-          pdClearShadow();
-          const qb = pdGetQrButtonSettings();
-          const rightCx = W*0.82;
-          if (qb.qrEnabled) pdDrawQrCode(rightCx, H-stripH/2 - 10 + qb.qrOffsetPct * H, 176 * qb.qrSizeMult);
-          if (qb.btnEnabled) pdDrawGetQuoteButton(W*0.50, H - 58 + qb.btnOffsetPct * H, accentColor);
-        }
-
-
-        function drawLuxuryRibbon() {
-          const W = pdCanvas.width, H = pdCanvas.height;
-          pdCtx.clearRect(0, 0, W, H);
-          const textMode = el('mq-pd-text-mode')?.value || 'text';
-          const tagline = el('mq-pd-tagline')?.value || '';
-          const shapeColor = el('mq-pd-shape-color')?.value || '#151515';
-          const accentColor = el('mq-pd-accent-color')?.value || '#c9a24b';
-          const tc = pdGetTextControls();
-          pdDrawPhotoInRect(pdPhotoImage, 0, 0, W, H);
-          pdCtx.fillStyle = 'rgba(0,0,0,0.28)'; pdCtx.fillRect(0,0,W,H);
-
-          const panelX = 54, panelY = 54, panelW = W*0.43, panelH = H*0.52;
-          pdCtx.save();
-          pdCtx.fillStyle = 'rgba(17,17,17,0.82)';
-          pdCtx.beginPath(); pdCtx.roundRect(panelX, panelY, panelW, panelH, 22); pdCtx.fill();
-          pdCtx.restore();
-          pdCtx.fillStyle = accentColor; pdCtx.fillRect(panelX+24, panelY+26, 120, 4);
-
-          pdCtx.textAlign = 'left';
-          pdSetTextShadow();
-          let cy = panelY + 72 + tc.offsetPct * H;
-          pdCtx.font = `600 ${Math.round(28*tc.preMult)}px -apple-system, sans-serif`;
-          pdCtx.fillStyle = tc.preColor || '#eadcb8';
-          pdCtx.fillText((tc.preText || '').toUpperCase(), panelX+24, cy);
-          cy += 46*tc.lineMult;
-          if (textMode === 'logo' && pdOwnLogoImage) {
-            const maxLogoW = panelW-48, maxLogoH = 130; const ratio = pdOwnLogoImage.width/pdOwnLogoImage.height; let lw=maxLogoW*.78, lh=lw/ratio; if(lh>maxLogoH){lh=maxLogoH; lw=lh*ratio;} pdCtx.drawImage(pdOwnLogoImage, panelX+24, cy, lw, lh); cy += lh + 22;
-          } else if (textMode === 'logo') {
-            pdCtx.font='500 26px -apple-system, sans-serif'; pdCtx.fillStyle='#d1d5db'; pdCtx.fillText('Upload a logo above', panelX+24, cy+22); cy += 58;
-          } else {
-            const nameFont = `900 ${Math.round(64*tc.nameMult)}px -apple-system, sans-serif`; pdCtx.font=nameFont; pdCtx.fillStyle=el('mq-pd-name-color')?.value || '#ffffff'; pdWrapText(pdShopName,nameFont,panelW-48).forEach(l=>{pdCtx.fillText(l,panelX+24,cy); cy += 64*tc.lineMult;});
-          }
-          if(tagline){ cy += 8*tc.lineMult; pdCtx.font=`500 ${Math.round(24*tc.tagMult)}px -apple-system, sans-serif`; pdCtx.fillStyle=tc.tagColor || '#efefef'; pdWrapText(tagline,pdCtx.font,panelW-48).forEach(l=>{pdCtx.fillText(l,panelX+24,cy); cy += 36*tc.lineMult;}); }
-          pdClearShadow();
-
-          pdCtx.save();
-          pdCtx.translate(W*0.84,H*0.80);
-          pdCtx.rotate(-0.65);
-          pdCtx.fillStyle = accentColor;
-          pdCtx.fillRect(-170,-38,340,76);
-          pdCtx.fillStyle = '#111111';
-          pdCtx.font='800 34px -apple-system, sans-serif';
-          pdCtx.textAlign='center'; pdCtx.textBaseline='middle';
-          pdCtx.fillText('FREE QUOTE',0,2);
-          pdCtx.restore();
-          pdCtx.textBaseline='alphabetic';
-
-          const qb = pdGetQrButtonSettings();
-          if (qb.qrEnabled) pdDrawQrCode(W*0.80, H*0.28 + qb.qrOffsetPct * H, 185 * qb.qrSizeMult);
-          if (qb.btnEnabled) pdDrawGetQuoteButton(W*0.72, H - 86 + qb.btnOffsetPct * H, shapeColor);
-        }
-
-        function drawCornerCard() {
-          const W = pdCanvas.width, H = pdCanvas.height;
-          pdCtx.clearRect(0, 0, W, H);
-          const textMode = el('mq-pd-text-mode')?.value || 'text';
-          const tagline = el('mq-pd-tagline')?.value || '';
-          const accentColor = el('mq-pd-accent-color')?.value || '#c9a24b';
-          const shapeColor = el('mq-pd-shape-color')?.value || '#ffffff';
-          const tc = pdGetTextControls();
-          pdDrawPhotoInRect(pdPhotoImage,0,0,W,H);
-          pdCtx.fillStyle='rgba(0,0,0,0.10)'; pdCtx.fillRect(0,0,W,H);
-          const cardW = W*0.50, cardH = H*0.42, cardX = 54, cardY = H-cardH-54;
-          pdCtx.save();
-          pdCtx.shadowColor='rgba(0,0,0,0.25)'; pdCtx.shadowBlur=22; pdCtx.shadowOffsetY=8;
-          pdCtx.fillStyle=shapeColor;
-          pdCtx.beginPath(); pdCtx.roundRect(cardX,cardY,cardW,cardH,26); pdCtx.fill();
-          pdCtx.restore();
-          pdCtx.fillStyle=accentColor; pdCtx.fillRect(cardX+28, cardY+28, 120, 4);
-          pdCtx.textAlign='left'; pdSetTextShadow();
-          let cy = cardY+72 + tc.offsetPct * H;
-          pdCtx.font=`600 ${Math.round(26*tc.preMult)}px -apple-system, sans-serif`; pdCtx.fillStyle=tc.preColor || '#6b6b6b'; pdCtx.fillText(tc.preText || '', cardX+28, cy); cy += 42*tc.lineMult;
-          if (textMode === 'logo' && pdOwnLogoImage) {
-            const maxLogoW = cardW-56, maxLogoH = 110; const ratio = pdOwnLogoImage.width/pdOwnLogoImage.height; let lw=maxLogoW*.72, lh=lw/ratio; if(lh>maxLogoH){lh=maxLogoH; lw=lh*ratio;} pdCtx.drawImage(pdOwnLogoImage, cardX+28, cy, lw, lh); cy += lh + 16;
-          } else if (textMode === 'logo') {
-            pdCtx.font='500 24px -apple-system, sans-serif'; pdCtx.fillStyle='#9ca3af'; pdCtx.fillText('Upload a logo above', cardX+28, cy+18); cy += 50;
-          } else {
-            const nameFont=`900 ${Math.round(56*tc.nameMult)}px -apple-system, sans-serif`; pdCtx.font=nameFont; pdCtx.fillStyle=el('mq-pd-name-color')?.value || '#111111'; pdWrapText(pdShopName,nameFont,cardW-56).forEach(l=>{pdCtx.fillText(l,cardX+28,cy); cy += 56*tc.lineMult;});
-          }
-          if(tagline){ cy += 6*tc.lineMult; pdCtx.font=`500 ${Math.round(23*tc.tagMult)}px -apple-system, sans-serif`; pdCtx.fillStyle=tc.tagColor || '#444444'; pdWrapText(tagline,pdCtx.font,cardW-56).forEach(l=>{pdCtx.fillText(l,cardX+28,cy); cy += 34*tc.lineMult;}); }
-          pdClearShadow();
-          const qb = pdGetQrButtonSettings();
-          if (qb.qrEnabled) pdDrawQrCode(W*0.82, H*0.24 + qb.qrOffsetPct * H, 170 * qb.qrSizeMult);
-          if (qb.btnEnabled) pdDrawGetQuoteButton(W*0.77, H - 90 + qb.btnOffsetPct * H, accentColor);
-        }
-
-        function drawSplitShowcase() {
-          const W = pdCanvas.width, H = pdCanvas.height;
-          pdCtx.clearRect(0, 0, W, H);
-          const isPortrait = pdOrientation === 'portrait';
-          const textMode = el('mq-pd-text-mode')?.value || 'text';
-          const tagline = el('mq-pd-tagline')?.value || '';
-          const shapeColor = el('mq-pd-shape-color')?.value || '#0f1f34';
-          const shapeColor2 = el('mq-pd-shape-color2')?.value || '#213a5b';
-          const accentColor = el('mq-pd-accent-color')?.value || '#c9a24b';
-          const useGradient = el('mq-pd-shape-gradient')?.checked || false;
-          const tc = pdGetTextControls();
-          let photoX, photoY, photoW, photoH, panelX, panelY, panelW, panelH;
-          if (isPortrait) {
-            photoX=0; photoY=0; photoW=W; photoH=H*0.54; panelX=0; panelY=photoH; panelW=W; panelH=H-photoH;
-          } else {
-            photoX=0; photoY=0; photoW=W*0.58; photoH=H; panelX=photoW; panelY=0; panelW=W-photoW; panelH=H;
-          }
-          pdDrawPhotoInRect(pdPhotoImage, photoX, photoY, photoW, photoH);
-          if (useGradient) { const g = isPortrait ? pdCtx.createLinearGradient(0,panelY,0,H) : pdCtx.createLinearGradient(panelX,0,W,0); g.addColorStop(0,shapeColor); g.addColorStop(1,shapeColor2); pdCtx.fillStyle=g; } else pdCtx.fillStyle=shapeColor;
-          pdCtx.fillRect(panelX,panelY,panelW,panelH);
-          pdCtx.fillStyle=accentColor; if (isPortrait) pdCtx.fillRect(0,panelY-6,W,12); else pdCtx.fillRect(panelX-6,0,12,H);
-          pdCtx.textAlign='left'; pdSetTextShadow();
-          const left = panelX + 34; let cy = panelY + 78 + tc.offsetPct * H; const textW = panelW - 68;
-          pdCtx.font=`600 ${Math.round(24*tc.preMult)}px -apple-system, sans-serif`; pdCtx.fillStyle=tc.preColor || '#d8d8d8'; pdCtx.fillText((tc.preText || '').toUpperCase(), left, cy); cy += 40*tc.lineMult;
-          if (textMode === 'logo' && pdOwnLogoImage) {
-            const maxLogoW=textW, maxLogoH=110; const ratio=pdOwnLogoImage.width/pdOwnLogoImage.height; let lw=maxLogoW*.8, lh=lw/ratio; if(lh>maxLogoH){lh=maxLogoH; lw=lh*ratio;} pdCtx.drawImage(pdOwnLogoImage,left,cy,lw,lh); cy += lh+18;
-          } else if (textMode === 'logo') {
-            pdCtx.font='500 24px -apple-system, sans-serif'; pdCtx.fillStyle='#d1d5db'; pdCtx.fillText('Upload a logo above', left, cy+18); cy += 52;
-          } else {
-            const nameFont=`900 ${Math.round((isPortrait?54:48)*tc.nameMult)}px -apple-system, sans-serif`; pdCtx.font=nameFont; pdCtx.fillStyle=el('mq-pd-name-color')?.value || '#ffffff'; pdWrapText(pdShopName,nameFont,textW).forEach(l=>{pdCtx.fillText(l,left,cy); cy += (isPortrait?56:50)*tc.lineMult;});
-          }
-          if(tagline){ cy += 6*tc.lineMult; pdCtx.font=`500 ${Math.round(22*tc.tagMult)}px -apple-system, sans-serif`; pdCtx.fillStyle=tc.tagColor || '#f0f0f0'; pdWrapText(tagline,pdCtx.font,textW).forEach(l=>{pdCtx.fillText(l,left,cy); cy += 32*tc.lineMult;}); }
-          pdClearShadow();
-          const qb = pdGetQrButtonSettings();
-          if (qb.qrEnabled) pdDrawQrCode(panelX + panelW*0.72, panelY + panelH*0.74 + qb.qrOffsetPct * H, 160 * qb.qrSizeMult);
-          if (qb.btnEnabled) pdDrawGetQuoteButton(panelX + panelW*0.50, H - 86 + qb.btnOffsetPct * H, accentColor);
-        }
-
-        function drawHeadlineBand() {
-          const W = pdCanvas.width, H = pdCanvas.height;
-          pdCtx.clearRect(0,0,W,H);
-          const textMode = el('mq-pd-text-mode')?.value || 'text';
-          const tagline = el('mq-pd-tagline')?.value || '';
-          const shapeColor = el('mq-pd-shape-color')?.value || '#111827';
-          const accentColor = el('mq-pd-accent-color')?.value || '#c9a24b';
-          const tc = pdGetTextControls();
-          pdDrawPhotoInRect(pdPhotoImage,0,0,W,H);
-          pdCtx.fillStyle='rgba(0,0,0,0.18)'; pdCtx.fillRect(0,0,W,H);
-          const bandH = H*0.26;
-          pdCtx.fillStyle=shapeColor; pdCtx.fillRect(0,0,W,bandH);
-          pdCtx.fillStyle=accentColor; pdCtx.fillRect(0,bandH-8,W,8);
-          pdCtx.textAlign='center'; pdSetTextShadow();
-          let cy = 62 + tc.offsetPct * H;
-          pdCtx.font=`600 ${Math.round(24*tc.preMult)}px -apple-system, sans-serif`; pdCtx.fillStyle=tc.preColor || '#dadada'; pdCtx.fillText((tc.preText || '').toUpperCase(), W/2, cy); cy += 44*tc.lineMult;
-          if (textMode === 'logo' && pdOwnLogoImage) {
-            const maxLogoW=W*0.48, maxLogoH=100; const ratio=pdOwnLogoImage.width/pdOwnLogoImage.height; let lw=maxLogoW, lh=lw/ratio; if(lh>maxLogoH){lh=maxLogoH; lw=lh*ratio;} pdCtx.drawImage(pdOwnLogoImage, W/2-lw/2, cy, lw, lh); cy += lh + 16;
-          } else if (textMode === 'logo') {
-            pdCtx.font='500 24px -apple-system, sans-serif'; pdCtx.fillStyle='#d1d5db'; pdCtx.fillText('Upload a logo above', W/2, cy+18); cy += 50;
-          } else {
-            const nameFont=`900 ${Math.round(58*tc.nameMult)}px -apple-system, sans-serif`; pdCtx.font=nameFont; pdCtx.fillStyle=el('mq-pd-name-color')?.value || '#ffffff'; pdWrapText(pdShopName,nameFont,W*0.82).forEach(l=>{pdCtx.fillText(l,W/2,cy); cy += 58*tc.lineMult;});
-          }
-          if(tagline){
-            pdCtx.fillStyle='rgba(17,24,39,0.72)'; pdCtx.beginPath(); pdCtx.roundRect(W*0.18, bandH+34, W*0.64, 74, 18); pdCtx.fill();
-            pdCtx.font=`600 ${Math.round(24*tc.tagMult)}px -apple-system, sans-serif`; pdCtx.fillStyle=tc.tagColor || '#ffffff'; pdCtx.fillText(tagline, W/2, bandH+82);
-          }
-          pdClearShadow();
-          const qb = pdGetQrButtonSettings();
-          if (qb.qrEnabled) pdDrawQrCode(W*0.82, H*0.72 + qb.qrOffsetPct * H, 180 * qb.qrSizeMult);
-          if (qb.btnEnabled) pdDrawGetQuoteButton(W*0.50, H - 84 + qb.btnOffsetPct * H, accentColor);
-        }
-
-        function drawPosterDesigner() {
-          if (pdTemplate === 'diamond-arrow') drawDiamondArrow();
-          else if (pdTemplate === 'ornate-divider') drawOrnateDivider();
-          else if (pdTemplate === 'circular-badge') drawCircularBadge();
-          else if (pdTemplate === 'bold-modern') drawBoldModern();
-          else if (pdTemplate === 'premium-frame') drawPremiumFrame();
-          else if (pdTemplate === 'estate-clean') drawEstateClean();
-          else if (pdTemplate === 'cta-strip') drawCtaStrip();
-          else if (pdTemplate === 'luxury-ribbon') drawLuxuryRibbon();
-          else if (pdTemplate === 'corner-card') drawCornerCard();
-          else if (pdTemplate === 'split-showcase') drawSplitShowcase();
-          else if (pdTemplate === 'headline-band') drawHeadlineBand();
-          else drawCurvedSplit();
-        }
-        window._mqRedrawPosterDesigner = () => { signLink = getSignLink(); drawPosterDesigner(); };
-
-        window.mqPdSelectTemplate = (tpl, thumbEl) => {
-          pdTemplate = tpl;
-          document.querySelectorAll('.mq-pd-template-thumb').forEach(t => t.style.border = '2px solid #e5e7eb');
-          if (thumbEl) thumbEl.style.border = '2px solid #1a1a1a';
-          // A sensible starting background per style — still fully editable
-          // afterward, this just saves someone from starting on a white
-          // background for a template designed to look best dark, or vice versa.
-          const bgInput = el('mq-pd-bg-color');
-          const bgInput2 = el('mq-pd-bg-color2');
-          const shapeInput = el('mq-pd-shape-color');
-          const shapeInput2 = el('mq-pd-shape-color2');
-          const accentInput = el('mq-pd-accent-color');
-          if (bgInput) {
-            if (tpl === 'diamond-arrow' || tpl === 'circular-badge' || tpl === 'premium-frame' || tpl === 'luxury-ribbon' || tpl === 'headline-band') bgInput.value = '#111111';
-            else if (tpl === 'cta-strip' || tpl === 'split-showcase') bgInput.value = '#0f1f34';
-            else bgInput.value = '#ffffff';
-          }
-          // A second colour for whichever gradient checkbox someone turns
-          // on — chosen to actually look like a deliberate two-tone blend
-          // for this specific style, not just a random pairing.
-          if (bgInput2) {
-            if (tpl === 'diamond-arrow' || tpl === 'circular-badge' || tpl === 'premium-frame' || tpl === 'luxury-ribbon' || tpl === 'headline-band') bgInput2.value = '#2b2b2b';
-            else if (tpl === 'cta-strip' || tpl === 'split-showcase') bgInput2.value = '#213a5b';
-            else bgInput2.value = '#f0f0f0';
-          }
-          if (shapeInput && accentInput) {
-            if (tpl === 'diamond-arrow') { shapeInput.value = '#c9a24b'; accentInput.value = '#c9a24b'; }
-            else if (tpl === 'ornate-divider') { shapeInput.value = '#6b4226'; accentInput.value = '#8a5a3a'; }
-            else if (tpl === 'circular-badge') { shapeInput.value = '#c9a24b'; accentInput.value = '#c9a24b'; }
-            else if (tpl === 'bold-modern') { shapeInput.value = '#1a3a6b'; accentInput.value = '#c9a24b'; }
-            else if (tpl === 'premium-frame') { shapeInput.value = '#171717'; accentInput.value = '#c9a24b'; }
-            else if (tpl === 'estate-clean') { shapeInput.value = '#ffffff'; accentInput.value = '#c9a24b'; }
-            else if (tpl === 'cta-strip') { shapeInput.value = '#0f1f34'; accentInput.value = '#c9a24b'; }
-            else if (tpl === 'luxury-ribbon') { shapeInput.value = '#151515'; accentInput.value = '#c9a24b'; }
-            else if (tpl === 'corner-card') { shapeInput.value = '#ffffff'; accentInput.value = '#c9a24b'; }
-            else if (tpl === 'split-showcase') { shapeInput.value = '#0f1f34'; accentInput.value = '#c9a24b'; }
-            else if (tpl === 'headline-band') { shapeInput.value = '#111827'; accentInput.value = '#c9a24b'; }
-            else { shapeInput.value = '#1a3a6b'; accentInput.value = '#c9a24b'; }
-          }
-          if (shapeInput2) {
-            if (tpl === 'diamond-arrow') shapeInput2.value = '#8a6d2b';
-            else if (tpl === 'ornate-divider') shapeInput2.value = '#3d2814';
-            else if (tpl === 'circular-badge') shapeInput2.value = '#8a6d2b';
-            else if (tpl === 'premium-frame') shapeInput2.value = '#2b2b2b';
-            else if (tpl === 'estate-clean') shapeInput2.value = '#f4f4f4';
-            else if (tpl === 'cta-strip') shapeInput2.value = '#213a5b';
-            else if (tpl === 'luxury-ribbon') shapeInput2.value = '#2b2b2b';
-            else if (tpl === 'corner-card') shapeInput2.value = '#f4f4f4';
-            else if (tpl === 'split-showcase') shapeInput2.value = '#213a5b';
-            else if (tpl === 'headline-band') shapeInput2.value = '#2b2b2b';
-            else if (tpl === 'bold-modern') shapeInput2.value = '#378ADD';
-            else shapeInput2.value = '#378ADD';
-          }
-          // Same idea for the pre-line/tagline text colours — sensible
-          // per-style defaults for readability, still fully editable.
-          const preColorInput = el('mq-pd-pre-color');
-          const tagColorInput = el('mq-pd-tag-color');
-          if (preColorInput && tagColorInput) {
-            if (tpl === 'diamond-arrow') { preColorInput.value = '#e5e7eb'; tagColorInput.value = '#e5e7eb'; }
-            else if (tpl === 'circular-badge') { preColorInput.value = '#f0f0f0'; tagColorInput.value = '#e0e0e0'; }
-            else if (tpl === 'bold-modern') { preColorInput.value = '#d0d0d0'; tagColorInput.value = '#d0d0d0'; }
-            else if (tpl === 'premium-frame' || tpl === 'cta-strip' || tpl === 'luxury-ribbon' || tpl === 'split-showcase' || tpl === 'headline-band') { preColorInput.value = '#e7d6b3'; tagColorInput.value = '#ececec'; }
-            else { preColorInput.value = '#6b6b6b'; tagColorInput.value = '#4b4b4b'; }
-          }
-          // Shop name colour is independent of shape colour (its own picker
-          // now, not derived from it) — still needs a sensible starting
-          // point per template though, same reasoning as the background
-          // colour above: diamond-arrow, circular-badge, and bold-modern
-          // all put the shop name over a dark panel/background by default,
-          // so white starts far more readable there than this picker's
-          // general black default.
-          const nameColorInput = el('mq-pd-name-color');
-          if (nameColorInput) {
-            if (tpl === 'diamond-arrow' || tpl === 'circular-badge' || tpl === 'bold-modern' || tpl === 'premium-frame' || tpl === 'cta-strip' || tpl === 'luxury-ribbon' || tpl === 'split-showcase' || tpl === 'headline-band') nameColorInput.value = '#ffffff';
-            else nameColorInput.value = '#1a1a1a';
-          }
-          drawPosterDesigner();
-        };
-
-        window.mqPdSetOrientation = (orient) => {
-          pdOrientation = orient;
-          if (orient === 'portrait') { pdCanvas.width = 1080; pdCanvas.height = 1620; }
-          else { pdCanvas.width = 1620; pdCanvas.height = 1080; }
-          pdCanvas.style.width = 'auto';
-          pdCanvas.style.height = '300px'; // fixed height so landscape ends up wider, not shorter, matching portrait's actual visual size
-          drawPosterDesigner();
-        };
-
-        window.mqPdBtnToggled = () => {
-          const wrap = el('mq-pd-btn-controls-wrap');
-          const enabled = el('mq-pd-btn-enabled')?.checked;
-          if (wrap) wrap.style.display = enabled ? 'block' : 'none';
-          drawPosterDesigner();
-        };
-
-        window.mqPdQrToggled = () => {
-          const wrap = el('mq-pd-qr-controls-wrap');
-          const enabled = el('mq-pd-qr-enabled')?.checked;
-          if (wrap) wrap.style.display = enabled ? 'block' : 'none';
-          drawPosterDesigner();
-        };
-
-        window.mqPdToggleGradientColor2 = (wrapId, show) => {
-          const wrap = document.getElementById(wrapId);
-          if (wrap) wrap.style.display = show ? 'inline-block' : 'none';
-          drawPosterDesigner();
-        };
-
-        window.mqPdTextModeChanged = () => {
-          const mode = el('mq-pd-text-mode')?.value;
-          const wrap = el('mq-pd-logo-upload-wrap');
-          if (wrap) wrap.style.display = mode === 'logo' ? 'block' : 'none';
-          drawPosterDesigner();
-        };
-
-        const pdPhotoInput = el('mq-pd-photo-input');
-        if (pdPhotoInput) {
-          pdPhotoInput.onchange = (e) => {
-            const file = e.target.files && e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-              const img = new Image();
-              img.onload = () => { pdPhotoImage = img; drawPosterDesigner(); };
-              img.src = ev.target.result;
-            };
-            reader.readAsDataURL(file);
-          };
-        }
-
-        const pdLogoInput = el('mq-pd-logo-input');
-        if (pdLogoInput) {
-          pdLogoInput.onchange = (e) => {
-            const file = e.target.files && e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-              const img = new Image();
-              img.onload = () => { pdOwnLogoImage = img; drawPosterDesigner(); };
-              img.src = ev.target.result;
-            };
-            reader.readAsDataURL(file);
-          };
-        }
-
-        const pdBgImageInput = el('mq-pd-bg-image-input');
-        if (pdBgImageInput) {
-          pdBgImageInput.onchange = (e) => {
-            const file = e.target.files && e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-              const img = new Image();
-              img.onload = () => { pdBgImage = img; drawPosterDesigner(); };
-              img.src = ev.target.result;
-            };
-            reader.readAsDataURL(file);
-          };
-        }
-
-        // Tap-to-zoom — converts the current canvas to an image and shows it
-        // full-screen, since a canvas itself can't be pinch-zoomed the way a
-        // real <img> can. Tap anywhere to close.
-        window.mqPdOpenZoom = () => {
-          let overlay = document.getElementById('mq-pd-zoom-overlay');
-          if (!overlay) {
-            overlay = document.createElement('div');
-            overlay.id = 'mq-pd-zoom-overlay';
-            overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:100000;display:flex;align-items:center;justify-content:center;padding:20px;cursor:zoom-out';
-            overlay.onclick = () => { overlay.style.display = 'none'; };
-            document.body.appendChild(overlay);
-          }
-          overlay.innerHTML = `<img src="${pdCanvas.toDataURL('image/png')}" style="max-width:100%;max-height:100%;border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,0.4)"/>`;
-          overlay.style.display = 'flex';
-        };
-
-        window.mqPdToggleColorSection = () => {
-          const body = el('mq-pd-color-section-body');
-          const arrow = el('mq-pd-color-section-arrow');
-          if (!body) return;
-          const opening = body.style.display === 'none';
-          body.style.display = opening ? 'block' : 'none';
-          if (arrow) arrow.style.transform = opening ? 'rotate(0deg)' : 'rotate(-90deg)';
-        };
-
-        // Pulls a live directory listing from the GitHub repo's textures
-        // folder via GitHub's API — no filenames hardcoded anywhere, so
-        // whatever gets added or removed from that folder just works, no
-        // code changes needed on our end. Cached per page load so flipping
-        // the picker open and closed doesn't keep re-fetching.
-        let _pdTextureCache = null;
-        window.mqPdLoadTextureLibrary = async () => {
-          const grid = el('mq-pd-texture-grid');
-          if (!grid) return;
-          const showing = grid.style.display === 'grid';
-          if (showing) { grid.style.display = 'none'; return; }
-          grid.style.display = 'grid';
-          if (_pdTextureCache) {
-            renderTextureGrid(_pdTextureCache);
-            return;
-          }
-          grid.innerHTML = '<div style="grid-column:1/-1;font-size:11px;color:#9ca3af;padding:6px">Loading textures…</div>';
-          try {
-            const res = await fetch('https://api.github.com/repos/aceswin/midasquote-widget/contents/textures');
-            if (!res.ok) throw new Error('Could not load texture list');
-            const files = await res.json();
-            const images = (Array.isArray(files) ? files : [])
-              .filter(f => f.type === 'file' && /\.(png|jpe?g|webp|gif)$/i.test(f.name))
-              .map(f => ({ name: f.name, url: `https://widget.midasquote.com/textures/${encodeURIComponent(f.name)}` }));
-            _pdTextureCache = images;
-            renderTextureGrid(images);
-          } catch(e) {
-            grid.innerHTML = '<div style="grid-column:1/-1;font-size:11px;color:#dc2626;padding:6px">Couldn\'t load the texture library — try again in a moment.</div>';
-          }
-          function renderTextureGrid(images) {
-            if (!images.length) {
-              grid.innerHTML = '<div style="grid-column:1/-1;font-size:11px;color:#9ca3af;padding:6px">No textures found yet.</div>';
-              return;
-            }
-            grid.innerHTML = images.map(img => `
-              <div onclick="mqPdSelectTexture('${img.url.replace(/'/g,"\\'")}')" style="cursor:pointer;border:2px solid #e5e7eb;border-radius:6px;overflow:hidden;aspect-ratio:1;background:#f3f4f6" title="${img.name.replace(/"/g,'&quot;')}">
-                <img src="${img.url}" style="width:100%;height:100%;object-fit:cover;display:block" loading="lazy"/>
-              </div>
-            `).join('');
-          }
-        };
-
-        window.mqPdSelectTexture = (url) => {
-          const img = new Image();
-          img.crossOrigin = 'anonymous';
-          img.onload = () => { pdBgImage = img; drawPosterDesigner(); };
-          img.onerror = () => { alert("Couldn't load that texture — try a different one."); };
-          img.src = url;
-        };
-
-        window.mqPdOverlayOpacityChanged = () => {
-          const val = el('mq-pd-bg-overlay-opacity')?.value || 0;
-          const label = el('mq-pd-bg-overlay-opacity-val');
-          if (label) label.textContent = val + '%';
-          drawPosterDesigner();
-        };
-
-        window.mqPdBgImageToggled = () => {
-          const wrap = el('mq-pd-bg-image-upload-wrap');
-          const enabled = el('mq-pd-bg-image-enabled')?.checked;
-          if (wrap) wrap.style.display = enabled ? 'block' : 'none';
-          drawPosterDesigner();
-        };
-
-        const pdDownloadBtn = el('mq-pd-download-btn');
-        if (pdDownloadBtn) {
-          pdDownloadBtn.onclick = () => {
-            const link = document.createElement('a');
-            link.download = (pdShopName.replace(/[^a-z0-9]/gi,'-').toLowerCase() || 'poster') + '-' + pdTemplate + '-' + pdOrientation + '.png';
-            link.href = pdCanvas.toDataURL('image/png');
-            link.click();
-          };
-        }
-
-        drawPosterDesigner();
-
-        // Only show the floating preview while this specific section is
-        // BOTH scrolled into view AND actually expanded — not just
-        // scrolled past while collapsed, and not the whole time someone's
-        // anywhere on the Marketing Kit page.
-        const pdOuterCard = document.getElementById('mq-pd-outer-card');
-        const pdStickyPreview = document.getElementById('mq-pd-sticky-preview');
-        let pdSectionInView = false;
-        window._mqPdUpdateStickyVisibility = () => {
-          if (!pdStickyPreview) return;
-          const body = document.getElementById('mq-mk-body-poster');
-          const isOpen = body && body.style.display !== 'none';
-          pdStickyPreview.style.display = (pdSectionInView && isOpen) ? 'block' : 'none';
-        };
-        if (pdOuterCard && pdStickyPreview && 'IntersectionObserver' in window) {
-          const pdObserver = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-              pdSectionInView = entry.isIntersecting;
-              window._mqPdUpdateStickyVisibility();
-            });
-          }, { threshold: 0.05 });
-          pdObserver.observe(pdOuterCard);
-        }
-      }
   }
 
   // JS-driven sticky nav — CSS position:sticky silently stops working if ANY
