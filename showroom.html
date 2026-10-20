@@ -808,6 +808,42 @@
       updateNav();
     }
 
+    // Prevent a slow/stalled API request from leaving the public Showroom stuck
+    // on "Loading your showroom..." forever. A retry also helps with brief
+    // network / Worker hiccups without requiring visitors to clear browser data.
+    async function mqSrFetchShopData(shopToken) {
+      const endpoint = `${CONFIG.PROXY_WORKER}/shop-data?shop=${encodeURIComponent(shopToken)}`;
+      let lastError;
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 12000);
+        try {
+          const response = await fetch(endpoint, {
+            cache: 'no-store',
+            signal: controller.signal,
+            headers: { 'Accept': 'application/json' }
+          });
+          if (!response.ok) {
+            const error = new Error(`Shop data server returned ${response.status}`);
+            error.retryable = response.status === 429 || response.status >= 500;
+            throw error;
+          }
+          const data = await response.json();
+          if (!data || typeof data !== 'object') throw new Error('Invalid shop data response');
+          return data;
+        } catch (error) {
+          lastError = error;
+          console.warn(`Showroom data request ${attempt + 1} failed:`, error);
+          if (attempt === 1 || error.retryable === false) break;
+          // Short pause before one retry. AbortError includes timeouts.
+          await new Promise(resolve => setTimeout(resolve, 500));
+        } finally {
+          clearTimeout(timeoutId);
+        }
+      }
+      throw new Error('The showroom could not reach its data server. Please try again.');
+    }
+
     async function init() {
       const shop_token = new URLSearchParams(window.location.search).get('shop');
       if (!shop_token) { document.getElementById('sr-content').innerHTML = '<div class="sr-empty">No shop specified.</div>'; return; }
@@ -816,8 +852,7 @@
       // this, a browser could serve a stale cached copy of this response
       // (e.g. right after a pricing/product fix is deployed to the proxy
       // worker), showing outdated items until the cache naturally expires.
-      const res = await fetch(`${CONFIG.PROXY_WORKER}/shop-data?shop=${encodeURIComponent(shop_token)}`, { cache: 'no-store' });
-      const payload = await res.json();
+      const payload = await mqSrFetchShopData(shop_token);
       if (payload.error || !payload.shop) { document.getElementById('sr-content').innerHTML = '<div class="sr-empty">Shop not found.</div>'; return; }
 
       const shop = payload.shop.fields;
@@ -1065,7 +1100,17 @@
 
     init().catch(err => {
       console.error('Showroom error:', err);
-      document.getElementById('sr-content').innerHTML = `<div class="sr-empty">Error loading showroom: ${err.message}. Please try refreshing.</div>`;
+      const content = document.getElementById('sr-content');
+      content.innerHTML = '<div class="sr-empty" role="alert"><p style="margin-bottom:16px">The showroom could not load right now. Please check your connection and try again.</p><button id="sr-retry" type="button" style="border:1px solid #b69b62;border-radius:8px;padding:11px 19px;background:#fff;color:#211e1a;font:600 13px Inter,sans-serif;cursor:pointer">Try again</button></div>';
+      document.getElementById('sr-retry').addEventListener('click', () => {
+        content.innerHTML = '<div class="sr-loading">Loading your showroom...</div>';
+        init().catch(retryErr => {
+          console.error('Showroom retry failed:', retryErr);
+          content.innerHTML = '<div class="sr-empty" role="alert">The showroom is temporarily unavailable. Please try again shortly.</div>';
+          mqSrReportHeight();
+        });
+      });
+      mqSrReportHeight();
     });
   </script>
 </body>
