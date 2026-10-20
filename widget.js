@@ -9745,6 +9745,13 @@
       #mq-fx-chooser .mq-fx-pt:hover .mq-fx-pt-img,#mq-fx-chooser .mq-fx-pt:focus-visible .mq-fx-pt-img{border-color:var(--mq-card-a,#1a1a1a);transform:translateY(-2px)}
       #mq-fx-chooser .mq-fx-pt:focus-visible{outline:none}
       #mq-fx-chooser .mq-fx-pt-name{font-size:12.5px;font-weight:700;color:#111827;line-height:1.25;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+      #mq-fx-chooser .mq-fx-pills{max-width:820px;margin:22px auto 0;padding-top:18px;border-top:1px solid #eceef1}
+      #mq-fx-chooser .mq-fx-pills-lbl{font-size:13px;font-weight:600;color:#6b7280;letter-spacing:.01em;margin-bottom:12px}
+      #mq-fx-chooser .mq-fx-pills-row{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+      #mq-fx-chooser .mq-fx-pill{display:inline-flex;align-items:center;max-width:100%;padding:8px 15px;border-radius:999px;border:1.5px solid var(--mq-card-a,#1a1a1a);background:#fff;color:var(--mq-card-ink,#1a1a1a);font-family:inherit;font-size:13.5px;font-weight:600;line-height:1.2;cursor:pointer;transition:background .15s,color .15s,transform .15s,box-shadow .15s;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+      #mq-fx-chooser .mq-fx-pill:focus-visible{outline:none;box-shadow:0 0 0 3px var(--mq-card-tint,#e5e7eb)}
+      #mq-fx-chooser .mq-fx-pill:active{background:var(--mq-card-a,#1a1a1a);color:var(--mq-card-fg,#fff)}
+      @media (hover:hover){#mq-fx-chooser .mq-fx-pill:hover{background:var(--mq-card-a,#1a1a1a);color:var(--mq-card-fg,#fff);transform:translateY(-1px)}}
       #mq-fx-chooser .mq-fx-trust{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 16px;margin:-6px auto 20px;font-size:13px;font-weight:600;color:#4b5563}
       #mq-fx-chooser .mq-fx-trust span{display:inline-flex;align-items:center;gap:6px}
       #mq-fx-chooser .mq-fx-trust svg{width:15px;height:15px;color:var(--mq-card-ink,#1a1a1a);flex-shrink:0}
@@ -10103,18 +10110,32 @@
       const ptHTML = t => {
         const list = typesFor(t.id);
         if (list.length < 2) return '';
-        return `<button type="button" class="mq-fx-ptog" aria-expanded="false" onclick="mqFxToggleTypes('${t.id}',this)"><span class="mq-fx-ptog-t">Project types</span><span class="mq-fx-ptog-c" aria-hidden="true"><svg viewBox="0 0 16 16" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8h11M9.5 4l4 4-4 4"/></svg></span><span class="mq-fx-ptick" aria-hidden="true" data-names="${escH(JSON.stringify(list.map(r => r.name)))}"></span></button>`
+        return `<button type="button" class="mq-fx-ptog" aria-expanded="false" onclick="mqFxToggleTypes('${t.id}',this)"><span class="mq-fx-ptog-t">${list.length} project types</span><span class="mq-fx-ptog-c" aria-hidden="true"><svg viewBox="0 0 16 16" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8h11M9.5 4l4 4-4 4"/></svg></span><span class="mq-fx-ptick" aria-hidden="true" data-names="${escH(JSON.stringify(list.map(r => r.name)))}"></span></button>`
           + `<div class="mq-fx-ptypes" hidden><div class="mq-fx-pgrid">${list.map(r => { const u = ptPhoto(r); return `<button type="button" class="mq-fx-pt" onclick="mqFxStartType('${t.id}','${escH(r.id)}')"><span class="mq-fx-pt-img"><span class="mq-fx-pt-ico">${t.icon}</span>${u ? `<img src="${u}" alt="" loading="lazy" decoding="async" onerror="this.remove()">` : ''}</span><span class="mq-fx-pt-name">${escH(r.name)}</span></button>`; }).join('')}</div></div>`;
       };
       const imgs = id => photosFor(id).map(u => `<img src="${u}" alt="" fetchpriority="high" decoding="async" onerror="this.remove()">`).join('');
       const TR = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
       const trust = `<div class="mq-fx-trust"><span>${TR('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>')}About 5 minutes</span><span>${TR('<path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/>')}No obligation</span><span>${TR('<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>')}Instant ballpark</span></div>`;
+      // "Or jump straight to a project": every project type as a tappable pill, shown
+      // right under the cards, so people can see at a glance that the three cards are
+      // only starting points (e.g. a doors-only job lives under a project type, not a
+      // card). Cabinet types start through the Cabinets card's flow, counter types
+      // through Countertops'; the pills only exist for quote types the shop shows.
+      const cabTab = shown.find(t => t.id === 'cabinets') || shown.find(t => t.id === 'both');
+      const ctTab = shown.find(t => t.id === 'countertops');
+      const pillItems = [].concat(
+        cabTab ? typesFor(cabTab.id).map(r => ({ tab: cabTab.id, r })) : [],
+        ctTab ? typesFor(ctTab.id).map(r => ({ tab: ctTab.id, r })) : []
+      );
+      const pillsHTML = pillItems.length >= 2
+        ? `<div class="mq-fx-pills"><div class="mq-fx-pills-lbl">Or jump straight to a project</div><div class="mq-fx-pills-row">${pillItems.map(p => `<button type="button" class="mq-fx-pill" onclick="mqFxStartType('${p.tab}','${escH(p.r.id)}')">${escH(p.r.name)}</button>`).join('')}</div></div>`
+        : '';
       ch.innerHTML = `<div class="mq-fx-ch-title">${one ? 'Ready for your estimate?' : 'What would you like a quote for?'}</div>
         <div class="mq-fx-ch-sub">${one ? 'Answer a few quick questions to get your estimate.' : 'Pick one to get started.'}</div>
         ${trust}
         <div class="mq-fx-cards mq-fx-cards-${shown.length}">${shown.map(t =>
           `<div class="mq-fx-cardwrap"><button type="button" class="mq-fx-card" data-tab="${t.id}" onclick="mqFxStart('${t.id}')"><span class="mq-fx-card-photo"><span class="mq-fx-card-icon">${t.icon}</span>${imgs(t.id)}</span><span class="mq-fx-card-body"><span class="mq-fx-card-text"><span class="mq-fx-card-title">${one ? t.startTitle : t.title}</span><span class="mq-fx-card-sub">${one ? 'Takes about 5 minutes' : t.sub}</span></span><span class="mq-fx-card-arrow">›</span></span></button>${ptHTML(t)}</div>`).join('')}
-        </div>`;
+        </div>${pillsHTML}`;
       // Cards are white with a gradient BORDER of the shop's own Brand colour
       // (brand -> a lighter shade of it); the icon tile is a soft tint of the
       // brand colour. A light brand (e.g. yellow) gets a darker icon so it
