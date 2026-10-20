@@ -2584,6 +2584,8 @@ window.logoutMember = async function () {
   .mq-studio-tile{background:#fff;border:1px solid #e9e6e9;border-radius:13px;padding:9px;text-align:left;cursor:pointer;box-shadow:0 3px 18px rgba(32,26,41,.04);transition:transform .2s,border-color .2s,box-shadow .2s;color:inherit}
   .mq-studio-tile:hover,.mq-studio-tile:focus-visible{transform:translateY(-3px);border-color:#a98caa;box-shadow:0 10px 28px rgba(32,26,41,.12);outline:none}
   .mq-studio-thumb{display:block;width:100%;height:175px;object-fit:cover;border-radius:8px;background:#eee8e9}
+  #mq-studio .mq-studio-yard-card .mq-studio-tile-meta strong{font-size:14px!important;line-height:1.25!important}
+  #mq-studio .mq-studio-yard-card .mq-studio-tile-meta small{font-size:11px!important}
   #mq-studio .mq-studio-yard-card .mq-studio-thumb-area{height:auto!important;aspect-ratio:3 / 2!important;background:#efe9e5!important;overflow:hidden!important;border-radius:9px!important}
   #mq-studio .mq-studio-yard-card .mq-studio-thumb{display:block!important;width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;object-fit:fill!important;border-radius:0!important}
   #mq-studio .mq-studio-yard-card{border-color:#e4ded7!important;box-shadow:0 4px 16px rgba(39,30,25,.09)!important}
@@ -14313,11 +14315,11 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
         const r=regions[opts.highlight];if(r){ctx.save();ctx.strokeStyle='#38bdf8';ctx.lineWidth=4*k;ctx.setLineDash([14*k,8*k]);ctx.strokeRect(...r);ctx.restore()}
       }
     }
-    function thumb(t){
-      const svgData=customStudioThumbSvg(t);
+    function thumb(t, coverData=null){
+      const svgData=customStudioThumbSvg(t, coverData);
       if(svgData)return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svgData);
       const canvas=document.createElement('canvas');canvas.width=360;canvas.height=360;paint(canvas,t,{color,surface:'#e9d9c8',photo:mqStudioPhoto,headlineFont:'playfair',subFont:'montserrat',ctaFont:'montserrat',align:'left',headlineColor:'#ffffff',subColor:'#f0e7ee',ctaBg:'#f2e1ca',ctaColor:'#2b2430',headlineFx:'soft',subFx:'soft',brandFx:'soft',ctaFx:'none',urlFx:'soft',fxColor:'#000000',headlineScale:100,subScale:100,ctaScale:100,headlineSpacing:0,subSpacing:0,contentX:0,contentY:0,ctaX:0,ctaY:0});return canvas.toDataURL('image/png')}
-    function customStudioThumbSvg(t){
+    function customStudioThumbSvg(t,coverData=null){
       if(t.category!=='yard')return '';
       // Purpose-built, landscape previews. Each preview follows its editable
       // sign's major blocks rather than using a one-size-fits-all mockup.
@@ -14329,16 +14331,26 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
       const darkBg=dark?'#17171b':'#f9f7f2', darkFg=dark?'#fff':'#25242a', accent=dark?'#d8ad54':'#986f43';
       const shop=esc((shopName||'YOUR CABINET SHOP').toUpperCase());
       const fmt=(v,max=25)=>{let words=String(v||'').toUpperCase().split(/\s+/), lines=[''];for(const word of words){const i=lines.length-1; if((lines[i]+' '+word).trim().length>max&&lines[i]&&lines.length<3)lines.push(word);else lines[i]=(lines[i]+' '+word).trim();}return lines.map(esc)};
-      const copy=(txt,x,y,maxW,lineH=40,size=31,fill='#fff',anchor='start',maxChars=23)=>fmt(txt,maxChars).map((ln,i)=>`<text x="${x}" y="${y+i*lineH}" text-anchor="${anchor}" font-family="Impact,Arial,sans-serif" font-weight="900" font-size="${size}" fill="${fill}">${ln}</text>`).join('');
+      // Gallery typography is deliberately quieter than printable artwork.
+      // Fit by both character count and available region to avoid cropped words.
+      const copy=(txt,x,y,maxW,lineH=40,size=31,fill='#fff',anchor='start',maxChars=23)=>{
+        const safeSize=Math.min(size*0.67,Math.max(10,(maxW-12)/Math.min(maxChars,28)*1.75));
+        const safeLineH=Math.min(lineH,Math.max(15,safeSize*1.3));
+        return fmt(txt,Math.max(8,Math.min(maxChars,Math.floor((maxW-12)/(safeSize*0.6))))).map((ln,i)=>`<text x="${x}" y="${y+i*safeLineH}" text-anchor="${anchor}" font-family="Arial,sans-serif" font-weight="800" font-size="${safeSize.toFixed(1)}" fill="${fill}">${ln}</text>`).join('');
+      };
       const header='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 360" width="540" height="360">';
       const defs=`<defs><linearGradient id="cab" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#eae0d1"/><stop offset=".5" stop-color="#bcaa97"/><stop offset="1" stop-color="#655c56"/></linearGradient><linearGradient id="soft" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#faf7f2"/><stop offset="1" stop-color="#e8dbcb"/></linearGradient></defs>`;
-      const photo=(x,y,w,h)=>`<svg x="${x}" y="${y}" width="${w}" height="${h}" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice"><rect width="400" height="300" fill="url(#cab)"/><rect x="25" y="56" width="116" height="138" rx="3" fill="#f1ede6"/><rect x="257" y="56" width="116" height="138" rx="3" fill="#f1ede6"/><rect x="152" y="69" width="94" height="126" fill="#b09e89"/><rect x="18" y="194" width="364" height="22" fill="#fffaf4"/><rect x="18" y="216" width="364" height="55" fill="#ede5dc"/><rect x="102" y="198" width="197" height="16" fill="#c1b3a2"/><rect x="110" y="212" width="180" height="57" fill="#90765e"/><path d="M110 234H290M201 216V268" stroke="#d5bfa6" stroke-width="2"/><circle cx="70" cy="95" r="5" fill="#8b755e"/><circle cx="323" cy="95" r="5" fill="#8b755e"/><path d="M55 205V170C55 150 84 150 84 170V201" stroke="#74685f" stroke-width="5" fill="none"/><circle cx="192" cy="33" r="13" fill="#fff0d8" opacity=".95"/></svg>`;
+      const photo=(x,y,w,h,index=0)=>{
+        const src=coverData?.[index] || coverData?.[0];
+        if(src)return `<svg x="${x}" y="${y}" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid slice"><image href="${src}" x="0" y="0" width="${w}" height="${h}" preserveAspectRatio="xMidYMid slice"/></svg>`;
+        return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="url(#cab)"/>`;
+      };
       const framed=(x,y,w,h,color='#fff')=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="5" fill="none" stroke="${color}" stroke-width="3"/>`;
       const strip=(txt,bg='#eee3d3',fg='#251e1c')=>`<rect x="24" y="300" width="492" height="42" rx="7" fill="${bg}"/>${copy(txt,270,328,480,32,21,fg,'middle',33)}`;
       const caption=(txt,y=286,c='#fff')=>`<text x="28" y="${y}" font-family="Arial,sans-serif" font-size="17" font-weight="700" fill="${c}">${esc(String(txt||'').slice(0,44))}</text>`;
       let body='';
       if(id==='yardbefore'){
-        body=`${photo(0,0,270,292)}${photo(270,0,270,292)}<rect x="177" y="10" width="186" height="48" rx="8" fill="#202027"/>${copy('BEFORE & AFTER',270,41,184,28,24,'#fff','middle',20)}<rect y="292" width="540" height="68" fill="#202027"/>${copy(shop,270,323,520,27,22,'#fff','middle',34)}<text x="270" y="345" text-anchor="middle" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#e5c77c">YOUR WEBSITE</text>`;
+        body=`${photo(0,0,270,292)}${photo(270,0,270,292,1)}<rect x="177" y="10" width="186" height="48" rx="8" fill="#202027"/>${copy('BEFORE & AFTER',270,41,184,28,24,'#fff','middle',20)}<rect y="292" width="540" height="68" fill="#202027"/>${copy(shop,270,323,520,27,22,'#fff','middle',34)}<text x="270" y="345" text-anchor="middle" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#e5c77c">YOUR WEBSITE</text>`;
       }else if(isClassic){
         if(classic==='band')body=`${photo(0,55,540,240)}<rect width="540" height="69" fill="#182334"/><rect y="284" width="540" height="76" fill="#182334"/>${copy(shop,270,43,510,30,23,'#fff','middle',35)}${copy(t.headline,270,326,500,26,23,'#fff','middle',34)}`;
         else if(['cta','estate'].includes(classic))body=`${photo(0,0,540,232)}<rect y="232" width="540" height="128" fill="${classic==='cta'?'#14233a':'#f8f5f0'}"/><rect y="229" width="540" height="6" fill="${accent}"/>${copy(t.headline,26,272,490,31,27,classic==='cta'?'#fff':'#25242a','start',32)}${caption(shop,334,classic==='cta'?'#eadfcf':'#27252a')}`;
@@ -14365,7 +14377,25 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
     function renderGallery(filter='all'){
       grid.innerHTML='';MQ_STUDIO_TEMPLATES.filter(t=>filter==='all'||t.category===filter).forEach(t=>{
         const btn=document.createElement('button');btn.type='button';btn.className='mq-studio-tile';btn.innerHTML=`<div class="mq-studio-thumb-area"><img class="mq-studio-thumb" alt=""/></div><div class="mq-studio-tile-meta"><span><strong></strong><small></small></span><b aria-hidden="true">↗</b></div>`;
-        if(t.category==='yard')btn.classList.add('mq-studio-yard-card');btn.querySelector('img').src=thumb(t);btn.querySelector('strong').textContent=t.title;btn.querySelector('small').textContent=t.tag;
+        if(t.category==='yard')btn.classList.add('mq-studio-yard-card');
+        const preview=btn.querySelector('img');
+        preview.src=thumb(t);
+        if(t.category==='yard'){
+          const kinds=t.id==='yardbefore'?[studioCoverForTemplate(t,0),studioCoverForTemplate(t,1)]:[studioCoverForTemplate(t,0)];
+          Promise.all(kinds.map(studioLoadCover)).then(images=>{
+            if(!btn.isConnected||images.some(img=>!img))return;
+            const coverData=images.map(img=>{
+              const cv=document.createElement('canvas');cv.width=480;cv.height=360;
+              const ctx=cv.getContext('2d');
+              const ratio=Math.max(cv.width/img.naturalWidth,cv.height/img.naturalHeight);
+              const dw=img.naturalWidth*ratio,dh=img.naturalHeight*ratio;
+              ctx.drawImage(img,(cv.width-dw)/2,(cv.height-dh)/2,dw,dh);
+              try{return cv.toDataURL('image/jpeg',0.76);}catch{return null;}
+            });
+            preview.src=thumb(t,coverData);
+          }).catch(()=>{});
+        }
+        btn.querySelector('strong').textContent=t.title;btn.querySelector('small').textContent=t.tag;
         btn.addEventListener('click',()=>select(t));grid.appendChild(btn);
       });
     }
