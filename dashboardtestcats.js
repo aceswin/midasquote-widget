@@ -1619,7 +1619,6 @@ window.logoutMember = async function () {
             <div class="mq-nav-item" data-mq-group="leads" onclick="mqNav('leads',this)">👥 &nbsp; Leads</div>
             <div class="mq-nav-item" data-mq-group="leads" onclick="mqNav('proposals',this)">📄 &nbsp; Proposals</div>
             <div class="mq-nav-item" data-mq-group="marketing" onclick="mqNav('marketing',this)">🎨 &nbsp; Design Studio</div>
-            <div class="mq-nav-item" data-mq-group="marketing" onclick="mqNav('showroom',this)">🖼 &nbsp; Showroom</div>
             <div class="mq-nav-item" data-mq-group="account" onclick="mqNav('billing',this)">💳 &nbsp; My account</div>
             <div class="mq-nav-item${showHelpGuideNudge ? ' mq-nav-item-nudge' : ''}" data-mq-group="account" id="mq-nav-helpguide" onclick="mqNav('helpguide',this)">📖 &nbsp; Help guide</div>
             <div class="mq-nav-item" data-mq-group="account" onclick="mqNav('support',this)">💬 &nbsp; Support</div>
@@ -2967,6 +2966,25 @@ window.logoutMember = async function () {
       /* MidasQuote workspace navigation prototype — 5 destinations, contextual setup steps */
       #midasquote-dashboard{background:#f5f7f8}
       #midasquote-dashboard .mq-layout{display:flex;flex-direction:column;min-width:0}
+
+      /* 2026 SaaS UX refresh: a compact browsing surface that expands only when needed. */
+      #midasquote-dashboard .mq-content{max-width:1480px}
+      #midasquote-dashboard #mq-page-products .mq-product-category-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;gap:14px;margin-top:12px}
+      #midasquote-dashboard #mq-page-products .mq-product-category-card{margin:0!important;border:1px solid #dfe4e7!important;border-radius:14px!important;box-shadow:0 2px 7px rgba(17,24,39,.035);min-width:0;background:#fff;transition:border-color .15s,box-shadow .15s}
+      #midasquote-dashboard #mq-page-products .mq-product-category-card:hover{border-color:#c1b18b!important;box-shadow:0 5px 18px rgba(17,24,39,.06)}
+      #midasquote-dashboard #mq-page-products .mq-product-category-card>div:first-child{padding:17px 19px!important;min-height:66px}
+      #midasquote-dashboard #mq-page-products .mq-product-category-card .mq-card-title{font-size:14px!important;font-weight:700;line-height:1.35}
+      #midasquote-dashboard #mq-page-products .mq-product-category-card.mq-category-open{grid-column:1/-1;border-color:#d2ad56!important;box-shadow:0 7px 26px rgba(17,24,39,.065)}
+      #midasquote-dashboard #mq-page-products .mq-product-category-card.mq-category-open>div:first-child{background:#fffbf2;border-bottom:1px solid #eee6d4}
+      #midasquote-dashboard #mq-page-products .mq-product-category-card [id^="mq-cat-body-"]{padding:22px!important}
+      /* Settings should read like a form, rather than stretching to the right edge. */
+      #midasquote-dashboard #mq-page-shop>.mq-card{max-width:1120px;padding:0!important;border:1px solid #dfe4e7!important;border-radius:14px!important;margin-bottom:13px!important;box-shadow:0 2px 8px rgba(17,24,39,.03)}
+      #midasquote-dashboard #mq-page-shop>.mq-card>.mq-card-title{font-size:14px!important;padding:18px 22px!important;margin:0!important;min-height:57px}
+      #midasquote-dashboard #mq-page-shop>.mq-card>.mq-card-title:hover{background:#fbfaf6}
+      #midasquote-dashboard #mq-page-shop>.mq-card .mq-section-body{padding:0 22px 22px}
+      #midasquote-dashboard #mq-page-products .mq-product-category-grid .mq-product-category-card:focus-within{border-color:#cfa947!important}
+      @media(max-width:760px){#midasquote-dashboard #mq-page-products .mq-product-category-grid{grid-template-columns:1fr;gap:10px}#midasquote-dashboard #mq-page-products .mq-product-category-card.mq-category-open{grid-column:1}#midasquote-dashboard #mq-page-products .mq-product-category-card [id^="mq-cat-body-"]{padding:14px!important}}
+
       #midasquote-dashboard .mq-top-navigation{width:100%;background:#fff;border-bottom:1px solid #e5e9ee;position:relative;z-index:85;flex:none}
       #midasquote-dashboard .mq-nav-major{display:flex;align-items:center;gap:5px;padding:12px clamp(14px,2.5vw,40px) 7px;overflow-x:auto;scrollbar-width:thin}
       #midasquote-dashboard .mq-major-tab{border:1px solid transparent;background:transparent;color:#57606d;white-space:nowrap;padding:11px 18px;border-radius:10px;cursor:pointer;font-size:13px;font-weight:700;font-family:inherit;transition:.15s}
@@ -9078,7 +9096,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       if (!items.length) return '';
       const disp = CAT_DISPLAY[cat] || { title: cat, emoji: '📦' };
       const hasGroups = GROUPABLE_CATS.includes(cat) && items.some(i => i.groupName);
-      return `<div class="mq-card" style="padding:0;overflow:hidden" data-mq-cat="${cat}">
+      return `<div class="mq-card mq-product-category-card" style="padding:0;overflow:hidden" data-mq-cat="${cat}">
         <div onclick="mqToggleProductCategory('${cat}')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
           <div class="mq-card-title" style="margin:0">${disp.title} <span style="font-size:12px;font-weight:400;color:#9ca3af">(${items.length})</span></div>
           <span id="mq-cat-arrow-${cat}" style="display:inline-block;transition:transform 0.2s;font-size:13px;color:#9ca3af">▶</span>
@@ -9752,11 +9770,13 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       if (!body) return;
       const opening = body.style.display === 'none';
       body.style.display = opening ? 'block' : 'none';
+      const card = body.closest('.mq-product-category-card');
+      if (card) card.classList.toggle('mq-category-open', opening);
       if (arrow) arrow.style.transform = opening ? 'rotate(90deg)' : 'rotate(0deg)';
     };
 
     const specRoomOptions = (window._mqRooms || defaultRoomTypes()).map(r => `<option value="${r.id}">${r.name}</option>`).join('');
-    const specSection = specItems.length ? `<div class="mq-card" style="padding:0;overflow:hidden">
+    const specSection = specItems.length ? `<div class="mq-card mq-product-category-card" style="padding:0;overflow:hidden">
       <div onclick="mqToggleProductCategory('specialty')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
         <div class="mq-card-title" style="margin:0">⭐ Specialty Items <span style="font-size:12px;font-weight:400;color:#9ca3af">(${specItems.length})</span></div>
         <span id="mq-cat-arrow-specialty" style="display:inline-block;transition:transform 0.2s;font-size:13px;color:#9ca3af">▶</span>
@@ -9989,7 +10009,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
               </div>
             </div>
             <div style="font-size:11px;color:#9ca3af;margin-top:10px">Shown on any item you mark below — change the wording or color here and every marked item updates automatically, no need to re-mark anything.</div>
-          </div>` + catsOrdered.map(catSection).join('') + specSection;
+          </div>` + `<div class="mq-product-category-grid">${catsOrdered.map(catSection).join('')}${specSection}</div>`;
 
       mqApplyEstimatorTabScopeToProducts();
 
