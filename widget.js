@@ -10119,9 +10119,12 @@
       // "Or jump straight to a project": every project type as a tappable pill, shown
       // right under the cards, so people can see at a glance that the three cards are
       // only starting points (e.g. a doors-only job lives under a project type, not a
-      // card). Cabinet types start through the Cabinets card's flow, counter types
-      // through Countertops'; the pills only exist for quote types the shop shows.
-      const cabTab = shown.find(t => t.id === 'cabinets') || shown.find(t => t.id === 'both');
+      // card). A cabinet-side project type starts the full "Cabinets + countertops" quote
+      // when the shop offers it (a lot of refacing/restaining/etc. customers want new
+      // counters too), and falls back to Cabinets only when it doesn't; a countertop
+      // project type starts the Countertops-only quote. (Reaching a project type by way of
+      // the three cards or their "project types" lists is unchanged: that card's own flow.)
+      const cabTab = shown.find(t => t.id === 'both') || shown.find(t => t.id === 'cabinets');
       const ctTab = shown.find(t => t.id === 'countertops');
       const pillItems = [].concat(
         cabTab ? typesFor(cabTab.id).map(r => ({ tab: cabTab.id, r })) : [],
