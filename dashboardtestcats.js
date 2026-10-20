@@ -231,9 +231,9 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     if (!btn) {
       btn = document.createElement('button');
       btn.id = 'mq-floating-save';
-      btn.style.cssText = "position:fixed;bottom:24px;z-index:9998;padding:13px 22px;border-radius:999px;border:none;background:#1a1a1a;color:#fff;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 10px 30px rgba(0,0,0,0.25);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;transition:box-shadow 0.15s";
-      btn.onmouseover = () => { btn.style.boxShadow = '0 14px 36px rgba(0,0,0,0.32)'; };
-      btn.onmouseout = () => { btn.style.boxShadow = '0 10px 30px rgba(0,0,0,0.25)'; };
+      btn.style.cssText = "position:fixed;bottom:26px;z-index:9998;padding:14px 24px;border-radius:999px;border:1px solid rgba(212,175,55,0.22);background:linear-gradient(180deg,#151820 0%,#0f1116 100%);color:#fff;font-size:14px;font-weight:700;letter-spacing:0.01em;cursor:pointer;box-shadow:0 18px 40px rgba(15,23,42,0.24);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;transition:transform 0.15s, box-shadow 0.15s";
+      btn.onmouseover = () => { btn.style.boxShadow = '0 22px 44px rgba(15,23,42,0.3)'; btn.style.transform = 'translateY(-1px)'; };
+      btn.onmouseout = () => { btn.style.boxShadow = '0 18px 40px rgba(15,23,42,0.24)'; btn.style.transform = 'translateY(0)'; };
       document.body.appendChild(btn);
     }
     btn.textContent = action.label;
@@ -3005,6 +3005,125 @@ window.logoutMember = async function () {
       #midasquote-dashboard .mq-content{width:100%;max-width:1520px;margin:0 auto;padding:clamp(20px,3vw,40px);min-width:0}
       #midasquote-dashboard .mq-top-navigation .mq-nav-item-nudge{animation:none}
       @media(max-width:700px){#midasquote-dashboard .mq-nav-major{gap:3px;padding:9px 12px 5px}#midasquote-dashboard .mq-major-tab{font-size:12px;padding:9px 12px}#midasquote-dashboard .mq-top-navigation .mq-sidebar{padding:9px 12px 12px}#midasquote-dashboard .mq-content{padding:20px 14px}}
+
+      /* Premium usability refresh v3 — tighter hierarchy, calmer surfaces, and content-sized work areas. */
+      #midasquote-dashboard{background:linear-gradient(180deg,#f8fafc 0%,#eef2f6 100%)!important;color:#0f172a}
+      #midasquote-dashboard .mq-topbar{background:linear-gradient(90deg,#101217 0%,#151922 60%,#0f1117 100%)!important;border-bottom:1px solid rgba(212,175,55,.18)!important;box-shadow:0 10px 28px rgba(15,23,42,.18)}
+      #midasquote-dashboard .mq-topbar-brand{font-size:24px;font-weight:800;letter-spacing:-0.02em}
+      #midasquote-dashboard .mq-topbar-shop{font-size:13px;color:#c1cad7}
+      #midasquote-dashboard .mq-topbar-actions .mq-btn{border-color:rgba(255,255,255,.14);background:rgba(255,255,255,.96)}
+      #midasquote-dashboard .mq-topbar-actions .mq-btn:hover{background:#fff;box-shadow:0 6px 18px rgba(15,23,42,.08)}
+      #midasquote-dashboard .mq-top-navigation{position:sticky;top:60px;z-index:84;background:rgba(248,250,252,.94)!important;backdrop-filter:blur(10px);border-bottom:1px solid #e6ebf2;box-shadow:0 4px 12px rgba(15,23,42,.04)}
+      #midasquote-dashboard .mq-nav-major{padding:14px clamp(14px,2.6vw,38px) 6px!important;gap:8px!important}
+      #midasquote-dashboard .mq-major-tab{border:1px solid #e6ebf2!important;background:#fff!important;color:#475569!important;border-radius:999px!important;padding:10px 16px!important;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+      #midasquote-dashboard .mq-major-tab:hover{background:#f8fafc!important;color:#111827!important;border-color:#d8e0ea!important}
+      #midasquote-dashboard .mq-major-tab.active{background:linear-gradient(180deg,#fff8e7 0%,#fff2ce 100%)!important;border-color:#e7c66b!important;color:#1f2937!important;box-shadow:0 8px 18px rgba(212,175,55,.14)!important}
+      #midasquote-dashboard .mq-top-navigation .mq-sidebar{padding:10px clamp(14px,2.6vw,38px) 15px!important;gap:8px!important;scrollbar-width:none}
+      #midasquote-dashboard .mq-top-navigation .mq-sidebar::-webkit-scrollbar{display:none}
+      #midasquote-dashboard .mq-top-navigation .mq-nav-item{border:1px solid #e4e9f1!important;border-radius:999px!important;padding:9px 14px!important;color:#475569!important;background:#fff!important;box-shadow:0 1px 2px rgba(15,23,42,.03)}
+      #midasquote-dashboard .mq-top-navigation .mq-nav-item:hover{background:#f8fafc!important;border-color:#d7dde7!important;transform:translateY(-1px)}
+      #midasquote-dashboard .mq-top-navigation .mq-nav-item.active{background:linear-gradient(180deg,#12151c 0%,#181c24 100%)!important;border-color:#12151c!important;color:#fff!important;box-shadow:0 10px 22px rgba(15,23,42,.12)}
+      #midasquote-dashboard .mq-nav-step{width:22px!important;height:22px!important;border-color:#dce2ea!important;background:#f8fafc!important;color:#334155!important}
+      #midasquote-dashboard .mq-top-navigation .mq-nav-item.active .mq-nav-step{background:#f7d36e!important;color:#111827!important;border-color:#f7d36e!important}
+      #midasquote-dashboard .mq-content{max-width:1560px!important;padding:30px clamp(16px,2.8vw,34px) 64px!important}
+      #midasquote-dashboard .mq-page-title{font-size:40px!important;line-height:1.02;letter-spacing:-0.03em;color:#0f172a}
+      #midasquote-dashboard .mq-page-sub{font-size:15px!important;line-height:1.7;max-width:760px;color:#64748b!important;margin-bottom:24px!important}
+      #midasquote-dashboard .mq-help-btn{top:0!important;right:0!important;box-shadow:0 8px 18px rgba(37,99,235,.1)}
+      #midasquote-dashboard .mq-card,#midasquote-dashboard .mq-stat{border:1px solid #e6ebf1!important;border-radius:22px!important;background:rgba(255,255,255,.94)!important;box-shadow:0 14px 32px rgba(15,23,42,.05)!important}
+      #midasquote-dashboard .mq-card{padding:22px!important}
+      #midasquote-dashboard .mq-card-title{font-size:15px!important;font-weight:800!important;color:#0f172a!important;letter-spacing:-0.015em}
+      #midasquote-dashboard .mq-stat{padding:20px 22px!important}
+      #midasquote-dashboard .mq-stat-val{font-size:30px!important;letter-spacing:-0.03em}
+      #midasquote-dashboard .mq-btn{border-radius:12px!important;padding:9px 14px!important;font-weight:700!important;border-color:#d8e0ea!important;background:#fff!important;box-shadow:0 1px 2px rgba(15,23,42,.03)}
+      #midasquote-dashboard .mq-btn:hover{background:#f8fafc!important}
+      #midasquote-dashboard .mq-btn-primary{background:linear-gradient(180deg,#151820 0%,#0f1116 100%)!important;border-color:#151820!important;color:#fff!important;box-shadow:0 10px 24px rgba(15,23,42,.16)!important}
+      #midasquote-dashboard .mq-btn-danger{border-color:#fecaca!important;background:#fff!important;color:#dc2626!important}
+      #midasquote-dashboard input[type=text],#midasquote-dashboard input[type=email],#midasquote-dashboard input[type=tel],#midasquote-dashboard input[type=number],#midasquote-dashboard input[type=url],#midasquote-dashboard select,#midasquote-dashboard textarea{border-radius:12px!important;border-color:#d7dde6!important;padding:10px 12px!important;background:#fff!important;box-shadow:inset 0 1px 2px rgba(15,23,42,.02)}
+      #midasquote-dashboard input:focus,#midasquote-dashboard select:focus,#midasquote-dashboard textarea:focus{border-color:#d4af37!important;box-shadow:0 0 0 4px rgba(212,175,55,.12)!important}
+      #midasquote-dashboard .mq-msg{border-radius:14px!important;box-shadow:0 8px 22px rgba(15,23,42,.05)}
+
+      /* Give settings pages a more app-like, content-sized workspace. */
+      #midasquote-dashboard #mq-page-shop,
+      #midasquote-dashboard #mq-page-rooms,
+      #midasquote-dashboard #mq-page-showroom,
+      #midasquote-dashboard #mq-page-embed,
+      #midasquote-dashboard #mq-page-billing,
+      #midasquote-dashboard #mq-page-helpguide,
+      #midasquote-dashboard #mq-page-support{max-width:1180px}
+      #midasquote-dashboard #mq-page-shop>.mq-card,
+      #midasquote-dashboard #mq-rooms-cabinet-card,
+      #midasquote-dashboard #mq-rooms-ct-card,
+      #midasquote-dashboard #mq-page-showroom .mq-sr-card,
+      #midasquote-dashboard #mq-page-embed>.mq-card{max-width:1120px;margin-left:auto!important;margin-right:auto!important}
+      #midasquote-dashboard #mq-page-shop>.mq-card{overflow:hidden;padding:0!important}
+      #midasquote-dashboard #mq-page-shop>.mq-card>.mq-card-title{padding:20px 24px!important;border-bottom:1px solid #eef2f7;background:linear-gradient(180deg,#fff 0%,#fbfcfd 100%)}
+      #midasquote-dashboard #mq-page-shop>[id$='-msg'],#midasquote-dashboard #mq-page-rooms>#mq-rooms-msg{max-width:1120px;margin-left:auto;margin-right:auto}
+      #midasquote-dashboard #mq-page-shop [id^='mq-shopsec-'][id$='-body']{padding:22px 24px 24px}
+      #midasquote-dashboard #mq-page-shop .mq-grid2{gap:18px}
+
+      /* Project types — compact card rows instead of giant bars. */
+      #midasquote-dashboard #mq-page-rooms .mq-card{padding:24px!important}
+      #midasquote-dashboard #mq-page-rooms .mq-room-row{max-width:1040px;margin:0 auto 14px!important;padding:16px 18px!important;background:#fff!important;border:1px solid #e5ebf3!important;border-radius:20px!important;box-shadow:0 10px 30px rgba(15,23,42,.05)!important;transition:transform .15s, box-shadow .15s, border-color .15s}
+      #midasquote-dashboard #mq-page-rooms .mq-room-row:hover{transform:translateY(-1px);box-shadow:0 14px 34px rgba(15,23,42,.08)!important}
+      #midasquote-dashboard #mq-page-rooms .mq-room-row.mq-room-open{background:linear-gradient(180deg,#fffdf8 0%,#fff 100%)!important;border-color:#e7c86f!important;box-shadow:0 18px 40px rgba(212,175,55,.12)!important}
+      #midasquote-dashboard #mq-page-rooms .mq-room-row>div:first-child{display:grid!important;grid-template-columns:24px minmax(220px,360px) auto auto auto;gap:12px!important;align-items:center}
+      #midasquote-dashboard #mq-page-rooms .mq-room-drag-handle{font-size:18px!important;color:#94a3b8!important}
+      #midasquote-dashboard #mq-page-rooms [id^='mq-room-body-']{padding-left:0!important;margin-top:14px}
+      #midasquote-dashboard #mq-page-rooms [id^='mq-room-island-settings-']{background:#f8fafc!important;border-radius:14px!important;border-color:#e6ebf2!important}
+      #midasquote-dashboard #mq-page-rooms [id^='mq-room-cover-preview-'],
+      #midasquote-dashboard #mq-page-rooms [id^='mq-room-measure-img-preview-'],
+      #midasquote-dashboard #mq-page-rooms [id^='mq-room-measure-img-extra-preview-']{border-radius:12px!important;border-color:#e5ebf3!important;background:#f8fafc!important}
+
+      /* Specialty items / dense tables — calmer toolbar + card rows. */
+      #midasquote-dashboard #mq-page-specialty .mq-card,
+      #midasquote-dashboard #mq-page-products .mq-card,
+      #midasquote-dashboard #mq-page-overview .mq-card,
+      #midasquote-dashboard #mq-page-leads .mq-card,
+      #midasquote-dashboard #mq-page-pricing .mq-card{border-radius:24px!important}
+      #midasquote-dashboard #mq-page-specialty .mq-card>div:first-child[style],
+      #midasquote-dashboard #mq-page-products .mq-card>div:first-child[style]{border-radius:18px 18px 0 0}
+      #midasquote-dashboard #mq-spec-table{border-collapse:separate!important;border-spacing:0 14px!important}
+      #midasquote-dashboard #mq-spec-table th{font-size:11px!important;color:#64748b!important;padding-bottom:12px!important}
+      #midasquote-dashboard #mq-spec-table td{background:#fff!important;border-top:1px solid #e8edf4!important;border-bottom:1px solid #e8edf4!important;box-shadow:0 12px 28px rgba(15,23,42,.05)!important}
+      #midasquote-dashboard #mq-spec-table td:first-child{border-left:1px solid #e8edf4!important;border-radius:18px 0 0 18px!important}
+      #midasquote-dashboard #mq-spec-table td:last-child{border-right:1px solid #e8edf4!important;border-radius:0 18px 18px 0!important}
+      #midasquote-dashboard #mq-page-specialty .mq-table-wrap{padding-bottom:12px}
+      #midasquote-dashboard #mq-page-specialty .mq-table-wrap::-webkit-scrollbar-thumb,
+      #midasquote-dashboard #mq-page-products .mq-table-wrap::-webkit-scrollbar-thumb{background:#cbd5e1}
+
+      /* My Products category cards — more editorial and less boxy. */
+      #midasquote-dashboard #mq-page-products .mq-product-category-grid{gap:18px!important}
+      #midasquote-dashboard #mq-page-products .mq-product-category-card{border-radius:20px!important;box-shadow:0 12px 30px rgba(15,23,42,.05)!important;border-color:#e5ebf3!important}
+      #midasquote-dashboard #mq-page-products .mq-product-category-card>div:first-child{padding:18px 20px!important;min-height:72px!important}
+      #midasquote-dashboard #mq-page-products .mq-product-category-card.mq-category-open{box-shadow:0 18px 36px rgba(15,23,42,.08)!important;border-color:#dfc278!important}
+      #midasquote-dashboard #mq-page-products .mq-product-category-card.mq-category-open>div:first-child{background:linear-gradient(180deg,#fffaf0 0%,#fffdf8 100%)!important;border-bottom:1px solid #f0e6d1!important}
+      #midasquote-dashboard #mq-page-products .mq-product-category-card [id^='mq-cat-body-']{padding:22px 22px 24px!important}
+
+      /* Showroom cards align visually with the rest of the app. */
+      #midasquote-dashboard .mq-sr-card,#midasquote-dashboard .mq-sr-tab .mq-card{border-radius:18px!important;border-color:#e5ebf3!important;box-shadow:0 10px 28px rgba(15,23,42,.05)!important}
+      #midasquote-dashboard .mq-sr-head{padding:16px 18px!important}
+      #midasquote-dashboard .mq-sr-title{font-size:14px!important;font-weight:800!important;color:#0f172a!important}
+      #midasquote-dashboard .mq-sr-body{padding:18px!important}
+
+      @media(max-width:980px){
+        #midasquote-dashboard .mq-page-title{font-size:32px!important}
+        #midasquote-dashboard #mq-page-rooms .mq-room-row>div:first-child{grid-template-columns:24px minmax(0,1fr) auto auto auto}
+      }
+      @media(max-width:760px){
+        #midasquote-dashboard .mq-content{padding:22px 14px 60px!important}
+        #midasquote-dashboard .mq-page-title{font-size:28px!important}
+        #midasquote-dashboard .mq-page-sub{font-size:14px!important}
+        #midasquote-dashboard .mq-topbar{padding:10px 14px!important}
+        #midasquote-dashboard .mq-topbar-brand{font-size:20px}
+        #midasquote-dashboard .mq-topbar-actions{gap:8px}
+        #midasquote-dashboard .mq-major-tab{padding:9px 13px!important}
+        #midasquote-dashboard .mq-top-navigation .mq-nav-item{padding:8px 12px!important}
+        #midasquote-dashboard #mq-page-shop [id^='mq-shopsec-'][id$='-body']{padding:18px 16px 18px}
+        #midasquote-dashboard #mq-page-rooms .mq-card{padding:16px!important}
+        #midasquote-dashboard #mq-page-rooms .mq-room-row{padding:14px!important;border-radius:18px!important}
+        #midasquote-dashboard #mq-page-rooms .mq-room-row>div:first-child{grid-template-columns:20px 1fr auto;gap:10px!important}
+      }
+
 </style>
           <!-- MARKETING KIT -->
           <div class="mq-page mq-sr-tab" id="mq-page-marketing">
