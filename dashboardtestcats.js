@@ -1599,26 +1599,32 @@ window.logoutMember = async function () {
       </div>
 
       <div class="mq-layout">
-        <div class="mq-sidebar">
-          <div class="mq-nav-section">Overview</div>
-          <div class="mq-nav-item active" onclick="mqNav('overview',this)"><span class="mq-nav-icon">📊</span> Dashboard</div>
-          <div class="mq-nav-item" onclick="mqNav('leads',this)"><span class="mq-nav-icon">👥</span> Leads</div>
-          <div class="mq-nav-section">Setup</div>
-          <div class="mq-nav-item${showHelpGuideNudge ? ' mq-nav-item-nudge' : ''}" id="mq-nav-helpguide" onclick="mqNav('helpguide',this)"><span class="mq-nav-icon">📖</span> Help guide</div>
-          <div class="mq-nav-item" onclick="mqNav('shop',this)"><span class="mq-nav-icon">🏪</span> Shop info</div>
-          <div class="mq-nav-item" onclick="mqNav('rooms',this)"><span class="mq-nav-icon">🚪</span> Project types</div>
-          <div class="mq-nav-item" onclick="mqNav('pricing',this)"><span class="mq-nav-icon">💰</span> Pricing</div>
-          <div class="mq-nav-item" onclick="mqNav('specialty',this)"><span class="mq-nav-icon">⭐</span> Specialty items</div>
-          <div class="mq-nav-item" id="mq-nav-products" onclick="mqNav('products',this)"><span class="mq-nav-icon">📦</span> My Products</div>
-          <div class="mq-nav-item" onclick="mqNav('showroom',this)"><span class="mq-nav-icon">🖼️</span> Showroom</div>
-          <div class="mq-nav-section">Launch &amp; Grow</div>
-          <div class="mq-nav-item" onclick="mqNav('embed',this)"><span class="mq-nav-icon">🔗</span> Embed code</div>
-          <div class="mq-nav-item" onclick="mqNav('marketing',this)"><span class="mq-nav-icon">📣</span> Design Studio</div>
-          <div class="mq-nav-item" onclick="mqNav('proposals',this)"><span class="mq-nav-icon">📄</span> Proposals</div>
-          <div class="mq-nav-section">Account</div>
-          <div class="mq-nav-item" onclick="mqNav('billing',this)"><span class="mq-nav-icon">💳</span> Account</div>
-          <div class="mq-nav-item" onclick="mqNav('support',this)"><span class="mq-nav-icon">💬</span> Support</div>
-          <div class="mq-nav-item" id="mq-nav-templates" onclick="mqNav('templates',this)" style="display:none"><span class="mq-nav-icon">🔧</span> Templates (Admin)</div>
+        <div class="mq-top-navigation" id="mq-top-navigation" data-mq-group="overview">
+          <div class="mq-nav-major" role="tablist" aria-label="MidasQuote sections">
+            <button type="button" class="mq-major-tab active" data-group="overview" onclick="mqSwitchNavGroup('overview')">⌂ &nbsp; Overview</button>
+            <button type="button" class="mq-major-tab" data-group="setup" onclick="mqSwitchNavGroup('setup')">⚙ &nbsp; Set up estimator</button>
+            <button type="button" class="mq-major-tab" data-group="leads" onclick="mqSwitchNavGroup('leads')">♙ &nbsp; Leads &amp; quotes</button>
+            <button type="button" class="mq-major-tab" data-group="marketing" onclick="mqSwitchNavGroup('marketing')">✦ &nbsp; Marketing</button>
+            <button type="button" class="mq-major-tab" data-group="account" onclick="mqSwitchNavGroup('account')">◉ &nbsp; Account &amp; help</button>
+          </div>
+          <div class="mq-sidebar" aria-label="Section pages">
+            <div class="mq-nav-item active" data-mq-group="overview" onclick="mqNav('overview',this)">📊 &nbsp; Dashboard</div>
+            <div class="mq-nav-item" data-mq-group="setup" onclick="mqNav('shop',this)"><span class="mq-nav-step">1</span> Shop info</div>
+            <div class="mq-nav-item" data-mq-group="setup" onclick="mqNav('rooms',this)"><span class="mq-nav-step">2</span> Project types</div>
+            <div class="mq-nav-item" data-mq-group="setup" onclick="mqNav('pricing',this)"><span class="mq-nav-step">3</span> Pricing</div>
+            <div class="mq-nav-item" data-mq-group="setup" onclick="mqNav('specialty',this)"><span class="mq-nav-step">4</span> Specialty items</div>
+            <div class="mq-nav-item" data-mq-group="setup" id="mq-nav-products" onclick="mqNav('products',this)"><span class="mq-nav-step">5</span> My Products</div>
+            <div class="mq-nav-item" data-mq-group="setup" onclick="mqNav('showroom',this)"><span class="mq-nav-step">6</span> Showroom</div>
+            <div class="mq-nav-item" data-mq-group="setup" onclick="mqNav('embed',this)"><span class="mq-nav-step">7</span> Embed code</div>
+            <div class="mq-nav-item" data-mq-group="leads" onclick="mqNav('leads',this)">👥 &nbsp; Leads</div>
+            <div class="mq-nav-item" data-mq-group="leads" onclick="mqNav('proposals',this)">📄 &nbsp; Proposals</div>
+            <div class="mq-nav-item" data-mq-group="marketing" onclick="mqNav('marketing',this)">🎨 &nbsp; Design Studio</div>
+            <div class="mq-nav-item" data-mq-group="marketing" onclick="mqNav('showroom',this)">🖼 &nbsp; Showroom</div>
+            <div class="mq-nav-item" data-mq-group="account" onclick="mqNav('billing',this)">💳 &nbsp; My account</div>
+            <div class="mq-nav-item${showHelpGuideNudge ? ' mq-nav-item-nudge' : ''}" data-mq-group="account" id="mq-nav-helpguide" onclick="mqNav('helpguide',this)">📖 &nbsp; Help guide</div>
+            <div class="mq-nav-item" data-mq-group="account" onclick="mqNav('support',this)">💬 &nbsp; Support</div>
+            <div class="mq-nav-item" data-mq-group="account" id="mq-nav-templates" onclick="mqNav('templates',this)" style="display:none">🔧 &nbsp; Templates (Admin)</div>
+          </div>
         </div>
 
         <div class="mq-content">
@@ -1677,32 +1683,17 @@ window.logoutMember = async function () {
           <!-- SHOP INFO -->
           <div class="mq-page" id="mq-page-shop">
             <button class="mq-help-btn" onclick="mqShowHelp('shop')"><span class="mq-help-badge">?</span> Need help?</button>
-            <div class="mq-page-title">Shop settings <span class="mq-shop-page-dot">●</span></div>
-            <div class="mq-page-sub">Everything that makes MidasQuote feel like your shop — in one place.</div>
+            <div class="mq-page-title">Shop info</div>
+            <div class="mq-page-sub">This info appears on your widget and in emails to customers</div>
             ${mqTrainingVideoBlockHTML('shop')}
             <div id="mq-shop-msg"></div>
 
-
-            <div class="mq-shop-workspace" id="mq-shop-workspace">
-              <aside class="mq-shop-nav" aria-label="Shop settings navigation">
-                <div class="mq-shop-nav-caption">YOUR WORKSPACE</div>
-                <button type="button" class="mq-shop-nav-item is-active" aria-current="true" data-shop-panel="business" onclick="mqSelectShopPanel('business')"><span class="mq-shop-nav-icon">▣</span><span><b>Business details</b><small>Name, contact & currency</small></span><span class="mq-shop-nav-arrow">›</span></button>
-                <button type="button" class="mq-shop-nav-item" data-shop-panel="branding" onclick="mqSelectShopPanel('branding')"><span class="mq-shop-nav-icon">◈</span><span><b>Branding</b><small>Logo & colors</small></span><span class="mq-shop-nav-arrow">›</span></button>
-                <button type="button" class="mq-shop-nav-item" data-shop-panel="widgettext" onclick="mqSelectShopPanel('widgettext')"><span class="mq-shop-nav-icon">✎</span><span><b>Quote settings</b><small>Ranges & customer text</small></span><span class="mq-shop-nav-arrow">›</span></button>
-                <button type="button" class="mq-shop-nav-item" data-shop-panel="leads" onclick="mqSelectShopPanel('leads')"><span class="mq-shop-nav-icon">✉</span><span><b>Leads & contacts</b><small>Notifications & bookings</small></span><span class="mq-shop-nav-arrow">›</span></button>
-                <button type="button" class="mq-shop-nav-item" data-shop-panel="financing" onclick="mqSelectShopPanel('financing')"><span class="mq-shop-nav-icon">◇</span><span><b>Financing</b><small>Offers & extras</small></span><span class="mq-shop-nav-arrow">›</span></button>
-                <button type="button" class="mq-shop-nav-item" data-shop-panel="access" onclick="mqSelectShopPanel('access')"><span class="mq-shop-nav-icon">♙</span><span><b>Access & privacy</b><small>Visitor permissions</small></span><span class="mq-shop-nav-arrow">›</span></button>
-                <button type="button" class="mq-shop-nav-item" data-shop-panel="layout" onclick="mqSelectShopPanel('layout')"><span class="mq-shop-nav-icon">▤</span><span><b>Widget layout</b><small>Customer experience</small></span><span class="mq-shop-nav-arrow">›</span></button>
-                <button type="button" class="mq-shop-nav-item" data-shop-panel="tabs" onclick="mqSelectShopPanel('tabs')"><span class="mq-shop-nav-icon">☷</span><span><b>Estimator tabs</b><small>Visible quote options</small></span><span class="mq-shop-nav-arrow">›</span></button>
-                <div class="mq-shop-nav-foot"><span class="mq-shop-nav-foot-dot"></span> Changes autosave as you edit</div>
-              </aside>
-              <div class="mq-shop-panels" id="mq-shop-panels">
-            <div class="mq-card mq-shop-panel is-active" data-shop-section="business">
-              <div class="mq-card-title" style="cursor:default;user-select:none">
+            <div class="mq-card">
+              <div class="mq-card-title" onclick="mqToggleShopSection('business')" style="cursor:pointer;user-select:none">
                 <span id="mq-shopsec-business-chevron" style="font-size:11px;color:#6b7280;display:inline-block;transition:transform 0.15s">▶</span>
                 🏢 Business info
               </div>
-              <div id="mq-shopsec-business-body" style="display:block">
+              <div id="mq-shopsec-business-body" style="display:none">
               <div class="mq-grid2">
                 <div class="mq-field"><label class="mq-label">Shop name</label><input type="text" id="mq-shop-name"/></div>
                 <div class="mq-field"><label class="mq-label">Phone number</label><input type="tel" id="mq-shop-phone"/></div>
@@ -1726,12 +1717,12 @@ window.logoutMember = async function () {
               </div>
             </div>
 
-            <div class="mq-card mq-shop-panel" data-shop-section="branding">
-              <div class="mq-card-title" style="cursor:default;user-select:none">
+            <div class="mq-card">
+              <div class="mq-card-title" onclick="mqToggleShopSection('branding')" style="cursor:pointer;user-select:none">
                 <span id="mq-shopsec-branding-chevron" style="font-size:11px;color:#6b7280;display:inline-block;transition:transform 0.15s">▶</span>
                 🎨 Branding
               </div>
-              <div id="mq-shopsec-branding-body" style="display:block">
+              <div id="mq-shopsec-branding-body" style="display:none">
               <div class="mq-grid2" style="margin-bottom:1rem">
                 <div class="mq-field"><label class="mq-label">Brand colour</label>
                   <div style="display:flex;align-items:center;gap:8px">
@@ -1801,12 +1792,12 @@ window.logoutMember = async function () {
               </div>
             </div>
 
-            <div class="mq-card mq-shop-panel" data-shop-section="widgettext">
-              <div class="mq-card-title" style="cursor:default;user-select:none">
+            <div class="mq-card">
+              <div class="mq-card-title" onclick="mqToggleShopSection('widgettext')" style="cursor:pointer;user-select:none">
                 <span id="mq-shopsec-widgettext-chevron" style="font-size:11px;color:#6b7280;display:inline-block;transition:transform 0.15s">▶</span>
                 📝 Widget text &amp; quote settings
               </div>
-              <div id="mq-shopsec-widgettext-body" style="display:block">
+              <div id="mq-shopsec-widgettext-body" style="display:none">
               <div class="mq-grid2" style="margin-bottom:1rem">
                 <div class="mq-field">
                   <label class="mq-label">Quote range — low (% below estimate)</label>
@@ -1837,12 +1828,12 @@ window.logoutMember = async function () {
               </div>
             </div>
 
-            <div class="mq-card mq-shop-panel" data-shop-section="leads">
-              <div class="mq-card-title" style="cursor:default;user-select:none">
+            <div class="mq-card">
+              <div class="mq-card-title" onclick="mqToggleShopSection('leads')" style="cursor:pointer;user-select:none">
                 <span id="mq-shopsec-leads-chevron" style="font-size:11px;color:#6b7280;display:inline-block;transition:transform 0.15s">▶</span>
                 📩 Leads &amp; consultations
               </div>
-              <div id="mq-shopsec-leads-body" style="display:block">
+              <div id="mq-shopsec-leads-body" style="display:none">
               <div class="mq-field" style="margin-bottom:1rem">
                 <label class="mq-label">Lead notify email</label>
                 <input type="email" id="mq-shop-email"/>
@@ -1871,12 +1862,12 @@ window.logoutMember = async function () {
               </div>
             </div>
 
-            <div class="mq-card mq-shop-panel" data-shop-section="financing">
-              <div class="mq-card-title" style="cursor:default;user-select:none">
+            <div class="mq-card">
+              <div class="mq-card-title" onclick="mqToggleShopSection('financing')" style="cursor:pointer;user-select:none">
                 <span id="mq-shopsec-financing-chevron" style="font-size:11px;color:#6b7280;display:inline-block;transition:transform 0.15s">▶</span>
                 💳 Financing &amp; extras
               </div>
-              <div id="mq-shopsec-financing-body" style="display:block">
+              <div id="mq-shopsec-financing-body" style="display:none">
               <div class="mq-toggle-row" style="margin-bottom:1rem">
                 <div>
                   <div style="font-size:13px;font-weight:500;color:#111">We offer financing</div>
@@ -1917,12 +1908,12 @@ window.logoutMember = async function () {
               </div>
             </div>
 
-            <div class="mq-card mq-shop-panel" data-shop-section="access">
-              <div class="mq-card-title" style="cursor:default;user-select:none">
+            <div class="mq-card">
+              <div class="mq-card-title" onclick="mqToggleShopSection('access')" style="cursor:pointer;user-select:none">
                 <span id="mq-shopsec-access-chevron" style="font-size:11px;color:#6b7280;display:inline-block;transition:transform 0.15s">▶</span>
                 🔒 Widget access
               </div>
-              <div id="mq-shopsec-access-body" style="display:block">
+              <div id="mq-shopsec-access-body" style="display:none">
               <div class="mq-toggle-row" style="margin-bottom:0">
                 <div>
                   <div style="font-size:13px;font-weight:500;color:#111">Require a password to use the widget</div>
@@ -1944,12 +1935,12 @@ window.logoutMember = async function () {
               </div>
             </div>
 
-            <div class="mq-card mq-shop-panel" data-shop-section="layout">
-              <div class="mq-card-title" style="cursor:default;user-select:none">
+            <div class="mq-card">
+              <div class="mq-card-title" onclick="mqToggleShopSection('layout')" style="cursor:pointer;user-select:none">
                 <span id="mq-shopsec-layout-chevron" style="font-size:11px;color:#6b7280;display:inline-block;transition:transform 0.15s">▶</span>
                 🎛️ Widget layout
               </div>
-              <div id="mq-shopsec-layout-body" style="display:block">
+              <div id="mq-shopsec-layout-body" style="display:none">
               <div class="mq-hint" style="display:block;margin-bottom:1rem">Choose how your widget feels to customers. This applies to your embedded widget and your standalone widget link everywhere at once — there's nothing to re-paste. MidasQuote Pro isn't affected — it always keeps its standard layout.</div>
               <div style="display:flex;gap:12px;flex-wrap:wrap">
                 <div id="mq-layout-classic" onclick="mqSetWidgetLayout('Classic')" style="flex:1;min-width:230px;border:2px solid #e5e7eb;border-radius:10px;padding:1rem;cursor:pointer">
@@ -1967,12 +1958,12 @@ window.logoutMember = async function () {
               </div>
             </div>
 
-            <div class="mq-card mq-shop-panel" data-shop-section="tabs">
-              <div class="mq-card-title" style="cursor:default;user-select:none">
+            <div class="mq-card">
+              <div class="mq-card-title" onclick="mqToggleShopSection('tabs')" style="cursor:pointer;user-select:none">
                 <span id="mq-shopsec-tabs-chevron" style="font-size:11px;color:#6b7280;display:inline-block;transition:transform 0.15s">▶</span>
                 🗂️ Estimator tabs
               </div>
-              <div id="mq-shopsec-tabs-body" style="display:block">
+              <div id="mq-shopsec-tabs-body" style="display:none">
               <div class="mq-hint" style="display:block;margin-bottom:1rem">Choose which quote tabs show on your widget. Whatever's left automatically shifts over to fill the space — at least one tab must stay visible.</div>
               <div class="mq-toggle-row" style="margin-bottom:1rem">
                 <div>
@@ -1998,8 +1989,6 @@ window.logoutMember = async function () {
                 Apply to MidasQuote Pro too
               </label>
               <div class="mq-hint" style="display:block;margin-top:4px">Unchecked, MidasQuote Pro always keeps showing all three tabs regardless of what's hidden above.</div>
-              </div>
-            </div>
               </div>
             </div>
           </div>
@@ -2975,29 +2964,29 @@ window.logoutMember = async function () {
 @media(max-width:980px){#mq-page-marketing .mq-creative-hub{grid-template-columns:1fr 1fr}}
 @media(max-width:680px){#mq-page-marketing .mq-creative-hub{grid-template-columns:1fr}#mq-page-marketing .mq-studio-mobile-notice{display:block}#mq-page-marketing #mq-studio-workspace:not(.mq-studio-phone-allowed){display:none!important}#mq-page-marketing #mq-studio-workspace.mq-studio-phone-allowed{display:flex!important}}
 
-/* MidasQuote Settings Workspace — scoped to Shop Info only */
-#midasquote-dashboard #mq-page-shop .mq-shop-page-dot{font-size:9px;color:#c09a43;vertical-align:middle}
-#midasquote-dashboard #mq-page-shop .mq-shop-workspace{display:grid;grid-template-columns:240px minmax(0,1fr);gap:20px;align-items:start;margin-top:18px}
-#midasquote-dashboard #mq-page-shop .mq-shop-nav{position:sticky;top:18px;background:#fff;border:1px solid #e4e7eb;border-radius:17px;padding:12px;box-shadow:0 10px 30px rgba(17,24,39,.035)}
-#midasquote-dashboard #mq-page-shop .mq-shop-nav-caption{font-size:10px;letter-spacing:1.3px;font-weight:800;color:#9399a4;padding:12px 13px 14px}
-#midasquote-dashboard #mq-page-shop .mq-shop-nav-item{width:100%;display:flex;align-items:center;gap:11px;text-align:left;border:1px solid transparent;background:transparent;border-radius:11px;padding:11px 10px;margin:2px 0;cursor:pointer;color:#394150;transition:background .15s,border-color .15s,transform .15s;font-family:inherit}
-#midasquote-dashboard #mq-page-shop .mq-shop-nav-item:hover{background:#f7f8fa}
-#midasquote-dashboard #mq-page-shop .mq-shop-nav-item.is-active{background:#f5f1e9;border-color:#dfd2b6;color:#171717}
-#midasquote-dashboard #mq-page-shop .mq-shop-nav-icon{display:grid;place-items:center;width:30px;height:30px;flex-shrink:0;border-radius:8px;background:#f1f3f5;color:#46505d;font-size:17px}
-#midasquote-dashboard #mq-page-shop .is-active .mq-shop-nav-icon{background:#171717;color:#f7d572}
-#midasquote-dashboard #mq-page-shop .mq-shop-nav-item>span:nth-child(2){min-width:0;flex:1}
-#midasquote-dashboard #mq-page-shop .mq-shop-nav-item b{display:block;font-size:12px;line-height:1.35;font-weight:750}
-#midasquote-dashboard #mq-page-shop .mq-shop-nav-item small{display:block;margin-top:3px;font-size:10px;line-height:1.35;font-weight:450;color:#828995}
-#midasquote-dashboard #mq-page-shop .mq-shop-nav-arrow{font-size:18px;color:#9da4ae}
-#midasquote-dashboard #mq-page-shop .mq-shop-nav-foot{font-size:10px;color:#6b7280;display:flex;gap:7px;align-items:center;margin:16px 10px 6px;padding-top:14px;border-top:1px solid #eef0f2}
-#midasquote-dashboard #mq-page-shop .mq-shop-nav-foot-dot{width:6px;height:6px;border-radius:50%;background:#4ba483;flex-shrink:0}
-#midasquote-dashboard #mq-page-shop .mq-shop-panel{display:none;margin:0!important;background:#fff;border:1px solid #e3e6ec;border-radius:18px;padding:28px;box-shadow:0 16px 36px rgba(17,24,39,.035)}
-#midasquote-dashboard #mq-page-shop .mq-shop-panel.is-active{display:block}
-#midasquote-dashboard #mq-page-shop .mq-shop-panel>.mq-card-title{font-size:19px;font-weight:800;letter-spacing:-.35px;border-bottom:1px solid #eef0f3;margin:0 0 25px;padding-bottom:20px;line-height:1.35}
-#midasquote-dashboard #mq-page-shop .mq-shop-panel>.mq-card-title [id$="-chevron"]{display:none!important}
-#midasquote-dashboard #mq-page-shop .mq-shop-panel .mq-field>input:not([type="checkbox"]):not([type="radio"]):not([type="color"]),#midasquote-dashboard #mq-page-shop .mq-shop-panel .mq-field>select,#midasquote-dashboard #mq-page-shop .mq-shop-panel .mq-field>textarea{border-radius:10px;border-color:#d9dee6;min-height:42px}
-#midasquote-dashboard #mq-page-shop .mq-shop-panel .mq-label{font-weight:700;color:#343b47;font-size:12px}
-@media(max-width:950px){#midasquote-dashboard #mq-page-shop .mq-shop-workspace{grid-template-columns:1fr;gap:12px}#midasquote-dashboard #mq-page-shop .mq-shop-nav{position:static;display:flex;overflow-x:auto;gap:6px;padding:8px;scrollbar-width:thin}#midasquote-dashboard #mq-page-shop .mq-shop-nav-caption,#midasquote-dashboard #mq-page-shop .mq-shop-nav-foot,#midasquote-dashboard #mq-page-shop .mq-shop-nav-arrow,#midasquote-dashboard #mq-page-shop .mq-shop-nav-item small{display:none}#midasquote-dashboard #mq-page-shop .mq-shop-nav-item{flex:0 0 auto;width:auto;white-space:nowrap;margin:0;padding:9px 12px}#midasquote-dashboard #mq-page-shop .mq-shop-nav-item b{font-size:12px}#midasquote-dashboard #mq-page-shop .mq-shop-nav-icon{width:24px;height:24px;font-size:14px}#midasquote-dashboard #mq-page-shop .mq-shop-panel{padding:20px}}
+      /* MidasQuote workspace navigation prototype — 5 destinations, contextual setup steps */
+      #midasquote-dashboard{background:#f5f7f8}
+      #midasquote-dashboard .mq-layout{display:flex;flex-direction:column;min-width:0}
+      #midasquote-dashboard .mq-top-navigation{width:100%;background:#fff;border-bottom:1px solid #e5e9ee;position:relative;z-index:85;flex:none}
+      #midasquote-dashboard .mq-nav-major{display:flex;align-items:center;gap:5px;padding:12px clamp(14px,2.5vw,40px) 7px;overflow-x:auto;scrollbar-width:thin}
+      #midasquote-dashboard .mq-major-tab{border:1px solid transparent;background:transparent;color:#57606d;white-space:nowrap;padding:11px 18px;border-radius:10px;cursor:pointer;font-size:13px;font-weight:700;font-family:inherit;transition:.15s}
+      #midasquote-dashboard .mq-major-tab:hover{color:#171717;background:#f6f7f8}
+      #midasquote-dashboard .mq-major-tab.active{color:#131313;background:#fff7e3;border-color:#edcf83;box-shadow:inset 0 -2px 0 #d7a42e}
+      #midasquote-dashboard .mq-top-navigation .mq-sidebar{display:flex!important;flex-wrap:nowrap;gap:6px;align-items:center;position:static!important;top:auto!important;left:auto!important;width:100%!important;max-height:none!important;height:auto!important;padding:10px clamp(14px,2.5vw,40px) 13px;background:transparent;border:0;overflow-x:auto!important;overflow-y:hidden!important;scrollbar-width:thin;z-index:auto!important}
+      #midasquote-dashboard .mq-top-navigation .mq-nav-item{display:none!important;align-items:center;white-space:nowrap;flex:none;border:1px solid #e8eaf0;border-radius:8px;padding:8px 12px;font-size:12px;color:#47515e;background:#fff;font-weight:600;transition:.15s}
+      #midasquote-dashboard .mq-top-navigation[data-mq-group="overview"] .mq-nav-item[data-mq-group="overview"],
+      #midasquote-dashboard .mq-top-navigation[data-mq-group="setup"] .mq-nav-item[data-mq-group="setup"],
+      #midasquote-dashboard .mq-top-navigation[data-mq-group="leads"] .mq-nav-item[data-mq-group="leads"],
+      #midasquote-dashboard .mq-top-navigation[data-mq-group="marketing"] .mq-nav-item[data-mq-group="marketing"],
+      #midasquote-dashboard .mq-top-navigation[data-mq-group="account"] .mq-nav-item[data-mq-group="account"]{display:flex!important}
+      #midasquote-dashboard .mq-top-navigation .mq-nav-item[style*="display:none"]{display:none!important}
+      #midasquote-dashboard .mq-top-navigation .mq-nav-item:hover{background:#f5f6f7;color:#151515}
+      #midasquote-dashboard .mq-top-navigation .mq-nav-item.active{background:#171717;border-color:#171717;color:#fff}
+      #midasquote-dashboard .mq-nav-step{display:inline-grid;place-items:center;width:19px;height:19px;border:1px solid #d6d9de;border-radius:50%;font-size:10px;font-weight:800;background:#f7f8fa;color:#454545}
+      #midasquote-dashboard .mq-top-navigation .mq-nav-item.active .mq-nav-step{background:#ffda72;color:#171717;border-color:#ffda72}
+      #midasquote-dashboard .mq-content{width:100%;max-width:1520px;margin:0 auto;padding:clamp(20px,3vw,40px);min-width:0}
+      #midasquote-dashboard .mq-top-navigation .mq-nav-item-nudge{animation:none}
+      @media(max-width:700px){#midasquote-dashboard .mq-nav-major{gap:3px;padding:9px 12px 5px}#midasquote-dashboard .mq-major-tab{font-size:12px;padding:9px 12px}#midasquote-dashboard .mq-top-navigation .mq-sidebar{padding:9px 12px 12px}#midasquote-dashboard .mq-content{padding:20px 14px}}
 </style>
           <!-- MARKETING KIT -->
           <div class="mq-page mq-sr-tab" id="mq-page-marketing">
@@ -3674,10 +3663,27 @@ window.logoutMember = async function () {
     }
   };
 
+  window.mqSwitchNavGroup = function(group) {
+    const wrapper = document.getElementById('mq-top-navigation');
+    if (!wrapper) return;
+    wrapper.dataset.mqGroup = group;
+    wrapper.querySelectorAll('.mq-major-tab').forEach(btn => {
+      const active = btn.dataset.group === group;
+      btn.classList.toggle('active', active);
+      btn.setAttribute('aria-selected', active ? 'true' : 'false');
+    });
+    const selected = wrapper.querySelector('.mq-nav-item.active[data-mq-group="' + group + '"]');
+    if (!selected) {
+      const first = wrapper.querySelector('.mq-nav-item[data-mq-group="' + group + '"]:not([style*="display:none"])');
+      if (first) first.click();
+    }
+  };
   window.mqNav = function(page, el) {
     document.querySelectorAll('#midasquote-dashboard .mq-nav-item').forEach(i => i.classList.remove('active'));
     document.querySelectorAll('#midasquote-dashboard .mq-page').forEach(p => p.classList.remove('active'));
     el.classList.add('active');
+    const group = el?.dataset?.mqGroup;
+    if (group && document.getElementById('mq-top-navigation')) window.mqSwitchNavGroup(group);
     const pageEl = document.getElementById('mq-page-' + page);
     if (pageEl) pageEl.classList.add('active');
   };
@@ -8177,22 +8183,6 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     showMsg('mq-shop-msg', `✓ ${label} reset to the MidasQuote default.`);
   };
 
-  window.mqSelectShopPanel = function(key) {
-    const workspace = document.getElementById('mq-shop-workspace');
-    if (!workspace) return;
-    const panel = workspace.querySelector('.mq-shop-panel[data-shop-section="' + key + '"]');
-    if (!panel) return;
-    workspace.querySelectorAll('.mq-shop-panel').forEach(p => p.classList.toggle('is-active', p === panel));
-    workspace.querySelectorAll('.mq-shop-nav-item').forEach(b => {
-      const active = b.dataset.shopPanel === key;
-      b.classList.toggle('is-active', active);
-      b.setAttribute('aria-current', active ? 'true' : 'false');
-    });
-    const body = document.getElementById('mq-shopsec-' + key + '-body');
-    if (body) body.style.display = 'block';
-    const activeNav = workspace.querySelector('.mq-shop-nav-item.is-active');
-    if (activeNav && window.innerWidth <= 950) activeNav.scrollIntoView({block:'nearest',inline:'nearest',behavior:'smooth'});
-  };
   window.mqToggleShopSection = function(key) {
     const body = el('mq-shopsec-' + key + '-body');
     const chevron = el('mq-shopsec-' + key + '-chevron');
@@ -8202,7 +8192,6 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     if (chevron) chevron.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(90deg)';
   };
   window.mqOpenShopSection = function(key) {
-    if (document.getElementById('mq-shop-workspace')) window.mqSelectShopPanel(key);
     const body = el('mq-shopsec-' + key + '-body');
     const chevron = el('mq-shopsec-' + key + '-chevron');
     if (!body) return;
@@ -15829,6 +15818,7 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
   // since it just measures real scroll position rather than depending on
   // the CSS containing-block chain.
   function mqInitStickyNav() {
+    if (document.getElementById('mq-top-navigation')) return;
     const sidebar = document.querySelector('#midasquote-dashboard .mq-sidebar');
     const layout  = document.querySelector('#midasquote-dashboard .mq-layout');
     const topbar  = document.querySelector('#midasquote-dashboard .mq-topbar');
@@ -15900,6 +15890,7 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
   // window.mqNav wrapper further down, the first time a shop actually clicks
   // into Help guide.
   function mqInitHelpGuideNudge() {
+    if (document.getElementById('mq-top-navigation')) return;
     const navItem = document.getElementById('mq-nav-helpguide');
     const root = document.getElementById('midasquote-dashboard');
     if (!navItem || !root || !navItem.classList.contains('mq-nav-item-nudge')) return;
