@@ -3058,10 +3058,10 @@ window.logoutMember = async function () {
       #midasquote-dashboard input:focus,#midasquote-dashboard select:focus,#midasquote-dashboard textarea:focus{border-color:#d4af37!important;box-shadow:0 0 0 4px rgba(212,175,55,.12)!important}
       #midasquote-dashboard .mq-msg{border-radius:14px!important;box-shadow:0 8px 22px rgba(15,23,42,.05)}
 
-      /* v4.2 — both priced and CUSTOM showroom item types, with safe action sizing. */
+      /* v4.4 — four responsive showroom columns with safe action sizing. */
       #midasquote-dashboard #mq-page-showroom .mq-sr-grid{
         display:grid!important;
-        grid-template-columns:repeat(3,minmax(0,1fr))!important;
+        grid-template-columns:repeat(4,minmax(0,1fr))!important;
         align-items:start!important;gap:16px!important;width:100%!important;
       }
       #midasquote-dashboard #mq-page-showroom .mq-sr-grid > .mq-sr-thumb,
@@ -3097,7 +3097,10 @@ window.logoutMember = async function () {
         box-sizing:border-box!important;white-space:normal!important;overflow-wrap:anywhere!important;
         padding:9px 6px!important;font-size:11px!important;line-height:1.3!important;
       }
-      @media(max-width:860px){
+      @media(max-width:1100px){
+        #midasquote-dashboard #mq-page-showroom .mq-sr-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:12px!important}
+      }
+      @media(max-width:760px){
         #midasquote-dashboard #mq-page-showroom .mq-sr-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important}
       }
       @media(max-width:480px){
