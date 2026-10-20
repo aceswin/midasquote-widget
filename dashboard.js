@@ -3042,16 +3042,51 @@ window.logoutMember = async function () {
       #midasquote-dashboard input:focus,#midasquote-dashboard select:focus,#midasquote-dashboard textarea:focus{border-color:#d4af37!important;box-shadow:0 0 0 4px rgba(212,175,55,.12)!important}
       #midasquote-dashboard .mq-msg{border-radius:14px!important;box-shadow:0 8px 22px rgba(15,23,42,.05)}
 
-      /* Showroom gallery: readable cards with room for BOTH actions; max five columns on wide screens. */
-      #midasquote-dashboard #mq-page-showroom .mq-sr-grid{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:14px!important;align-items:stretch!important}
-      #midasquote-dashboard #mq-page-showroom .mq-sr-thumb{min-width:0!important;overflow:hidden!important;display:flex!important;flex-direction:column!important;gap:9px!important;padding:13px!important;border:1px solid #e6ebf2!important;border-radius:16px!important;background:#fff!important;box-shadow:0 6px 20px rgba(15,23,42,.04)!important}
-      #midasquote-dashboard #mq-page-showroom .mq-sr-thumb img{height:132px!important;width:100%!important;object-fit:cover!important;background:#f1f5f9!important;border-radius:12px!important;margin:0!important}
-      #midasquote-dashboard #mq-page-showroom .mq-sr-thumb .mq-sr-name{font-size:12px!important;line-height:1.4!important;font-weight:700!important;color:#334155!important;overflow-wrap:anywhere!important}
-      #midasquote-dashboard #mq-page-showroom .mq-sr-thumb button,#midasquote-dashboard #mq-page-showroom .mq-sr-thumb .mq-btn{width:100%!important;max-width:100%!important;min-width:0!important;white-space:normal!important;overflow-wrap:break-word!important;line-height:1.35!important;min-height:34px!important;padding:7px 8px!important;font-size:11px!important}
-      #midasquote-dashboard #mq-page-showroom .mq-sr-thumb>div:has(>button),#midasquote-dashboard #mq-page-showroom .mq-sr-thumb>div:has(>.mq-btn){display:flex!important;flex-wrap:wrap!important;gap:6px!important}
-      @media(max-width:1100px){#midasquote-dashboard #mq-page-showroom .mq-sr-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
-      @media(max-width:700px){#midasquote-dashboard #mq-page-showroom .mq-sr-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important}#midasquote-dashboard #mq-page-showroom .mq-sr-thumb{padding:9px!important}#midasquote-dashboard #mq-page-showroom .mq-sr-thumb img{height:100px!important}}
-      @media(max-width:420px){#midasquote-dashboard #mq-page-showroom .mq-sr-grid{grid-template-columns:1fr!important}}
+      /* v4.2 — both priced and CUSTOM showroom item types, with safe action sizing. */
+      #midasquote-dashboard #mq-page-showroom .mq-sr-grid{
+        display:grid!important;
+        grid-template-columns:repeat(3,minmax(0,1fr))!important;
+        align-items:start!important;gap:16px!important;width:100%!important;
+      }
+      #midasquote-dashboard #mq-page-showroom .mq-sr-grid > .mq-sr-thumb,
+      #midasquote-dashboard #mq-page-showroom .mq-sr-grid > .mq-showroom-item-card{
+        min-width:0!important;width:100%!important;max-width:100%!important;
+        overflow:hidden!important;box-sizing:border-box!important;
+        padding:14px!important;border:1px solid #e4eaf2!important;
+        border-radius:16px!important;background:#fff!important;
+        box-shadow:0 6px 20px rgba(15,23,42,.04)!important;
+      }
+      #midasquote-dashboard #mq-page-showroom .mq-sr-grid > .mq-sr-thumb img,
+      #midasquote-dashboard #mq-page-showroom .mq-sr-grid > .mq-showroom-item-card > img{
+        width:100%!important;height:145px!important;max-width:100%!important;
+        object-fit:contain!important;background:#f5f6f8!important;border-radius:12px!important;
+      }
+      #midasquote-dashboard #mq-page-showroom .mq-sr-grid > .mq-showroom-item-card > input[type=text]{
+        display:block!important;min-width:0!important;max-width:100%!important;width:100%!important;
+      }
+      #midasquote-dashboard #mq-page-showroom .mq-sr-grid > .mq-showroom-item-card > label.mq-btn,
+      #midasquote-dashboard #mq-page-showroom .mq-sr-grid > .mq-showroom-item-card > button,
+      #midasquote-dashboard #mq-page-showroom .mq-sr-grid > .mq-sr-thumb > button{
+        width:100%!important;max-width:100%!important;min-width:0!important;
+        white-space:normal!important;overflow-wrap:anywhere!important;
+        padding:9px 10px!important;line-height:1.4!important;
+      }
+      /* Last div in custom cards holds Name and Delete — never allow overflow. */
+      #midasquote-dashboard #mq-page-showroom .mq-sr-grid > .mq-showroom-item-card > div:last-child{
+        display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+        align-items:stretch!important;gap:8px!important;min-width:0!important;width:100%!important;
+      }
+      #midasquote-dashboard #mq-page-showroom .mq-sr-grid > .mq-showroom-item-card > div:last-child > button{
+        display:block!important;min-width:0!important;max-width:100%!important;width:100%!important;
+        box-sizing:border-box!important;white-space:normal!important;overflow-wrap:anywhere!important;
+        padding:9px 6px!important;font-size:11px!important;line-height:1.3!important;
+      }
+      @media(max-width:860px){
+        #midasquote-dashboard #mq-page-showroom .mq-sr-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important}
+      }
+      @media(max-width:480px){
+        #midasquote-dashboard #mq-page-showroom .mq-sr-grid{grid-template-columns:minmax(0,1fr)!important}
+      }
 
       /* Help area: reading width, polished tabs and focused knowledge panel. */
       #midasquote-dashboard #mq-page-helpguide .mq-help-header-row{max-width:1100px!important;gap:24px!important;margin-bottom:22px!important}

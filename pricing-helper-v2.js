@@ -317,7 +317,7 @@ let wizardBaseline = null;
        #mq-pricing-helper-v2 .mqph-field input,#mq-pricing-helper-v2 .mqph-field select,#mq-pricing-helper-v2 .mqph-field textarea{border-radius:12px !important;border:1px solid #d8e0e9 !important;padding:10px 12px !important}
        #mq-pricing-helper-v2 .mqph-field input:focus,#mq-pricing-helper-v2 .mqph-field select:focus,#mq-pricing-helper-v2 .mqph-input-row input:focus{border-color:#cda84b !important;box-shadow:0 0 0 4px rgba(212,175,55,.12) !important}
        #mq-pricing-helper-v2 .mqph-ct-row{padding:15px 20px !important;border-color:#edf2f6 !important}
-       #mq-pricing-helper-v2 .mqph-ct-block{max-width:1050px !important}
+       #mq-pricing-helper-v2 .mqph-ct-block{max-width:none !important;width:100% !important}
        #mq-pricing-helper-v2 .mqph-info,#mq-pricing-helper-v2 .mqph-warn,#mq-pricing-helper-v2 .mqph-hl,#mq-pricing-helper-v2 .mqph-spec-box{border-radius:14px !important;line-height:1.7 !important}
        @media(max-width:700px){#mq-pricing-helper-v2{padding:6px 0 26px !important}#mq-pricing-helper-v2 .mqph-cat-header,#mq-pricing-helper-v2 .mqph-setup-header{padding:15px 16px !important}#mq-pricing-helper-v2 .mqph-row{padding:13px 15px !important}#mq-pricing-helper-v2 .mqph-wizard-header,#mq-pricing-helper-v2 .mqph-wizard-body,#mq-pricing-helper-v2 .mqph-wizard-nav{padding:18px !important}#mq-pricing-helper-v2 .mqph-modal{border-radius:0 !important}}
     `;
