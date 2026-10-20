@@ -2222,10 +2222,7 @@ window.mqphGoToWizard = function() {
 
     return `
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;gap:1rem;flex-wrap:wrap">
-        <div>
-          <h2 style="font-size:20px;font-weight:700;color:#111;margin-bottom:4px">⚙️ Pricing</h2>
-          <p style="font-size:13px;color:#6b7280">Your rates — changes apply to your widget immediately.</p>
-        </div>
+        <div style="font-size:12px;color:#64748b;font-weight:700;letter-spacing:.06em;text-transform:uppercase">Manage your rates</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
           ${wizardHasRun ? `<div style="font-size:12px;color:#6b7280;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:8px 12px;max-width:340px;line-height:1.5">✨ Add new items using the <strong>+ Add</strong> buttons below, or <button class="mqph-btn-ghost" style="font-size:12px;padding:0;color:#1d4ed8;text-decoration:underline;cursor:pointer;background:none;border:none;font-family:inherit" onclick="mqphGoToWizard()">re-run the pricing wizard</button> to reprice everything.</div>` : `<button class="mqph-btn mqph-btn-secondary" onclick="mqphStartItemSetup()">🛠️ Edit shop items</button>`}
           <button class="mqph-btn mqph-btn-secondary" onclick="mqphGoToWizard()">🧙 Re-run pricing wizard</button>

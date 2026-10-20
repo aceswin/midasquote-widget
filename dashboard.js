@@ -2032,9 +2032,13 @@ window.logoutMember = async function () {
           <!-- PRICING -->
           <div class="mq-page" id="mq-page-pricing">
             <button class="mq-help-btn" onclick="mqShowHelp('pricing')"><span class="mq-help-badge">?</span> Need help?</button>
-            <div style="height:24px"></div>
-            <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 14px;margin-bottom:1rem;font-size:13px;color:#92400e;line-height:1.6">
-              🔧 <strong>Handles & knobs:</strong> Don't include handles or knobs in your pricing here — since their prices vary so widely, add them as a specialty item instead. That said, if your shop installs handles as part of the job, your door installation price should still account for that labor.
+            <div class="mq-pricing-intro">
+              <div class="mq-page-title">Pricing</div>
+              <div class="mq-page-sub">Build accurate estimates using your shop’s own prices. Manage materials, installation and upgrades — changes update your estimator automatically.</div>
+            </div>
+            <div class="mq-pricing-hardware-note">
+              <span class="mq-pricing-hardware-icon" aria-hidden="true">🔧</span>
+              <div><strong>Handles &amp; knobs</strong><p>Prices vary by style, so add hardware as <strong>Specialty Items</strong> instead of including it in your cabinet rates. If your shop installs the hardware, remember to include that labour in your door installation pricing.</p></div>
             </div>
             <div id="mq-pricing-helper-v2"></div>
           </div>
@@ -3005,6 +3009,18 @@ window.logoutMember = async function () {
       #midasquote-dashboard .mq-content{width:100%;max-width:1520px;margin:0 auto;padding:clamp(20px,3vw,40px);min-width:0}
       #midasquote-dashboard .mq-top-navigation .mq-nav-item-nudge{animation:none}
       @media(max-width:700px){#midasquote-dashboard .mq-nav-major{gap:3px;padding:9px 12px 5px}#midasquote-dashboard .mq-major-tab{font-size:12px;padding:9px 12px}#midasquote-dashboard .mq-top-navigation .mq-sidebar{padding:9px 12px 12px}#midasquote-dashboard .mq-content{padding:20px 14px}}
+
+      /* v4.3 — Pricing intro and hardware guidance share the editor's content width. */
+      #midasquote-dashboard #mq-page-pricing{max-width:1180px;margin:0 auto}
+      #midasquote-dashboard #mq-page-pricing>.mq-help-btn{top:4px!important}
+      #midasquote-dashboard #mq-page-pricing .mq-pricing-intro{max-width:780px;padding-right:150px;margin-bottom:18px}
+      #midasquote-dashboard #mq-page-pricing .mq-pricing-intro .mq-page-sub{margin-bottom:0!important}
+      #midasquote-dashboard #mq-page-pricing .mq-pricing-hardware-note{display:flex;align-items:flex-start;gap:14px;max-width:1180px;margin:0 0 20px;padding:16px 20px;border:1px solid #f2dc9d;border-left:4px solid #d5a632;background:#fffaf0;border-radius:16px;color:#6a4914;box-shadow:0 6px 18px rgba(166,114,20,.035)}
+      #midasquote-dashboard #mq-page-pricing .mq-pricing-hardware-icon{display:grid;place-items:center;width:34px;height:34px;flex:none;background:#fff0c9;border-radius:10px;font-size:17px}
+      #midasquote-dashboard #mq-page-pricing .mq-pricing-hardware-note strong{display:block;font-size:13px;font-weight:800;letter-spacing:.01em;color:#6a4914}
+      #midasquote-dashboard #mq-page-pricing .mq-pricing-hardware-note p{font-size:12.5px;font-weight:400;line-height:1.65;color:#856331;margin-top:4px}
+      #midasquote-dashboard #mq-page-pricing .mq-pricing-hardware-note p strong{display:inline;font-size:inherit}
+      @media(max-width:720px){#midasquote-dashboard #mq-page-pricing .mq-pricing-intro{padding-right:0;padding-top:46px}#midasquote-dashboard #mq-page-pricing .mq-pricing-hardware-note{padding:14px;gap:10px}#midasquote-dashboard #mq-page-pricing .mq-pricing-hardware-icon{width:30px;height:30px}}
 
       /* Premium usability refresh v3 — tighter hierarchy, calmer surfaces, and content-sized work areas. */
       #midasquote-dashboard{background:linear-gradient(180deg,#f8fafc 0%,#eef2f6 100%)!important;color:#0f172a}
