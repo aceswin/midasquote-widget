@@ -3065,6 +3065,63 @@ window.logoutMember = async function () {
         background:#f0fdf4!important;
       }
 
+      /* v4.8 — Restore readable data workspaces while leaving the viewport gradient visible. */
+      #midasquote-dashboard #mq-page-leads > .mq-card{
+        background:#fff!important;border:1px solid #e1e7ee!important;
+        border-radius:22px!important;box-shadow:0 16px 36px rgba(15,23,42,.10)!important;
+        padding:12px 16px!important;overflow:hidden;
+      }
+      #midasquote-dashboard #mq-page-leads #mq-leads-table,
+      #midasquote-dashboard #mq-page-leads #mq-leads-table .mq-table-wrap{
+        background:#fff!important;
+      }
+      #midasquote-dashboard #mq-page-leads #mq-leads-table table{
+        width:100%;background:#fff!important;border-collapse:collapse;
+      }
+      #midasquote-dashboard #mq-page-leads #mq-leads-table th{
+        background:#f6f8fb!important;color:#64748b!important;border-bottom:1px solid #e4eaf1!important;
+      }
+      #midasquote-dashboard #mq-page-leads #mq-leads-table td{
+        background:#fff!important;border-bottom:1px solid #e9edf2!important;
+      }
+      #midasquote-dashboard #mq-page-leads #mq-leads-table tbody tr:hover td{background:#f8fafc!important;}
+      /* Filter toolbar + table header appear as one white Specialty Items workspace. */
+      #midasquote-dashboard #mq-page-specialty > .mq-card:not(#mq-spec-tips-card){
+        background:#fff!important;border:1px solid #e2e8f0!important;
+        border-radius:22px!important;box-shadow:0 16px 36px rgba(15,23,42,.10)!important;
+        padding:20px 16px!important;
+      }
+      #midasquote-dashboard #mq-page-specialty .mq-spec-filter-toolbar{
+        background:#f7f9fc!important;border:1px solid #e5eaf1!important;
+        border-radius:16px 16px 0 0!important;
+        padding:16px!important;margin-bottom:0!important;
+        align-items:end;
+      }
+      #midasquote-dashboard #mq-page-specialty #mq-spec-table-wrap{
+        background:#fff!important;border:1px solid #e5eaf1!important;
+        border-top:0!important;border-radius:0 0 16px 16px!important;
+        padding:0 12px 12px!important;
+        max-width:100%;
+      }
+      #midasquote-dashboard #mq-page-specialty #mq-spec-table thead{
+        background:#f7f9fc!important;
+      }
+      #midasquote-dashboard #mq-page-specialty #mq-spec-table thead th{
+        background:#f7f9fc!important;border-bottom:1px solid #e5eaf1!important;
+        padding:17px 10px!important;
+      }
+      #midasquote-dashboard #mq-page-specialty #mq-spec-table tbody td{
+        background:#fff!important;
+      }
+      #midasquote-dashboard #mq-page-specialty .mq-table-wrap::-webkit-scrollbar-track{
+        background:#f0f3f7!important;
+      }
+      @media(max-width:760px){
+        #midasquote-dashboard #mq-page-leads > .mq-card{padding:8px!important;}
+        #midasquote-dashboard #mq-page-specialty > .mq-card:not(#mq-spec-tips-card){padding:12px 8px!important;}
+        #midasquote-dashboard #mq-page-specialty .mq-spec-filter-toolbar{padding:12px!important;}
+      }
+
       #midasquote-dashboard .mq-page-title{font-size:40px!important;line-height:1.02;letter-spacing:-0.03em;color:#0f172a}
       #midasquote-dashboard .mq-page-sub{font-size:15px!important;line-height:1.7;max-width:760px;color:#64748b!important;margin-bottom:24px!important}
       #midasquote-dashboard .mq-help-btn{top:0!important;right:0!important;box-shadow:0 8px 18px rgba(37,99,235,.1)}
@@ -7830,7 +7887,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const rooms = window._mqRooms || defaultRoomTypes();
     const roomOptions = rooms.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
     container.innerHTML = `
-      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;padding:10px 12px;background:#f9fafb;border-radius:8px">
+      <div class="mq-spec-filter-toolbar" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;padding:10px 12px;background:#f9fafb;border-radius:8px">
         <div style="flex:1;min-width:160px">
           <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Filter by project type</label>
           <select id="mq-spec-tab-filter-room" onchange="mqFilterSpecTable();mqRefreshCategoryOrderBox();mqRefreshItemOrderBox()" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;width:100%">
