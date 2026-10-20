@@ -3045,6 +3045,26 @@ window.logoutMember = async function () {
       /* Same gradient behind every tab, with each page transparent so it remains visible. */
       #midasquote-dashboard .mq-content{background:linear-gradient(180deg,#f8fafc 0%,#758696 100%)!important;}
       #midasquote-dashboard .mq-content > .mq-page{background:transparent!important;}
+
+      /* Leads & Specialty use full-page table wrapper cards; let the shared gradient
+         show between the individually styled table rows and toolbar controls. */
+      #midasquote-dashboard #mq-page-leads > .mq-card,
+      #midasquote-dashboard #mq-page-specialty > .mq-card:not(#mq-spec-tips-card){
+        background:transparent!important;
+        border-color:transparent!important;
+        box-shadow:none!important;
+        padding:0!important;
+      }
+      #midasquote-dashboard #mq-leads-table,
+      #midasquote-dashboard #mq-spec-list,
+      #midasquote-dashboard #mq-spec-table-wrap{
+        background:transparent!important;
+      }
+      /* Keep data cells and the Tips card legible. */
+      #midasquote-dashboard #mq-page-specialty #mq-spec-tips-card{
+        background:#f0fdf4!important;
+      }
+
       #midasquote-dashboard .mq-page-title{font-size:40px!important;line-height:1.02;letter-spacing:-0.03em;color:#0f172a}
       #midasquote-dashboard .mq-page-sub{font-size:15px!important;line-height:1.7;max-width:760px;color:#64748b!important;margin-bottom:24px!important}
       #midasquote-dashboard .mq-help-btn{top:0!important;right:0!important;box-shadow:0 8px 18px rgba(37,99,235,.1)}
