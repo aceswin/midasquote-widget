@@ -231,9 +231,9 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     if (!btn) {
       btn = document.createElement('button');
       btn.id = 'mq-floating-save';
-      btn.style.cssText = "position:fixed;bottom:24px;z-index:9998;padding:13px 22px;border-radius:999px;border:none;background:#1a1a1a;color:#fff;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 10px 30px rgba(0,0,0,0.25);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;transition:box-shadow 0.15s";
-      btn.onmouseover = () => { btn.style.boxShadow = '0 14px 36px rgba(0,0,0,0.32)'; };
-      btn.onmouseout = () => { btn.style.boxShadow = '0 10px 30px rgba(0,0,0,0.25)'; };
+      btn.style.cssText = "position:fixed;bottom:26px;z-index:9998;padding:14px 24px;border-radius:999px;border:1px solid rgba(212,175,55,0.22);background:linear-gradient(180deg,#151820 0%,#0f1116 100%);color:#fff;font-size:14px;font-weight:700;letter-spacing:0.01em;cursor:pointer;box-shadow:0 18px 40px rgba(15,23,42,0.24);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;transition:transform 0.15s, box-shadow 0.15s";
+      btn.onmouseover = () => { btn.style.boxShadow = '0 22px 44px rgba(15,23,42,0.3)'; btn.style.transform = 'translateY(-1px)'; };
+      btn.onmouseout = () => { btn.style.boxShadow = '0 18px 40px rgba(15,23,42,0.24)'; btn.style.transform = 'translateY(0)'; };
       document.body.appendChild(btn);
     }
     btn.textContent = action.label;
@@ -1599,26 +1599,31 @@ window.logoutMember = async function () {
       </div>
 
       <div class="mq-layout">
-        <div class="mq-sidebar">
-          <div class="mq-nav-section">Overview</div>
-          <div class="mq-nav-item active" onclick="mqNav('overview',this)"><span class="mq-nav-icon">📊</span> Dashboard</div>
-          <div class="mq-nav-item" onclick="mqNav('leads',this)"><span class="mq-nav-icon">👥</span> Leads</div>
-          <div class="mq-nav-section">Setup</div>
-          <div class="mq-nav-item${showHelpGuideNudge ? ' mq-nav-item-nudge' : ''}" id="mq-nav-helpguide" onclick="mqNav('helpguide',this)"><span class="mq-nav-icon">📖</span> Help guide</div>
-          <div class="mq-nav-item" onclick="mqNav('shop',this)"><span class="mq-nav-icon">🏪</span> Shop info</div>
-          <div class="mq-nav-item" onclick="mqNav('rooms',this)"><span class="mq-nav-icon">🚪</span> Project types</div>
-          <div class="mq-nav-item" onclick="mqNav('pricing',this)"><span class="mq-nav-icon">💰</span> Pricing</div>
-          <div class="mq-nav-item" onclick="mqNav('specialty',this)"><span class="mq-nav-icon">⭐</span> Specialty items</div>
-          <div class="mq-nav-item" id="mq-nav-products" onclick="mqNav('products',this)"><span class="mq-nav-icon">📦</span> My Products</div>
-          <div class="mq-nav-item" onclick="mqNav('showroom',this)"><span class="mq-nav-icon">🖼️</span> Showroom</div>
-          <div class="mq-nav-section">Launch &amp; Grow</div>
-          <div class="mq-nav-item" onclick="mqNav('embed',this)"><span class="mq-nav-icon">🔗</span> Embed code</div>
-          <div class="mq-nav-item" onclick="mqNav('marketing',this)"><span class="mq-nav-icon">📣</span> Design Studio</div>
-          <div class="mq-nav-item" onclick="mqNav('proposals',this)"><span class="mq-nav-icon">📄</span> Proposals</div>
-          <div class="mq-nav-section">Account</div>
-          <div class="mq-nav-item" onclick="mqNav('billing',this)"><span class="mq-nav-icon">💳</span> Account</div>
-          <div class="mq-nav-item" onclick="mqNav('support',this)"><span class="mq-nav-icon">💬</span> Support</div>
-          <div class="mq-nav-item" id="mq-nav-templates" onclick="mqNav('templates',this)" style="display:none"><span class="mq-nav-icon">🔧</span> Templates (Admin)</div>
+        <div class="mq-top-navigation" id="mq-top-navigation" data-mq-group="overview">
+          <div class="mq-nav-major" role="tablist" aria-label="MidasQuote sections">
+            <button type="button" class="mq-major-tab active" data-group="overview" onclick="mqSwitchNavGroup('overview')">⌂ &nbsp; Overview</button>
+            <button type="button" class="mq-major-tab" data-group="setup" onclick="mqSwitchNavGroup('setup')">⚙ &nbsp; Set up estimator</button>
+            <button type="button" class="mq-major-tab" data-group="leads" onclick="mqSwitchNavGroup('leads')">♙ &nbsp; Leads &amp; quotes</button>
+            <button type="button" class="mq-major-tab" data-group="marketing" onclick="mqSwitchNavGroup('marketing')">✦ &nbsp; Marketing</button>
+            <button type="button" class="mq-major-tab" data-group="account" onclick="mqSwitchNavGroup('account')">◉ &nbsp; Account &amp; help</button>
+          </div>
+          <div class="mq-sidebar" aria-label="Section pages">
+            <div class="mq-nav-item active" data-mq-group="overview" onclick="mqNav('overview',this)">📊 &nbsp; Dashboard</div>
+            <div class="mq-nav-item" data-mq-group="setup" onclick="mqNav('shop',this)"><span class="mq-nav-step">1</span> Shop info</div>
+            <div class="mq-nav-item" data-mq-group="setup" onclick="mqNav('rooms',this)"><span class="mq-nav-step">2</span> Project types</div>
+            <div class="mq-nav-item" data-mq-group="setup" onclick="mqNav('pricing',this)"><span class="mq-nav-step">3</span> Pricing</div>
+            <div class="mq-nav-item" data-mq-group="setup" onclick="mqNav('specialty',this)"><span class="mq-nav-step">4</span> Specialty items</div>
+            <div class="mq-nav-item" data-mq-group="setup" id="mq-nav-products" onclick="mqNav('products',this)"><span class="mq-nav-step">5</span> My Products</div>
+            <div class="mq-nav-item" data-mq-group="setup" onclick="mqNav('showroom',this)"><span class="mq-nav-step">6</span> Showroom</div>
+            <div class="mq-nav-item" data-mq-group="setup" onclick="mqNav('embed',this)"><span class="mq-nav-step">7</span> Embed code</div>
+            <div class="mq-nav-item" data-mq-group="leads" onclick="mqNav('leads',this)">👥 &nbsp; Leads</div>
+            <div class="mq-nav-item" data-mq-group="leads" onclick="mqNav('proposals',this)">📄 &nbsp; Proposals</div>
+            <div class="mq-nav-item" data-mq-group="marketing" onclick="mqNav('marketing',this)">🎨 &nbsp; Design Studio</div>
+            <div class="mq-nav-item" data-mq-group="account" onclick="mqNav('billing',this)">💳 &nbsp; My account</div>
+            <div class="mq-nav-item${showHelpGuideNudge ? ' mq-nav-item-nudge' : ''}" data-mq-group="account" id="mq-nav-helpguide" onclick="mqNav('helpguide',this)">📖 &nbsp; Help guide</div>
+            <div class="mq-nav-item" data-mq-group="account" onclick="mqNav('support',this)">💬 &nbsp; Support</div>
+            <div class="mq-nav-item" data-mq-group="account" id="mq-nav-templates" onclick="mqNav('templates',this)" style="display:none">🔧 &nbsp; Templates (Admin)</div>
+          </div>
         </div>
 
         <div class="mq-content">
@@ -2957,6 +2962,188 @@ window.logoutMember = async function () {
 #mq-page-marketing .mq-studio-mobile-notice button{display:inline-block;border:1px solid #aa873a;border-radius:8px;padding:8px 11px;background:#fff;color:#5a4110;font-weight:700;margin:10px 0 0;cursor:pointer}
 @media(max-width:980px){#mq-page-marketing .mq-creative-hub{grid-template-columns:1fr 1fr}}
 @media(max-width:680px){#mq-page-marketing .mq-creative-hub{grid-template-columns:1fr}#mq-page-marketing .mq-studio-mobile-notice{display:block}#mq-page-marketing #mq-studio-workspace:not(.mq-studio-phone-allowed){display:none!important}#mq-page-marketing #mq-studio-workspace.mq-studio-phone-allowed{display:flex!important}}
+
+      /* MidasQuote workspace navigation prototype — 5 destinations, contextual setup steps */
+      #midasquote-dashboard{background:#f5f7f8}
+      #midasquote-dashboard .mq-layout{display:flex;flex-direction:column;min-width:0}
+
+      /* 2026 SaaS UX refresh: a compact browsing surface that expands only when needed. */
+      #midasquote-dashboard .mq-content{max-width:1480px}
+      #midasquote-dashboard #mq-page-products .mq-product-category-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;gap:14px;margin-top:12px}
+      #midasquote-dashboard #mq-page-products .mq-product-category-card{margin:0!important;border:1px solid #dfe4e7!important;border-radius:14px!important;box-shadow:0 2px 7px rgba(17,24,39,.035);min-width:0;background:#fff;transition:border-color .15s,box-shadow .15s}
+      #midasquote-dashboard #mq-page-products .mq-product-category-card:hover{border-color:#c1b18b!important;box-shadow:0 5px 18px rgba(17,24,39,.06)}
+      #midasquote-dashboard #mq-page-products .mq-product-category-card>div:first-child{padding:17px 19px!important;min-height:66px}
+      #midasquote-dashboard #mq-page-products .mq-product-category-card .mq-card-title{font-size:14px!important;font-weight:700;line-height:1.35}
+      #midasquote-dashboard #mq-page-products .mq-product-category-card.mq-category-open{grid-column:1/-1;border-color:#d2ad56!important;box-shadow:0 7px 26px rgba(17,24,39,.065)}
+      #midasquote-dashboard #mq-page-products .mq-product-category-card.mq-category-open>div:first-child{background:#fffbf2;border-bottom:1px solid #eee6d4}
+      #midasquote-dashboard #mq-page-products .mq-product-category-card [id^="mq-cat-body-"]{padding:22px!important}
+      /* Settings should read like a form, rather than stretching to the right edge. */
+      #midasquote-dashboard #mq-page-shop>.mq-card{max-width:1120px;padding:0!important;border:1px solid #dfe4e7!important;border-radius:14px!important;margin-bottom:13px!important;box-shadow:0 2px 8px rgba(17,24,39,.03)}
+      #midasquote-dashboard #mq-page-shop>.mq-card>.mq-card-title{font-size:14px!important;padding:18px 22px!important;margin:0!important;min-height:57px}
+      #midasquote-dashboard #mq-page-shop>.mq-card>.mq-card-title:hover{background:#fbfaf6}
+      #midasquote-dashboard #mq-page-shop>.mq-card .mq-section-body{padding:0 22px 22px}
+      #midasquote-dashboard #mq-page-products .mq-product-category-grid .mq-product-category-card:focus-within{border-color:#cfa947!important}
+      @media(max-width:760px){#midasquote-dashboard #mq-page-products .mq-product-category-grid{grid-template-columns:1fr;gap:10px}#midasquote-dashboard #mq-page-products .mq-product-category-card.mq-category-open{grid-column:1}#midasquote-dashboard #mq-page-products .mq-product-category-card [id^="mq-cat-body-"]{padding:14px!important}}
+
+      #midasquote-dashboard .mq-top-navigation{width:100%;background:#fff;border-bottom:1px solid #e5e9ee;position:relative;z-index:85;flex:none}
+      #midasquote-dashboard .mq-nav-major{display:flex;align-items:center;gap:5px;padding:12px clamp(14px,2.5vw,40px) 7px;overflow-x:auto;scrollbar-width:thin}
+      #midasquote-dashboard .mq-major-tab{border:1px solid transparent;background:transparent;color:#57606d;white-space:nowrap;padding:11px 18px;border-radius:10px;cursor:pointer;font-size:13px;font-weight:700;font-family:inherit;transition:.15s}
+      #midasquote-dashboard .mq-major-tab:hover{color:#171717;background:#f6f7f8}
+      #midasquote-dashboard .mq-major-tab.active{color:#131313;background:#fff7e3;border-color:#edcf83;box-shadow:inset 0 -2px 0 #d7a42e}
+      #midasquote-dashboard .mq-top-navigation .mq-sidebar{display:flex!important;flex-wrap:nowrap;gap:6px;align-items:center;position:static!important;top:auto!important;left:auto!important;width:100%!important;max-height:none!important;height:auto!important;padding:10px clamp(14px,2.5vw,40px) 13px;background:transparent;border:0;overflow-x:auto!important;overflow-y:hidden!important;scrollbar-width:thin;z-index:auto!important}
+      #midasquote-dashboard .mq-top-navigation .mq-nav-item{display:none!important;align-items:center;white-space:nowrap;flex:none;border:1px solid #e8eaf0;border-radius:8px;padding:8px 12px;font-size:12px;color:#47515e;background:#fff;font-weight:600;transition:.15s}
+      #midasquote-dashboard .mq-top-navigation[data-mq-group="overview"] .mq-nav-item[data-mq-group="overview"],
+      #midasquote-dashboard .mq-top-navigation[data-mq-group="setup"] .mq-nav-item[data-mq-group="setup"],
+      #midasquote-dashboard .mq-top-navigation[data-mq-group="leads"] .mq-nav-item[data-mq-group="leads"],
+      #midasquote-dashboard .mq-top-navigation[data-mq-group="marketing"] .mq-nav-item[data-mq-group="marketing"],
+      #midasquote-dashboard .mq-top-navigation[data-mq-group="account"] .mq-nav-item[data-mq-group="account"]{display:flex!important}
+      #midasquote-dashboard .mq-top-navigation .mq-nav-item[style*="display:none"]{display:none!important}
+      #midasquote-dashboard .mq-top-navigation .mq-nav-item:hover{background:#f5f6f7;color:#151515}
+      #midasquote-dashboard .mq-top-navigation .mq-nav-item.active{background:#171717;border-color:#171717;color:#fff}
+      #midasquote-dashboard .mq-nav-step{display:inline-grid;place-items:center;width:19px;height:19px;border:1px solid #d6d9de;border-radius:50%;font-size:10px;font-weight:800;background:#f7f8fa;color:#454545}
+      #midasquote-dashboard .mq-top-navigation .mq-nav-item.active .mq-nav-step{background:#ffda72;color:#171717;border-color:#ffda72}
+      #midasquote-dashboard .mq-content{width:100%;max-width:1520px;margin:0 auto;padding:clamp(20px,3vw,40px);min-width:0}
+      #midasquote-dashboard .mq-top-navigation .mq-nav-item-nudge{animation:none}
+      @media(max-width:700px){#midasquote-dashboard .mq-nav-major{gap:3px;padding:9px 12px 5px}#midasquote-dashboard .mq-major-tab{font-size:12px;padding:9px 12px}#midasquote-dashboard .mq-top-navigation .mq-sidebar{padding:9px 12px 12px}#midasquote-dashboard .mq-content{padding:20px 14px}}
+
+      /* Premium usability refresh v3 — tighter hierarchy, calmer surfaces, and content-sized work areas. */
+      #midasquote-dashboard{background:linear-gradient(180deg,#f8fafc 0%,#eef2f6 100%)!important;color:#0f172a}
+      #midasquote-dashboard .mq-topbar{background:linear-gradient(90deg,#101217 0%,#151922 60%,#0f1117 100%)!important;border-bottom:1px solid rgba(212,175,55,.18)!important;box-shadow:0 10px 28px rgba(15,23,42,.18)}
+      #midasquote-dashboard .mq-topbar-brand{font-size:24px;font-weight:800;letter-spacing:-0.02em}
+      #midasquote-dashboard .mq-topbar-shop{font-size:13px;color:#c1cad7}
+      #midasquote-dashboard .mq-topbar-actions .mq-btn{border-color:rgba(255,255,255,.14);background:rgba(255,255,255,.96)}
+      #midasquote-dashboard .mq-topbar-actions .mq-btn:hover{background:#fff;box-shadow:0 6px 18px rgba(15,23,42,.08)}
+      #midasquote-dashboard .mq-top-navigation{position:sticky;top:60px;z-index:84;background:rgba(248,250,252,.94)!important;backdrop-filter:blur(10px);border-bottom:1px solid #e6ebf2;box-shadow:0 4px 12px rgba(15,23,42,.04)}
+      #midasquote-dashboard .mq-nav-major{padding:14px clamp(14px,2.6vw,38px) 6px!important;gap:8px!important}
+      #midasquote-dashboard .mq-major-tab{border:1px solid #e6ebf2!important;background:#fff!important;color:#475569!important;border-radius:999px!important;padding:10px 16px!important;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+      #midasquote-dashboard .mq-major-tab:hover{background:#f8fafc!important;color:#111827!important;border-color:#d8e0ea!important}
+      #midasquote-dashboard .mq-major-tab.active{background:linear-gradient(180deg,#fff8e7 0%,#fff2ce 100%)!important;border-color:#e7c66b!important;color:#1f2937!important;box-shadow:0 8px 18px rgba(212,175,55,.14)!important}
+      #midasquote-dashboard .mq-top-navigation .mq-sidebar{padding:10px clamp(14px,2.6vw,38px) 15px!important;gap:8px!important;scrollbar-width:none}
+      #midasquote-dashboard .mq-top-navigation .mq-sidebar::-webkit-scrollbar{display:none}
+      #midasquote-dashboard .mq-top-navigation .mq-nav-item{border:1px solid #e4e9f1!important;border-radius:999px!important;padding:9px 14px!important;color:#475569!important;background:#fff!important;box-shadow:0 1px 2px rgba(15,23,42,.03)}
+      #midasquote-dashboard .mq-top-navigation .mq-nav-item:hover{background:#f8fafc!important;border-color:#d7dde7!important;transform:translateY(-1px)}
+      #midasquote-dashboard .mq-top-navigation .mq-nav-item.active{background:linear-gradient(180deg,#12151c 0%,#181c24 100%)!important;border-color:#12151c!important;color:#fff!important;box-shadow:0 10px 22px rgba(15,23,42,.12)}
+      #midasquote-dashboard .mq-nav-step{width:22px!important;height:22px!important;border-color:#dce2ea!important;background:#f8fafc!important;color:#334155!important}
+      #midasquote-dashboard .mq-top-navigation .mq-nav-item.active .mq-nav-step{background:#f7d36e!important;color:#111827!important;border-color:#f7d36e!important}
+      #midasquote-dashboard .mq-content{max-width:1560px!important;padding:30px clamp(16px,2.8vw,34px) 64px!important}
+      #midasquote-dashboard .mq-page-title{font-size:40px!important;line-height:1.02;letter-spacing:-0.03em;color:#0f172a}
+      #midasquote-dashboard .mq-page-sub{font-size:15px!important;line-height:1.7;max-width:760px;color:#64748b!important;margin-bottom:24px!important}
+      #midasquote-dashboard .mq-help-btn{top:0!important;right:0!important;box-shadow:0 8px 18px rgba(37,99,235,.1)}
+      #midasquote-dashboard .mq-card,#midasquote-dashboard .mq-stat{border:1px solid #e6ebf1!important;border-radius:22px!important;background:rgba(255,255,255,.94)!important;box-shadow:0 14px 32px rgba(15,23,42,.05)!important}
+      #midasquote-dashboard .mq-card{padding:22px!important}
+      #midasquote-dashboard .mq-card-title{font-size:15px!important;font-weight:800!important;color:#0f172a!important;letter-spacing:-0.015em}
+      #midasquote-dashboard .mq-stat{padding:20px 22px!important}
+      #midasquote-dashboard .mq-stat-val{font-size:30px!important;letter-spacing:-0.03em}
+      #midasquote-dashboard .mq-btn{border-radius:12px!important;padding:9px 14px!important;font-weight:700!important;border-color:#d8e0ea!important;background:#fff!important;box-shadow:0 1px 2px rgba(15,23,42,.03)}
+      #midasquote-dashboard .mq-btn:hover{background:#f8fafc!important}
+      #midasquote-dashboard .mq-btn-primary{background:linear-gradient(180deg,#151820 0%,#0f1116 100%)!important;border-color:#151820!important;color:#fff!important;box-shadow:0 10px 24px rgba(15,23,42,.16)!important}
+      #midasquote-dashboard .mq-btn-danger{border-color:#fecaca!important;background:#fff!important;color:#dc2626!important}
+      #midasquote-dashboard input[type=text],#midasquote-dashboard input[type=email],#midasquote-dashboard input[type=tel],#midasquote-dashboard input[type=number],#midasquote-dashboard input[type=url],#midasquote-dashboard select,#midasquote-dashboard textarea{border-radius:12px!important;border-color:#d7dde6!important;padding:10px 12px!important;background:#fff!important;box-shadow:inset 0 1px 2px rgba(15,23,42,.02)}
+      #midasquote-dashboard input:focus,#midasquote-dashboard select:focus,#midasquote-dashboard textarea:focus{border-color:#d4af37!important;box-shadow:0 0 0 4px rgba(212,175,55,.12)!important}
+      #midasquote-dashboard .mq-msg{border-radius:14px!important;box-shadow:0 8px 22px rgba(15,23,42,.05)}
+
+      /* Showroom gallery: readable cards with room for BOTH actions; max five columns on wide screens. */
+      #midasquote-dashboard #mq-page-showroom .mq-sr-grid{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:14px!important;align-items:stretch!important}
+      #midasquote-dashboard #mq-page-showroom .mq-sr-thumb{min-width:0!important;overflow:hidden!important;display:flex!important;flex-direction:column!important;gap:9px!important;padding:13px!important;border:1px solid #e6ebf2!important;border-radius:16px!important;background:#fff!important;box-shadow:0 6px 20px rgba(15,23,42,.04)!important}
+      #midasquote-dashboard #mq-page-showroom .mq-sr-thumb img{height:132px!important;width:100%!important;object-fit:cover!important;background:#f1f5f9!important;border-radius:12px!important;margin:0!important}
+      #midasquote-dashboard #mq-page-showroom .mq-sr-thumb .mq-sr-name{font-size:12px!important;line-height:1.4!important;font-weight:700!important;color:#334155!important;overflow-wrap:anywhere!important}
+      #midasquote-dashboard #mq-page-showroom .mq-sr-thumb button,#midasquote-dashboard #mq-page-showroom .mq-sr-thumb .mq-btn{width:100%!important;max-width:100%!important;min-width:0!important;white-space:normal!important;overflow-wrap:break-word!important;line-height:1.35!important;min-height:34px!important;padding:7px 8px!important;font-size:11px!important}
+      #midasquote-dashboard #mq-page-showroom .mq-sr-thumb>div:has(>button),#midasquote-dashboard #mq-page-showroom .mq-sr-thumb>div:has(>.mq-btn){display:flex!important;flex-wrap:wrap!important;gap:6px!important}
+      @media(max-width:1100px){#midasquote-dashboard #mq-page-showroom .mq-sr-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
+      @media(max-width:700px){#midasquote-dashboard #mq-page-showroom .mq-sr-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important}#midasquote-dashboard #mq-page-showroom .mq-sr-thumb{padding:9px!important}#midasquote-dashboard #mq-page-showroom .mq-sr-thumb img{height:100px!important}}
+      @media(max-width:420px){#midasquote-dashboard #mq-page-showroom .mq-sr-grid{grid-template-columns:1fr!important}}
+
+      /* Help area: reading width, polished tabs and focused knowledge panel. */
+      #midasquote-dashboard #mq-page-helpguide .mq-help-header-row{max-width:1100px!important;gap:24px!important;margin-bottom:22px!important}
+      #midasquote-dashboard #mq-page-helpguide #mq-help-search{border:1px solid #dbe3ed!important;border-radius:14px!important;background:#fff!important;box-shadow:0 6px 18px rgba(15,23,42,.04)!important;padding:13px 16px!important}
+      #midasquote-dashboard #mq-page-helpguide .mq-help-folder{max-width:1100px!important;border:1px solid #e5ebf3!important;border-radius:22px!important;overflow:hidden!important;background:#fff!important;box-shadow:0 14px 38px rgba(15,23,42,.05)!important}
+      #midasquote-dashboard #mq-page-helpguide .mq-help-tabbar{background:#f8fafc!important;border-bottom:1px solid #e5ebf3!important;padding:12px!important;gap:7px!important}
+      #midasquote-dashboard #mq-page-helpguide .mq-help-panel{padding:28px 32px!important;line-height:1.75!important}
+      #midasquote-dashboard #mq-page-support .mq-card{max-width:680px!important}
+      @media(max-width:700px){#midasquote-dashboard #mq-page-helpguide .mq-help-panel{padding:18px!important}}
+
+      /* Give settings pages a more app-like, content-sized workspace. */
+      #midasquote-dashboard #mq-page-shop,
+      #midasquote-dashboard #mq-page-rooms,
+      #midasquote-dashboard #mq-page-showroom,
+      #midasquote-dashboard #mq-page-embed,
+      #midasquote-dashboard #mq-page-billing,
+      #midasquote-dashboard #mq-page-helpguide,
+      #midasquote-dashboard #mq-page-support{max-width:1180px}
+      #midasquote-dashboard #mq-page-shop>.mq-card,
+      #midasquote-dashboard #mq-rooms-cabinet-card,
+      #midasquote-dashboard #mq-rooms-ct-card,
+      #midasquote-dashboard #mq-page-showroom .mq-sr-card,
+      #midasquote-dashboard #mq-page-embed>.mq-card{max-width:1120px;margin-left:auto!important;margin-right:auto!important}
+      #midasquote-dashboard #mq-page-shop>.mq-card{overflow:hidden;padding:0!important}
+      #midasquote-dashboard #mq-page-shop>.mq-card>.mq-card-title{padding:20px 24px!important;border-bottom:1px solid #eef2f7;background:linear-gradient(180deg,#fff 0%,#fbfcfd 100%)}
+      #midasquote-dashboard #mq-page-shop>[id$='-msg'],#midasquote-dashboard #mq-page-rooms>#mq-rooms-msg{max-width:1120px;margin-left:auto;margin-right:auto}
+      #midasquote-dashboard #mq-page-shop [id^='mq-shopsec-'][id$='-body']{padding:22px 24px 24px}
+      #midasquote-dashboard #mq-page-shop .mq-grid2{gap:18px}
+
+      /* Project types — compact card rows instead of giant bars. */
+      #midasquote-dashboard #mq-page-rooms .mq-card{padding:24px!important}
+      #midasquote-dashboard #mq-page-rooms .mq-room-row{max-width:1040px;margin:0 auto 14px!important;padding:16px 18px!important;background:#fff!important;border:1px solid #e5ebf3!important;border-radius:20px!important;box-shadow:0 10px 30px rgba(15,23,42,.05)!important;transition:transform .15s, box-shadow .15s, border-color .15s}
+      #midasquote-dashboard #mq-page-rooms .mq-room-row:hover{transform:translateY(-1px);box-shadow:0 14px 34px rgba(15,23,42,.08)!important}
+      #midasquote-dashboard #mq-page-rooms .mq-room-row.mq-room-open{background:linear-gradient(180deg,#fffdf8 0%,#fff 100%)!important;border-color:#e7c86f!important;box-shadow:0 18px 40px rgba(212,175,55,.12)!important}
+      #midasquote-dashboard #mq-page-rooms .mq-room-row>div:first-child{display:grid!important;grid-template-columns:24px minmax(220px,360px) auto auto auto;gap:12px!important;align-items:center}
+      #midasquote-dashboard #mq-page-rooms .mq-room-drag-handle{font-size:18px!important;color:#94a3b8!important}
+      #midasquote-dashboard #mq-page-rooms [id^='mq-room-body-']{padding-left:0!important;margin-top:14px}
+      #midasquote-dashboard #mq-page-rooms [id^='mq-room-island-settings-']{background:#f8fafc!important;border-radius:14px!important;border-color:#e6ebf2!important}
+      #midasquote-dashboard #mq-page-rooms [id^='mq-room-cover-preview-'],
+      #midasquote-dashboard #mq-page-rooms [id^='mq-room-measure-img-preview-'],
+      #midasquote-dashboard #mq-page-rooms [id^='mq-room-measure-img-extra-preview-']{border-radius:12px!important;border-color:#e5ebf3!important;background:#f8fafc!important}
+
+      /* Specialty items / dense tables — calmer toolbar + card rows. */
+      #midasquote-dashboard #mq-page-specialty .mq-card,
+      #midasquote-dashboard #mq-page-products .mq-card,
+      #midasquote-dashboard #mq-page-overview .mq-card,
+      #midasquote-dashboard #mq-page-leads .mq-card,
+      #midasquote-dashboard #mq-page-pricing .mq-card{border-radius:24px!important}
+      #midasquote-dashboard #mq-page-specialty .mq-card>div:first-child[style],
+      #midasquote-dashboard #mq-page-products .mq-card>div:first-child[style]{border-radius:18px 18px 0 0}
+      #midasquote-dashboard #mq-spec-table{border-collapse:separate!important;border-spacing:0 14px!important}
+      #midasquote-dashboard #mq-spec-table th{font-size:11px!important;color:#64748b!important;padding-bottom:12px!important}
+      #midasquote-dashboard #mq-spec-table td{background:#fff!important;border-top:1px solid #e8edf4!important;border-bottom:1px solid #e8edf4!important;box-shadow:0 12px 28px rgba(15,23,42,.05)!important}
+      #midasquote-dashboard #mq-spec-table td:first-child{border-left:1px solid #e8edf4!important;border-radius:18px 0 0 18px!important}
+      #midasquote-dashboard #mq-spec-table td:last-child{border-right:1px solid #e8edf4!important;border-radius:0 18px 18px 0!important}
+      #midasquote-dashboard #mq-page-specialty .mq-table-wrap{padding-bottom:12px}
+      #midasquote-dashboard #mq-page-specialty .mq-table-wrap::-webkit-scrollbar-thumb,
+      #midasquote-dashboard #mq-page-products .mq-table-wrap::-webkit-scrollbar-thumb{background:#cbd5e1}
+
+      /* My Products category cards — more editorial and less boxy. */
+      #midasquote-dashboard #mq-page-products .mq-product-category-grid{gap:18px!important}
+      #midasquote-dashboard #mq-page-products .mq-product-category-card{border-radius:20px!important;box-shadow:0 12px 30px rgba(15,23,42,.05)!important;border-color:#e5ebf3!important}
+      #midasquote-dashboard #mq-page-products .mq-product-category-card>div:first-child{padding:18px 20px!important;min-height:72px!important}
+      #midasquote-dashboard #mq-page-products .mq-product-category-card.mq-category-open{box-shadow:0 18px 36px rgba(15,23,42,.08)!important;border-color:#dfc278!important}
+      #midasquote-dashboard #mq-page-products .mq-product-category-card.mq-category-open>div:first-child{background:linear-gradient(180deg,#fffaf0 0%,#fffdf8 100%)!important;border-bottom:1px solid #f0e6d1!important}
+      #midasquote-dashboard #mq-page-products .mq-product-category-card [id^='mq-cat-body-']{padding:22px 22px 24px!important}
+
+      /* Showroom cards align visually with the rest of the app. */
+      #midasquote-dashboard .mq-sr-card,#midasquote-dashboard .mq-sr-tab .mq-card{border-radius:18px!important;border-color:#e5ebf3!important;box-shadow:0 10px 28px rgba(15,23,42,.05)!important}
+      #midasquote-dashboard .mq-sr-head{padding:16px 18px!important}
+      #midasquote-dashboard .mq-sr-title{font-size:14px!important;font-weight:800!important;color:#0f172a!important}
+      #midasquote-dashboard .mq-sr-body{padding:18px!important}
+
+      @media(max-width:980px){
+        #midasquote-dashboard .mq-page-title{font-size:32px!important}
+        #midasquote-dashboard #mq-page-rooms .mq-room-row>div:first-child{grid-template-columns:24px minmax(0,1fr) auto auto auto}
+      }
+      @media(max-width:760px){
+        #midasquote-dashboard .mq-content{padding:22px 14px 60px!important}
+        #midasquote-dashboard .mq-page-title{font-size:28px!important}
+        #midasquote-dashboard .mq-page-sub{font-size:14px!important}
+        #midasquote-dashboard .mq-topbar{padding:10px 14px!important}
+        #midasquote-dashboard .mq-topbar-brand{font-size:20px}
+        #midasquote-dashboard .mq-topbar-actions{gap:8px}
+        #midasquote-dashboard .mq-major-tab{padding:9px 13px!important}
+        #midasquote-dashboard .mq-top-navigation .mq-nav-item{padding:8px 12px!important}
+        #midasquote-dashboard #mq-page-shop [id^='mq-shopsec-'][id$='-body']{padding:18px 16px 18px}
+        #midasquote-dashboard #mq-page-rooms .mq-card{padding:16px!important}
+        #midasquote-dashboard #mq-page-rooms .mq-room-row{padding:14px!important;border-radius:18px!important}
+        #midasquote-dashboard #mq-page-rooms .mq-room-row>div:first-child{grid-template-columns:20px 1fr auto;gap:10px!important}
+      }
+
 </style>
           <!-- MARKETING KIT -->
           <div class="mq-page mq-sr-tab" id="mq-page-marketing">
@@ -3633,10 +3820,27 @@ window.logoutMember = async function () {
     }
   };
 
+  window.mqSwitchNavGroup = function(group) {
+    const wrapper = document.getElementById('mq-top-navigation');
+    if (!wrapper) return;
+    wrapper.dataset.mqGroup = group;
+    wrapper.querySelectorAll('.mq-major-tab').forEach(btn => {
+      const active = btn.dataset.group === group;
+      btn.classList.toggle('active', active);
+      btn.setAttribute('aria-selected', active ? 'true' : 'false');
+    });
+    const selected = wrapper.querySelector('.mq-nav-item.active[data-mq-group="' + group + '"]');
+    if (!selected) {
+      const first = wrapper.querySelector('.mq-nav-item[data-mq-group="' + group + '"]:not([style*="display:none"])');
+      if (first) first.click();
+    }
+  };
   window.mqNav = function(page, el) {
     document.querySelectorAll('#midasquote-dashboard .mq-nav-item').forEach(i => i.classList.remove('active'));
     document.querySelectorAll('#midasquote-dashboard .mq-page').forEach(p => p.classList.remove('active'));
     el.classList.add('active');
+    const group = el?.dataset?.mqGroup;
+    if (group && document.getElementById('mq-top-navigation')) window.mqSwitchNavGroup(group);
     const pageEl = document.getElementById('mq-page-' + page);
     if (pageEl) pageEl.classList.add('active');
   };
@@ -9031,7 +9235,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       if (!items.length) return '';
       const disp = CAT_DISPLAY[cat] || { title: cat, emoji: '📦' };
       const hasGroups = GROUPABLE_CATS.includes(cat) && items.some(i => i.groupName);
-      return `<div class="mq-card" style="padding:0;overflow:hidden" data-mq-cat="${cat}">
+      return `<div class="mq-card mq-product-category-card" style="padding:0;overflow:hidden" data-mq-cat="${cat}">
         <div onclick="mqToggleProductCategory('${cat}')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
           <div class="mq-card-title" style="margin:0">${disp.title} <span style="font-size:12px;font-weight:400;color:#9ca3af">(${items.length})</span></div>
           <span id="mq-cat-arrow-${cat}" style="display:inline-block;transition:transform 0.2s;font-size:13px;color:#9ca3af">▶</span>
@@ -9705,11 +9909,13 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       if (!body) return;
       const opening = body.style.display === 'none';
       body.style.display = opening ? 'block' : 'none';
+      const card = body.closest('.mq-product-category-card');
+      if (card) card.classList.toggle('mq-category-open', opening);
       if (arrow) arrow.style.transform = opening ? 'rotate(90deg)' : 'rotate(0deg)';
     };
 
     const specRoomOptions = (window._mqRooms || defaultRoomTypes()).map(r => `<option value="${r.id}">${r.name}</option>`).join('');
-    const specSection = specItems.length ? `<div class="mq-card" style="padding:0;overflow:hidden">
+    const specSection = specItems.length ? `<div class="mq-card mq-product-category-card" style="padding:0;overflow:hidden">
       <div onclick="mqToggleProductCategory('specialty')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
         <div class="mq-card-title" style="margin:0">⭐ Specialty Items <span style="font-size:12px;font-weight:400;color:#9ca3af">(${specItems.length})</span></div>
         <span id="mq-cat-arrow-specialty" style="display:inline-block;transition:transform 0.2s;font-size:13px;color:#9ca3af">▶</span>
@@ -9942,7 +10148,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
               </div>
             </div>
             <div style="font-size:11px;color:#9ca3af;margin-top:10px">Shown on any item you mark below — change the wording or color here and every marked item updates automatically, no need to re-mark anything.</div>
-          </div>` + catsOrdered.map(catSection).join('') + specSection;
+          </div>` + `<div class="mq-product-category-grid">${catsOrdered.map(catSection).join('')}${specSection}</div>`;
 
       mqApplyEstimatorTabScopeToProducts();
 
@@ -15771,6 +15977,7 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
   // since it just measures real scroll position rather than depending on
   // the CSS containing-block chain.
   function mqInitStickyNav() {
+    if (document.getElementById('mq-top-navigation')) return;
     const sidebar = document.querySelector('#midasquote-dashboard .mq-sidebar');
     const layout  = document.querySelector('#midasquote-dashboard .mq-layout');
     const topbar  = document.querySelector('#midasquote-dashboard .mq-topbar');
@@ -15842,6 +16049,7 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
   // window.mqNav wrapper further down, the first time a shop actually clicks
   // into Help guide.
   function mqInitHelpGuideNudge() {
+    if (document.getElementById('mq-top-navigation')) return;
     const navItem = document.getElementById('mq-nav-helpguide');
     const root = document.getElementById('midasquote-dashboard');
     if (!navItem || !root || !navItem.classList.contains('mq-nav-item-nudge')) return;
