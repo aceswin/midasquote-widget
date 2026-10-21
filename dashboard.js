@@ -3131,6 +3131,7 @@ window.logoutMember = async function () {
         #midasquote-dashboard #mq-page-pro .mqp-step .mqp-btn-line{margin-left:40px!important}
       }
       #midasquote-dashboard .mq-top-navigation .mq-nav-item[style*="display:none"]{display:none!important}
+      #midasquote-dashboard .mq-top-navigation[data-mq-group] .mq-nav-item[data-mq-group][style*="display:none"]{display:none!important} /* outranks the group "show" rules above, so inline-hidden items (e.g. Templates (Admin)) stay hidden */
       #midasquote-dashboard .mq-top-navigation .mq-nav-item:hover{background:#f5f6f7;color:#151515}
       #midasquote-dashboard .mq-top-navigation .mq-nav-item.active{background:#171717;border-color:#171717;color:#fff}
       #midasquote-dashboard .mq-nav-step{display:inline-grid;place-items:center;width:19px;height:19px;border:1px solid #d6d9de;border-radius:50%;font-size:10px;font-weight:800;background:#f7f8fa;color:#454545}
@@ -16719,6 +16720,14 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
       const navTemplates = el('mq-nav-templates');
       if (navTemplates) navTemplates.style.display = 'flex';
       window._mqIsAdminShop = true;
+    } else {
+      // Every other shop: remove the admin tab AND its page outright, so no
+      // CSS rule can ever bring them back into view (Oct 2026 — a newer
+      // nav-group rule was overriding the tab's inline display:none, which
+      // showed "Templates (Admin)" to every shop).
+      el('mq-nav-templates')?.remove();
+      el('mq-page-templates')?.remove();
+      window._mqIsAdminShop = false;
     }
     mqBuildHelpGuide();
 
