@@ -861,6 +861,8 @@
          none of this applies: the aside is hidden, the bar lives on
          <body> at the bottom of the screen exactly as before. */
       #mq-pro-aside{display:none}
+      /* Pro is always live (Oct 2026) — no Calculate buttons. */
+      #midasquote-widget #mq-c-calc-btn,#midasquote-widget #mq-ct-calc-btn,#midasquote-widget #mq-b-calc-btn{display:none!important}
       @media (min-width:1100px){
         #midasquote-widget{max-width:1760px;width:100%;margin:0 auto;border-radius:0;box-shadow:none;overflow:visible;background:#f3f5f9;min-height:100vh;display:grid;grid-template-columns:minmax(0,1fr) clamp(330px,26vw,400px);column-gap:0;align-items:start}
         #midasquote-widget > *{grid-column:1 / -1}
@@ -2439,7 +2441,7 @@
             ${data.shop['Project type title'] || 'Start here — choose your project type'}
           </label>
           <select id="mq-${prefix}-room" onfocus="window._mqPrevRoomId=window._mqPrevRoomId||{};window._mqPrevRoomId['${prefix}']=this.value" onchange="mqCommitCurrentConfig('${prefix}');mqTogVanityNote('${prefix}');mqTogDwOption('${prefix}');mqRefreshRoomVisibility('${prefix}');mqShowRoomDescription('${prefix}');mqRefreshMeasureGuide('${prefix}');mqRefreshAllPickerVisibility('${prefix}');mqOnProjectTypeChange('${prefix}')" style="font-size:15px;font-weight:600;padding:10px 12px">${(roomTypes||[]).filter(r=>!r.hideFromPro && !r.forCountertops).map(r=>`<option value="${r.id}">${r.name}</option>`).join('')}</select>
-          <p style="display:block;margin-top:8px;font-weight:500;color:#0f2a52;font-size:13px">${data.shop['Project type hint'] || 'After calculating your first quote, you can continue adding other project types.'}</p>
+          <p style="display:block;margin-top:8px;font-weight:500;color:#0f2a52;font-size:13px">${data.shop['Project type hint'] || 'Your quote updates live as you go. Switch project type any time to add another one to the same quote.'}</p>
           <p class="mq-hint" id="mq-${prefix}-room-vanity-note" style="display:none;color:#0f2a52;font-weight:600;margin-top:8px"></p>
           <div id="mq-${prefix}-room-desc" style="display:none;margin-top:8px;padding:10px 12px;background:#fff;border:1px solid #0f2a52;border-radius:6px;font-size:13px;color:#1f2937;line-height:1.5"></div>
         </div>
@@ -2854,7 +2856,7 @@
               ${shop['Project type title'] || 'Start here — choose your project type'}
             </label>
             <select id="mq-ct-room" onfocus="window._mqPrevRoomId=window._mqPrevRoomId||{};window._mqPrevRoomId['ct']=this.value" onchange="mqCommitCurrentConfig('ct');mqTogVanityNote('ct');mqTogDwOption('ct');mqRefreshRoomVisibility('ct');mqShowRoomDescription('ct');mqRefreshMeasureGuide('ct');mqRefreshAllPickerVisibility('ct');mqOnProjectTypeChange('ct')" style="font-size:15px;font-weight:600;padding:10px 12px">${(roomTypes||[]).filter(r=>r.forCountertops).map(r=>`<option value="${r.id}">${r.name}</option>`).join('')}</select>
-            <p class="mq-hint mq-focal-box-label" style="display:block;margin-top:8px;font-weight:500">${shop['Project type hint'] || 'After calculating your first quote, you can continue adding other project types.'}</p>
+            <p class="mq-hint mq-focal-box-label" style="display:block;margin-top:8px;font-weight:500">${shop['Project type hint'] || 'Your quote updates live as you go. Switch project type any time to add another one to the same quote.'}</p>
             <div id="mq-ct-room-desc" style="display:none;margin-top:8px;padding:10px 12px;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;font-size:13px;color:#92400e;line-height:1.5"></div>
           </div>
         </div>
@@ -4501,6 +4503,8 @@
     // scroll animation has time to land first — "Done" means done, not
     // "now go find and click a second button yourself."
     function mqHighlightCalcButton(prefix) {
+      // Always-live Pro has no Calculate button to scroll to / click.
+      if (window._mqProAutoLive) { mqLiveRecalcSticky(); return; }
       const btnId = prefix === 'c' ? 'mq-c-calc-btn' : (prefix === 'ct' ? 'mq-ct-calc-btn' : 'mq-b-calc-btn');
       const btn = document.getElementById(btnId);
       if (!btn) return;
@@ -7629,6 +7633,32 @@
       return true;
     }
 
+    // "📄 Create proposal" on the live panel / bottom bar (Oct 2026). Pro no
+    // longer has Calculate buttons (it's always live), so this does the two
+    // jobs Calculate used to do before a proposal could open: checks the
+    // specialty-item install quantities, and stores the current tab's real
+    // numbers as window._mqLastEstimate[prefix] — same shape and same
+    // "drop the bold Subtotal row" filter as mqCalcCabinets /
+    // mqCalcCountertops / mqCalcBoth — then opens the normal proposal modal.
+    window.mqProCreateProposalLive = function() {
+      const prefix = window._mqStickyPrefix || window._mqActiveTabPrefix || 'b';
+      if (!mqValidateInstallQty(prefix)) return;
+      let est;
+      if (prefix === 'c') {
+        const r = calcCabinet('c');
+        est = { projectType: r.roomLabel + ' — Cabinets', lines: r.lines.filter(l=>!l.bold), total: r.total };
+      } else if (prefix === 'ct') {
+        const r = calcCountertop('ct');
+        est = { projectType: 'Countertops', lines: r.lines.filter(l=>!l.bold), total: r.total };
+      } else {
+        const cab = calcCabinet('b'), ct = calcCountertop('b');
+        est = { projectType: 'Cabinets + Countertops', lines: [...cab.lines.filter(l=>!l.bold), ...ct.lines.filter(l=>!l.bold)], total: cab.total + ct.total };
+      }
+      if (!est.lines.length || !(est.total > 0)) { alert('Add some measurements or selections first — the proposal is built from the live quote.'); return; }
+      window._mqLastEstimate = Object.assign(window._mqLastEstimate || {}, { [prefix]: est });
+      window.mqOpenProposalModal(prefix);
+    };
+
     addSurfaceInternal('ct');
     // Auto-add one starting tall cabinet card per tab so the photo picker is
     // visible immediately on load — starts at qty 0 so it doesn't silently
@@ -7704,6 +7734,7 @@
     const stickyBar = document.getElementById('mq-sticky-bar');
     if (stickyBar) stickyBar.classList.remove('show');
     mqAdjustWidgetBottomPadding();
+    mqProStartAutoLive();
     window.mqScrollWithOffset(container);
   };
 
@@ -7895,8 +7926,9 @@
             <div id="mq-sticky-links-row" style="margin-top:2px"><button id="mq-sticky-email-link" onclick="mqEmailMyQuote()" style="background:none;border:none;padding:0;font-size:11px;font-weight:600;color:rgba(255,255,255,0.65);text-decoration:underline;cursor:pointer;font-family:inherit;vertical-align:middle">📧 Email me a copy</button></div>
           </div>
           <div id="mq-sticky-ctas">
+            <button class="mq-pri" id="mq-sticky-proposal-btn" onclick="mqProCreateProposalLive()">📄 Create proposal</button>
             ${window._mqAskQuestionBtn || `<button onclick="mqShowConsultModal()">Ask a question ↗</button>`}
-            <button class="mq-pri" onclick="mqShowConsultModal()">Book a consultation ↗</button>
+            <button onclick="mqShowConsultModal()">Book a consultation ↗</button>
           </div>
         </div>
         <div id="mq-sticky-breakdown" style="display:none;padding:0 16px 12px;font-size:12.5px;color:rgba(255,255,255,0.9)"></div>
@@ -8306,11 +8338,48 @@
           range = { low: r.low, high: r.high, total: r.total, label: r.roomLabel };
         }
       }
+      if (range && window._mqProAutoLive) {
+        // Always-live mode: the bar/panel appears the moment there's a real
+        // number and goes back to its empty state if everything is cleared,
+        // instead of waiting for a Calculate press.
+        const hasValue = (range.low||0) > 0 || (range.high||0) > 0 || (range.total||0) > 0;
+        const hasCart = (window._mqQuoteCart || []).length > 0;
+        const bar = document.getElementById('mq-sticky-bar');
+        if (!hasValue) {
+          window._mqLivePreview = null;
+          mqRenderQuoteCart();
+          if (hasCart) mqSetStickyPrice(prefix, 0, 0, 0, false);
+          if (bar) bar.classList.toggle('show', hasCart);
+          mqAdjustWidgetBottomPadding();
+          return;
+        }
+        if (bar && !bar.classList.contains('show')) { bar.classList.add('show'); mqAdjustWidgetBottomPadding(); }
+      }
       if (range) {
         mqSetStickyPrice(prefix, range.low, range.high, range.total, true);
         mqUpdateLivePreview(prefix, range);
       }
     } catch (e) { /* mid-edit DOM state can briefly be inconsistent — just skip this tick */ }
+  }
+  // MidasQuote Pro is ALWAYS live (Oct 2026, Jordan: "always calculating as
+  // if someone had hit calculate from the start"). Instead of the live
+  // tracker only switching on after the first Calculate, it's on from the
+  // moment the widget loads, following whichever tab is active. Calculate
+  // itself still works exactly as before (results panel, Create proposal,
+  // the email) — it just isn't needed to see numbers anymore.
+  window._mqProAutoLive = true;
+  function mqProStartAutoLive() {
+    if (!window._mqProAutoLive) return;
+    // Read the active tab from the page itself: after a rebuild (Start new
+    // estimate) the screen is back on its first tab while
+    // _mqActiveTabPrefix can still name the tab that was open before.
+    const activeTab = document.querySelector('#midasquote-widget .mq-tab-content.active');
+    const fromDom = activeTab ? ({ 'mq-tab-both': 'b', 'mq-tab-cabinets': 'c', 'mq-tab-countertops': 'ct' })[activeTab.id] : null;
+    if (fromDom) window._mqActiveTabPrefix = fromDom;
+    window._mqStickyPrefix = window._mqActiveTabPrefix || 'b';
+    window._mqStickyDismissed = false;
+    mqSetupStickyBar();
+    mqLiveRecalcSticky();
   }
   let _mqStickyDebounce = null;
   function mqScheduleLiveRecalc() {
@@ -8418,6 +8487,7 @@
     // rows, etc.) — no need to individually wire each one.
     container.addEventListener('input', mqScheduleLiveRecalc);
     container.addEventListener('change', mqScheduleLiveRecalc);
+    mqProStartAutoLive();
     // Keep each "About how many drawers?" box's estimate in step with the
     // footage/tier the customer has entered.
     container.addEventListener('input', () => { if (window.mqDrawerCountSyncAll) window.mqDrawerCountSyncAll(); });
