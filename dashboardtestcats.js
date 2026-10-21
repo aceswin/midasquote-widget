@@ -3082,52 +3082,53 @@ window.logoutMember = async function () {
       #midasquote-dashboard .mq-top-navigation[data-mq-group="account"] .mq-nav-item[data-mq-group="account"]{display:flex!important}
 
       /* ── MidasQuote Pro page (Oct 2026) ── hairline, compact, scoped to #mq-page-pro */
-      #midasquote-dashboard #mq-page-pro .mqp-wrap{max-width:960px;margin:0 auto}
-      #midasquote-dashboard #mq-page-pro .mqp-hero{position:relative;overflow:hidden;background:linear-gradient(135deg,#0f2a52 0%,#16345f 60%,#1e3a5f 100%);color:#fff;border-radius:16px;padding:30px 32px 24px;border:1px solid rgba(251,191,36,.35);box-shadow:0 10px 30px rgba(15,42,82,.16)}
+      #midasquote-dashboard #mq-page-pro h2,#midasquote-dashboard #mq-page-pro h3,#midasquote-dashboard #mq-page-pro h4{font-family:inherit!important;text-transform:none}
+      #midasquote-dashboard #mq-page-pro .mqp-wrap{max-width:960px;margin:0 auto!important}
+      #midasquote-dashboard #mq-page-pro .mqp-hero{position:relative;overflow:hidden;background:linear-gradient(135deg,#0f2a52 0%,#16345f 60%,#1e3a5f 100%);color:#fff;border-radius:16px;padding:30px 32px 24px!important;border:1px solid rgba(251,191,36,.35);box-shadow:0 10px 30px rgba(15,42,82,.16)}
       #midasquote-dashboard #mq-page-pro .mqp-hero::after{content:'';position:absolute;right:-60px;top:-60px;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(251,191,36,.18),transparent 70%);pointer-events:none}
-      #midasquote-dashboard #mq-page-pro .mqp-eyebrow{font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#fbbf24;margin:0 0 10px}
-      #midasquote-dashboard #mq-page-pro .mqp-h2{font-size:26px;line-height:1.2;font-weight:800;letter-spacing:-.015em;color:#fff;margin:0 0 10px;max-width:560px}
-      #midasquote-dashboard #mq-page-pro .mqp-lead{font-size:14.5px;line-height:1.65;color:#cbd5e1;margin:0 0 20px;max-width:600px}
-      #midasquote-dashboard #mq-page-pro .mqp-actions{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
-      #midasquote-dashboard #mq-page-pro .mqp-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;font-family:inherit;font-size:13px;font-weight:700;border-radius:9px;padding:10px 16px;cursor:pointer;text-decoration:none;white-space:nowrap;transition:background .15s,border-color .15s,opacity .15s}
+      #midasquote-dashboard #mq-page-pro .mqp-eyebrow{font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#fbbf24;margin:0 0 10px!important}
+      #midasquote-dashboard #mq-page-pro .mqp-h2{font-size:26px;line-height:1.2;font-weight:800;letter-spacing:-.015em;color:#fff;margin:0 0 10px!important;max-width:560px}
+      #midasquote-dashboard #mq-page-pro .mqp-lead{font-size:14.5px;line-height:1.65;color:#cbd5e1;margin:0 0 20px!important;max-width:600px}
+      #midasquote-dashboard #mq-page-pro .mqp-actions{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px!important}
+      #midasquote-dashboard #mq-page-pro .mqp-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;font-family:inherit;font-size:13px;font-weight:700;border-radius:9px;padding:10px 16px!important;cursor:pointer;text-decoration:none;white-space:nowrap;transition:background .15s,border-color .15s,opacity .15s}
       #midasquote-dashboard #mq-page-pro .mqp-btn-gold{background:#fbbf24;color:#0f2a52;border:1px solid #fbbf24}
       #midasquote-dashboard #mq-page-pro .mqp-btn-gold:hover{opacity:.9}
       #midasquote-dashboard #mq-page-pro .mqp-btn-ghost{background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.25)}
       #midasquote-dashboard #mq-page-pro .mqp-btn-ghost:hover{background:rgba(255,255,255,.14)}
-      #midasquote-dashboard #mq-page-pro .mqp-btn-line{background:#fff;color:#0f2a52;border:1px solid #dfe4e7;padding:8px 13px;font-size:12.5px}
+      #midasquote-dashboard #mq-page-pro .mqp-btn-line{background:#fff;color:#0f2a52;border:1px solid #dfe4e7;padding:8px 13px!important;font-size:12.5px}
       #midasquote-dashboard #mq-page-pro .mqp-btn-line:hover{border-color:#0f2a52}
-      #midasquote-dashboard #mq-page-pro .mqp-meta{display:flex;flex-wrap:wrap;gap:6px 18px;padding-top:16px;border-top:1px solid rgba(255,255,255,.12);font-size:12px;color:#94a3b8}
-      #midasquote-dashboard #mq-page-pro .mqp-meta span::before{content:'✓';color:#fbbf24;font-weight:800;margin-right:6px}
-      #midasquote-dashboard #mq-page-pro .mqp-section-label{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#6b7280;margin:28px 2px 10px}
+      #midasquote-dashboard #mq-page-pro .mqp-meta{display:flex;flex-wrap:wrap;gap:6px 18px;padding-top:16px!important;border-top:1px solid rgba(255,255,255,.12);font-size:12px;color:#94a3b8}
+      #midasquote-dashboard #mq-page-pro .mqp-meta span::before{content:'✓';color:#fbbf24;font-weight:800;margin-right:6px!important}
+      #midasquote-dashboard #mq-page-pro .mqp-section-label{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#6b7280;margin:28px 2px 10px!important}
       #midasquote-dashboard #mq-page-pro .mqp-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
-      #midasquote-dashboard #mq-page-pro .mqp-card{background:#fff;border:1px solid #dfe4e7;border-radius:14px;padding:18px 18px 16px;box-shadow:0 2px 8px rgba(17,24,39,.03)}
-      #midasquote-dashboard #mq-page-pro .mqp-icon{width:34px;height:34px;border-radius:9px;background:#fff7e3;border:1px solid #f1dca3;display:flex;align-items:center;justify-content:center;font-size:17px;margin-bottom:12px}
-      #midasquote-dashboard #mq-page-pro .mqp-card h3{font-size:14.5px;line-height:1.35;font-weight:750;color:#111;margin:0 0 8px}
-      #midasquote-dashboard #mq-page-pro .mqp-card p{font-size:13px;line-height:1.6;color:#4b5563;margin:0}
+      #midasquote-dashboard #mq-page-pro .mqp-card{background:#fff;border:1px solid #dfe4e7;border-radius:14px;padding:18px 18px 16px!important;box-shadow:0 2px 8px rgba(17,24,39,.03)}
+      #midasquote-dashboard #mq-page-pro .mqp-icon{width:34px;height:34px;border-radius:9px;background:#fff7e3;border:1px solid #f1dca3;display:flex;align-items:center;justify-content:center;font-size:17px;margin-bottom:12px!important}
+      #midasquote-dashboard #mq-page-pro .mqp-card h3{font-size:14.5px;line-height:1.35;font-weight:750;color:#111;margin:0 0 8px!important}
+      #midasquote-dashboard #mq-page-pro .mqp-card p{font-size:13px;line-height:1.6;color:#4b5563;margin:0!important}
       #midasquote-dashboard #mq-page-pro .mqp-card strong{color:#111;font-weight:650}
-      #midasquote-dashboard #mq-page-pro .mqp-tip{margin-top:10px!important;padding:9px 11px;background:#f8fafc;border:1px solid #e5e9ee;border-radius:9px;font-size:12.5px!important}
-      #midasquote-dashboard #mq-page-pro .mqp-list{list-style:none;padding:0;margin:12px 0 0;display:flex;flex-direction:column;gap:6px}
-      #midasquote-dashboard #mq-page-pro .mqp-list li{font-size:12.5px;line-height:1.5;color:#4b5563;padding:8px 10px;background:#f8fafc;border:1px solid #e5e9ee;border-radius:9px}
-      #midasquote-dashboard #mq-page-pro .mqp-list li span{display:block;font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#0f2a52;margin-bottom:1px}
+      #midasquote-dashboard #mq-page-pro .mqp-card p.mqp-tip{margin-top:10px!important;padding:9px 11px!important;background:#f8fafc;border:1px solid #e5e9ee;border-radius:9px;font-size:12.5px!important}
+      #midasquote-dashboard #mq-page-pro .mqp-list{list-style:none;padding:0!important;margin:12px 0 0!important;display:flex;flex-direction:column;gap:6px}
+      #midasquote-dashboard #mq-page-pro .mqp-list li{font-size:12.5px;line-height:1.5;color:#4b5563;padding:8px 10px!important;background:#f8fafc;border:1px solid #e5e9ee;border-radius:9px}
+      #midasquote-dashboard #mq-page-pro .mqp-list li span{display:block;font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#0f2a52;margin-bottom:1px!important}
       #midasquote-dashboard #mq-page-pro em{font-style:normal;font-weight:650;color:#111}
       #midasquote-dashboard #mq-page-pro .mqp-steps{background:#fff;border:1px solid #dfe4e7;border-radius:14px;overflow:hidden}
-      #midasquote-dashboard #mq-page-pro .mqp-step{display:flex;align-items:center;gap:14px;padding:15px 18px}
+      #midasquote-dashboard #mq-page-pro .mqp-step{display:flex;align-items:center;gap:14px;padding:15px 18px!important}
       #midasquote-dashboard #mq-page-pro .mqp-step + .mqp-step{border-top:1px solid #eef1f4}
       #midasquote-dashboard #mq-page-pro .mqp-num{flex:none;width:26px;height:26px;border-radius:50%;background:#0f2a52;color:#fbbf24;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center}
       #midasquote-dashboard #mq-page-pro .mqp-step-body{flex:1;min-width:0}
-      #midasquote-dashboard #mq-page-pro .mqp-step h4{font-size:13.5px;font-weight:750;color:#111;margin:0 0 2px}
-      #midasquote-dashboard #mq-page-pro .mqp-step p{font-size:12.5px;line-height:1.5;color:#6b7280;margin:0}
-      #midasquote-dashboard #mq-page-pro .mqp-details{margin-top:12px;background:#fff;border:1px solid #dfe4e7;border-radius:14px}
-      #midasquote-dashboard #mq-page-pro .mqp-details summary{cursor:pointer;padding:14px 18px;font-size:13px;font-weight:700;color:#111;list-style-position:inside}
-      #midasquote-dashboard #mq-page-pro .mqp-details-body{padding:0 18px 18px}
+      #midasquote-dashboard #mq-page-pro .mqp-step h4{font-size:13.5px;font-weight:750;color:#111;margin:0 0 2px!important}
+      #midasquote-dashboard #mq-page-pro .mqp-step p{font-size:12.5px;line-height:1.5;color:#6b7280;margin:0!important}
+      #midasquote-dashboard #mq-page-pro .mqp-details{margin-top:12px!important;background:#fff;border:1px solid #dfe4e7;border-radius:14px}
+      #midasquote-dashboard #mq-page-pro .mqp-details summary{cursor:pointer;padding:14px 18px!important;font-size:13px;font-weight:700;color:#111;list-style-position:inside}
+      #midasquote-dashboard #mq-page-pro .mqp-details-body{padding:0 18px 18px!important}
       @media(max-width:860px){#midasquote-dashboard #mq-page-pro .mqp-grid{grid-template-columns:1fr}}
       @media(max-width:600px){
-        #midasquote-dashboard #mq-page-pro .mqp-hero{padding:22px 18px 18px;border-radius:14px}
+        #midasquote-dashboard #mq-page-pro .mqp-hero{padding:22px 18px 18px!important;border-radius:14px}
         #midasquote-dashboard #mq-page-pro .mqp-h2{font-size:21px}
         #midasquote-dashboard #mq-page-pro .mqp-actions .mqp-btn{flex:1}
         #midasquote-dashboard #mq-page-pro .mqp-step{flex-wrap:wrap;align-items:flex-start}
         #midasquote-dashboard #mq-page-pro .mqp-step-body{flex:1 1 calc(100% - 40px)}
-        #midasquote-dashboard #mq-page-pro .mqp-step .mqp-btn-line{margin-left:40px}
+        #midasquote-dashboard #mq-page-pro .mqp-step .mqp-btn-line{margin-left:40px!important}
       }
       #midasquote-dashboard .mq-top-navigation .mq-nav-item[style*="display:none"]{display:none!important}
       #midasquote-dashboard .mq-top-navigation .mq-nav-item:hover{background:#f5f6f7;color:#151515}
