@@ -2078,7 +2078,7 @@ window.logoutMember = async function () {
                    "mqph-hl" class or some ambient page style outside this
                    file, so it wins regardless of where it was coming from. -->
               <div id="mq-spec-tips-body" class="mqph-hl" style="display:none;padding:0 16px 14px;font-size:13px;color:#166534;line-height:1.7;border:none">
-                💡 <strong>Pricing tip:</strong> If your specialty item is priced by the linear foot or square foot, check the <strong>Per lin ft</strong> or <strong>Per sq ft</strong> box and enter your per-unit rate. For flat-rate items, leave both unchecked and enter the flat price.
+                💡 <strong>Pricing tip:</strong> Pick how each item is priced under <strong>How is this priced?</strong> — <strong>Flat rate</strong>, <strong>Per lin ft</strong>, <strong>Per sq ft</strong>, or <strong>Custom</strong> for anything else (hours, 2x4s, visits). With Custom, name the unit exactly how customers should see it, and quantities can use decimals like 2.5.
                 <br><br>
                 🔧 <strong>Handles & knobs:</strong> If you supply hardware, add each type as a specialty item (e.g. "Standard handle", "Standard knob") with your per-unit price. Customers can then add how many they need. If you don't supply hardware, leave it out — the widget will automatically let customers know it's not included.
                 <br><br>
@@ -4749,6 +4749,8 @@ window.logoutMember = async function () {
           'Install per linear foot': master.fields['Install per linear foot'] || false,
           'Install per square foot': master.fields['Install per square foot'] || false,
           'Install quantity label': master.fields['Install quantity label'] || '',
+          ...(master.fields['Custom unit'] ? { 'Custom unit': master.fields['Custom unit'] } : {}),
+          ...(master.fields['Install custom unit'] ? { 'Install custom unit': master.fields['Install custom unit'] } : {}),
           'Description': master.fields['Description'] || '',
           'Category': master.fields['Category'] || '',
           'Pro only': master.fields['Pro only'] || false,
@@ -12295,6 +12297,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     }
     const ftBox = document.getElementById(`mq-spec-perft-${id}`);
     const sqftBox = document.getElementById(`mq-spec-persqft-${id}`);
+    if (mode !== 'custom') mqSpecClearCustomUnitIfSet(id, false);
     if (mode === 'linft') {
       if (ftBox) ftBox.checked = true;
       mqSaveSpecUnit(id, 'Per linear foot', true);
@@ -12315,6 +12318,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         sqftBox.checked = false;
         mqSaveSpecUnit(id, 'Per square foot', false);
       }
+      if (mode === 'custom') mqSpecRefreshCustomUnitUI(id, false, true);
     }
   };
 
@@ -12361,6 +12365,15 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   window.mqSpecInstallPricingModeChange = function(id, mode) {
     const ftBox = document.getElementById(`mq-spec-installperft-${id}`);
     const sqftBox = document.getElementById(`mq-spec-installpersqft-${id}`);
+    if (mode !== 'custom') mqSpecClearCustomUnitIfSet(id, true);
+    else {
+      // Pre-fill the install unit with the supply unit (the common case:
+      // "hours" to supply and "hours" to install = one shared quantity).
+      const inp = document.getElementById(`mq-spec-installcustomunit-${id}`);
+      const r = mqFindVariantOwnerRecord(id);
+      const supplyUnit = String((r && r.fields['Custom unit']) || '').trim();
+      if (inp && !inp.value && supplyUnit) { inp.value = supplyUnit; mqSaveSpecCustomUnit(id, true, supplyUnit); }
+    }
     if (mode === 'linft') {
       if (ftBox) ftBox.checked = true;
       mqSaveSpecInstallUnit(id, 'Install per linear foot', true);
@@ -12379,6 +12392,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         sqftBox.checked = false;
         mqSaveSpecInstallUnit(id, 'Install per square foot', false);
       }
+
+      if (mode === 'custom') mqSpecRefreshCustomUnitUI(id, true, true);
     }
   };
 
@@ -12390,7 +12405,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // and drops the equivalent $/sqft or $/linft straight into the price
   // field. The stored rate and the widget's own pricing math never change
   // — this is purely a friendlier way to type the same number.
-  function mqSpecRateCalcIconHTML(id, isInstall, visible) {
+  function mqSpecRateCalcIconHTML(id, isInstall, visible, flatText) {
     const wrapId = isInstall ? `mq-spec-installprice-calcwrap-${id}` : `mq-spec-price-calcwrap-${id}`;
     const svg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="2" width="16" height="20" rx="2" stroke="#1d4ed8" stroke-width="1.8"/><rect x="6.5" y="4.5" width="11" height="4" rx="0.5" fill="#1d4ed8"/><rect x="6.5" y="11" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="10.7" y="11" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="14.9" y="11" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="6.5" y="15" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="10.7" y="15" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="14.9" y="15" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="6.5" y="19" width="11" height="2" rx="0.4" fill="#1d4ed8"/></svg>`;
     // Flat-rate items (neither per-unit box checked) show a plain "Flat
@@ -12400,7 +12415,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // / Per sq ft, this label live-swaps for the actual calculator button
     // (see mqSaveSpecUnit / mqSaveSpecInstallUnit).
     return `<span id="${wrapId}" style="display:inline-flex;align-items:center;margin-left:14px;vertical-align:middle">
-      <span id="${wrapId}-flat" style="display:${visible ? 'none' : 'inline-flex'};font-size:11px;color:#9ca3af;font-style:italic;white-space:nowrap">Flat rate</span>
+      <span id="${wrapId}-flat" style="display:${visible ? 'none' : 'inline-flex'};font-size:11px;color:#9ca3af;font-style:italic;white-space:nowrap">${flatText ? mqSpecEsc(flatText) : 'Flat rate'}</span>
       <span id="${wrapId}-metric" style="display:${visible ? 'inline-flex' : 'none'};align-items:center;gap:7px">
         <span style="font-size:11px;color:#2563eb;font-weight:600;white-space:nowrap">Use metric?</span>
         <button type="button" onclick="mqShowSpecRateCalc(this,'${id}',${isInstall ? 'true' : 'false'},event)" title="Enter a metric rate instead (per m² or per linear metre) — we'll convert it" style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:#eff6ff;border:1px solid #93c5fd;border-radius:6px;cursor:pointer;padding:0;flex-shrink:0">${svg}</button>
@@ -12413,6 +12428,73 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // stays hidden until Per lin ft / Per sq ft is checked (same visibility
   // rule, and the same show/hide toggle points, as the metric calculator
   // above — see mqSaveSpecUnit / mqSaveSpecInstallUnit).
+  // ── "Per custom" pricing (Oct 2026) ─────────────────────────────────
+  // A Per custom item is stored as a flat-rate item (both Per linear foot /
+  // Per square foot unticked) PLUS a non-empty "Custom unit" text field
+  // (supply) or "Install custom unit" (install) — the shop's own unit name,
+  // shown in the widget exactly as typed (e.g. "hours", "2x4s", "visits").
+  // Older code that doesn't know these fields simply treats the item as
+  // flat rate, so nothing breaks. Both Airtable fields must exist
+  // (Specialty Items table, Single line text) — this never creates them.
+  function mqSpecEsc(t) { return String(t == null ? '' : t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  // Keeps the small italic label beside the price ("Flat rate" / "per hours") in step.
+  function mqSpecSetFlatLabel(id, isInstall, unit) {
+    const lab = document.getElementById(isInstall ? `mq-spec-installprice-calcwrap-${id}-flat` : `mq-spec-price-calcwrap-${id}-flat`);
+    if (lab) lab.textContent = unit ? 'per ' + unit : 'Flat rate';
+  }
+  function mqSpecCustomUnit(r, isInstall) {
+    const f = (r && r.fields) || {};
+    if (isInstall) return (!f['Install per linear foot'] && !f['Install per square foot'] && String(f['Install custom unit'] || '').trim()) || '';
+    return (!f['Per linear foot'] && !f['Per square foot'] && String(f['Custom unit'] || '').trim()) || '';
+  }
+  function mqSpecCustomUnitInputHTML(r, isInstall) {
+    const id = r.id;
+    const unit = (r.fields[isInstall ? 'Install custom unit' : 'Custom unit'] || '');
+    const shown = !!mqSpecCustomUnit(r, isInstall);
+    const boxId = isInstall ? `mq-spec-installcustomunit-${id}` : `mq-spec-customunit-${id}`;
+    const placeholder = isInstall ? (String(r.fields['Custom unit'] || '').trim() || 'e.g. hours') : 'e.g. hours';
+    return `<div id="${boxId}-wrap" style="display:${shown ? 'block' : 'none'};margin-top:5px;width:${isInstall ? '150px' : '98px'}">
+      <input type="text" id="${boxId}" maxlength="24" value="${String(unit).replace(/"/g,'&quot;')}" placeholder="${placeholder}" title="Name your unit exactly how customers should see it — e.g. hours, 2x4s, visits" style="width:100%;font-size:11px;padding:4px 6px;border:1px solid #d1d5db;border-radius:6px" onblur="mqSaveSpecCustomUnit('${id}', ${isInstall}, this.value)"/>
+      <div style="font-size:10px;color:#9ca3af;line-height:1.3;margin-top:2px">Unit name, shown as typed</div>
+    </div>`;
+  }
+  // Shows/hides the unit-name box + the Min box for one side after a mode change.
+  function mqSpecRefreshCustomUnitUI(id, isInstall, isCustom) {
+    const wrap = document.getElementById(isInstall ? `mq-spec-installcustomunit-${id}-wrap` : `mq-spec-customunit-${id}-wrap`);
+    if (wrap) wrap.style.display = isCustom ? 'block' : 'none';
+    if (isCustom) { const inp = document.getElementById(isInstall ? `mq-spec-installcustomunit-${id}` : `mq-spec-customunit-${id}`); if (inp && !inp.value) inp.focus(); }
+    const minWrap = document.getElementById(isInstall ? `mq-spec-installprice-minwrap-${id}` : `mq-spec-price-minwrap-${id}`);
+    if (minWrap) {
+      const ft = document.getElementById(isInstall ? `mq-spec-installperft-${id}` : `mq-spec-perft-${id}`);
+      const sq = document.getElementById(isInstall ? `mq-spec-installpersqft-${id}` : `mq-spec-persqft-${id}`);
+      minWrap.style.display = (isCustom || ft?.checked || sq?.checked) ? 'flex' : 'none';
+    }
+  }
+  window.mqSaveSpecCustomUnit = async function(id, isInstall, value) {
+    const field = isInstall ? 'Install custom unit' : 'Custom unit';
+    const v = String(value || '').trim().slice(0, 24);
+    const r = mqFindVariantOwnerRecord(id);
+    if (r && (r.fields[field] || '') === v) return;
+    if (r) r.fields[field] = v;
+    mqSpecSetFlatLabel(id, isInstall, v);
+    try { await atUpdate(CONFIG.SPECIALTY_TABLE, id, { [field]: v }); }
+    catch(e) {
+      console.error('Failed to save ' + field, e);
+      alert(`Couldn't save the unit name. Make sure the Specialty Items table in Airtable has a text field named exactly "${field}".`);
+    }
+  };
+  // Leaving Per custom clears the stored unit name (only if one was set, so
+  // shops that never use this never write to the new field at all).
+  function mqSpecClearCustomUnitIfSet(id, isInstall) {
+    const field = isInstall ? 'Install custom unit' : 'Custom unit';
+    const r = mqFindVariantOwnerRecord(id);
+    const inp = document.getElementById(isInstall ? `mq-spec-installcustomunit-${id}` : `mq-spec-customunit-${id}`);
+    if (inp) inp.value = '';
+    mqSpecSetFlatLabel(id, isInstall, '');
+    if (r && String(r.fields[field] || '').trim()) mqSaveSpecCustomUnit(id, isInstall, '');
+    mqSpecRefreshCustomUnitUI(id, isInstall, false);
+  }
+
   function mqSpecMinPriceHTML(r, isInstall) {
     const id = r.id;
     const wrapId = isInstall ? `mq-spec-installprice-minwrap-${id}` : `mq-spec-price-minwrap-${id}`;
@@ -12420,7 +12502,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const field = isInstall ? 'Install minimum price' : 'Minimum price';
     const perFt = isInstall ? r.fields['Install per linear foot'] : r.fields['Per linear foot'];
     const perSqFt = isInstall ? r.fields['Install per square foot'] : r.fields['Per square foot'];
-    const visible = !!(perFt || perSqFt);
+    const visible = !!(perFt || perSqFt || mqSpecCustomUnit(r, isInstall));
     return `<div id="${wrapId}" style="display:${visible ? 'flex' : 'none'};align-items:center;gap:4px;margin-top:5px">
       <span style="font-size:10px;color:#9ca3af;white-space:nowrap">Min ${CUR()}</span>
       <input type="number" value="${r.fields[field] || ''}" id="${fieldId}" placeholder="0.00" style="width:64px;font-size:11px;padding:3px 5px" onblur="mqSaveSpecField('${id}','${field}',parseFloat(this.value))"/>
@@ -12464,17 +12546,18 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     }
     return `<div style="display:flex;flex-direction:column;gap:3px;width:94px">
       <input type="number" value="${r.fields['Price'] || ''}" id="mq-spec-price-${r.id}" style="width:94px" onblur="mqSaveSpecField('${r.id}','Price',parseFloat(this.value))"/>
-      ${mqSpecRateCalcIconHTML(r.id, false, !!(r.fields['Per linear foot'] || r.fields['Per square foot']))}${mqSpecMinPriceHTML(r, false)}
+      ${mqSpecRateCalcIconHTML(r.id, false, !!(r.fields['Per linear foot'] || r.fields['Per square foot']), mqSpecCustomUnit(r, false) ? 'per ' + mqSpecCustomUnit(r, false) : '')}${mqSpecMinPriceHTML(r, false)}
     </div>`;
   }
 
   function mqSpecPricedCellHTML(r) {
     const variantCount = mqParseVariants(r).length;
     const pickerHTML = `<select id="mq-spec-pricingmode-${r.id}" onchange="mqSpecPricingModeChange('${r.id}', this.value)" style="font-size:12px;padding:5px 4px;border-radius:6px;border:1px solid #d1d5db;width:98px;background:#fff">
-        <option value="flat" ${(!r.fields['Per linear foot'] && !r.fields['Per square foot']) ? 'selected' : ''}>Flat rate</option>
+        <option value="flat" ${(!r.fields['Per linear foot'] && !r.fields['Per square foot'] && !mqSpecCustomUnit(r, false)) ? 'selected' : ''}>Flat rate</option>
         <option value="linft" ${r.fields['Per linear foot'] ? 'selected' : ''}>Per lin ft</option>
         <option value="sqft" ${r.fields['Per square foot'] ? 'selected' : ''}>Per sq ft</option>
-      </select>`;
+        <option value="custom" ${mqSpecCustomUnit(r, false) ? 'selected' : ''}>Custom</option>
+      </select>${mqSpecCustomUnitInputHTML(r, false)}`;
     // Still real and functional with variants — see the correction note
     // above. This note just clarifies that it's one shared setting for
     // every variant listed below, since that's the part that confused
@@ -12577,18 +12660,20 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           <span style="font-size:11px;color:#6b7280">Install price (labor only, added on top)</span>
           <span onclick="mqShowSpecHelpPopover(this,'e.g. ${CUR()}54.95/sqft to supply a door + ${CUR()}16.80/door to install it — enter 16.80 here, not the combined total. The widget adds supply and install as two separate charges.',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>
         </div>
-        <input type="number" value="${r.fields['Install price'] || ''}" id="mq-spec-installprice-${r.id}" placeholder="${CUR()}0.00" style="width:100px" onblur="mqSaveSpecField('${r.id}','Install price',parseFloat(this.value))"/>${mqSpecRateCalcIconHTML(r.id, true, !!(r.fields['Install per linear foot'] || r.fields['Install per square foot']))}
+        <input type="number" value="${r.fields['Install price'] || ''}" id="mq-spec-installprice-${r.id}" placeholder="${CUR()}0.00" style="width:100px" onblur="mqSaveSpecField('${r.id}','Install price',parseFloat(this.value))"/>${mqSpecRateCalcIconHTML(r.id, true, !!(r.fields['Install per linear foot'] || r.fields['Install per square foot']), mqSpecCustomUnit(r, true) ? 'per ' + mqSpecCustomUnit(r, true) : '')}
         ${mqSpecMinPriceHTML(r, true)}
         <div style="margin-top:6px;display:flex;gap:6px;align-items:center">
           <select id="mq-spec-installmode-select-${r.id}" onchange="mqSpecInstallPricingModeChange('${r.id}', this.value)" style="font-size:11px;padding:4px 4px;border-radius:6px;border:1px solid #d1d5db;width:96px;background:#fff">
-            <option value="perItem" ${(!installPerFt && !installPerSqFt) ? 'selected' : ''}>Per item</option>
+            <option value="perItem" ${(!installPerFt && !installPerSqFt && !mqSpecCustomUnit(r, true)) ? 'selected' : ''}>Per item</option>
             <option value="linft" ${installPerFt ? 'selected' : ''}>Per lin ft</option>
             <option value="sqft" ${installPerSqFt ? 'selected' : ''}>Per sq ft</option>
+            <option value="custom" ${mqSpecCustomUnit(r, true) ? 'selected' : ''}>Custom</option>
           </select>
           <input type="checkbox" id="mq-spec-installperft-${r.id}" ${installPerFt?'checked':''} style="display:none"/>
           <input type="checkbox" id="mq-spec-installpersqft-${r.id}" ${installPerSqFt?'checked':''} style="display:none"/>
           <span onclick="mqShowSpecHelpPopover(this,'Choose Per item if install is priced per item, not per linear or square foot. Can be a different method than supply — e.g. supply priced per sqft, install priced per door.',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>
         </div>
+        ${mqSpecCustomUnitInputHTML(r, true)}
         <div style="margin-top:6px;display:flex;align-items:center;gap:4px">
           <span style="font-size:11px;color:#6b7280">Question customers see:</span>
           <span onclick="mqShowSpecHelpPopover(this,'This only shows to customers when install is priced differently than supply. Type your own question to customize it, or leave blank to use the placeholder text shown below as the default.',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>
@@ -13302,6 +13387,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         'Install per linear foot': master.fields['Install per linear foot'] || false,
         'Install per square foot': master.fields['Install per square foot'] || false,
         'Install quantity label': master.fields['Install quantity label'] || '',
+        ...(master.fields['Custom unit'] ? { 'Custom unit': master.fields['Custom unit'] } : {}),
+        ...(master.fields['Install custom unit'] ? { 'Install custom unit': master.fields['Install custom unit'] } : {}),
         'Description': master.fields['Description'] || '',
         'Category': master.fields['Category'] || '',
         'Pro only': master.fields['Pro only'] || false,

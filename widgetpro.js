@@ -363,6 +363,9 @@
           badgePrice:(defaultVariant ? defaultVariant.price : (r.fields['Price']||0))+(r.fields['Install price']||0),
           perFt:r.fields['Per linear foot']||false,
           perSqFt:r.fields['Per square foot']||false,
+          // "Per custom" (Oct 2026): a flat-rate item with the shop's own unit
+          // name, e.g. "hours" — shown exactly as typed, decimals allowed.
+          customUnit:(!r.fields['Per linear foot'] && !r.fields['Per square foot']) ? String(r.fields['Custom unit']||'').trim() : '',
           // Per-order floor for size-based items (e.g. a tiny door still
           // takes a full sheet and the same labor as a bigger one) — only
           // meaningful when perFt/perSqFt is set, same as the dashboard only
@@ -385,6 +388,7 @@
           installMode: r.fields['Install mode']||'supply',
           installPerFt: r.fields['Install per linear foot']||false,
           installPerSqFt: r.fields['Install per square foot']||false,
+          installCustomUnit: (!r.fields['Install per linear foot'] && !r.fields['Install per square foot']) ? String(r.fields['Install custom unit']||'').trim() : '',
           installQtyLabel: r.fields['Install quantity label']||'',
           description: r.fields['Description']||'',
           category: r.fields['Category']||'',
@@ -472,6 +476,8 @@
     );
   }
 
+  // HTML-escapes a shop-typed "Per custom" unit name before it goes into markup.
+  function mqEscUnit(u) { return String(u == null ? '' : u).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
   async function sendEmail(to, subject, html) {
     if (!CONFIG.EMAIL_WORKER||!to) return;
     try { await fetch(CONFIG.EMAIL_WORKER,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to,subject,html})}); }
@@ -1965,8 +1971,8 @@
           ${mqVariantScrollWrap(`${prefix}-specvariant-${i}`,
             s.variants.map((v,vi) => mqSpecVariantChipHTML(s, prefix, i, v, vi, vi===0)).join(''))}
         </div>` : '';
-      const specUnitKind = (perFt, perSqFt) => perFt ? 'linear' : (perSqFt ? 'sqft' : 'item');
-      const installDiffers = s.offersInstallChoice && specUnitKind(s.perFt, s.perSqFt) !== specUnitKind(s.installPerFt, s.installPerSqFt);
+      const specUnitKind = (perFt, perSqFt, custom) => perFt ? 'linear' : (perSqFt ? 'sqft' : (custom ? 'custom:' + custom.toLowerCase() : 'item'));
+      const installDiffers = s.offersInstallChoice && specUnitKind(s.perFt, s.perSqFt, s.customUnit) !== specUnitKind(s.installPerFt, s.installPerSqFt, s.installCustomUnit);
       // The actual supply/install CHOICE control sits under the photo,
       // left-aligned to match the image's own width, above the variant
       // pills — its own visually distinct row rather than crammed into the
@@ -1989,11 +1995,11 @@
           <div style="font-size:11px;color:#6b7280;margin-bottom:4px">${s.installQtyLabel || 'How many of these need to be installed?'}</div>
           <div class="mq-qty-ctrl">
             <button class="mq-qty-btn" onclick="mqAdjInstallQty('${prefix}',${i},-1)">−</button>
-            <input type="text" inputmode="${s.installPerFt||s.installPerSqFt?'decimal':'numeric'}" pattern="${s.installPerFt||s.installPerSqFt?'[0-9]*\\.?[0-9]*':'[0-9]*'}" id="mq-installqty-${prefix}-${i}" value="0" style="width:36px;text-align:center;font-size:16px;font-weight:500;border:1px solid #d1d5db;border-radius:4px;padding:2px 4px;font-family:inherit;box-shadow:none" oninput="mqSetInstallQty('${prefix}',${i},this.value)" onclick="this.select()"/>
+            <input type="text" inputmode="${s.installPerFt||s.installPerSqFt||s.installCustomUnit?'decimal':'numeric'}" pattern="${s.installPerFt||s.installPerSqFt||s.installCustomUnit?'[0-9]*\\.?[0-9]*':'[0-9]*'}" id="mq-installqty-${prefix}-${i}" value="0" style="width:36px;text-align:center;font-size:16px;font-weight:500;border:1px solid #d1d5db;border-radius:4px;padding:2px 4px;font-family:inherit;box-shadow:none" oninput="mqSetInstallQty('${prefix}',${i},this.value)" onclick="this.select()"/>
             <button class="mq-qty-btn" onclick="mqAdjInstallQty('${prefix}',${i},1)">+</button>
             ${s.installPerSqFt ? calcBtn(`mq-installqty-${prefix}-${i}`,'sqft',s.label) : (s.installPerFt ? calcBtn(`mq-installqty-${prefix}-${i}`,'linear',s.label) : '')}
           </div>
-          <span style="font-size:11px;font-weight:600;color:#6b7280">${s.installPerSqFt ? 'square feet' : (s.installPerFt ? 'linear feet' : 'quantity')}</span>
+          <span style="font-size:11px;font-weight:600;color:#6b7280">${s.installPerSqFt ? 'square feet' : (s.installPerFt ? 'linear feet' : (s.installCustomUnit ? mqEscUnit(s.installCustomUnit) : 'quantity'))}</span>
         </div>` : '';
       return `
       <div class="mq-spec-item" id="${itemDomId}" data-rooms="${roomsAttr}" data-item-id="${s.id}">
@@ -2010,11 +2016,11 @@
         <div class="mq-spec-bottom">
           <div class="mq-qty-ctrl">
             <button class="mq-qty-btn" onclick="mqAdjQty('${prefix}',${i},-1)">−</button>
-            <input type="text" inputmode="${(s.perSqFt||s.perFt)?'decimal':'numeric'}" pattern="${(s.perSqFt||s.perFt)?'[0-9]*\\.?[0-9]*':'[0-9]*'}" id="mq-qty-${prefix}-${i}" value="0" style="width:36px;text-align:center;font-size:16px;font-weight:500;border:1px solid #d1d5db;border-radius:4px;padding:2px 4px;font-family:inherit;box-shadow:none" oninput="mqSetQty('${prefix}',${i},this.value)" onclick="this.select()"/>
+            <input type="text" inputmode="${(s.perSqFt||s.perFt||s.customUnit)?'decimal':'numeric'}" pattern="${(s.perSqFt||s.perFt||s.customUnit)?'[0-9]*\\.?[0-9]*':'[0-9]*'}" id="mq-qty-${prefix}-${i}" value="0" style="width:36px;text-align:center;font-size:16px;font-weight:500;border:1px solid #d1d5db;border-radius:4px;padding:2px 4px;font-family:inherit;box-shadow:none" oninput="mqSetQty('${prefix}',${i},this.value)" onclick="this.select()"/>
             <button class="mq-qty-btn" onclick="mqAdjQty('${prefix}',${i},1)">+</button>
             ${s.perSqFt ? calcBtn(`mq-qty-${prefix}-${i}`,'sqft',s.label) : (s.perFt ? calcBtn(`mq-qty-${prefix}-${i}`,'linear',s.label) : '')}
           </div>
-          <span style="font-size:11px;font-weight:600;color:#6b7280">${s.perSqFt ? 'square feet' : (s.perFt ? 'linear feet' : 'quantity')}</span>
+          <span style="font-size:11px;font-weight:600;color:#6b7280">${s.perSqFt ? 'square feet' : (s.perFt ? 'linear feet' : (s.customUnit ? mqEscUnit(s.customUnit) : 'quantity'))}</span>
           ${installQtyRowHtml}
         </div>
       </div>`;
@@ -3457,7 +3463,7 @@
         const q = Array.isArray(qtyArr) ? (qtyArr[vi] || 0) : 0;
         let badge = chip.querySelector('.mq-spec-variant-qty-badge');
         if (q > 0) {
-          const unitSuffix = s.perSqFt ? ' sf' : (s.perFt ? ' ft' : '×');
+          const unitSuffix = s.perSqFt ? ' sf' : (s.perFt ? ' ft' : (s.customUnit ? ' ' + s.customUnit : '×'));
           if (!badge) {
             badge = document.createElement('span');
             badge.className = 'mq-spec-variant-qty-badge';
@@ -5743,9 +5749,10 @@
     window.mqToggleSpec=(prefix,i)=>{if(mqSpecQtyGet(prefix,i)===0){if(!mqSpecModeChosen(prefix,i))return;mqAdjQty(prefix,i,1);}else mqAdjQty(prefix,i,-mqSpecQtyGet(prefix,i));};
     window.mqAdjQty=(prefix,i,d)=>{
       if (d > 0 && !mqSpecModeChosen(prefix,i)) return;
-      const allowDecimal = specs[i] && (specs[i].perFt || specs[i].perSqFt);
+      const allowDecimal = specs[i] && (specs[i].perFt || specs[i].perSqFt || specs[i].customUnit);
+      const dp = specs[i] && specs[i].customUnit ? 100 : 10; // Per custom: 2 decimals (2.25 hours); lin/sq ft: 1
       let next = Math.max(0, mqSpecQtyGet(prefix,i) + d);
-      if (allowDecimal) next = Math.round(next * 10) / 10; // keep to one decimal place
+      if (allowDecimal) next = Math.round(next * dp) / dp;
       mqSpecQtySet(prefix,i,next);
       const el=document.getElementById(`mq-qty-${prefix}-${i}`);
       if(el) { el.value=next; el.dispatchEvent(new Event('input', { bubbles: true })); }
@@ -5753,9 +5760,10 @@
       mqUpdateSpecVariantBadge(prefix,i);
     };
     window.mqSetQty=(prefix,i,val)=>{
-      const allowDecimal = specs[i] && (specs[i].perFt || specs[i].perSqFt);
+      const allowDecimal = specs[i] && (specs[i].perFt || specs[i].perSqFt || specs[i].customUnit);
+      const dp = specs[i] && specs[i].customUnit ? 100 : 10;
       const n = allowDecimal
-        ? Math.max(0, Math.round((parseFloat(val)||0) * 10) / 10) // one decimal — e.g. linear/sq ft items
+        ? Math.max(0, Math.round((parseFloat(val)||0) * dp) / dp) // decimals — lin/sq ft (1 place) or Per custom (2 places)
         : Math.max(0, parseInt(val,10)||0); // whole numbers — plain quantity items
       if (n > 0 && !mqSpecModeChosen(prefix,i)) {
         const el=document.getElementById(`mq-qty-${prefix}-${i}`);
@@ -5807,17 +5815,19 @@
       row.style.display = (sel && sel.value === 'install') ? 'block' : 'none';
     };
     window.mqAdjInstallQty=(prefix,i,d)=>{
-      const allowDecimal = specs[i] && (specs[i].installPerFt || specs[i].installPerSqFt);
+      const allowDecimal = specs[i] && (specs[i].installPerFt || specs[i].installPerSqFt || specs[i].installCustomUnit);
+      const dp = specs[i] && specs[i].installCustomUnit ? 100 : 10;
       let next = Math.max(0, (installQty[prefix][i]||0) + d);
-      if (allowDecimal) next = Math.round(next * 10) / 10;
+      if (allowDecimal) next = Math.round(next * dp) / dp;
       installQty[prefix][i]=next;
       const el=document.getElementById(`mq-installqty-${prefix}-${i}`);
       if(el) { el.value=installQty[prefix][i]; el.dispatchEvent(new Event('input', { bubbles: true })); }
     };
     window.mqSetInstallQty=(prefix,i,val)=>{
-      const allowDecimal = specs[i] && (specs[i].installPerFt || specs[i].installPerSqFt);
+      const allowDecimal = specs[i] && (specs[i].installPerFt || specs[i].installPerSqFt || specs[i].installCustomUnit);
+      const dp = specs[i] && specs[i].installCustomUnit ? 100 : 10;
       const n = allowDecimal
-        ? Math.max(0, Math.round((parseFloat(val)||0) * 10) / 10)
+        ? Math.max(0, Math.round((parseFloat(val)||0) * dp) / dp)
         : Math.max(0, parseInt(val,10)||0);
       installQty[prefix][i]=n;
     };
@@ -6372,8 +6382,8 @@
           // (perFt/perSqFt), same as the dashboard only shows the field
           // then.
           let supplyCost = entry.price * entry.qty;
-          if ((s.perFt || s.perSqFt) && entry.minPrice > 0) supplyCost = Math.max(supplyCost, entry.minPrice);
-          const supplyQtyLabel = s.perSqFt?`${entry.qty} sqft`:(s.perFt?`${entry.qty} ft`:(entry.qty>1?`× ${entry.qty}`:''));
+          if ((s.perFt || s.perSqFt || s.customUnit) && entry.minPrice > 0) supplyCost = Math.max(supplyCost, entry.minPrice);
+          const supplyQtyLabel = s.perSqFt?`${entry.qty} sqft`:(s.perFt?`${entry.qty} ft`:(s.customUnit?`${entry.qty} ${s.customUnit}`:(entry.qty>1?`× ${entry.qty}`:'')));
           specTotal += supplyCost;
           lines.push({label:supplyQtyLabel?`${entry.label} (${supplyQtyLabel})${supplySuffix}`:`${entry.label}${supplySuffix}`,cost:Math.round(supplyCost)});
         });
@@ -6390,13 +6400,13 @@
         // per-variant, same as they always have been) — when install's
         // pricing method matches supply's, its quantity is simply every
         // variant's supply quantity added together.
-        const supplyKind = s.perFt ? 'linear' : (s.perSqFt ? 'sqft' : 'item');
-        const installKind = s.installPerFt ? 'linear' : (s.installPerSqFt ? 'sqft' : 'item');
+        const supplyKind = s.perFt ? 'linear' : (s.perSqFt ? 'sqft' : (s.customUnit ? 'custom:' + s.customUnit.toLowerCase() : 'item'));
+        const installKind = s.installPerFt ? 'linear' : (s.installPerSqFt ? 'sqft' : (s.installCustomUnit ? 'custom:' + s.installCustomUnit.toLowerCase() : 'item'));
         const totalSupplyQty = supplyEntries.reduce((a,e)=>a+e.qty, 0);
         const installQtyVal = (installKind !== supplyKind) ? (installQty[prefix][i] || 0) : totalSupplyQty;
         let installCost = s.installPrice * installQtyVal;
-        if ((s.installPerFt || s.installPerSqFt) && s.installMinPrice > 0 && installQtyVal > 0) installCost = Math.max(installCost, s.installMinPrice);
-        const installQtyLabel = s.installPerSqFt?`${installQtyVal} sqft`:(s.installPerFt?`${installQtyVal} ft`:(installQtyVal>1?`× ${installQtyVal}`:''));
+        if ((s.installPerFt || s.installPerSqFt || s.installCustomUnit) && s.installMinPrice > 0 && installQtyVal > 0) installCost = Math.max(installCost, s.installMinPrice);
+        const installQtyLabel = s.installPerSqFt?`${installQtyVal} sqft`:(s.installPerFt?`${installQtyVal} ft`:(s.installCustomUnit?`${installQtyVal} ${s.installCustomUnit}`:(installQtyVal>1?`× ${installQtyVal}`:'')));
         specTotal += installCost;
         lines.push({label:installQtyLabel?`${s.label} (${installQtyLabel}) — Install`:`${s.label} — Install`,cost:Math.round(installCost)});
       });
