@@ -3098,7 +3098,7 @@ window.logoutMember = async function () {
         align-items:end;
       }
       #midasquote-dashboard #mq-page-specialty #mq-spec-table-wrap{
-        background:#fff!important;border:1px solid #e5eaf1!important;
+        background:#dde1e6!important;border:1px solid #e5eaf1!important;
         border-top:0!important;border-radius:0 0 16px 16px!important;
         padding:0 12px 12px!important;
         max-width:100%;
