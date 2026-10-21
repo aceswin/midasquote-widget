@@ -1604,6 +1604,7 @@ window.logoutMember = async function () {
             <button type="button" class="mq-major-tab active" data-group="overview" onclick="mqSwitchNavGroup('overview')">⌂ &nbsp; Overview</button>
             <button type="button" class="mq-major-tab" data-group="setup" onclick="mqSwitchNavGroup('setup')">⚙ &nbsp; Set up estimator</button>
             <button type="button" class="mq-major-tab" data-group="leads" onclick="mqSwitchNavGroup('leads')">♙ &nbsp; Leads &amp; quotes</button>
+            <button type="button" class="mq-major-tab" data-group="pro" onclick="mqSwitchNavGroup('pro')">⚡ &nbsp; MidasQuote Pro</button>
             <button type="button" class="mq-major-tab" data-group="marketing" onclick="mqSwitchNavGroup('marketing')">✦ &nbsp; Marketing</button>
             <button type="button" class="mq-major-tab" data-group="account" onclick="mqSwitchNavGroup('account')">◉ &nbsp; Account &amp; help</button>
           </div>
@@ -1618,6 +1619,7 @@ window.logoutMember = async function () {
             <div class="mq-nav-item" data-mq-group="setup" onclick="mqNav('embed',this)"><span class="mq-nav-step">7</span> Embed code</div>
             <div class="mq-nav-item" data-mq-group="leads" onclick="mqNav('leads',this)">👥 &nbsp; Leads</div>
             <div class="mq-nav-item" data-mq-group="leads" onclick="mqNav('proposals',this)">📄 &nbsp; Proposals</div>
+            <div class="mq-nav-item" data-mq-group="pro" id="mq-nav-pro" onclick="mqNav('pro',this)">⚡ &nbsp; MidasQuote Pro</div>
             <div class="mq-nav-item" data-mq-group="marketing" onclick="mqNav('marketing',this)">🎨 &nbsp; Design Studio</div>
             <div class="mq-nav-item" data-mq-group="account" onclick="mqNav('billing',this)">💳 &nbsp; My account</div>
             <div class="mq-nav-item${showHelpGuideNudge ? ' mq-nav-item-nudge' : ''}" data-mq-group="account" id="mq-nav-helpguide" onclick="mqNav('helpguide',this)">📖 &nbsp; Help guide</div>
@@ -2275,6 +2277,82 @@ window.logoutMember = async function () {
               </div>
             </div>
 
+          </div>
+
+          <!-- MIDASQUOTE PRO (Oct 2026) — explains what Pro is for and how to
+               set up shop-only items/projects. Styles: the "MidasQuote Pro
+               page" block in the stylesheet (#mq-page-pro .mqp-*). -->
+          <div class="mq-page" id="mq-page-pro">
+            <div class="mqp-wrap">
+              <section class="mqp-hero">
+                <div class="mqp-eyebrow">⚡ MidasQuote Pro</div>
+                <h2 class="mqp-h2">Your quoting tool, with the real numbers.</h2>
+                <p class="mqp-lead">The same estimator your customers use, built for the shop. It shows the exact price behind every line, updates as you type, and turns any quote into a proposal in one click.</p>
+                <div class="mqp-actions">
+                  <a class="mqp-btn mqp-btn-gold" href="https://widget.midasquote.com/pro.html?shop=${token}" target="_blank" rel="noopener">Open MidasQuote Pro ↗</a>
+                  <button type="button" class="mqp-btn mqp-btn-ghost" onclick="mqCopyText('https://widget.midasquote.com/pro.html?shop=${token}',this)">Copy link</button>
+                </div>
+                <div class="mqp-meta">
+                  <span>Real totals on every line</span><span>Live as you type</span><span>Proposals in one click</span><span>Email yourself a copy</span>
+                </div>
+              </section>
+
+              <div class="mqp-section-label">Quote the whole job, not just the ballpark</div>
+              <div class="mqp-grid">
+                <div class="mqp-card">
+                  <div class="mqp-icon">🧰</div>
+                  <h3>Add the extras customers miss</h3>
+                  <p>Use <strong>Specialty items</strong> for the things a homeowner wouldn't put in a ballpark: finished ends, fillers and scribes, hourly labour, site visits, disposal. Price them flat, per linear foot or per square foot.</p>
+                  <p class="mqp-tip"><strong>Hourly work:</strong> make a flat-rate item priced per hour, then enter the hours as the quantity.</p>
+                </div>
+                <div class="mqp-card">
+                  <div class="mqp-icon">📐</div>
+                  <h3>Side splashes and returns are built in</h3>
+                  <p>No extra items needed. Enter <strong>side splashes</strong> in the backsplash step, and <strong>crown and valance returns</strong> right in the crown and valance step. Pro prices them into the quote for you.</p>
+                </div>
+                <div class="mqp-card">
+                  <div class="mqp-icon">🔒</div>
+                  <h3>Keep any item or project to yourself</h3>
+                  <p>Anything can be <strong>Pro only</strong>. It shows in MidasQuote Pro and stays hidden from the estimator on your website.</p>
+                  <ul class="mqp-list">
+                    <li><span>Specialty items</span> tick <em>Pro only?</em></li>
+                    <li><span>Project types</span> set <em>Visibility</em> to <em>Only show in MidasQuote Pro</em></li>
+                  </ul>
+                </div>
+              </div>
+
+              <div class="mqp-section-label">Set it up in two minutes</div>
+              <div class="mqp-steps">
+                <div class="mqp-step">
+                  <div class="mqp-num">1</div>
+                  <div class="mqp-step-body">
+                    <h4>Add your shop-only extras</h4>
+                    <p>Create the item in Specialty items, then tick <em>Pro only?</em> so customers never see it.</p>
+                  </div>
+                  <button type="button" class="mqp-btn mqp-btn-line" onclick="mqProGoTo('specialty')">Specialty items →</button>
+                </div>
+                <div class="mqp-step">
+                  <div class="mqp-num">2</div>
+                  <div class="mqp-step-body">
+                    <h4>Add projects you only quote yourself</h4>
+                    <p>Commercial work, service calls, warranty jobs. Create the project type and set its <em>Visibility</em> to Pro only.</p>
+                  </div>
+                  <button type="button" class="mqp-btn mqp-btn-line" onclick="mqProGoTo('rooms')">Project types →</button>
+                </div>
+                <div class="mqp-step">
+                  <div class="mqp-num">3</div>
+                  <div class="mqp-step-body">
+                    <h4>Keep it one tap away</h4>
+                    <p>Add Pro to your phone or laptop home screen so it opens like an app.</p>
+                  </div>
+                  <button type="button" class="mqp-btn mqp-btn-line" onclick="var d=document.getElementById('mqp-homescreen');d.open=!d.open;if(d.open)d.scrollIntoView({behavior:'smooth',block:'nearest'})">Show me how</button>
+                </div>
+              </div>
+              <details class="mqp-details" id="mqp-homescreen">
+                <summary>Add MidasQuote Pro to your home screen</summary>
+                <div class="mqp-details-body">${mqAddToHomescreenInstructionsHTML()}</div>
+              </details>
+            </div>
           </div>
 
           <!-- MY PRODUCTS -->
@@ -3000,7 +3078,58 @@ window.logoutMember = async function () {
       #midasquote-dashboard .mq-top-navigation[data-mq-group="setup"] .mq-nav-item[data-mq-group="setup"],
       #midasquote-dashboard .mq-top-navigation[data-mq-group="leads"] .mq-nav-item[data-mq-group="leads"],
       #midasquote-dashboard .mq-top-navigation[data-mq-group="marketing"] .mq-nav-item[data-mq-group="marketing"],
+      #midasquote-dashboard .mq-top-navigation[data-mq-group="pro"] .mq-nav-item[data-mq-group="pro"],
       #midasquote-dashboard .mq-top-navigation[data-mq-group="account"] .mq-nav-item[data-mq-group="account"]{display:flex!important}
+
+      /* ── MidasQuote Pro page (Oct 2026) ── hairline, compact, scoped to #mq-page-pro */
+      #midasquote-dashboard #mq-page-pro h2,#midasquote-dashboard #mq-page-pro h3,#midasquote-dashboard #mq-page-pro h4{font-family:inherit!important;text-transform:none}
+      #midasquote-dashboard #mq-page-pro .mqp-wrap{max-width:960px;margin:0 auto!important}
+      #midasquote-dashboard #mq-page-pro .mqp-hero{position:relative;overflow:hidden;background:linear-gradient(135deg,#0f2a52 0%,#16345f 60%,#1e3a5f 100%);color:#fff;border-radius:16px;padding:30px 32px 24px!important;border:1px solid rgba(251,191,36,.35);box-shadow:0 10px 30px rgba(15,42,82,.16)}
+      #midasquote-dashboard #mq-page-pro .mqp-hero::after{content:'';position:absolute;right:-60px;top:-60px;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(251,191,36,.18),transparent 70%);pointer-events:none}
+      #midasquote-dashboard #mq-page-pro .mqp-eyebrow{font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#fbbf24;margin:0 0 10px!important}
+      #midasquote-dashboard #mq-page-pro .mqp-h2{font-size:26px;line-height:1.2;font-weight:800;letter-spacing:-.015em;color:#fff;margin:0 0 10px!important;max-width:560px}
+      #midasquote-dashboard #mq-page-pro .mqp-lead{font-size:14.5px;line-height:1.65;color:#cbd5e1;margin:0 0 20px!important;max-width:600px}
+      #midasquote-dashboard #mq-page-pro .mqp-actions{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px!important}
+      #midasquote-dashboard #mq-page-pro .mqp-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;font-family:inherit;font-size:13px;font-weight:700;border-radius:9px;padding:10px 16px!important;cursor:pointer;text-decoration:none;white-space:nowrap;transition:background .15s,border-color .15s,opacity .15s}
+      #midasquote-dashboard #mq-page-pro .mqp-btn-gold{background:#fbbf24;color:#0f2a52;border:1px solid #fbbf24}
+      #midasquote-dashboard #mq-page-pro .mqp-btn-gold:hover{opacity:.9}
+      #midasquote-dashboard #mq-page-pro .mqp-btn-ghost{background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.25)}
+      #midasquote-dashboard #mq-page-pro .mqp-btn-ghost:hover{background:rgba(255,255,255,.14)}
+      #midasquote-dashboard #mq-page-pro .mqp-btn-line{background:#fff;color:#0f2a52;border:1px solid #dfe4e7;padding:8px 13px!important;font-size:12.5px}
+      #midasquote-dashboard #mq-page-pro .mqp-btn-line:hover{border-color:#0f2a52}
+      #midasquote-dashboard #mq-page-pro .mqp-meta{display:flex;flex-wrap:wrap;gap:6px 18px;padding-top:16px!important;border-top:1px solid rgba(255,255,255,.12);font-size:12px;color:#94a3b8}
+      #midasquote-dashboard #mq-page-pro .mqp-meta span::before{content:'✓';color:#fbbf24;font-weight:800;margin-right:6px!important}
+      #midasquote-dashboard #mq-page-pro .mqp-section-label{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#6b7280;margin:28px 2px 10px!important}
+      #midasquote-dashboard #mq-page-pro .mqp-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+      #midasquote-dashboard #mq-page-pro .mqp-card{background:#fff;border:1px solid #dfe4e7;border-radius:14px;padding:18px 18px 16px!important;box-shadow:0 2px 8px rgba(17,24,39,.03)}
+      #midasquote-dashboard #mq-page-pro .mqp-icon{width:34px;height:34px;border-radius:9px;background:#fff7e3;border:1px solid #f1dca3;display:flex;align-items:center;justify-content:center;font-size:17px;margin-bottom:12px!important}
+      #midasquote-dashboard #mq-page-pro .mqp-card h3{font-size:14.5px;line-height:1.35;font-weight:750;color:#111;margin:0 0 8px!important}
+      #midasquote-dashboard #mq-page-pro .mqp-card p{font-size:13px;line-height:1.6;color:#4b5563;margin:0!important}
+      #midasquote-dashboard #mq-page-pro .mqp-card strong{color:#111;font-weight:650}
+      #midasquote-dashboard #mq-page-pro .mqp-card p.mqp-tip{margin-top:10px!important;padding:9px 11px!important;background:#f8fafc;border:1px solid #e5e9ee;border-radius:9px;font-size:12.5px!important}
+      #midasquote-dashboard #mq-page-pro .mqp-list{list-style:none;padding:0!important;margin:12px 0 0!important;display:flex;flex-direction:column;gap:6px}
+      #midasquote-dashboard #mq-page-pro .mqp-list li{font-size:12.5px;line-height:1.5;color:#4b5563;padding:8px 10px!important;background:#f8fafc;border:1px solid #e5e9ee;border-radius:9px}
+      #midasquote-dashboard #mq-page-pro .mqp-list li span{display:block;font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#0f2a52;margin-bottom:1px!important}
+      #midasquote-dashboard #mq-page-pro em{font-style:normal;font-weight:650;color:#111}
+      #midasquote-dashboard #mq-page-pro .mqp-steps{background:#fff;border:1px solid #dfe4e7;border-radius:14px;overflow:hidden}
+      #midasquote-dashboard #mq-page-pro .mqp-step{display:flex;align-items:center;gap:14px;padding:15px 18px!important}
+      #midasquote-dashboard #mq-page-pro .mqp-step + .mqp-step{border-top:1px solid #eef1f4}
+      #midasquote-dashboard #mq-page-pro .mqp-num{flex:none;width:26px;height:26px;border-radius:50%;background:#0f2a52;color:#fbbf24;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center}
+      #midasquote-dashboard #mq-page-pro .mqp-step-body{flex:1;min-width:0}
+      #midasquote-dashboard #mq-page-pro .mqp-step h4{font-size:13.5px;font-weight:750;color:#111;margin:0 0 2px!important}
+      #midasquote-dashboard #mq-page-pro .mqp-step p{font-size:12.5px;line-height:1.5;color:#6b7280;margin:0!important}
+      #midasquote-dashboard #mq-page-pro .mqp-details{margin-top:12px!important;background:#fff;border:1px solid #dfe4e7;border-radius:14px}
+      #midasquote-dashboard #mq-page-pro .mqp-details summary{cursor:pointer;padding:14px 18px!important;font-size:13px;font-weight:700;color:#111;list-style-position:inside}
+      #midasquote-dashboard #mq-page-pro .mqp-details-body{padding:0 18px 18px!important}
+      @media(max-width:860px){#midasquote-dashboard #mq-page-pro .mqp-grid{grid-template-columns:1fr}}
+      @media(max-width:600px){
+        #midasquote-dashboard #mq-page-pro .mqp-hero{padding:22px 18px 18px!important;border-radius:14px}
+        #midasquote-dashboard #mq-page-pro .mqp-h2{font-size:21px}
+        #midasquote-dashboard #mq-page-pro .mqp-actions .mqp-btn{flex:1}
+        #midasquote-dashboard #mq-page-pro .mqp-step{flex-wrap:wrap;align-items:flex-start}
+        #midasquote-dashboard #mq-page-pro .mqp-step-body{flex:1 1 calc(100% - 40px)}
+        #midasquote-dashboard #mq-page-pro .mqp-step .mqp-btn-line{margin-left:40px!important}
+      }
       #midasquote-dashboard .mq-top-navigation .mq-nav-item[style*="display:none"]{display:none!important}
       #midasquote-dashboard .mq-top-navigation .mq-nav-item:hover{background:#f5f6f7;color:#151515}
       #midasquote-dashboard .mq-top-navigation .mq-nav-item.active{background:#171717;border-color:#171717;color:#fff}
@@ -3023,7 +3152,7 @@ window.logoutMember = async function () {
       @media(max-width:720px){#midasquote-dashboard #mq-page-pricing .mq-pricing-intro{padding-right:0;padding-top:46px}#midasquote-dashboard #mq-page-pricing .mq-pricing-hardware-note{padding:14px;gap:10px}#midasquote-dashboard #mq-page-pricing .mq-pricing-hardware-icon{width:30px;height:30px}}
 
       /* Premium usability refresh v3 — tighter hierarchy, calmer surfaces, and content-sized work areas. */
-      #midasquote-dashboard{background:linear-gradient(180deg,#f8fafc 0px,#9cb2c6 850px) fixed!important;color:#0f172a}
+      #midasquote-dashboard{background:linear-gradient(180deg,#f8fafc 0px,#758696 850px) fixed!important;color:#0f172a}
       #midasquote-dashboard .mq-topbar{background:linear-gradient(90deg,#101217 0%,#151922 60%,#0f1117 100%)!important;border-bottom:1px solid rgba(212,175,55,.18)!important;box-shadow:0 10px 28px rgba(15,23,42,.18)}
       #midasquote-dashboard .mq-topbar-brand{font-size:24px;font-weight:800;letter-spacing:-0.02em}
       #midasquote-dashboard .mq-topbar-shop{font-size:13px;color:#c1cad7}
@@ -3043,7 +3172,7 @@ window.logoutMember = async function () {
       #midasquote-dashboard .mq-top-navigation .mq-nav-item.active .mq-nav-step{background:#f7d36e!important;color:#111827!important;border-color:#f7d36e!important}
       #midasquote-dashboard .mq-content{max-width:1560px!important;padding:30px clamp(16px,2.8vw,34px) 64px!important}
       /* Same gradient behind every tab, with each page transparent so it remains visible. */
-      #midasquote-dashboard .mq-content{background:linear-gradient(180deg,#f8fafc 0px,#9cb2c6 850px) fixed!important;min-height:calc(100vh - 60px);}
+      #midasquote-dashboard .mq-content{background:linear-gradient(180deg,#f8fafc 0px,#758696 850px) fixed!important;min-height:calc(100vh - 60px);}
       #midasquote-dashboard .mq-content > .mq-page{background:transparent!important;}
 
       /* Leads & Specialty use full-page table wrapper cards; let the shared gradient
@@ -3133,6 +3262,8 @@ window.logoutMember = async function () {
       #midasquote-dashboard .mq-btn{border-radius:12px!important;padding:9px 14px!important;font-weight:700!important;border-color:#d8e0ea!important;background:#fff!important;box-shadow:0 1px 2px rgba(15,23,42,.03)}
       #midasquote-dashboard .mq-btn:hover{background:#f8fafc!important}
       #midasquote-dashboard .mq-btn-primary{background:linear-gradient(180deg,#151820 0%,#0f1116 100%)!important;border-color:#151820!important;color:#fff!important;box-shadow:0 10px 24px rgba(15,23,42,.16)!important}
+      /* Primary (dark) buttons pick up the light .mq-btn:hover background above, so their white text vanished on hover — switch it to dark instead (Oct 2026). */
+      #midasquote-dashboard .mq-btn-primary:hover{color:#0f172a!important}
       #midasquote-dashboard .mq-btn-danger{border-color:#fecaca!important;background:#fff!important;color:#dc2626!important}
       #midasquote-dashboard input[type=text],#midasquote-dashboard input[type=email],#midasquote-dashboard input[type=tel],#midasquote-dashboard input[type=number],#midasquote-dashboard input[type=url],#midasquote-dashboard select,#midasquote-dashboard textarea{border-radius:12px!important;border-color:#d7dde6!important;padding:10px 12px!important;background:#fff!important;box-shadow:inset 0 1px 2px rgba(15,23,42,.02)}
       #midasquote-dashboard input:focus,#midasquote-dashboard select:focus,#midasquote-dashboard textarea:focus{border-color:#d4af37!important;box-shadow:0 0 0 4px rgba(212,175,55,.12)!important}
@@ -3968,6 +4099,11 @@ window.logoutMember = async function () {
       const first = wrapper.querySelector('.mq-nav-item[data-mq-group="' + group + '"]:not([style*="display:none"])');
       if (first) first.click();
     }
+  };
+  // MidasQuote Pro page's "Specialty items →" / "Project types →" buttons.
+  window.mqProGoTo = function(page) {
+    const item = document.querySelector(`#midasquote-dashboard .mq-nav-item[onclick^="mqNav('${page}'"]`);
+    if (item) { item.click(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
   };
   window.mqNav = function(page, el) {
     document.querySelectorAll('#midasquote-dashboard .mq-nav-item').forEach(i => i.classList.remove('active'));
