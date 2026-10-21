@@ -851,6 +851,50 @@
         .mq-lightbox-nav-left{left:8px}
         .mq-lightbox-nav-right{right:8px}
       }
+      /* ── Desktop "app" layout (Oct 2026) ──────────────────────────────
+         At 1100px and wider Pro fills the window like quoting software:
+         banner / shop header / tabs run full width across the top, the
+         quote form is the left column, and the live-price bar
+         (#mq-sticky-bar — the SAME element, ids and buttons, just moved
+         into #mq-pro-aside by mqProLayout()) becomes a pinned "Live quote"
+         panel on the right with its breakdown always open. Below 1100px
+         none of this applies: the aside is hidden, the bar lives on
+         <body> at the bottom of the screen exactly as before. */
+      #mq-pro-aside{display:none}
+      @media (min-width:1100px){
+        #midasquote-widget{max-width:1760px;width:100%;margin:0 auto;border-radius:0;box-shadow:none;overflow:visible;background:#f3f5f9;min-height:100vh;display:grid;grid-template-columns:minmax(0,1fr) clamp(330px,26vw,400px);column-gap:0;align-items:start}
+        #midasquote-widget > *{grid-column:1 / -1}
+        #midasquote-widget > .mq-tab-content{grid-column:1;padding:20px 20px 40px 24px}
+        #midasquote-widget > .mq-header{background:#fff;padding:0.85rem 24px}
+        #midasquote-widget > .mq-powered-by{background:#fff;margin:0!important;padding:0 0 8px!important}
+        /* Right padding = the aside's width, so the tabs line up with the form column below. */
+        #midasquote-widget > .mq-tab-bar{padding:10px calc(clamp(330px,26vw,400px) + 20px) 10px 24px;background:#fff}
+        #mq-pro-aside{display:block;grid-column:2;position:sticky;top:0;padding:20px 24px 20px 0;max-height:100vh;overflow-y:auto;overscroll-behavior:contain}
+        #mq-pro-aside .mq-pro-aside-eyebrow{font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#64748b;margin:0 0 8px 2px}
+        #mq-pro-aside .mq-pro-aside-empty{background:#fff;border:1px dashed #cbd5e1;border-radius:12px;padding:28px 20px;text-align:center;color:#64748b;font-size:13.5px;line-height:1.55}
+        #mq-pro-aside .mq-pro-aside-empty b{display:block;color:#0f2a52;font-size:15px;margin-bottom:4px}
+        #mq-pro-aside:has(#mq-sticky-bar.show) .mq-pro-aside-empty{display:none}
+        #mq-pro-aside #mq-sticky-bar{position:static;display:none;animation:none;border:1px solid rgba(251,191,36,0.55);border-radius:14px;padding:16px 18px 14px;box-shadow:0 10px 30px rgba(15,42,82,0.22)}
+        #mq-pro-aside #mq-sticky-bar.show{display:block}
+        /* Reorder for a side panel: price, breakdown, then buttons. */
+        #mq-pro-aside #mq-sticky-inner{max-width:none;display:flex;flex-direction:column}
+        #mq-pro-aside #mq-sticky-main{display:contents}
+        #mq-pro-aside #mq-sticky-content{order:1}
+        #mq-pro-aside #mq-sticky-breakdown{order:2}
+        #mq-pro-aside #mq-sticky-ctas{margin-top:14px}
+        #mq-pro-aside #mq-sticky-financing{order:4}
+        #mq-pro-aside #mq-sticky-label{white-space:normal;font-size:12.5px;color:#cbd5e1;font-weight:500}
+        #mq-pro-aside #mq-sticky-breakdown-toggle{display:none!important}
+        #mq-pro-aside #mq-sticky-price{font-size:26px;display:inline-block!important}
+        #mq-pro-aside #mq-sticky-bar:has(#mq-sticky-breakdown:not(:empty)) #mq-sticky-price{display:none!important}
+        #mq-pro-aside #mq-sticky-real{display:block;margin:6px 0 2px!important;font-size:18px!important;font-weight:800!important;letter-spacing:-0.01em}
+        #mq-pro-aside #mq-sticky-real-val{color:#fff}
+        #mq-pro-aside #mq-sticky-breakdown{display:block!important;padding:4px 0 0!important;margin-top:10px;border-top:1px solid rgba(255,255,255,0.14);font-size:13px}
+        #mq-pro-aside #mq-sticky-breakdown:empty{display:none!important}
+        #mq-pro-aside #mq-sticky-ctas{flex-direction:column;gap:8px;order:3}
+        #mq-pro-aside #mq-sticky-ctas button{width:100%;padding:10px 12px;font-size:13px}
+        #mq-pro-aside #mq-sticky-ctas button.mq-pri{background:#fbbf24!important;color:#0f2a52!important;border-color:transparent!important}
+      }
     `;
     document.head.appendChild(s);
   }
@@ -7648,8 +7692,10 @@
     buildCTMAT(data);
     buildTRIM(data);
     buildTALLCAB(data);
+    mqProParkStickyBar();
     container.innerHTML = buildWidgetHTML(shop, specs, data);
     wireWidget(data);
+    mqProLayout();
     // Fresh estimate — nothing calculated yet, so hide any leftover sticky
     // bar from before and let it re-earn its spot once they Calculate again.
     window._mqStickyPrefix = null;
@@ -7858,6 +7904,48 @@
       </div>`;
     document.body.appendChild(bar);
     window.addEventListener('resize', mqAdjustWidgetBottomPadding);
+    mqProLayout();
+  }
+  // Desktop "app" layout (see the matching CSS block at the end of
+  // injectStyles). Makes sure the widget has its right-hand
+  // #mq-pro-aside column, and puts the ONE live-price bar where it belongs
+  // for the current screen width: inside the aside on desktop (1100px+),
+  // back on <body> (bottom of the screen) below that. Only ever MOVES the
+  // existing #mq-sticky-bar node — never copies it — so every
+  // getElementById('mq-sticky-...') call elsewhere keeps working unchanged.
+  // Safe to call any number of times.
+  var MQ_PRO_DESKTOP_MQ = window.matchMedia ? window.matchMedia('(min-width:1100px)') : null;
+  function mqProIsDesktop() { return !!(MQ_PRO_DESKTOP_MQ && MQ_PRO_DESKTOP_MQ.matches); }
+  function mqProLayout() {
+    const container = document.getElementById('midasquote-widget');
+    if (!container) return;
+    let aside = document.getElementById('mq-pro-aside');
+    if (!aside || !container.contains(aside)) {
+      aside = document.createElement('aside');
+      aside.id = 'mq-pro-aside';
+      aside.setAttribute('aria-label', 'Live quote');
+      aside.innerHTML = `<div class="mq-pro-aside-eyebrow">Live quote</div>
+        <div class="mq-pro-aside-empty"><b>No numbers yet</b>Pick a project type and hit Calculate. Your live total and breakdown stay pinned here while you work.</div>`;
+      container.appendChild(aside);
+    }
+    const bar = document.getElementById('mq-sticky-bar');
+    if (bar) {
+      const want = mqProIsDesktop() ? aside : document.body;
+      if (bar.parentNode !== want) want.appendChild(bar);
+    }
+    mqAdjustWidgetBottomPadding();
+  }
+  // Before the widget's own HTML gets rebuilt (Start new estimate), park
+  // the bar back on <body> so the rebuild doesn't destroy it along with
+  // the old aside; mqProLayout() moves it back in afterwards.
+  function mqProParkStickyBar() {
+    const bar = document.getElementById('mq-sticky-bar');
+    if (bar && bar.parentNode !== document.body) document.body.appendChild(bar);
+  }
+  if (MQ_PRO_DESKTOP_MQ) {
+    const onChange = () => mqProLayout();
+    if (MQ_PRO_DESKTOP_MQ.addEventListener) MQ_PRO_DESKTOP_MQ.addEventListener('change', onChange);
+    else if (MQ_PRO_DESKTOP_MQ.addListener) MQ_PRO_DESKTOP_MQ.addListener(onChange);
   }
   window.mqToggleStickyBreakdown = function() {
     const panel = document.getElementById('mq-sticky-breakdown');
@@ -7888,7 +7976,9 @@
       if (_mqOrigBodyPaddingBottom === null) {
         _mqOrigBodyPaddingBottom = document.body.style.paddingBottom || '';
       }
-      if (bar && bar.classList.contains('show')) {
+      // In the desktop side panel the bar isn't covering anything at the
+      // bottom of the page, so no extra padding is needed there.
+      if (bar && bar.classList.contains('show') && !bar.closest('#mq-pro-aside')) {
         document.body.style.paddingBottom = (bar.offsetHeight + 24) + 'px';
       } else {
         document.body.style.paddingBottom = _mqOrigBodyPaddingBottom;
