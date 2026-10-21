@@ -3023,7 +3023,7 @@ window.logoutMember = async function () {
       @media(max-width:720px){#midasquote-dashboard #mq-page-pricing .mq-pricing-intro{padding-right:0;padding-top:46px}#midasquote-dashboard #mq-page-pricing .mq-pricing-hardware-note{padding:14px;gap:10px}#midasquote-dashboard #mq-page-pricing .mq-pricing-hardware-icon{width:30px;height:30px}}
 
       /* Premium usability refresh v3 — tighter hierarchy, calmer surfaces, and content-sized work areas. */
-      #midasquote-dashboard{background:linear-gradient(180deg,#f8fafc 0px,#758696 850px) fixed!important;color:#0f172a}
+      #midasquote-dashboard{background:linear-gradient(180deg,#f8fafc 0px,#9cb2c6 850px) fixed!important;color:#0f172a}
       #midasquote-dashboard .mq-topbar{background:linear-gradient(90deg,#101217 0%,#151922 60%,#0f1117 100%)!important;border-bottom:1px solid rgba(212,175,55,.18)!important;box-shadow:0 10px 28px rgba(15,23,42,.18)}
       #midasquote-dashboard .mq-topbar-brand{font-size:24px;font-weight:800;letter-spacing:-0.02em}
       #midasquote-dashboard .mq-topbar-shop{font-size:13px;color:#c1cad7}
@@ -3043,7 +3043,7 @@ window.logoutMember = async function () {
       #midasquote-dashboard .mq-top-navigation .mq-nav-item.active .mq-nav-step{background:#f7d36e!important;color:#111827!important;border-color:#f7d36e!important}
       #midasquote-dashboard .mq-content{max-width:1560px!important;padding:30px clamp(16px,2.8vw,34px) 64px!important}
       /* Same gradient behind every tab, with each page transparent so it remains visible. */
-      #midasquote-dashboard .mq-content{background:linear-gradient(180deg,#f8fafc 0px,#758696 850px) fixed!important;min-height:calc(100vh - 60px);}
+      #midasquote-dashboard .mq-content{background:linear-gradient(180deg,#f8fafc 0px,#9cb2c6 850px) fixed!important;min-height:calc(100vh - 60px);}
       #midasquote-dashboard .mq-content > .mq-page{background:transparent!important;}
 
       /* Leads & Specialty use full-page table wrapper cards; let the shared gradient
