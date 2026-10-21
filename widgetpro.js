@@ -5421,6 +5421,32 @@
 
     // Clears the whole running quote and resets every tab's form back to
     // its starting state, so the customer can start completely over.
+    // Clears every specialty item on one tab: quantities (every variant),
+    // the selected card highlight, supply/install mode, install quantity,
+    // and the chosen variant. Same steps mqOnProjectTypeChange already runs
+    // on a project-type switch — Reset quote (and widget.js's "clear this
+    // project") never did, so specialty items silently survived a reset
+    // and came straight back into the next estimate (Oct 2026).
+    function mqResetSpecItems(prefix) {
+      if (!specQty[prefix]) return;
+      Object.keys(specQty[prefix]).forEach(i => {
+        mqSpecQtyResetAll(prefix, i);
+        const qtyInput = document.getElementById(`mq-qty-${prefix}-${i}`);
+        if (qtyInput) qtyInput.value = 0;
+        document.getElementById(`mq-sp-${prefix}-${i}`)?.classList.remove('on');
+        mqUpdateSpecVariantBadge(prefix, i);
+        const modeSel = document.getElementById(`mq-spec-mode-${prefix}-${i}`);
+        if (modeSel) modeSel.selectedIndex = 0;
+        if (installQty[prefix]) installQty[prefix][i] = 0;
+        const installQtyInput = document.getElementById(`mq-installqty-${prefix}-${i}`);
+        if (installQtyInput) installQtyInput.value = 0;
+        const installQtyRow = document.getElementById(`mq-spec-installqty-${prefix}-${i}`);
+        if (installQtyRow) installQtyRow.style.display = 'none';
+        if (specVariant[prefix] && specVariant[prefix][i] !== 0 && specs[i] && specs[i].variants && specs[i].variants.length) {
+          window.mqPickSpecVariant(prefix, i, 0);
+        }
+      });
+    }
     window.mqResetEntireQuote = function() {
       if ((window._mqQuoteCart||[]).length && !confirm('Clear your whole quote and start over?')) return;
       window._mqQuoteCart = [];
@@ -5429,6 +5455,7 @@
       mqResetCabinetForm('c');
       mqResetCabinetForm('b');
       mqResetCountertopStandalone('ct');
+      ['c','b','ct'].forEach(mqResetSpecItems);
       // Hide every tab's already-calculated result panel too -- resetting
       // the form fields above doesn't do this on its own, so without this
       // a tab that had a result showing before "Reset quote" was clicked
