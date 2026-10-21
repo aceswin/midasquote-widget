@@ -851,49 +851,85 @@
         .mq-lightbox-nav-left{left:8px}
         .mq-lightbox-nav-right{right:8px}
       }
-      /* ── Desktop "app" layout (Oct 2026) ──────────────────────────────
-         At 1100px and wider Pro fills the window like quoting software:
-         banner / shop header / tabs run full width across the top, the
-         quote form is the left column, and the live-price bar
-         (#mq-sticky-bar — the SAME element, ids and buttons, just moved
-         into #mq-pro-aside by mqProLayout()) becomes a pinned "Live quote"
-         panel on the right with its breakdown always open. Below 1100px
-         none of this applies: the aside is hidden, the bar lives on
-         <body> at the bottom of the screen exactly as before. */
+      /* ── Desktop "app" layout (Oct 2026, v2) ──────────────────────────
+         mqProLayout() wraps the widget's own top-level pieces ONCE after
+         every render:
+           #mq-pro-topbar    = the navy banner + the shop header
+           #mq-pro-workspace = #mq-pro-main (tabs + forms) + #mq-pro-aside
+         Below 1100px every wrapper is display:contents and the aside is
+         hidden, so phones/tablets lay out exactly as they always have.
+         At 1100px+ it's a slim navy app bar on top, then a CENTERED
+         workspace (max 1320px): a reading-width form column and the pinned
+         Live quote panel beside it. #mq-sticky-bar is the same element the
+         rest of the file already uses — just moved into the aside. */
+      #mq-pro-topbar,#mq-pro-workspace,#mq-pro-main{display:contents}
+      .mq-pro-divider{display:none}
       #mq-pro-aside{display:none}
-      /* Pro is always live (Oct 2026) — no Calculate buttons. */
+      /* Pro is always live — no Calculate buttons (any screen size). */
       #midasquote-widget #mq-c-calc-btn,#midasquote-widget #mq-ct-calc-btn,#midasquote-widget #mq-b-calc-btn{display:none!important}
       @media (min-width:1100px){
-        #midasquote-widget{max-width:1760px;width:100%;margin:0 auto;border-radius:0;box-shadow:none;overflow:visible;background:#f3f5f9;min-height:100vh;display:grid;grid-template-columns:minmax(0,1fr) clamp(330px,26vw,400px);column-gap:0;align-items:start}
-        #midasquote-widget > *{grid-column:1 / -1}
-        #midasquote-widget > .mq-tab-content{grid-column:1;padding:20px 20px 40px 24px}
-        #midasquote-widget > .mq-header{background:#fff;padding:0.85rem 24px}
-        #midasquote-widget > .mq-powered-by{background:#fff;margin:0!important;padding:0 0 8px!important}
-        /* Right padding = the aside's width, so the tabs line up with the form column below. */
-        #midasquote-widget > .mq-tab-bar{padding:10px calc(clamp(330px,26vw,400px) + 20px) 10px 24px;background:#fff}
-        #mq-pro-aside{display:block;grid-column:2;position:sticky;top:0;padding:20px 24px 20px 0;max-height:100vh;overflow-y:auto;overscroll-behavior:contain}
-        #mq-pro-aside .mq-pro-aside-eyebrow{font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#64748b;margin:0 0 8px 2px}
+        #midasquote-widget{max-width:none;width:100%;margin:0;border-radius:0;box-shadow:none;overflow:visible;background:#f4f6f9;min-height:100vh}
+
+        /* Slim navy app bar */
+        #mq-pro-topbar{display:flex;align-items:center;gap:14px;height:60px;padding:0 max(24px, calc((100% - 1320px) / 2 + 24px));background:linear-gradient(135deg,#0f2a52,#16345f);border-bottom:1px solid rgba(251,191,36,0.35);position:relative;z-index:2}
+        #mq-pro-topbar > #mq-pro-banner,#mq-pro-topbar > .mq-header{display:contents}
+        #mq-pro-banner > div:nth-of-type(1){order:1;font-size:14px!important;letter-spacing:0.12em!important;white-space:nowrap}
+        #mq-pro-banner > div:nth-of-type(2){display:none}
+        #mq-pro-topbar .mq-pro-divider{display:block;order:2;width:1px;height:26px;background:rgba(255,255,255,0.18);flex-shrink:0}
+        #mq-pro-topbar .mq-logo,#mq-pro-topbar .mq-logo-real{order:3;height:36px;width:auto;min-width:36px;max-width:140px;background:#fff;border-radius:8px;padding:3px 8px;box-shadow:none;display:flex;align-items:center;justify-content:center}
+        #mq-pro-topbar .mq-logo{width:36px;padding:0;color:#0f2a52}
+        #mq-pro-topbar .mq-logo-real img{max-height:30px;max-width:124px}
+        #mq-pro-topbar .mq-header > div[style*="flex:1"]{order:4;flex:1;min-width:0}
+        #mq-pro-topbar .mq-shop-name{color:#fff;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        #mq-pro-topbar .mq-shop-sub{color:#94a3b8;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        #mq-pro-topbar .mq-header-actions{order:5;display:flex;gap:8px}
+        #mq-pro-topbar .mq-header-actions > a,#mq-pro-topbar .mq-header-actions > button{background:rgba(255,255,255,0.06)!important;border:1px solid rgba(255,255,255,0.18)!important;box-shadow:none!important;color:#fff!important;font-size:12.5px!important;padding:7px 12px!important;border-radius:8px!important}
+        #mq-pro-topbar .mq-header-actions > a:hover,#mq-pro-topbar .mq-header-actions > button:hover{background:rgba(255,255,255,0.14)!important}
+        #mq-pro-topbar #mq-pro-refresh-btn{order:6;position:static!important;flex-shrink:0;width:34px!important;height:34px!important}
+
+        /* Centered workspace */
+        #mq-pro-workspace{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:24px;align-items:start;max-width:1320px;margin:0 auto;padding:22px 24px 48px}
+        #mq-pro-main{display:block;min-width:0}
+        #mq-pro-main > .mq-powered-by{display:none}
+        #mq-pro-main > .mq-tab-content{padding:0}
+
+        /* Tabs = segmented control */
+        #mq-pro-main > .mq-tab-bar{background:#fff;border:1px solid #e3e8ef;border-radius:12px;padding:4px;gap:4px;margin-bottom:16px}
+        #mq-pro-main .mq-tab{box-shadow:none;border:0;border-radius:9px;padding:8px 12px;background:transparent}
+        #mq-pro-main .mq-tab:hover{background:#f4f6f9}
+        #mq-pro-main .mq-tab.active{background:#0f2a52;color:#fff;box-shadow:0 1px 3px rgba(15,42,82,0.25)}
+        #mq-pro-main .mq-tab-icon{font-size:15px}
+        #mq-pro-main .mq-tab-title{font-size:13.5px;font-weight:600}
+
+        /* Hairline cards */
+        #midasquote-widget .mq-sec{border:1px solid #e3e8ef;border-radius:12px;padding:16px 18px;margin-bottom:12px;box-shadow:0 1px 2px rgba(16,24,40,0.04)}
+        #midasquote-widget .mq-sec.mq-step-current{box-shadow:0 0 0 2px #fbbf24,0 6px 20px rgba(16,24,40,0.08)}
+        #midasquote-widget .mq-sec.mq-step-done{filter:none;opacity:0.85}
+        #midasquote-widget .mq-sec.mq-step-upcoming{filter:none;opacity:0.6}
+        #midasquote-widget .mq-sec.mq-step-upcoming:hover,#midasquote-widget .mq-sec.mq-step-done:hover{opacity:1}
+        #midasquote-widget [id$="-room-desc"] img{max-height:150px!important;width:100%;object-fit:cover}
+
+        /* Live quote panel */
+        #mq-pro-aside{display:block;position:sticky;top:20px;max-height:calc(100vh - 40px);overflow-y:auto;overscroll-behavior:contain}
+        #mq-pro-aside .mq-pro-aside-eyebrow{font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#64748b;margin:2px 0 8px 2px}
         #mq-pro-aside .mq-pro-aside-empty{background:#fff;border:1px dashed #cbd5e1;border-radius:12px;padding:28px 20px;text-align:center;color:#64748b;font-size:13.5px;line-height:1.55}
         #mq-pro-aside .mq-pro-aside-empty b{display:block;color:#0f2a52;font-size:15px;margin-bottom:4px}
         #mq-pro-aside:has(#mq-sticky-bar.show) .mq-pro-aside-empty{display:none}
-        #mq-pro-aside #mq-sticky-bar{position:static;display:none;animation:none;border:1px solid rgba(251,191,36,0.55);border-radius:14px;padding:16px 18px 14px;box-shadow:0 10px 30px rgba(15,42,82,0.22)}
+        #mq-pro-aside #mq-sticky-bar{position:static;display:none;animation:none;border:1px solid rgba(251,191,36,0.45);border-radius:14px;padding:16px 18px;box-shadow:0 10px 30px rgba(15,42,82,0.18)}
         #mq-pro-aside #mq-sticky-bar.show{display:block}
-        /* Reorder for a side panel: price, breakdown, then buttons. */
         #mq-pro-aside #mq-sticky-inner{max-width:none;display:flex;flex-direction:column}
         #mq-pro-aside #mq-sticky-main{display:contents}
         #mq-pro-aside #mq-sticky-content{order:1}
         #mq-pro-aside #mq-sticky-breakdown{order:2}
-        #mq-pro-aside #mq-sticky-ctas{margin-top:14px}
+        #mq-pro-aside #mq-sticky-ctas{order:3;flex-direction:column;gap:8px;margin-top:14px}
         #mq-pro-aside #mq-sticky-financing{order:4}
-        #mq-pro-aside #mq-sticky-label{white-space:normal;font-size:12.5px;color:#cbd5e1;font-weight:500}
-        #mq-pro-aside #mq-sticky-breakdown-toggle{display:none!important}
-        #mq-pro-aside #mq-sticky-price{font-size:26px;display:inline-block!important}
+        #mq-pro-aside #mq-sticky-label-row{display:none}
+        #mq-pro-aside #mq-sticky-price{font-size:24px;display:inline-block!important}
         #mq-pro-aside #mq-sticky-bar:has(#mq-sticky-breakdown:not(:empty)) #mq-sticky-price{display:none!important}
-        #mq-pro-aside #mq-sticky-real{display:block;margin:6px 0 2px!important;font-size:18px!important;font-weight:800!important;letter-spacing:-0.01em}
+        #mq-pro-aside #mq-sticky-real{display:block;margin:0 0 2px!important;font-size:22px!important;font-weight:800!important;letter-spacing:-0.01em}
         #mq-pro-aside #mq-sticky-real-val{color:#fff}
-        #mq-pro-aside #mq-sticky-breakdown{display:block!important;padding:4px 0 0!important;margin-top:10px;border-top:1px solid rgba(255,255,255,0.14);font-size:13px}
+        #mq-pro-aside #mq-sticky-breakdown{display:block!important;padding:4px 0 0!important;margin-top:12px;border-top:1px solid rgba(255,255,255,0.14);font-size:13px}
         #mq-pro-aside #mq-sticky-breakdown:empty{display:none!important}
-        #mq-pro-aside #mq-sticky-ctas{flex-direction:column;gap:8px;order:3}
         #mq-pro-aside #mq-sticky-ctas button{width:100%;padding:10px 12px;font-size:13px}
         #mq-pro-aside #mq-sticky-ctas button.mq-pri{background:#fbbf24!important;color:#0f2a52!important;border-color:transparent!important}
       }
@@ -7923,12 +7959,10 @@
               <button id="mq-sticky-breakdown-toggle" onclick="mqToggleStickyBreakdown()" aria-label="Show price breakdown" style="display:none;align-items:center;justify-content:center;width:26px;height:26px;flex-shrink:0;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.5);border-radius:6px;color:#fff;font-size:16px;line-height:1;cursor:pointer;font-family:inherit;padding:0">▾</button>
             </div>
             <div id="mq-sticky-price-wrap"><span id="mq-sticky-price">—</span> <span id="mq-sticky-real" style="display:none;font-size:12px;font-weight:700;color:#fbbf24;margin-left:8px;white-space:nowrap">💰 Real: <span id="mq-sticky-real-val">—</span></span></div>
-            <div id="mq-sticky-links-row" style="margin-top:2px"><button id="mq-sticky-email-link" onclick="mqEmailMyQuote()" style="background:none;border:none;padding:0;font-size:11px;font-weight:600;color:rgba(255,255,255,0.65);text-decoration:underline;cursor:pointer;font-family:inherit;vertical-align:middle">📧 Email me a copy</button></div>
           </div>
           <div id="mq-sticky-ctas">
             <button class="mq-pri" id="mq-sticky-proposal-btn" onclick="mqProCreateProposalLive()">📄 Create proposal</button>
-            ${window._mqAskQuestionBtn || `<button onclick="mqShowConsultModal()">Ask a question ↗</button>`}
-            <button onclick="mqShowConsultModal()">Book a consultation ↗</button>
+            <button id="mq-sticky-email-link" onclick="mqEmailMyQuote()">📧 Email me a copy</button>
           </div>
         </div>
         <div id="mq-sticky-breakdown" style="display:none;padding:0 16px 12px;font-size:12.5px;color:rgba(255,255,255,0.9)"></div>
@@ -7953,12 +7987,35 @@
     if (!container) return;
     let aside = document.getElementById('mq-pro-aside');
     if (!aside || !container.contains(aside)) {
+      // Wrap the freshly rendered widget ONCE: banner + shop header into
+      // #mq-pro-topbar, everything else into #mq-pro-main, and main + the
+      // aside into #mq-pro-workspace. Only moves existing nodes (nothing is
+      // re-created), and every wrapper is display:contents below 1100px, so
+      // phones/tablets render exactly as before.
+      const kids = Array.from(container.children);
+      const banner = kids.find(el => el.querySelector && el.querySelector('#mq-pro-refresh-btn'));
+      const header = kids.find(el => el.classList && el.classList.contains('mq-header'));
+      const topbar = document.createElement('div');
+      topbar.id = 'mq-pro-topbar';
+      if (banner) { banner.id = 'mq-pro-banner'; topbar.appendChild(banner); }
+      const divider = document.createElement('span');
+      divider.className = 'mq-pro-divider';
+      topbar.appendChild(divider);
+      if (header) topbar.appendChild(header);
+      const main = document.createElement('div');
+      main.id = 'mq-pro-main';
+      kids.forEach(el => { if (el !== banner && el !== header) main.appendChild(el); });
       aside = document.createElement('aside');
       aside.id = 'mq-pro-aside';
       aside.setAttribute('aria-label', 'Live quote');
       aside.innerHTML = `<div class="mq-pro-aside-eyebrow">Live quote</div>
-        <div class="mq-pro-aside-empty"><b>No numbers yet</b>Pick a project type and hit Calculate. Your live total and breakdown stay pinned here while you work.</div>`;
-      container.appendChild(aside);
+        <div class="mq-pro-aside-empty"><b>No numbers yet</b>Pick a project type and enter your measurements. Your real total and breakdown update here as you work.</div>`;
+      const workspace = document.createElement('div');
+      workspace.id = 'mq-pro-workspace';
+      workspace.appendChild(main);
+      workspace.appendChild(aside);
+      container.appendChild(topbar);
+      container.appendChild(workspace);
     }
     const bar = document.getElementById('mq-sticky-bar');
     if (bar) {
