@@ -5603,7 +5603,7 @@ window.logoutMember = async function () {
   // upload button or a URL field for one of these.
   function mqDemoImageLockedHTML(whatLabel) {
     return `<div style="background:#f9fafb;border:1px dashed #d1d5db;border-radius:8px;padding:10px 12px;font-size:12px;color:#6b7280;line-height:1.6">
-      🔒 Custom ${whatLabel} is a paid feature. Your free Demo always shows MidasQuote's standard library photo here — upgrade from the Account tab to use your own photos or video links.
+      🔒 Custom ${whatLabel} is a paid feature. On the free plan, MidasQuote's standard library photo always shows here — upgrade from the Account tab to use your own photos or video links.
     </div>`;
   }
 
@@ -6185,7 +6185,7 @@ window.logoutMember = async function () {
         msg = `🗓️ You're on the <strong>free trial</strong> — full access. Add a plan any time in the Account tab to keep it.`;
       } else if (mqFreeTrialDaysLeft(expiry) < 0) {
         urgent = true;
-        msg = `🗓️ Your <strong>free trial is ending</strong> — your account moves to the free Demo plan shortly. Pick a plan in the Account tab to keep full access.`;
+        msg = `🗓️ Your <strong>free trial is ending</strong> — you'll move to the free plan shortly. Your estimator stays live on your website; pick a plan in the Account tab to keep photos and MidasQuote Pro.`;
       } else {
         const dateStr = expiry.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
         const daysLeft = mqFreeTrialDaysLeft(expiry);
@@ -6198,7 +6198,7 @@ window.logoutMember = async function () {
     }
     if (plan === 'Demo' && !window._mqDemoBannerDismissed) {
       return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px 16px;flex-wrap:wrap;background:#eff6ff;border:1px solid #bfdbfe;color:#1e3a8a;border-radius:10px;padding:12px 16px;margin-bottom:1.25rem;font-size:13px;line-height:1.5">
-        <span style="flex:1 1 280px">Your <strong>free trial has ended</strong> — you're welcome to stay on the free Demo plan. Want full access again? Pick a plan in the Account tab.</span>
+        <span style="flex:1 1 280px">You're on the <strong>free plan</strong> — your estimator stays live on your website. Upgrade for your own photos, MidasQuote Pro and new showroom uploads.</span>
         <span style="display:flex;align-items:center;gap:10px">${btn('Get full access →')}<button type="button" aria-label="Dismiss" title="Dismiss" onclick="mqDismissDemoBanner()" style="background:none;border:none;color:#1e3a8a;font-size:16px;line-height:1;cursor:pointer;padding:2px 4px">✕</button></span></div>`;
     }
     return '';
@@ -10963,6 +10963,15 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     if (arrow) arrow.style.transform = collapsed ? 'rotate(0deg)' : 'rotate(90deg)';
   };
 
+  // Free plan (stored Plan = 'Demo'): showroom photos are frozen — whatever
+  // was added before the trial ended stays, but no new uploads/URLs until
+  // they upgrade. Same rule My Products already uses. (Oct 2026)
+  function mqIsFreePlanShop() { return (window._mqShopRecord?.fields?.['Plan'] || '') === 'Demo'; }
+  const MQ_SHOWROOM_LOCK_MSG = '🔒 Adding photos is a paid feature. Photos already here stay in your showroom — upgrade from the Account tab to add more.';
+  function mqShowroomLockNoteHTML(compact) {
+    return `<div class="mq-sr-locknote" style="background:#f9fafb;border:1px dashed #d1d5db;border-radius:8px;padding:${compact?'6px 8px':'8px 10px'};font-size:${compact?'10.5':'12'}px;color:#6b7280;line-height:1.45;${compact?'margin-bottom:6px':'display:inline-block;max-width:520px'}">${compact ? '🔒 Photo uploads are a paid feature.' : MQ_SHOWROOM_LOCK_MSG}</div>`;
+  }
+
   function renderShowroomCats() {
     const wrap = el('mq-showroom-cats');
     if (!wrap) return;
@@ -11010,10 +11019,10 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
               ${(cat.items||[]).map(item => mqShowroomItemCardHTML(cat.id, item)).join('') || '<div style="grid-column:1/-1;font-size:12px;color:#9ca3af">No items in this category yet.</div>'}
             </div>
             ${(cat.items||[]).length > 1 ? '<p class="mq-sr-note">Drag any photo\'s ⠿ handle to reorder it.</p>' : ''}
-            <label class="mq-btn mq-btn-sm mq-btn-primary" style="cursor:pointer;display:inline-block">
+            ${mqIsFreePlanShop() ? mqShowroomLockNoteHTML(false) : `<label class="mq-btn mq-btn-sm mq-btn-primary" style="cursor:pointer;display:inline-block">
               📤 Add photos
               <input type="file" accept="image/*" multiple style="display:none" onchange="mqBulkAddShowroomItems('${cat.id}', this.files); this.value=''"/>
-            </label>
+            </label>`}
           </div>
         </div>`;
       }
@@ -11217,7 +11226,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       <div class="mq-showroom-drag-handle" title="Drag to reorder" style="cursor:grab;text-align:center;color:#b0b0b0;font-size:13px;line-height:1;margin:-2px 0 4px;user-select:none">⠿</div>
       ${preview}
       <div style="font-size:12px;font-weight:${hasName?600:400};font-style:${hasName?'normal':'italic'};color:${hasName?'#111':'#9ca3af'};margin-bottom:6px;line-height:1.3">${hasName ? (item.name||'').replace(/</g,'&lt;') : 'Untitled item'}</div>
-      <label class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;margin-bottom:6px;text-align:center;cursor:pointer;display:block;box-sizing:border-box">
+${mqIsFreePlanShop() ? mqShowroomLockNoteHTML(true) : `      <label class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;margin-bottom:6px;text-align:center;cursor:pointer;display:block;box-sizing:border-box">
         📤 ${photo ? 'Replace photo' : 'Upload a photo'}
         <input type="file" id="mq-showroom-upload-${key}" accept="image/*" style="display:none"/>
       </label>
@@ -11225,7 +11234,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       <div style="font-size:10.5px;color:#9ca3af;margin-bottom:3px">Or paste a photo URL</div>
       <input type="text" id="mq-showroom-url-${key}" value="${photo.replace(/"/g,'&quot;')}" placeholder="https://your-site.com/photo.jpg"
         style="font-size:11.5px;padding:5px 7px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:5px"/>
-      <button class="mq-btn mq-btn-sm" style="width:100%;font-size:10.5px;margin-bottom:5px" onclick="mqSaveShowroomItemPhoto('${key}', document.getElementById('mq-showroom-url-${key}').value.trim())">Save photo URL</button>
+      <button class="mq-btn mq-btn-sm" style="width:100%;font-size:10.5px;margin-bottom:5px" onclick="mqSaveShowroomItemPhoto('${key}', document.getElementById('mq-showroom-url-${key}').value.trim())">Save photo URL</button>`}
       <div style="display:flex;gap:4px">
         <button class="mq-btn mq-btn-sm" style="flex:1;white-space:nowrap;font-size:10.5px;padding:4px 2px" onclick="mqRenameShowroomItem('${catId}','${item.id}')">${hasName ? '✏️ Rename' : '✏️ Name'}</button>
         <button class="mq-btn mq-btn-sm" style="flex:1;white-space:nowrap;font-size:10.5px;padding:4px 2px;color:#dc2626" onclick="mqDeleteShowroomItem('${catId}','${item.id}')">Delete</button>
@@ -11290,6 +11299,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const cat = cats.find(c => c.id === catId);
     const shopRec = window._mqShopRecord;
     if (!cat || !shopRec || !fileList || !fileList.length) return;
+    if (mqIsFreePlanShop()) { showMsg('mq-showroom-msg', MQ_SHOWROOM_LOCK_MSG, 'error'); return; }
     const files = Array.from(fileList);
     const shopToken = shopRec.fields['Shop token'] || 'unknown-shop';
 
@@ -11355,6 +11365,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // Fired both by a completed upload (mqWireUploadButton's onDone) and by
   // the "Save photo URL" button for a pasted link — key is "<catId>::<itemId>".
   window.mqSaveShowroomItemPhoto = async function(key, url) {
+    if (mqIsFreePlanShop() && url) { showMsg('mq-showroom-msg', MQ_SHOWROOM_LOCK_MSG, 'error'); return; }
     const [catId, itemId] = key.split('::');
     const cats = window._mqShowroomCats || [];
     const cat = cats.find(c => c.id === catId);
@@ -16864,7 +16875,7 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
           if (cancelCard) cancelCard.style.display = 'block';
         } else if (isFreeTier) {
           const demoNote = plan === 'Demo'
-            ? 'your free trial has ended and you\'re on the limited free Demo tier (DEMO watermark, no MidasQuote Pro, no custom photos)'
+            ? 'your estimator stays live on your website for free. Your own photos, MidasQuote Pro and new showroom uploads are paid features'
             : 'you\'re on the free trial — full access, no card on file';
           // Only shown while actually trialing — once Plan flips to 'Demo'
           // the trial has already ended, so a countdown/expiry date no
@@ -16880,7 +16891,7 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
           }
           planEl.innerHTML = `
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-              <span style="background:#e0e7ff;color:#3730a3;font-size:12px;font-weight:500;padding:3px 10px;border-radius:20px">${plan}</span>
+              <span style="background:#e0e7ff;color:#3730a3;font-size:12px;font-weight:500;padding:3px 10px;border-radius:20px">${plan === 'Demo' ? 'Free' : plan}</span>
               <span style="font-size:14px;font-weight:500;color:#111">Free plan</span>
             </div>
             ${trialExpiryHTML}

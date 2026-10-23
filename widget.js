@@ -8215,7 +8215,7 @@
     buildTALLCAB(data);
     container.innerHTML = mqFxLazyImgs(buildWidgetHTML(shop, specs, data));
     wireWidget(data);
-    if (window._mqIsDemoPlan) mqInjectDemoWatermark(container);
+    // Free plan (Oct 2026): no DEMO watermark — the widget is free to use on a shop's own site. Photos still show as placeholders (loadShopData).
     if (window.mqFxInit) window.mqFxInit();
     // Fresh estimate — nothing calculated yet, so hide any leftover sticky
     // bar from before and let it re-earn its spot once they Calculate again.
@@ -9075,7 +9075,7 @@
       buildTALLCAB(data);
       container.innerHTML=mqFxLazyImgs(buildWidgetHTML(shop,specs,data));
       wireWidget(data);
-      if (window._mqIsDemoPlan) mqInjectDemoWatermark(container);
+      // Free plan (Oct 2026): no DEMO watermark — the widget is free to use on a shop's own site. Photos still show as placeholders (loadShopData).
       if (window.mqFxInit) window.mqFxInit();
       mqSetupModalOverlays();
       mqSetupStickyBar();

@@ -8557,8 +8557,8 @@
     if ((shop['Plan']||'') === 'Demo') {
       container.innerHTML=`<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:2.5rem 1.5rem;text-align:center;color:#4b5563;font-size:14px;line-height:1.6">
         <div style="font-size:2rem;margin-bottom:0.75rem">⚡</div>
-        <div style="font-weight:600;color:#111;font-size:15px;margin-bottom:6px">MidasQuote Pro isn't included in the free Demo</div>
-        <div>Upgrade to a paid plan from your dashboard to unlock the real-numbers Pro quoting tool.</div>
+        <div style="font-weight:600;color:#111;font-size:15px;margin-bottom:6px">MidasQuote Pro is a paid add-on</div>
+        <div>Your free estimator keeps working on your website. Upgrade from the Account tab in your dashboard to unlock MidasQuote Pro.</div>
       </div>`;
       return;
     }
