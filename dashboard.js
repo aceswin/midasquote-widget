@@ -14,7 +14,10 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   }
 
   const CONFIG = {
-      AIRTABLE_TOKEN:     'patBtaoCbxqqQzRId.4342548ea07fbac4e5998244a4eaa09db09e9ab6494efb175664bd1f9e0462b3',
+      // No Airtable token in this file anymore (Oct 2026) — every read/write
+      // goes through the proxy Worker's /dash route, which checks the
+      // logged-in Memberstack member and only touches their own shop.
+      PROXY_WORKER:       'https://midasquote-airtable-proxy.jordan132001.workers.dev',
     BASE_ID:            'app4zrMlVLwF2xn4h',
     SHOPS_TABLE:        'tbl8PoF2Mu3sAdlMs',
     PRICING_TABLE:      'tblu6AYZs8h7SIaQl',
@@ -29,8 +32,56 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     IMAGE_UPLOAD_SECRET:'mq-upload-7f3k9xQ2',
   };
 
-  const AT_BASE = `https://api.airtable.com/v0/${CONFIG.BASE_ID}`;
-  const AT_HEADS = { 'Authorization': `Bearer ${CONFIG.AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' };
+  // ── Secure data access (Oct 2026) ──────────────────────────────────
+  // atGet / atCreate / atUpdate / atDelete keep their old names and return
+  // shapes (so none of their ~100 callers changed), but now POST to the
+  // Worker's /dash route with the logged-in member's Memberstack token. The
+  // Worker verifies that login and limits every call to the member's own
+  // shop (admins excepted). Paging, 429 back-off and typecast all happen in
+  // the Worker. Also exposed as window.mqDashApi for pricing-helper-v2.js.
+  async function mqMemberJwt() {
+    try {
+      const ms = window.$memberstackDom;
+      if (ms && typeof ms.getMemberCookie === 'function') {
+        const t = await ms.getMemberCookie();
+        if (t) return t;
+      }
+    } catch (e) {}
+    const m = document.cookie.match(/(?:^|;\s*)_ms-mid=([^;]+)/);
+    return m ? decodeURIComponent(m[1]) : '';
+  }
+  async function mqDash(payload, attempt) {
+    attempt = attempt || 0;
+    const jwt = await mqMemberJwt();
+    let res;
+    try {
+      res = await fetch(CONFIG.PROXY_WORKER + '/dash', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(jwt ? { 'Authorization': 'Bearer ' + jwt } : {}) },
+        body: JSON.stringify(payload),
+      });
+    } catch (e) {
+      // Network blip — reads/updates/deletes are safe to repeat; creates are not.
+      if (payload.op !== 'create' && attempt < 2) { await new Promise(r => setTimeout(r, 600 * (attempt + 1))); return mqDash(payload, attempt + 1); }
+      throw e;
+    }
+    if (res.ok) return await res.json();
+    const errBody = await res.text().catch(() => '');
+    // Login cookie can lag a moment behind a fresh login/refresh — retry once.
+    if (res.status === 401 && attempt < 1) { await new Promise(r => setTimeout(r, 800)); return mqDash(payload, attempt + 1); }
+    if (res.status === 503 && payload.op !== 'create' && attempt < 3) { await new Promise(r => setTimeout(r, 700 * Math.pow(2, attempt))); return mqDash(payload, attempt + 1); }
+    if (res.status === 401) mqShowLoginExpired();
+    console.error(`Dashboard ${payload.op} ${payload.table} failed: ${res.status}`, errBody);
+    throw new Error(`Airtable ${String(payload.op).toUpperCase()} ${payload.table} failed: ${res.status} ${errBody}`);
+  }
+  function mqShowLoginExpired() {
+    if (document.getElementById('mq-login-expired')) return;
+    const d = document.createElement('div');
+    d.id = 'mq-login-expired';
+    d.style.cssText = 'position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:100050;background:#111;color:#fff;padding:12px 16px;border-radius:10px;font:600 13px -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.3)';
+    d.innerHTML = 'Your login has expired — <a href="/login" style="color:#fbbf24">log in again</a> to keep saving.';
+    document.body.appendChild(d);
+  }
 
   // This script's own URL, captured while it's still executing at its own
   // top level (document.currentScript only resolves correctly here, not
@@ -64,91 +115,20 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   // returned a malformed/repeating offset — no real shop is anywhere near
   // that many rows in any one table.
   async function atGet(table, formula) {
-    let allRecords = [];
-    let offset;
-    let pages = 0;
-    do {
-      const offsetParam = offset ? `&offset=${offset}` : '';
-      const url = `${AT_BASE}/${table}?filterByFormula=${encodeURIComponent(formula)}&pageSize=100${offsetParam}`;
-      const res = await fetch(url, { headers: AT_HEADS });
-      if (!res.ok) {
-        const errBody = await res.text().catch(() => '');
-        throw new Error(`Airtable GET ${table} failed: ${res.status} ${errBody}`);
-      }
-      const data = await res.json();
-      allRecords = allRecords.concat(data.records || []);
-      offset = data.offset;
-      pages++;
-    } while (offset && pages < 50);
-    return allRecords;
+    const data = await mqDash({ op: 'get', table, formula });
+    return data.records || [];
   }
-
-  // Jordan: "once in a while when adding new groups or editing new groups
-  // its says 'Couldnt save group' but then still seems to save it fine
-  // amnyway." Root cause: Airtable enforces 5 requests/second PER BASE, and
-  // several call sites (mqSaveGroupManager chief among them — saving a
-  // group with several items, some spanning 2 underlying ids each, fires
-  // every write via Promise.all with zero throttling) can easily burst past
-  // that in one go. Airtable answers an over-the-limit request with 429 and
-  // does NOT process it — atUpdate used to throw on that immediately, which
-  // fails the whole Promise.all and pops the "Could not save" alert even
-  // though every OTHER write in that same batch already went through fine.
-  // It "still seems to save it fine anyway" because each item's in-memory
-  // groupName is set synchronously in the forEach loop, before any of the
-  // writes are even awaited — so the on-screen grid already reflects the
-  // intended end state regardless of what the network actually did, masking
-  // that one write may not have actually landed in Airtable.
-  // Fix: retry a 429 with a short backoff (honoring Airtable's own
-  // Retry-After header when it sends one) instead of failing immediately —
-  // up to 3 attempts, which comfortably covers a momentary burst. Any other
-  // failure (a genuine 4xx/5xx, e.g. a real validation error) still throws
-  // right away exactly as before; only a rate-limit response is retried.
-  async function atUpdate(table, id, fields, attempt) {
-    attempt = attempt || 0;
-    const res = await fetch(`${AT_BASE}/${table}/${id}`, {
-      method: 'PATCH', headers: AT_HEADS,
-      // typecast:true lets Airtable auto-add a new option to a Single Select
-      // field (like "Currency symbol") instead of rejecting the request with
-      // a 422 when the value isn't already one of the field's known choices.
-      body: JSON.stringify({ fields, typecast: true })
-    });
-    if (!res.ok) {
-      if (res.status === 429 && attempt < 3) {
-        const retryAfterSec = parseFloat(res.headers.get('Retry-After'));
-        const delayMs = !isNaN(retryAfterSec) ? retryAfterSec * 1000 : 300 * Math.pow(2, attempt);
-        await new Promise(r => setTimeout(r, delayMs));
-        return atUpdate(table, id, fields, attempt + 1);
-      }
-      const errBody = await res.text().catch(() => '');
-      console.error(`Airtable UPDATE ${table} failed: ${res.status}`, errBody);
-      throw new Error(`Airtable UPDATE ${table} failed: ${res.status} ${errBody}`);
-    }
-    return await res.json();
+  async function atUpdate(table, id, fields) {
+    return await mqDash({ op: 'update', table, id, fields });
   }
-
   async function atCreate(table, fields) {
-    const res = await fetch(`${AT_BASE}/${table}`, {
-      method: 'POST', headers: AT_HEADS,
-      body: JSON.stringify({ fields, typecast: true })
-    });
-    if (!res.ok) {
-      const errBody = await res.text().catch(() => '');
-      console.error(`Airtable CREATE ${table} failed: ${res.status}`, errBody);
-      throw new Error(`Airtable CREATE ${table} failed: ${res.status} ${errBody}`);
-    }
-    return await res.json();
+    return await mqDash({ op: 'create', table, fields });
   }
-
   async function atDelete(table, id) {
-    const res = await fetch(`${AT_BASE}/${table}/${id}`, {
-      method: 'DELETE', headers: AT_HEADS
-    });
-    if (!res.ok) {
-      const errBody = await res.text().catch(() => '');
-      throw new Error(`Airtable DELETE ${table} failed: ${res.status} ${errBody}`);
-    }
-    return await res.json();
+    return await mqDash({ op: 'delete', table, id });
   }
+  window.mqDashApi = { atGet, atCreate, atUpdate, atDelete };
+
 
 
   // A UK (or any non-North-American) shop can pick their own currency
@@ -4490,6 +4470,10 @@ window.logoutMember = async function () {
     });
     const missingEntries = Object.entries(PROJECT_TYPE_TEMPLATES).filter(([roomId]) => !existingRoomIds.has(roomId));
     if (!missingEntries.length) return masterItems;
+    // Only the admin (Maple & Stone) may write master template items — the
+    // secure /dash route refuses it for everyone else (Oct 2026), so a normal
+    // shop just uses whatever master items already exist.
+    if ((window._mqShopRecord?.fields?.['Shop name'] || '') !== 'Maple & Stone Cabinetry') return masterItems;
 
     const bootstrapItems = missingEntries.flatMap(([roomId, items]) =>
       items.map(item => ({ ...item, roomId }))
@@ -16659,7 +16643,16 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
       return;
     }
 
-    const shopRecord = await loadShop(shopToken);
+    let shopRecord = null;
+    try {
+      shopRecord = await loadShop(shopToken);
+    } catch (e) {
+      const loggedOut = /failed: 401/.test(String(e && e.message));
+      container.innerHTML = loggedOut
+        ? '<div style="padding:4rem;text-align:center;color:#111;font-size:14px">Please <a href="/login" style="color:#1a1a1a;font-weight:700">log in</a> to see your dashboard.</div>'
+        : '<div style="padding:4rem;text-align:center;color:#dc2626;font-size:14px">We couldn\'t load your dashboard just now. Please refresh in a moment — if it keeps happening, contact support@midasquote.com.</div>';
+      return;
+    }
     if (!shopRecord) {
       container.innerHTML = '<div class="mq-loading" style="padding:4rem;text-align:center;color:#dc2626">Shop not found. Please contact support at support@midasquote.com</div>';
       return;

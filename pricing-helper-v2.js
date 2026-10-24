@@ -36,8 +36,13 @@ let wizardBaseline = null;
   const mqphMm = (inches) => Math.round(inches * 25.4);
   const mqphMmTag = (inches) => `<span class="mqph-mm">(${mqphMm(inches).toLocaleString()}mm)</span>`;
 
-  const AT_BASE_URL = () => `https://api.airtable.com/v0/${shopRecord._baseId}`;
-  const AT_HEADS = () => ({ 'Authorization': `Bearer ${shopRecord._token}`, 'Content-Type': 'application/json' });
+  // Data access goes through dashboard.js's secure functions (window.mqDashApi,
+  // Oct 2026) — the Worker checks the logged-in member and limits every call to
+  // their own shop. No Airtable token lives in this file anymore.
+  function mqphApi() {
+    if (!window.mqDashApi) throw new Error('MidasQuote dashboard not loaded — pricing data is unavailable.');
+    return window.mqDashApi;
+  }
 
   // A UK (or any non-North-American) shop can pick their own currency
   // symbol on the dashboard's Shop Info tab — everywhere in the pricing
@@ -69,54 +74,11 @@ let wizardBaseline = null;
   // and the loop actually reaches every page. The 50-page (5,000 record)
   // backstop is just against a runaway loop, not a real limit any shop's
   // Line Items table would ever approach.
-  async function atGet(table, formula) {
-    let allRecords = [];
-    let offset;
-    let pages = 0;
-    do {
-      const offsetParam = offset ? `&offset=${offset}` : '';
-      const url = `${AT_BASE_URL()}/${table}?filterByFormula=${encodeURIComponent(formula)}&pageSize=100${offsetParam}`;
-      const res = await fetch(url, { headers: AT_HEADS() });
-      if (!res.ok) {
-        const errBody = await res.text().catch(() => '');
-        throw new Error(`Airtable GET ${table} failed: ${res.status} ${errBody}`);
-      }
-      const data = await res.json();
-      allRecords = allRecords.concat(data.records || []);
-      offset = data.offset;
-      pages++;
-    } while (offset && pages < 50);
-    return allRecords;
-  }
-  async function atCreate(table, fields) {
-    // typecast:true lets Airtable auto-add a new option to a Single Select
-    // field instead of rejecting the request with a 422 when the value
-    // isn't already one of the field's known choices.
-    const res = await fetch(`${AT_BASE_URL()}/${table}`, { method: 'POST', headers: AT_HEADS(), body: JSON.stringify({ fields, typecast: true }) });
-    if (!res.ok) {
-      const errBody = await res.text().catch(() => '');
-      console.error(`Airtable CREATE ${table} failed: ${res.status}`, errBody);
-      throw new Error(`Airtable CREATE ${table} failed: ${res.status} ${errBody}`);
-    }
-    return await res.json();
-  }
-  async function atUpdate(table, id, fields) {
-    const res = await fetch(`${AT_BASE_URL()}/${table}/${id}`, { method: 'PATCH', headers: AT_HEADS(), body: JSON.stringify({ fields, typecast: true }) });
-    if (!res.ok) {
-      const errBody = await res.text().catch(() => '');
-      console.error(`Airtable UPDATE ${table} failed: ${res.status}`, errBody);
-      throw new Error(`Airtable UPDATE ${table} failed: ${res.status} ${errBody}`);
-    }
-    return await res.json();
-  }
-  async function atDelete(table, id) {
-    const res = await fetch(`${AT_BASE_URL()}/${table}/${id}`, { method: 'DELETE', headers: AT_HEADS() });
-    if (!res.ok) {
-      const errBody = await res.text().catch(() => '');
-      throw new Error(`Airtable DELETE ${table} failed: ${res.status} ${errBody}`);
-    }
-    return await res.json();
-  }
+  async function atGet(table, formula) { return mqphApi().atGet(table, formula); }
+  async function atCreate(table, fields) { return mqphApi().atCreate(table, fields); }
+  async function atUpdate(table, id, fields) { return mqphApi().atUpdate(table, id, fields); }
+  async function atDelete(table, id) { return mqphApi().atDelete(table, id); }
+
 
   // ============================================================
   // STYLES
@@ -6357,8 +6319,6 @@ window.mqphGoToWizard = function() {
       ...passedShopRecord,
       _recordId: passedShopRecord.id,
       _shopToken: (passedShopRecord.fields && passedShopRecord.fields['Shop token']) || '',
-      _baseId:   'app4zrMlVLwF2xn4h',
-      _token:    'patBtaoCbxqqQzRId.4342548ea07fbac4e5998244a4eaa09db09e9ab6494efb175664bd1f9e0462b3',
       _pricingTable: 'tblu6AYZs8h7SIaQl',
     };
     pricingRecord = passedPricingRecord;
