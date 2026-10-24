@@ -14,7 +14,10 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   }
 
   const CONFIG = {
-      AIRTABLE_TOKEN:     'patBtaoCbxqqQzRId.4342548ea07fbac4e5998244a4eaa09db09e9ab6494efb175664bd1f9e0462b3',
+      // No Airtable token in this file anymore (Oct 2026) — every read/write
+      // goes through the proxy Worker's /dash route, which checks the
+      // logged-in Memberstack member and only touches their own shop.
+      PROXY_WORKER:       'https://midasquote-airtable-proxy.jordan132001.workers.dev',
     BASE_ID:            'app4zrMlVLwF2xn4h',
     SHOPS_TABLE:        'tbl8PoF2Mu3sAdlMs',
     PRICING_TABLE:      'tblu6AYZs8h7SIaQl',
@@ -29,8 +32,56 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     IMAGE_UPLOAD_SECRET:'mq-upload-7f3k9xQ2',
   };
 
-  const AT_BASE = `https://api.airtable.com/v0/${CONFIG.BASE_ID}`;
-  const AT_HEADS = { 'Authorization': `Bearer ${CONFIG.AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' };
+  // ── Secure data access (Oct 2026) ──────────────────────────────────
+  // atGet / atCreate / atUpdate / atDelete keep their old names and return
+  // shapes (so none of their ~100 callers changed), but now POST to the
+  // Worker's /dash route with the logged-in member's Memberstack token. The
+  // Worker verifies that login and limits every call to the member's own
+  // shop (admins excepted). Paging, 429 back-off and typecast all happen in
+  // the Worker. Also exposed as window.mqDashApi for pricing-helper-v2.js.
+  async function mqMemberJwt() {
+    try {
+      const ms = window.$memberstackDom;
+      if (ms && typeof ms.getMemberCookie === 'function') {
+        const t = await ms.getMemberCookie();
+        if (t) return t;
+      }
+    } catch (e) {}
+    const m = document.cookie.match(/(?:^|;\s*)_ms-mid=([^;]+)/);
+    return m ? decodeURIComponent(m[1]) : '';
+  }
+  async function mqDash(payload, attempt) {
+    attempt = attempt || 0;
+    const jwt = await mqMemberJwt();
+    let res;
+    try {
+      res = await fetch(CONFIG.PROXY_WORKER + '/dash', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(jwt ? { 'Authorization': 'Bearer ' + jwt } : {}) },
+        body: JSON.stringify(payload),
+      });
+    } catch (e) {
+      // Network blip — reads/updates/deletes are safe to repeat; creates are not.
+      if (payload.op !== 'create' && attempt < 2) { await new Promise(r => setTimeout(r, 600 * (attempt + 1))); return mqDash(payload, attempt + 1); }
+      throw e;
+    }
+    if (res.ok) return await res.json();
+    const errBody = await res.text().catch(() => '');
+    // Login cookie can lag a moment behind a fresh login/refresh — retry once.
+    if (res.status === 401 && attempt < 1) { await new Promise(r => setTimeout(r, 800)); return mqDash(payload, attempt + 1); }
+    if (res.status === 503 && payload.op !== 'create' && attempt < 3) { await new Promise(r => setTimeout(r, 700 * Math.pow(2, attempt))); return mqDash(payload, attempt + 1); }
+    if (res.status === 401) mqShowLoginExpired();
+    console.error(`Dashboard ${payload.op} ${payload.table} failed: ${res.status}`, errBody);
+    throw new Error(`Airtable ${String(payload.op).toUpperCase()} ${payload.table} failed: ${res.status} ${errBody}`);
+  }
+  function mqShowLoginExpired() {
+    if (document.getElementById('mq-login-expired')) return;
+    const d = document.createElement('div');
+    d.id = 'mq-login-expired';
+    d.style.cssText = 'position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:100050;background:#111;color:#fff;padding:12px 16px;border-radius:10px;font:600 13px -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.3)';
+    d.innerHTML = 'Your login has expired — <a href="/login" style="color:#fbbf24">log in again</a> to keep saving.';
+    document.body.appendChild(d);
+  }
 
   // This script's own URL, captured while it's still executing at its own
   // top level (document.currentScript only resolves correctly here, not
@@ -64,91 +115,20 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   // returned a malformed/repeating offset — no real shop is anywhere near
   // that many rows in any one table.
   async function atGet(table, formula) {
-    let allRecords = [];
-    let offset;
-    let pages = 0;
-    do {
-      const offsetParam = offset ? `&offset=${offset}` : '';
-      const url = `${AT_BASE}/${table}?filterByFormula=${encodeURIComponent(formula)}&pageSize=100${offsetParam}`;
-      const res = await fetch(url, { headers: AT_HEADS });
-      if (!res.ok) {
-        const errBody = await res.text().catch(() => '');
-        throw new Error(`Airtable GET ${table} failed: ${res.status} ${errBody}`);
-      }
-      const data = await res.json();
-      allRecords = allRecords.concat(data.records || []);
-      offset = data.offset;
-      pages++;
-    } while (offset && pages < 50);
-    return allRecords;
+    const data = await mqDash({ op: 'get', table, formula });
+    return data.records || [];
   }
-
-  // Jordan: "once in a while when adding new groups or editing new groups
-  // its says 'Couldnt save group' but then still seems to save it fine
-  // amnyway." Root cause: Airtable enforces 5 requests/second PER BASE, and
-  // several call sites (mqSaveGroupManager chief among them — saving a
-  // group with several items, some spanning 2 underlying ids each, fires
-  // every write via Promise.all with zero throttling) can easily burst past
-  // that in one go. Airtable answers an over-the-limit request with 429 and
-  // does NOT process it — atUpdate used to throw on that immediately, which
-  // fails the whole Promise.all and pops the "Could not save" alert even
-  // though every OTHER write in that same batch already went through fine.
-  // It "still seems to save it fine anyway" because each item's in-memory
-  // groupName is set synchronously in the forEach loop, before any of the
-  // writes are even awaited — so the on-screen grid already reflects the
-  // intended end state regardless of what the network actually did, masking
-  // that one write may not have actually landed in Airtable.
-  // Fix: retry a 429 with a short backoff (honoring Airtable's own
-  // Retry-After header when it sends one) instead of failing immediately —
-  // up to 3 attempts, which comfortably covers a momentary burst. Any other
-  // failure (a genuine 4xx/5xx, e.g. a real validation error) still throws
-  // right away exactly as before; only a rate-limit response is retried.
-  async function atUpdate(table, id, fields, attempt) {
-    attempt = attempt || 0;
-    const res = await fetch(`${AT_BASE}/${table}/${id}`, {
-      method: 'PATCH', headers: AT_HEADS,
-      // typecast:true lets Airtable auto-add a new option to a Single Select
-      // field (like "Currency symbol") instead of rejecting the request with
-      // a 422 when the value isn't already one of the field's known choices.
-      body: JSON.stringify({ fields, typecast: true })
-    });
-    if (!res.ok) {
-      if (res.status === 429 && attempt < 3) {
-        const retryAfterSec = parseFloat(res.headers.get('Retry-After'));
-        const delayMs = !isNaN(retryAfterSec) ? retryAfterSec * 1000 : 300 * Math.pow(2, attempt);
-        await new Promise(r => setTimeout(r, delayMs));
-        return atUpdate(table, id, fields, attempt + 1);
-      }
-      const errBody = await res.text().catch(() => '');
-      console.error(`Airtable UPDATE ${table} failed: ${res.status}`, errBody);
-      throw new Error(`Airtable UPDATE ${table} failed: ${res.status} ${errBody}`);
-    }
-    return await res.json();
+  async function atUpdate(table, id, fields) {
+    return await mqDash({ op: 'update', table, id, fields });
   }
-
   async function atCreate(table, fields) {
-    const res = await fetch(`${AT_BASE}/${table}`, {
-      method: 'POST', headers: AT_HEADS,
-      body: JSON.stringify({ fields, typecast: true })
-    });
-    if (!res.ok) {
-      const errBody = await res.text().catch(() => '');
-      console.error(`Airtable CREATE ${table} failed: ${res.status}`, errBody);
-      throw new Error(`Airtable CREATE ${table} failed: ${res.status} ${errBody}`);
-    }
-    return await res.json();
+    return await mqDash({ op: 'create', table, fields });
   }
-
   async function atDelete(table, id) {
-    const res = await fetch(`${AT_BASE}/${table}/${id}`, {
-      method: 'DELETE', headers: AT_HEADS
-    });
-    if (!res.ok) {
-      const errBody = await res.text().catch(() => '');
-      throw new Error(`Airtable DELETE ${table} failed: ${res.status} ${errBody}`);
-    }
-    return await res.json();
+    return await mqDash({ op: 'delete', table, id });
   }
+  window.mqDashApi = { atGet, atCreate, atUpdate, atDelete };
+
 
 
   // A UK (or any non-North-American) shop can pick their own currency
@@ -1618,8 +1598,8 @@ window.logoutMember = async function () {
             <div class="mq-nav-item" data-mq-group="setup" onclick="mqNav('showroom',this)"><span class="mq-nav-step">6</span> Showroom</div>
             <div class="mq-nav-item" data-mq-group="setup" onclick="mqNav('embed',this)"><span class="mq-nav-step">7</span> Embed code</div>
             <div class="mq-nav-item" data-mq-group="leads" onclick="mqNav('leads',this)">👥 &nbsp; Leads</div>
-            <div class="mq-nav-item" data-mq-group="leads" onclick="mqNav('proposals',this)">📄 &nbsp; Proposals</div>
             <div class="mq-nav-item" data-mq-group="pro" id="mq-nav-pro" onclick="mqNav('pro',this)">⚡ &nbsp; MidasQuote Pro</div>
+            <div class="mq-nav-item" data-mq-group="pro" onclick="mqNav('proposals',this)">📄 &nbsp; Proposals</div>
             <div class="mq-nav-item" data-mq-group="marketing" onclick="mqNav('marketing',this)">🎨 &nbsp; Design Studio</div>
             <div class="mq-nav-item" data-mq-group="account" onclick="mqNav('billing',this)">💳 &nbsp; My account</div>
             <div class="mq-nav-item${showHelpGuideNudge ? ' mq-nav-item-nudge' : ''}" data-mq-group="account" id="mq-nav-helpguide" onclick="mqNav('helpguide',this)">📖 &nbsp; Help guide</div>
@@ -2078,7 +2058,7 @@ window.logoutMember = async function () {
                    "mqph-hl" class or some ambient page style outside this
                    file, so it wins regardless of where it was coming from. -->
               <div id="mq-spec-tips-body" class="mqph-hl" style="display:none;padding:0 16px 14px;font-size:13px;color:#166534;line-height:1.7;border:none">
-                💡 <strong>Pricing tip:</strong> If your specialty item is priced by the linear foot or square foot, check the <strong>Per lin ft</strong> or <strong>Per sq ft</strong> box and enter your per-unit rate. For flat-rate items, leave both unchecked and enter the flat price.
+                💡 <strong>Pricing tip:</strong> Pick how each item is priced under <strong>How is this priced?</strong> — <strong>Flat rate</strong>, <strong>Per lin ft</strong>, <strong>Per sq ft</strong>, or <strong>Custom</strong> for anything else (hours, 2x4s, visits). With Custom, name the unit exactly how customers should see it, and quantities can use decimals like 2.5.
                 <br><br>
                 🔧 <strong>Handles & knobs:</strong> If you supply hardware, add each type as a specialty item (e.g. "Standard handle", "Standard knob") with your per-unit price. Customers can then add how many they need. If you don't supply hardware, leave it out — the widget will automatically let customers know it's not included.
                 <br><br>
@@ -3131,6 +3111,7 @@ window.logoutMember = async function () {
         #midasquote-dashboard #mq-page-pro .mqp-step .mqp-btn-line{margin-left:40px!important}
       }
       #midasquote-dashboard .mq-top-navigation .mq-nav-item[style*="display:none"]{display:none!important}
+      #midasquote-dashboard .mq-top-navigation[data-mq-group] .mq-nav-item[data-mq-group][style*="display:none"]{display:none!important} /* outranks the group "show" rules above, so inline-hidden items (e.g. Templates (Admin)) stay hidden */
       #midasquote-dashboard .mq-top-navigation .mq-nav-item:hover{background:#f5f6f7;color:#151515}
       #midasquote-dashboard .mq-top-navigation .mq-nav-item.active{background:#171717;border-color:#171717;color:#fff}
       #midasquote-dashboard .mq-nav-step{display:inline-grid;place-items:center;width:19px;height:19px;border:1px solid #d6d9de;border-radius:50%;font-size:10px;font-weight:800;background:#f7f8fa;color:#454545}
@@ -3262,6 +3243,8 @@ window.logoutMember = async function () {
       #midasquote-dashboard .mq-btn{border-radius:12px!important;padding:9px 14px!important;font-weight:700!important;border-color:#d8e0ea!important;background:#fff!important;box-shadow:0 1px 2px rgba(15,23,42,.03)}
       #midasquote-dashboard .mq-btn:hover{background:#f8fafc!important}
       #midasquote-dashboard .mq-btn-primary{background:linear-gradient(180deg,#151820 0%,#0f1116 100%)!important;border-color:#151820!important;color:#fff!important;box-shadow:0 10px 24px rgba(15,23,42,.16)!important}
+      /* Primary (dark) buttons pick up the light .mq-btn:hover background above, so their white text vanished on hover — switch it to dark instead (Oct 2026). */
+      #midasquote-dashboard .mq-btn-primary:hover{color:#0f172a!important}
       #midasquote-dashboard .mq-btn-danger{border-color:#fecaca!important;background:#fff!important;color:#dc2626!important}
       #midasquote-dashboard input[type=text],#midasquote-dashboard input[type=email],#midasquote-dashboard input[type=tel],#midasquote-dashboard input[type=number],#midasquote-dashboard input[type=url],#midasquote-dashboard select,#midasquote-dashboard textarea{border-radius:12px!important;border-color:#d7dde6!important;padding:10px 12px!important;background:#fff!important;box-shadow:inset 0 1px 2px rgba(15,23,42,.02)}
       #midasquote-dashboard input:focus,#midasquote-dashboard select:focus,#midasquote-dashboard textarea:focus{border-color:#d4af37!important;box-shadow:0 0 0 4px rgba(212,175,55,.12)!important}
@@ -4487,6 +4470,10 @@ window.logoutMember = async function () {
     });
     const missingEntries = Object.entries(PROJECT_TYPE_TEMPLATES).filter(([roomId]) => !existingRoomIds.has(roomId));
     if (!missingEntries.length) return masterItems;
+    // Only the admin (Maple & Stone) may write master template items — the
+    // secure /dash route refuses it for everyone else (Oct 2026), so a normal
+    // shop just uses whatever master items already exist.
+    if ((window._mqShopRecord?.fields?.['Shop name'] || '') !== 'Maple & Stone Cabinetry') return masterItems;
 
     const bootstrapItems = missingEntries.flatMap(([roomId, items]) =>
       items.map(item => ({ ...item, roomId }))
@@ -4747,6 +4734,8 @@ window.logoutMember = async function () {
           'Install per linear foot': master.fields['Install per linear foot'] || false,
           'Install per square foot': master.fields['Install per square foot'] || false,
           'Install quantity label': master.fields['Install quantity label'] || '',
+          ...(master.fields['Custom unit'] ? { 'Custom unit': master.fields['Custom unit'] } : {}),
+          ...(master.fields['Install custom unit'] ? { 'Install custom unit': master.fields['Install custom unit'] } : {}),
           'Description': master.fields['Description'] || '',
           'Category': master.fields['Category'] || '',
           'Pro only': master.fields['Pro only'] || false,
@@ -5004,9 +4993,18 @@ window.logoutMember = async function () {
   // Items both keep the full list (Specialty Items can genuinely show on
   // either side -- see roomsForCategory's callers).
   const CABINET_ONLY_CATS = ['material', 'door', 'drawer', 'hinge', 'trim_crown', 'trim_valance', 'tall_cabinet'];
+  // The shop's custom pricing categories (Pricing tab → ✨ Custom pricing
+  // categories). [{ id:'cc_…', name, description, answer, required, showIf, proOnly }]
+  function mqCustomCatsOf(shopRecord) {
+    let a = [];
+    try { a = JSON.parse((shopRecord && shopRecord.fields && shopRecord.fields['Custom categories']) || '[]'); } catch(e) { a = []; }
+    return Array.isArray(a) ? a.filter(c => c && typeof c.id === 'string' && /^cc_[a-z0-9]+$/i.test(c.id)) : [];
+  }
+  function mqEscHtml(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
   function roomsForCategory(cat) {
     const allRooms = window._mqRooms || defaultRoomTypes();
-    if (CABINET_ONLY_CATS.includes(cat)) return allRooms.filter(r => !r.forCountertops);
+    // Custom pricing categories (cc_…) only show on the Cabinets/Both tabs.
+    if (CABINET_ONLY_CATS.includes(cat) || /^cc_/.test(cat)) return allRooms.filter(r => !r.forCountertops);
     // Specialty items can genuinely show on either side, so they don't lose
     // rooms the way the cabinet-only categories above do -- but per Jordan,
     // once a shop has scoped its widget down to just one estimator tab
@@ -5071,6 +5069,8 @@ window.logoutMember = async function () {
     });
     const ctCard = document.querySelector('#mq-products-content .mq-card[data-mq-cat="countertop"]');
     if (ctCard) ctCard.style.display = cabinetsOnly ? 'none' : '';
+    // Custom pricing categories are cabinet-side only.
+    document.querySelectorAll('#mq-products-content .mq-card[data-mq-cat^="cc_"]').forEach(card => { card.style.display = countertopsOnly ? 'none' : ''; });
   }
   // Refreshes the Pricing tab's own scoping too, if it's been built yet —
   // pricing-helper-v2.js is a separate file/module (loaded lazily the
@@ -5598,7 +5598,7 @@ window.logoutMember = async function () {
   // upload button or a URL field for one of these.
   function mqDemoImageLockedHTML(whatLabel) {
     return `<div style="background:#f9fafb;border:1px dashed #d1d5db;border-radius:8px;padding:10px 12px;font-size:12px;color:#6b7280;line-height:1.6">
-      🔒 Custom ${whatLabel} is a paid feature. Your free Demo always shows MidasQuote's standard library photo here — upgrade from the Account tab to use your own photos or video links.
+      🔒 Custom ${whatLabel} is a paid feature. On the free plan, MidasQuote's standard library photo always shows here — upgrade from the Account tab to use your own photos or video links.
     </div>`;
   }
 
@@ -6180,7 +6180,7 @@ window.logoutMember = async function () {
         msg = `🗓️ You're on the <strong>free trial</strong> — full access. Add a plan any time in the Account tab to keep it.`;
       } else if (mqFreeTrialDaysLeft(expiry) < 0) {
         urgent = true;
-        msg = `🗓️ Your <strong>free trial is ending</strong> — your account moves to the free Demo plan shortly. Pick a plan in the Account tab to keep full access.`;
+        msg = `🗓️ Your <strong>free trial is ending</strong> — you'll move to the free plan shortly. Your estimator stays live on your website; pick a plan in the Account tab to keep photos and MidasQuote Pro.`;
       } else {
         const dateStr = expiry.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
         const daysLeft = mqFreeTrialDaysLeft(expiry);
@@ -6193,7 +6193,7 @@ window.logoutMember = async function () {
     }
     if (plan === 'Demo' && !window._mqDemoBannerDismissed) {
       return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px 16px;flex-wrap:wrap;background:#eff6ff;border:1px solid #bfdbfe;color:#1e3a8a;border-radius:10px;padding:12px 16px;margin-bottom:1.25rem;font-size:13px;line-height:1.5">
-        <span style="flex:1 1 280px">Your <strong>free trial has ended</strong> — you're welcome to stay on the free Demo plan. Want full access again? Pick a plan in the Account tab.</span>
+        <span style="flex:1 1 280px">You're on the <strong>free plan</strong> — your estimator stays live on your website. Upgrade for your own photos, MidasQuote Pro and new showroom uploads.</span>
         <span style="display:flex;align-items:center;gap:10px">${btn('Get full access →')}<button type="button" aria-label="Dismiss" title="Dismiss" onclick="mqDismissDemoBanner()" style="background:none;border:none;color:#1e3a8a;font-size:16px;line-height:1;cursor:pointer;padding:2px 4px">✕</button></span></div>`;
     }
     return '';
@@ -9415,6 +9415,15 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       trim_valance: { title:'📏 Valance',          emoji:'📏' },
       tall_cabinet: { title:'🏛️ Tall Cabinets',    emoji:'🏛️' },
     };
+    // Custom pricing categories (made on the Pricing tab, saved as the
+    // shop's 'Custom categories' JSON). Their options are ordinary line items
+    // whose Category is the category id, so everything below — photos,
+    // groups, project types, hide, best seller — works for them unchanged.
+    const customCats = mqCustomCatsOf(shopRecord);
+    customCats.forEach(c => {
+      CAT_DISPLAY[c.id] = { title: '✨ ' + mqEscHtml(c.name) + (c.proOnly ? ' <span style="font-size:10px;font-weight:700;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:1px 7px;vertical-align:middle">⚡ Pro only</span>' : ''), emoji: '✨' };
+      CAT_DISPLAY_NAMES[c.id] = c.name;
+    });
     // Stored globally so mqToggleCategoryRoom (defined outside this closure)
     // can bulk-sync every item in a category when its category-level
     // checkbox changes.
@@ -9496,7 +9505,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
 
     // Groups only make sense for categories customers actually pick a
     // style/material from — not hinges, countertops, or tall cabinets.
-    const GROUPABLE_CATS = ['material','door','drawer','trim_crown','trim_valance','countertop'];
+    const GROUPABLE_CATS = ['material','door','drawer','trim_crown','trim_valance','countertop', ...customCats.map(c => c.id)];
 
     function catSection(cat) {
       const items = byCategory[cat] || [];
@@ -10390,7 +10399,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
 
     const content = el('mq-products-content');
     if (content) {
-      const catsOrdered = ['material','door','drawer','hinge','countertop','trim_crown','trim_valance','tall_cabinet'];
+      const catsOrdered = ['material','door','drawer','hinge','countertop','trim_crown','trim_valance','tall_cabinet', ...customCats.map(c => c.id)];
       const hasCats = catsOrdered.some(c => byCategory[c]?.length);
       content.innerHTML = (!hasCats && !specItems.length)
         ? '<div class="mq-empty">Set up your pricing first — your configured items will appear here automatically.</div>'
@@ -10958,6 +10967,15 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     if (arrow) arrow.style.transform = collapsed ? 'rotate(0deg)' : 'rotate(90deg)';
   };
 
+  // Free plan (stored Plan = 'Demo'): showroom photos are frozen — whatever
+  // was added before the trial ended stays, but no new uploads/URLs until
+  // they upgrade. Same rule My Products already uses. (Oct 2026)
+  function mqIsFreePlanShop() { return (window._mqShopRecord?.fields?.['Plan'] || '') === 'Demo'; }
+  const MQ_SHOWROOM_LOCK_MSG = '🔒 Adding photos is a paid feature. Photos already here stay in your showroom — upgrade from the Account tab to add more.';
+  function mqShowroomLockNoteHTML(compact) {
+    return `<div class="mq-sr-locknote" style="background:#f9fafb;border:1px dashed #d1d5db;border-radius:8px;padding:${compact?'6px 8px':'8px 10px'};font-size:${compact?'10.5':'12'}px;color:#6b7280;line-height:1.45;${compact?'margin-bottom:6px':'display:inline-block;max-width:520px'}">${compact ? '🔒 Photo uploads are a paid feature.' : MQ_SHOWROOM_LOCK_MSG}</div>`;
+  }
+
   function renderShowroomCats() {
     const wrap = el('mq-showroom-cats');
     if (!wrap) return;
@@ -11005,10 +11023,10 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
               ${(cat.items||[]).map(item => mqShowroomItemCardHTML(cat.id, item)).join('') || '<div style="grid-column:1/-1;font-size:12px;color:#9ca3af">No items in this category yet.</div>'}
             </div>
             ${(cat.items||[]).length > 1 ? '<p class="mq-sr-note">Drag any photo\'s ⠿ handle to reorder it.</p>' : ''}
-            <label class="mq-btn mq-btn-sm mq-btn-primary" style="cursor:pointer;display:inline-block">
+            ${mqIsFreePlanShop() ? mqShowroomLockNoteHTML(false) : `<label class="mq-btn mq-btn-sm mq-btn-primary" style="cursor:pointer;display:inline-block">
               📤 Add photos
               <input type="file" accept="image/*" multiple style="display:none" onchange="mqBulkAddShowroomItems('${cat.id}', this.files); this.value=''"/>
-            </label>
+            </label>`}
           </div>
         </div>`;
       }
@@ -11212,7 +11230,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       <div class="mq-showroom-drag-handle" title="Drag to reorder" style="cursor:grab;text-align:center;color:#b0b0b0;font-size:13px;line-height:1;margin:-2px 0 4px;user-select:none">⠿</div>
       ${preview}
       <div style="font-size:12px;font-weight:${hasName?600:400};font-style:${hasName?'normal':'italic'};color:${hasName?'#111':'#9ca3af'};margin-bottom:6px;line-height:1.3">${hasName ? (item.name||'').replace(/</g,'&lt;') : 'Untitled item'}</div>
-      <label class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;margin-bottom:6px;text-align:center;cursor:pointer;display:block;box-sizing:border-box">
+${mqIsFreePlanShop() ? mqShowroomLockNoteHTML(true) : `      <label class="mq-btn mq-btn-sm" style="width:100%;font-size:11px;margin-bottom:6px;text-align:center;cursor:pointer;display:block;box-sizing:border-box">
         📤 ${photo ? 'Replace photo' : 'Upload a photo'}
         <input type="file" id="mq-showroom-upload-${key}" accept="image/*" style="display:none"/>
       </label>
@@ -11220,7 +11238,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       <div style="font-size:10.5px;color:#9ca3af;margin-bottom:3px">Or paste a photo URL</div>
       <input type="text" id="mq-showroom-url-${key}" value="${photo.replace(/"/g,'&quot;')}" placeholder="https://your-site.com/photo.jpg"
         style="font-size:11.5px;padding:5px 7px;border:1px solid #d1d5db;border-radius:6px;width:100%;margin-bottom:5px"/>
-      <button class="mq-btn mq-btn-sm" style="width:100%;font-size:10.5px;margin-bottom:5px" onclick="mqSaveShowroomItemPhoto('${key}', document.getElementById('mq-showroom-url-${key}').value.trim())">Save photo URL</button>
+      <button class="mq-btn mq-btn-sm" style="width:100%;font-size:10.5px;margin-bottom:5px" onclick="mqSaveShowroomItemPhoto('${key}', document.getElementById('mq-showroom-url-${key}').value.trim())">Save photo URL</button>`}
       <div style="display:flex;gap:4px">
         <button class="mq-btn mq-btn-sm" style="flex:1;white-space:nowrap;font-size:10.5px;padding:4px 2px" onclick="mqRenameShowroomItem('${catId}','${item.id}')">${hasName ? '✏️ Rename' : '✏️ Name'}</button>
         <button class="mq-btn mq-btn-sm" style="flex:1;white-space:nowrap;font-size:10.5px;padding:4px 2px;color:#dc2626" onclick="mqDeleteShowroomItem('${catId}','${item.id}')">Delete</button>
@@ -11285,6 +11303,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const cat = cats.find(c => c.id === catId);
     const shopRec = window._mqShopRecord;
     if (!cat || !shopRec || !fileList || !fileList.length) return;
+    if (mqIsFreePlanShop()) { showMsg('mq-showroom-msg', MQ_SHOWROOM_LOCK_MSG, 'error'); return; }
     const files = Array.from(fileList);
     const shopToken = shopRec.fields['Shop token'] || 'unknown-shop';
 
@@ -11350,6 +11369,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // Fired both by a completed upload (mqWireUploadButton's onDone) and by
   // the "Save photo URL" button for a pasted link — key is "<catId>::<itemId>".
   window.mqSaveShowroomItemPhoto = async function(key, url) {
+    if (mqIsFreePlanShop() && url) { showMsg('mq-showroom-msg', MQ_SHOWROOM_LOCK_MSG, 'error'); return; }
     const [catId, itemId] = key.split('::');
     const cats = window._mqShowroomCats || [];
     const cat = cats.find(c => c.id === catId);
@@ -12293,6 +12313,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     }
     const ftBox = document.getElementById(`mq-spec-perft-${id}`);
     const sqftBox = document.getElementById(`mq-spec-persqft-${id}`);
+    if (mode !== 'custom') mqSpecClearCustomUnitIfSet(id, false);
     if (mode === 'linft') {
       if (ftBox) ftBox.checked = true;
       mqSaveSpecUnit(id, 'Per linear foot', true);
@@ -12313,6 +12334,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         sqftBox.checked = false;
         mqSaveSpecUnit(id, 'Per square foot', false);
       }
+      if (mode === 'custom') mqSpecRefreshCustomUnitUI(id, false, true);
     }
   };
 
@@ -12359,6 +12381,15 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   window.mqSpecInstallPricingModeChange = function(id, mode) {
     const ftBox = document.getElementById(`mq-spec-installperft-${id}`);
     const sqftBox = document.getElementById(`mq-spec-installpersqft-${id}`);
+    if (mode !== 'custom') mqSpecClearCustomUnitIfSet(id, true);
+    else {
+      // Pre-fill the install unit with the supply unit (the common case:
+      // "hours" to supply and "hours" to install = one shared quantity).
+      const inp = document.getElementById(`mq-spec-installcustomunit-${id}`);
+      const r = mqFindVariantOwnerRecord(id);
+      const supplyUnit = String((r && r.fields['Custom unit']) || '').trim();
+      if (inp && !inp.value && supplyUnit) { inp.value = supplyUnit; mqSaveSpecCustomUnit(id, true, supplyUnit); }
+    }
     if (mode === 'linft') {
       if (ftBox) ftBox.checked = true;
       mqSaveSpecInstallUnit(id, 'Install per linear foot', true);
@@ -12377,6 +12408,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         sqftBox.checked = false;
         mqSaveSpecInstallUnit(id, 'Install per square foot', false);
       }
+
+      if (mode === 'custom') mqSpecRefreshCustomUnitUI(id, true, true);
     }
   };
 
@@ -12388,7 +12421,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // and drops the equivalent $/sqft or $/linft straight into the price
   // field. The stored rate and the widget's own pricing math never change
   // — this is purely a friendlier way to type the same number.
-  function mqSpecRateCalcIconHTML(id, isInstall, visible) {
+  function mqSpecRateCalcIconHTML(id, isInstall, visible, flatText) {
     const wrapId = isInstall ? `mq-spec-installprice-calcwrap-${id}` : `mq-spec-price-calcwrap-${id}`;
     const svg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="2" width="16" height="20" rx="2" stroke="#1d4ed8" stroke-width="1.8"/><rect x="6.5" y="4.5" width="11" height="4" rx="0.5" fill="#1d4ed8"/><rect x="6.5" y="11" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="10.7" y="11" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="14.9" y="11" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="6.5" y="15" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="10.7" y="15" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="14.9" y="15" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="6.5" y="19" width="11" height="2" rx="0.4" fill="#1d4ed8"/></svg>`;
     // Flat-rate items (neither per-unit box checked) show a plain "Flat
@@ -12398,7 +12431,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // / Per sq ft, this label live-swaps for the actual calculator button
     // (see mqSaveSpecUnit / mqSaveSpecInstallUnit).
     return `<span id="${wrapId}" style="display:inline-flex;align-items:center;margin-left:14px;vertical-align:middle">
-      <span id="${wrapId}-flat" style="display:${visible ? 'none' : 'inline-flex'};font-size:11px;color:#9ca3af;font-style:italic;white-space:nowrap">Flat rate</span>
+      <span id="${wrapId}-flat" style="display:${visible ? 'none' : 'inline-flex'};font-size:11px;color:#9ca3af;font-style:italic;white-space:nowrap">${flatText ? mqSpecEsc(flatText) : 'Flat rate'}</span>
       <span id="${wrapId}-metric" style="display:${visible ? 'inline-flex' : 'none'};align-items:center;gap:7px">
         <span style="font-size:11px;color:#2563eb;font-weight:600;white-space:nowrap">Use metric?</span>
         <button type="button" onclick="mqShowSpecRateCalc(this,'${id}',${isInstall ? 'true' : 'false'},event)" title="Enter a metric rate instead (per m² or per linear metre) — we'll convert it" style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:#eff6ff;border:1px solid #93c5fd;border-radius:6px;cursor:pointer;padding:0;flex-shrink:0">${svg}</button>
@@ -12411,6 +12444,73 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // stays hidden until Per lin ft / Per sq ft is checked (same visibility
   // rule, and the same show/hide toggle points, as the metric calculator
   // above — see mqSaveSpecUnit / mqSaveSpecInstallUnit).
+  // ── "Per custom" pricing (Oct 2026) ─────────────────────────────────
+  // A Per custom item is stored as a flat-rate item (both Per linear foot /
+  // Per square foot unticked) PLUS a non-empty "Custom unit" text field
+  // (supply) or "Install custom unit" (install) — the shop's own unit name,
+  // shown in the widget exactly as typed (e.g. "hours", "2x4s", "visits").
+  // Older code that doesn't know these fields simply treats the item as
+  // flat rate, so nothing breaks. Both Airtable fields must exist
+  // (Specialty Items table, Single line text) — this never creates them.
+  function mqSpecEsc(t) { return String(t == null ? '' : t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  // Keeps the small italic label beside the price ("Flat rate" / "per hours") in step.
+  function mqSpecSetFlatLabel(id, isInstall, unit) {
+    const lab = document.getElementById(isInstall ? `mq-spec-installprice-calcwrap-${id}-flat` : `mq-spec-price-calcwrap-${id}-flat`);
+    if (lab) lab.textContent = unit ? 'per ' + unit : 'Flat rate';
+  }
+  function mqSpecCustomUnit(r, isInstall) {
+    const f = (r && r.fields) || {};
+    if (isInstall) return (!f['Install per linear foot'] && !f['Install per square foot'] && String(f['Install custom unit'] || '').trim()) || '';
+    return (!f['Per linear foot'] && !f['Per square foot'] && String(f['Custom unit'] || '').trim()) || '';
+  }
+  function mqSpecCustomUnitInputHTML(r, isInstall) {
+    const id = r.id;
+    const unit = (r.fields[isInstall ? 'Install custom unit' : 'Custom unit'] || '');
+    const shown = !!mqSpecCustomUnit(r, isInstall);
+    const boxId = isInstall ? `mq-spec-installcustomunit-${id}` : `mq-spec-customunit-${id}`;
+    const placeholder = isInstall ? (String(r.fields['Custom unit'] || '').trim() || 'e.g. hours') : 'e.g. hours';
+    return `<div id="${boxId}-wrap" style="display:${shown ? 'block' : 'none'};margin-top:5px;width:${isInstall ? '150px' : '98px'}">
+      <input type="text" id="${boxId}" maxlength="24" value="${String(unit).replace(/"/g,'&quot;')}" placeholder="${placeholder}" title="Name your unit exactly how customers should see it — e.g. hours, 2x4s, visits" style="width:100%;font-size:11px;padding:4px 6px;border:1px solid #d1d5db;border-radius:6px" onblur="mqSaveSpecCustomUnit('${id}', ${isInstall}, this.value)"/>
+      <div style="font-size:10px;color:#9ca3af;line-height:1.3;margin-top:2px">Unit name, shown as typed</div>
+    </div>`;
+  }
+  // Shows/hides the unit-name box + the Min box for one side after a mode change.
+  function mqSpecRefreshCustomUnitUI(id, isInstall, isCustom) {
+    const wrap = document.getElementById(isInstall ? `mq-spec-installcustomunit-${id}-wrap` : `mq-spec-customunit-${id}-wrap`);
+    if (wrap) wrap.style.display = isCustom ? 'block' : 'none';
+    if (isCustom) { const inp = document.getElementById(isInstall ? `mq-spec-installcustomunit-${id}` : `mq-spec-customunit-${id}`); if (inp && !inp.value) inp.focus(); }
+    const minWrap = document.getElementById(isInstall ? `mq-spec-installprice-minwrap-${id}` : `mq-spec-price-minwrap-${id}`);
+    if (minWrap) {
+      const ft = document.getElementById(isInstall ? `mq-spec-installperft-${id}` : `mq-spec-perft-${id}`);
+      const sq = document.getElementById(isInstall ? `mq-spec-installpersqft-${id}` : `mq-spec-persqft-${id}`);
+      minWrap.style.display = (isCustom || ft?.checked || sq?.checked) ? 'flex' : 'none';
+    }
+  }
+  window.mqSaveSpecCustomUnit = async function(id, isInstall, value) {
+    const field = isInstall ? 'Install custom unit' : 'Custom unit';
+    const v = String(value || '').trim().slice(0, 24);
+    const r = mqFindVariantOwnerRecord(id);
+    if (r && (r.fields[field] || '') === v) return;
+    if (r) r.fields[field] = v;
+    mqSpecSetFlatLabel(id, isInstall, v);
+    try { await atUpdate(CONFIG.SPECIALTY_TABLE, id, { [field]: v }); }
+    catch(e) {
+      console.error('Failed to save ' + field, e);
+      alert(`Couldn't save the unit name. Make sure the Specialty Items table in Airtable has a text field named exactly "${field}".`);
+    }
+  };
+  // Leaving Per custom clears the stored unit name (only if one was set, so
+  // shops that never use this never write to the new field at all).
+  function mqSpecClearCustomUnitIfSet(id, isInstall) {
+    const field = isInstall ? 'Install custom unit' : 'Custom unit';
+    const r = mqFindVariantOwnerRecord(id);
+    const inp = document.getElementById(isInstall ? `mq-spec-installcustomunit-${id}` : `mq-spec-customunit-${id}`);
+    if (inp) inp.value = '';
+    mqSpecSetFlatLabel(id, isInstall, '');
+    if (r && String(r.fields[field] || '').trim()) mqSaveSpecCustomUnit(id, isInstall, '');
+    mqSpecRefreshCustomUnitUI(id, isInstall, false);
+  }
+
   function mqSpecMinPriceHTML(r, isInstall) {
     const id = r.id;
     const wrapId = isInstall ? `mq-spec-installprice-minwrap-${id}` : `mq-spec-price-minwrap-${id}`;
@@ -12418,7 +12518,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const field = isInstall ? 'Install minimum price' : 'Minimum price';
     const perFt = isInstall ? r.fields['Install per linear foot'] : r.fields['Per linear foot'];
     const perSqFt = isInstall ? r.fields['Install per square foot'] : r.fields['Per square foot'];
-    const visible = !!(perFt || perSqFt);
+    const visible = !!(perFt || perSqFt || mqSpecCustomUnit(r, isInstall));
     return `<div id="${wrapId}" style="display:${visible ? 'flex' : 'none'};align-items:center;gap:4px;margin-top:5px">
       <span style="font-size:10px;color:#9ca3af;white-space:nowrap">Min ${CUR()}</span>
       <input type="number" value="${r.fields[field] || ''}" id="${fieldId}" placeholder="0.00" style="width:64px;font-size:11px;padding:3px 5px" onblur="mqSaveSpecField('${id}','${field}',parseFloat(this.value))"/>
@@ -12462,17 +12562,18 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     }
     return `<div style="display:flex;flex-direction:column;gap:3px;width:94px">
       <input type="number" value="${r.fields['Price'] || ''}" id="mq-spec-price-${r.id}" style="width:94px" onblur="mqSaveSpecField('${r.id}','Price',parseFloat(this.value))"/>
-      ${mqSpecRateCalcIconHTML(r.id, false, !!(r.fields['Per linear foot'] || r.fields['Per square foot']))}${mqSpecMinPriceHTML(r, false)}
+      ${mqSpecRateCalcIconHTML(r.id, false, !!(r.fields['Per linear foot'] || r.fields['Per square foot']), mqSpecCustomUnit(r, false) ? 'per ' + mqSpecCustomUnit(r, false) : '')}${mqSpecMinPriceHTML(r, false)}
     </div>`;
   }
 
   function mqSpecPricedCellHTML(r) {
     const variantCount = mqParseVariants(r).length;
     const pickerHTML = `<select id="mq-spec-pricingmode-${r.id}" onchange="mqSpecPricingModeChange('${r.id}', this.value)" style="font-size:12px;padding:5px 4px;border-radius:6px;border:1px solid #d1d5db;width:98px;background:#fff">
-        <option value="flat" ${(!r.fields['Per linear foot'] && !r.fields['Per square foot']) ? 'selected' : ''}>Flat rate</option>
+        <option value="flat" ${(!r.fields['Per linear foot'] && !r.fields['Per square foot'] && !mqSpecCustomUnit(r, false)) ? 'selected' : ''}>Flat rate</option>
         <option value="linft" ${r.fields['Per linear foot'] ? 'selected' : ''}>Per lin ft</option>
         <option value="sqft" ${r.fields['Per square foot'] ? 'selected' : ''}>Per sq ft</option>
-      </select>`;
+        <option value="custom" ${mqSpecCustomUnit(r, false) ? 'selected' : ''}>Custom</option>
+      </select>${mqSpecCustomUnitInputHTML(r, false)}`;
     // Still real and functional with variants — see the correction note
     // above. This note just clarifies that it's one shared setting for
     // every variant listed below, since that's the part that confused
@@ -12575,18 +12676,20 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           <span style="font-size:11px;color:#6b7280">Install price (labor only, added on top)</span>
           <span onclick="mqShowSpecHelpPopover(this,'e.g. ${CUR()}54.95/sqft to supply a door + ${CUR()}16.80/door to install it — enter 16.80 here, not the combined total. The widget adds supply and install as two separate charges.',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>
         </div>
-        <input type="number" value="${r.fields['Install price'] || ''}" id="mq-spec-installprice-${r.id}" placeholder="${CUR()}0.00" style="width:100px" onblur="mqSaveSpecField('${r.id}','Install price',parseFloat(this.value))"/>${mqSpecRateCalcIconHTML(r.id, true, !!(r.fields['Install per linear foot'] || r.fields['Install per square foot']))}
+        <input type="number" value="${r.fields['Install price'] || ''}" id="mq-spec-installprice-${r.id}" placeholder="${CUR()}0.00" style="width:100px" onblur="mqSaveSpecField('${r.id}','Install price',parseFloat(this.value))"/>${mqSpecRateCalcIconHTML(r.id, true, !!(r.fields['Install per linear foot'] || r.fields['Install per square foot']), mqSpecCustomUnit(r, true) ? 'per ' + mqSpecCustomUnit(r, true) : '')}
         ${mqSpecMinPriceHTML(r, true)}
         <div style="margin-top:6px;display:flex;gap:6px;align-items:center">
           <select id="mq-spec-installmode-select-${r.id}" onchange="mqSpecInstallPricingModeChange('${r.id}', this.value)" style="font-size:11px;padding:4px 4px;border-radius:6px;border:1px solid #d1d5db;width:96px;background:#fff">
-            <option value="perItem" ${(!installPerFt && !installPerSqFt) ? 'selected' : ''}>Per item</option>
+            <option value="perItem" ${(!installPerFt && !installPerSqFt && !mqSpecCustomUnit(r, true)) ? 'selected' : ''}>Per item</option>
             <option value="linft" ${installPerFt ? 'selected' : ''}>Per lin ft</option>
             <option value="sqft" ${installPerSqFt ? 'selected' : ''}>Per sq ft</option>
+            <option value="custom" ${mqSpecCustomUnit(r, true) ? 'selected' : ''}>Custom</option>
           </select>
           <input type="checkbox" id="mq-spec-installperft-${r.id}" ${installPerFt?'checked':''} style="display:none"/>
           <input type="checkbox" id="mq-spec-installpersqft-${r.id}" ${installPerSqFt?'checked':''} style="display:none"/>
           <span onclick="mqShowSpecHelpPopover(this,'Choose Per item if install is priced per item, not per linear or square foot. Can be a different method than supply — e.g. supply priced per sqft, install priced per door.',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>
         </div>
+        ${mqSpecCustomUnitInputHTML(r, true)}
         <div style="margin-top:6px;display:flex;align-items:center;gap:4px">
           <span style="font-size:11px;color:#6b7280">Question customers see:</span>
           <span onclick="mqShowSpecHelpPopover(this,'This only shows to customers when install is priced differently than supply. Type your own question to customize it, or leave blank to use the placeholder text shown below as the default.',event)" style="cursor:pointer;color:#9ca3af;font-size:11px;font-weight:700;border:1px solid #d1d5db;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">?</span>
@@ -13300,6 +13403,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         'Install per linear foot': master.fields['Install per linear foot'] || false,
         'Install per square foot': master.fields['Install per square foot'] || false,
         'Install quantity label': master.fields['Install quantity label'] || '',
+        ...(master.fields['Custom unit'] ? { 'Custom unit': master.fields['Custom unit'] } : {}),
+        ...(master.fields['Install custom unit'] ? { 'Install custom unit': master.fields['Install custom unit'] } : {}),
         'Description': master.fields['Description'] || '',
         'Category': master.fields['Category'] || '',
         'Pro only': master.fields['Pro only'] || false,
@@ -16558,7 +16663,16 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
       return;
     }
 
-    const shopRecord = await loadShop(shopToken);
+    let shopRecord = null;
+    try {
+      shopRecord = await loadShop(shopToken);
+    } catch (e) {
+      const loggedOut = /failed: 401/.test(String(e && e.message));
+      container.innerHTML = loggedOut
+        ? '<div style="padding:4rem;text-align:center;color:#111;font-size:14px">Please <a href="/login" style="color:#1a1a1a;font-weight:700">log in</a> to see your dashboard.</div>'
+        : '<div style="padding:4rem;text-align:center;color:#dc2626;font-size:14px">We couldn\'t load your dashboard just now. Please refresh in a moment — if it keeps happening, contact support@midasquote.com.</div>';
+      return;
+    }
     if (!shopRecord) {
       container.innerHTML = '<div class="mq-loading" style="padding:4rem;text-align:center;color:#dc2626">Shop not found. Please contact support at support@midasquote.com</div>';
       return;
@@ -16630,6 +16744,14 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
       const navTemplates = el('mq-nav-templates');
       if (navTemplates) navTemplates.style.display = 'flex';
       window._mqIsAdminShop = true;
+    } else {
+      // Every other shop: remove the admin tab AND its page outright, so no
+      // CSS rule can ever bring them back into view (Oct 2026 — a newer
+      // nav-group rule was overriding the tab's inline display:none, which
+      // showed "Templates (Admin)" to every shop).
+      el('mq-nav-templates')?.remove();
+      el('mq-page-templates')?.remove();
+      window._mqIsAdminShop = false;
     }
     mqBuildHelpGuide();
 
@@ -16766,7 +16888,7 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
           if (cancelCard) cancelCard.style.display = 'block';
         } else if (isFreeTier) {
           const demoNote = plan === 'Demo'
-            ? 'your free trial has ended and you\'re on the limited free Demo tier (DEMO watermark, no MidasQuote Pro, no custom photos)'
+            ? 'your estimator stays live on your website for free. Your own photos, MidasQuote Pro and new showroom uploads are paid features'
             : 'you\'re on the free trial — full access, no card on file';
           // Only shown while actually trialing — once Plan flips to 'Demo'
           // the trial has already ended, so a countdown/expiry date no
@@ -16782,7 +16904,7 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
           }
           planEl.innerHTML = `
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-              <span style="background:#e0e7ff;color:#3730a3;font-size:12px;font-weight:500;padding:3px 10px;border-radius:20px">${plan}</span>
+              <span style="background:#e0e7ff;color:#3730a3;font-size:12px;font-weight:500;padding:3px 10px;border-radius:20px">${plan === 'Demo' ? 'Free' : plan}</span>
               <span style="font-size:14px;font-weight:500;color:#111">Free plan</span>
             </div>
             ${trialExpiryHTML}

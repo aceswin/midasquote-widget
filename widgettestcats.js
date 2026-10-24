@@ -68,6 +68,64 @@
   }
 
   // ============================================================
+  // FETCHING THE SHOP'S DATA (built to survive slow / flaky connections)
+  // ============================================================
+  // History: this used to be 3 sequential tries with an 8-second wait each and nothing
+  // on screen but a spinner, so a visitor on a slow or briefly-locked-out connection
+  // (Airtable only allows 5 requests/second for the whole account) could sit through
+  // ~25-30 seconds of nothing and leave (seen on a Microsoft Clarity recording of a
+  // Facebook-ad visitor). Now:
+  //   - the request is started again in parallel at 5s and 10s (the first one is NOT
+  //     cancelled, so whichever answers first wins), and a quick failure (HTTP 429 /
+  //     5xx / dropped connection) is retried straight away instead of after a long wait;
+  //   - the last good copy of the shop's data is kept in the browser (localStorage). If
+  //     the network hasn't answered after 7 seconds, or every try failed, that copy is
+  //     used so returning visitors can still open the estimator. Normally the live data
+  //     always wins, so price changes still show up immediately;
+  //   - the hard stop is ~25s, after which the "Having trouble loading" card appears.
+  const MQ_SHOP_CACHE = t => 'mq_shop_payload_v1_' + t;
+  function mqReadShopCache(token) {
+    try {
+      const o = JSON.parse(localStorage.getItem(MQ_SHOP_CACHE(token)) || 'null');
+      if (o && o.payload && o.payload.shop && o.t && Date.now() - o.t < 14 * 864e5) return o.payload;
+    } catch (e) {}
+    return null;
+  }
+  function mqWriteShopCache(token, payload) {
+    try { localStorage.setItem(MQ_SHOP_CACHE(token), JSON.stringify({ t: Date.now(), payload })); } catch (e) {}
+  }
+  function mqFetchShopPayload(token) {
+    const url = `${CONFIG.PROXY_WORKER}/shop-data?shop=${encodeURIComponent(token)}`;
+    const SLOW_MS = 7000, HARD_MS = 25000, MAX_TRIES = 3;
+    return new Promise((resolve, reject) => {
+      let settled = false, started = 0, inflight = 0, lastErr = null;
+      const timers = [];
+      const finish = (ok, v) => { if (settled) return; settled = true; timers.forEach(clearTimeout); (ok ? resolve : reject)(v); };
+      const useCacheOr = err => { const c = mqReadShopCache(token); if (c) { window._mqUsedCachedShopData = true; finish(true, c); } else finish(false, err); };
+      const launch = () => {
+        if (settled || started >= MAX_TRIES) return;
+        started++; inflight++;
+        const ctl = new AbortController();
+        const killer = setTimeout(() => ctl.abort(), HARD_MS);
+        fetch(url, { signal: ctl.signal, cache: 'no-store' })
+          .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+          .then(p => { clearTimeout(killer); if (p && !p.error && p.shop) mqWriteShopCache(token, p); finish(true, p); })
+          .catch(err => {
+            clearTimeout(killer); lastErr = err; inflight--;
+            if (settled) return;
+            if (started < MAX_TRIES) timers.push(setTimeout(launch, 450 * started));
+            else if (inflight <= 0) useCacheOr(err);
+          });
+      };
+      launch();
+      timers.push(setTimeout(launch, 5000));
+      timers.push(setTimeout(launch, 10000));
+      timers.push(setTimeout(() => { if (!settled && mqReadShopCache(token)) useCacheOr(lastErr); }, SLOW_MS));
+      timers.push(setTimeout(() => useCacheOr(lastErr || new Error('timeout')), HARD_MS));
+    });
+  }
+
+  // ============================================================
   // LOAD SHOP DATA
   // ============================================================
   // Matches the dashboard's "My Products" tab photo-key format so the widget
@@ -127,8 +185,7 @@
   }
 
   async function loadShopData(token) {
-    const res = await fetchWithRetry(`${CONFIG.PROXY_WORKER}/shop-data?shop=${encodeURIComponent(token)}`, {});
-    const payload = await res.json();
+    const payload = await mqFetchShopPayload(token);
     if (payload.error || !payload.shop) { console.error('MidasQuote: Shop not found:', token); return null; }
 
     const shopRecord = payload.shop;
@@ -393,6 +450,9 @@
           badgePrice:(defaultVariant ? defaultVariant.price : (r.fields['Price']||0))+(r.fields['Install price']||0),
           perFt:r.fields['Per linear foot']||false,
           perSqFt:r.fields['Per square foot']||false,
+          // "Per custom" (Oct 2026): a flat-rate item with the shop's own unit
+          // name, e.g. "hours" — shown exactly as typed, decimals allowed.
+          customUnit:(!r.fields['Per linear foot'] && !r.fields['Per square foot']) ? String(r.fields['Custom unit']||'').trim() : '',
           // Per-order floor for size-based items (e.g. a tiny door still
           // takes a full sheet and the same labor as a bigger one) — only
           // meaningful when perFt/perSqFt is set, same as the dashboard only
@@ -423,6 +483,7 @@
           // three describe install's own pricing method independently.
           installPerFt: r.fields['Install per linear foot']||false,
           installPerSqFt: r.fields['Install per square foot']||false,
+          installCustomUnit: (!r.fields['Install per linear foot'] && !r.fields['Install per square foot']) ? String(r.fields['Install custom unit']||'').trim() : '',
           installQtyLabel: r.fields['Install quantity label']||'',
           description: r.fields['Description']||'',
           category: r.fields['Category']||'',
@@ -439,6 +500,8 @@
     });
     const specs = specsRaw;
 
+    // Custom pricing categories — see mqCcBuild. Pro-only ones are left out here.
+    window._mqCustomCats = mqCcBuild(shop, sorted, shopPhotos, shopFeatured, false);
     return { shop, pricing:p, specs, li, hasDynamic, shopPhotos, shopFeatured, roomTypes };
   }
 
@@ -616,6 +679,8 @@
     );
   }
 
+  // HTML-escapes a shop-typed "Per custom" unit name before it goes into markup.
+  function mqEscUnit(u) { return String(u == null ? '' : u).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
   async function sendEmail(to, subject, html) {
     if (!CONFIG.EMAIL_WORKER||!to) return;
     try { await fetch(CONFIG.EMAIL_WORKER,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to,subject,html})}); }
@@ -2173,8 +2238,8 @@
       // reusing the supply quantity (45 sqft) against a per-door rate would
       // massively overcharge. specUnitKind normalizes each side down to
       // 'linear' | 'sqft' | 'item' so they're comparable.
-      const specUnitKind = (perFt, perSqFt) => perFt ? 'linear' : (perSqFt ? 'sqft' : 'item');
-      const installDiffers = s.offersInstallChoice && specUnitKind(s.perFt, s.perSqFt) !== specUnitKind(s.installPerFt, s.installPerSqFt);
+      const specUnitKind = (perFt, perSqFt, custom) => perFt ? 'linear' : (perSqFt ? 'sqft' : (custom ? 'custom:' + custom.toLowerCase() : 'item'));
+      const installDiffers = s.offersInstallChoice && specUnitKind(s.perFt, s.perSqFt, s.customUnit) !== specUnitKind(s.installPerFt, s.installPerSqFt, s.installCustomUnit);
       // The actual supply/install CHOICE control (a real decision the
       // customer has to make) sits under the photo, left-aligned to match
       // the image's own width, above the variant pills — its own visually
@@ -2199,11 +2264,11 @@
           <div style="font-size:11px;color:#6b7280;margin-bottom:4px">${s.installQtyLabel || 'How many of these need to be installed?'}</div>
           <div class="mq-qty-ctrl">
             <button class="mq-qty-btn" onclick="mqAdjInstallQty('${prefix}',${i},-1)">−</button>
-            <input type="text" inputmode="${s.installPerFt||s.installPerSqFt?'decimal':'numeric'}" pattern="${s.installPerFt||s.installPerSqFt?'[0-9]*\\.?[0-9]*':'[0-9]*'}" id="mq-installqty-${prefix}-${i}" value="0" style="width:36px;text-align:center;font-size:16px;font-weight:500;border:1px solid #d1d5db;border-radius:4px;padding:2px 4px;font-family:inherit;box-shadow:none" oninput="mqSetInstallQty('${prefix}',${i},this.value)" onclick="this.select()"/>
+            <input type="text" inputmode="${s.installPerFt||s.installPerSqFt||s.installCustomUnit?'decimal':'numeric'}" pattern="${s.installPerFt||s.installPerSqFt||s.installCustomUnit?'[0-9]*\\.?[0-9]*':'[0-9]*'}" id="mq-installqty-${prefix}-${i}" value="0" style="width:36px;text-align:center;font-size:16px;font-weight:500;border:1px solid #d1d5db;border-radius:4px;padding:2px 4px;font-family:inherit;box-shadow:none" oninput="mqSetInstallQty('${prefix}',${i},this.value)" onclick="this.select()"/>
             <button class="mq-qty-btn" onclick="mqAdjInstallQty('${prefix}',${i},1)">+</button>
             ${s.installPerSqFt ? calcBtn(`mq-installqty-${prefix}-${i}`,'sqft',s.label) : (s.installPerFt ? calcBtn(`mq-installqty-${prefix}-${i}`,'linear',s.label) : '')}
           </div>
-          <span style="font-size:11px;font-weight:600;color:#6b7280">${s.installPerSqFt ? 'square feet' : (s.installPerFt ? 'linear feet' : 'quantity')}</span>
+          <span style="font-size:11px;font-weight:600;color:#6b7280">${s.installPerSqFt ? 'square feet' : (s.installPerFt ? 'linear feet' : (s.installCustomUnit ? mqEscUnit(s.installCustomUnit) : 'quantity'))}</span>
         </div>` : '';
       return `
       <div class="mq-spec-item" id="${itemDomId}" data-rooms="${roomsAttr}" data-item-id="${s.id}">
@@ -2220,11 +2285,11 @@
         <div class="mq-spec-bottom">
           <div class="mq-qty-ctrl">
             <button class="mq-qty-btn" onclick="mqAdjQty('${prefix}',${i},-1)">−</button>
-            <input type="text" inputmode="${(s.perSqFt||s.perFt)?'decimal':'numeric'}" pattern="${(s.perSqFt||s.perFt)?'[0-9]*\\.?[0-9]*':'[0-9]*'}" id="mq-qty-${prefix}-${i}" value="0" style="width:36px;text-align:center;font-size:16px;font-weight:500;border:1px solid #d1d5db;border-radius:4px;padding:2px 4px;font-family:inherit;box-shadow:none" oninput="mqSetQty('${prefix}',${i},this.value)" onclick="this.select()"/>
+            <input type="text" inputmode="${(s.perSqFt||s.perFt||s.customUnit)?'decimal':'numeric'}" pattern="${(s.perSqFt||s.perFt||s.customUnit)?'[0-9]*\\.?[0-9]*':'[0-9]*'}" id="mq-qty-${prefix}-${i}" value="0" style="width:36px;text-align:center;font-size:16px;font-weight:500;border:1px solid #d1d5db;border-radius:4px;padding:2px 4px;font-family:inherit;box-shadow:none" oninput="mqSetQty('${prefix}',${i},this.value)" onclick="this.select()"/>
             <button class="mq-qty-btn" onclick="mqAdjQty('${prefix}',${i},1)">+</button>
             ${s.perSqFt ? calcBtn(`mq-qty-${prefix}-${i}`,'sqft',s.label) : (s.perFt ? calcBtn(`mq-qty-${prefix}-${i}`,'linear',s.label) : '')}
           </div>
-          <span style="font-size:11px;font-weight:600;color:#6b7280">${s.perSqFt ? 'square feet' : (s.perFt ? 'linear feet' : 'quantity')}</span>
+          <span style="font-size:11px;font-weight:600;color:#6b7280">${s.perSqFt ? 'square feet' : (s.perFt ? 'linear feet' : (s.customUnit ? mqEscUnit(s.customUnit) : 'quantity'))}</span>
           ${installQtyRowHtml}
         </div>
       </div>`;
@@ -2381,8 +2446,26 @@
   // breakdown no longer reflects reality, so it starts fresh instead.
   let _mqCalcSavedSections = {};
 
+  // The calculator's boxes accept fractions as well as decimals, e.g.
+  // "36 3/4", "36-3/4", "3/8", "½", "36¾" or plain "36.75". Anything it
+  // can't read counts as 0, same as an empty box always did.
+  const MQ_CALC_UNICODE_FRACS = { '½': ' 1/2', '¼': ' 1/4', '¾': ' 3/4', '⅛': ' 1/8', '⅜': ' 3/8', '⅝': ' 5/8', '⅞': ' 7/8', '⅓': ' 1/3', '⅔': ' 2/3', '⅙': ' 1/6', '⅚': ' 5/6', '⅕': ' 1/5', '⅖': ' 2/5', '⅗': ' 3/5', '⅘': ' 4/5' };
+  function mqCalcParse(val) {
+    let t = String(val == null ? '' : val).toLowerCase();
+    t = t.replace(/[½¼¾⅛⅜⅝⅞⅓⅔⅙⅚⅕⅖⅗⅘]/g, c => MQ_CALC_UNICODE_FRACS[c]);
+    t = t.replace(/[″”"]/g, '').replace(/(inches|inch|in)\b/g, '');
+    t = t.replace(/(\d)\s*-\s*(\d+\s*\/)/, '$1 $2');           // 36-3/4 -> 36 3/4
+    t = t.replace(/\s*\/\s*/g, '/').replace(/\s+/g, ' ').trim();
+    let m = /^(\d*\.?\d+) (\d+)\/(\d+)$/.exec(t);               // mixed number
+    if (m) return +m[3] ? (+m[1]) + (+m[2]) / (+m[3]) : 0;
+    m = /^(\d+)\/(\d+)$/.exec(t);                               // plain fraction
+    if (m) return +m[2] ? (+m[1]) / (+m[2]) : 0;
+    const n = parseFloat(t);
+    return isNaN(n) ? 0 : n;
+  }
+
   function mqCalcToFeet(val, unit) {
-    const n = parseFloat(val) || 0;
+    const n = mqCalcParse(val);
     if (unit === 'ft') return n;
     return unit === 'mm' ? n / 304.8 : n / 12;
   }
@@ -2392,14 +2475,14 @@
   // those fields reuse the exact same ft/in/mm calculator, just landing the
   // total in inches instead of feet.
   function mqCalcToInches(val, unit) {
-    const n = parseFloat(val) || 0;
+    const n = mqCalcParse(val);
     if (unit === 'in') return n;
     return unit === 'mm' ? n / 25.4 : n * 12;
   }
 
   function mqCalcComputeTotalFor(sections, mode, unit) {
     if (mode === 'linear' || mode === 'inches') {
-      const totalUnits = sections.reduce((sum, s) => sum + (parseFloat(s.val) || 0), 0);
+      const totalUnits = sections.reduce((sum, s) => sum + mqCalcParse(s.val), 0);
       return mode === 'inches' ? mqCalcToInches(totalUnits, unit) : mqCalcToFeet(totalUnits, unit);
     }
     return sections.reduce((sum, s) => sum + mqCalcToFeet(s.w, unit) * mqCalcToFeet(s.h, unit), 0);
@@ -2527,6 +2610,15 @@
     window.mqPhotoLightbox(list[i].src, list[i].label, list, i);
   };
 
+  // Inches get the full keyboard (the number pad has no "/"); feet and mm
+  // keep the number pad since fractions are rarely typed there.
+  function mqCalcInputAttrs() {
+    return `inputmode="${_mqCalcUnit === 'in' ? 'text' : 'decimal'}" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"`;
+  }
+  function mqCalcEsc(v) {
+    return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+  }
+
   function mqRenderCalc() {
     const card = document.getElementById('mq-calc-card');
     if (!card) return;
@@ -2534,15 +2626,15 @@
     const rows = _mqCalcSections.map((s, idx) => (_mqCalcMode === 'linear' || _mqCalcMode === 'inches') ? `
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
         ${_mqCalcMode === 'linear' ? `<span style="font-size:13px;color:#4b5563;width:64px;flex-shrink:0">Section ${idx + 1}</span>` : ''}
-        <input type="number" value="${s.val}" placeholder="0" oninput="mqCalcUpdateSection(${idx},'val',this.value)" style="flex:1;font-size:16px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit"/>
+        <input type="text" ${mqCalcInputAttrs()} value="${mqCalcEsc(s.val)}" placeholder="0" oninput="mqCalcUpdateSection(${idx},'val',this.value)" style="flex:1;font-size:16px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit"/>
         <span style="font-size:13px;color:#4b5563;width:44px">${unitLabel}</span>
         ${_mqCalcMode === 'linear' && _mqCalcSections.length > 1 ? `<button type="button" onclick="mqCalcRemoveSection(${idx})" style="background:none;border:none;color:#dc2626;font-size:16px;cursor:pointer;padding:0 4px">✕</button>` : (_mqCalcMode === 'linear' ? '<span style="width:20px;flex-shrink:0"></span>' : '')}
       </div>` : `
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
         <span style="font-size:13px;color:#4b5563;width:64px;flex-shrink:0">Section ${idx + 1}</span>
-        <input type="number" value="${s.w}" placeholder="Width" oninput="mqCalcUpdateSection(${idx},'w',this.value)" style="flex:1;min-width:0;font-size:16px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit"/>
+        <input type="text" ${mqCalcInputAttrs()} value="${mqCalcEsc(s.w)}" placeholder="Width" oninput="mqCalcUpdateSection(${idx},'w',this.value)" style="flex:1;min-width:0;font-size:16px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit"/>
         <span style="font-size:12px;color:#6b7280;flex-shrink:0">×</span>
-        <input type="number" value="${s.h}" placeholder="Height" oninput="mqCalcUpdateSection(${idx},'h',this.value)" style="flex:1;min-width:0;font-size:16px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit"/>
+        <input type="text" ${mqCalcInputAttrs()} value="${mqCalcEsc(s.h)}" placeholder="Height" oninput="mqCalcUpdateSection(${idx},'h',this.value)" style="flex:1;min-width:0;font-size:16px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit"/>
         <span style="font-size:13px;color:#4b5563;width:44px">${unitLabel}</span>
         ${_mqCalcSections.length > 1 ? `<button type="button" onclick="mqCalcRemoveSection(${idx})" style="background:none;border:none;color:#dc2626;font-size:16px;cursor:pointer;padding:0 4px">✕</button>` : '<span style="width:20px;flex-shrink:0"></span>'}
       </div>`
@@ -2557,6 +2649,7 @@
         <button type="button" onclick="mqCalcSetUnit('in')" style="flex:1;padding:8px;border-radius:6px;border:1.5px solid ${_mqCalcUnit === 'in' ? '#1a1a1a' : '#d1d5db'};background:${_mqCalcUnit === 'in' ? '#1a1a1a' : '#fff'};color:${_mqCalcUnit === 'in' ? '#fff' : '#374151'};font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Inches</button>
         <button type="button" onclick="mqCalcSetUnit('mm')" style="flex:1;padding:8px;border-radius:6px;border:1.5px solid ${_mqCalcUnit === 'mm' ? '#1a1a1a' : '#d1d5db'};background:${_mqCalcUnit === 'mm' ? '#1a1a1a' : '#fff'};color:${_mqCalcUnit === 'mm' ? '#fff' : '#374151'};font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Millimeters</button>
       </div>
+      ${_mqCalcUnit === 'in' ? `<div style="font-size:12px;color:#6b7280;margin:-6px 0 10px">Fractions are fine — e.g. 36 3/4 or 3/8</div>` : ''}
       <div id="mq-calc-rows">${rows}</div>
       ${_mqCalcMode !== 'inches' ? `<button type="button" onclick="mqCalcAddSection()" style="width:100%;padding:8px;border-radius:6px;border:1.5px dashed #93c5fd;background:#eff6ff;color:#1e40af;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:14px">+ Add another section</button>` : ''}
       <div style="background:#f0fdf4;border-radius:8px;padding:10px 12px;margin-bottom:14px;text-align:center">
@@ -2578,7 +2671,7 @@
     // one decimal place; everything else (uft/bft/trim) supports full
     // decimals.
     const total = (_mqCalcTargetId && _mqCalcTargetId.startsWith('mq-qty-')) || _mqCalcMode === 'inches'
-      ? Math.round(rawTotal * 10) / 10
+      ? (_mqCalcMode === 'inches' ? Math.round(rawTotal * 1000) / 1000 : Math.round(rawTotal * 10) / 10)
       : Math.round(rawTotal * 100) / 100;
     const targetEl = document.getElementById(_mqCalcTargetId);
     if (targetEl) {
@@ -2955,8 +3048,322 @@
         <div id="mq-${prefix}-specialty-body" style="display:none">
           <div class="mq-spec-grid">${specHTML(specs, prefix)}</div>
         </div>
+      </div>
+      ${mqCcSectionsHTML(prefix)}`;
+  }
+
+
+  // ============================================================
+  // CUSTOM PRICING CATEGORIES (Phase 1, Oct 2026)
+  // ============================================================
+  // A shop can make its own priced categories on the dashboard's Pricing tab
+  // (e.g. "Finishing & extras", "Site access"). Each one shows up here as its
+  // own numbered step in the Cabinets and Both tabs, right after Details &
+  // Selections. The category settings live on the shop ('Custom categories'
+  // JSON); its options are ordinary Line Items rows whose Category is the
+  // category's id (cc_xxxx), so photos, groups, best-seller badges and
+  // project-type visibility all come from My Products exactly like doors or
+  // materials. Each option's pricing rule is in its 'Custom pricing' JSON:
+  //   how: flat | each (customer enters a count, `unit` names it) |
+  //        base_lf | upper_lf | all_lf (uses the cabinet measurements) |
+  //        pct (% of the cabinet estimate before these extras)
+  //   min: minimum charge, showIf: another option's id (pick-any only),
+  //   proOnly: shows in MidasQuote Pro only.
+  // A category is either "pick one" (photo chips like door styles, with an
+  // optional None) or "pick any" (cards customers add, with a +/- count for
+  // per-unit options). The category itself can also be Pro only, or shown
+  // only when another option is picked.
+  // Every control has an id starting mq-<prefix>-cc so the multi-project
+  // cart's snapshot/restore (mqSnapshotFormState) carries it automatically.
+  const MQ_CC_CSS = `<style>
+    #midasquote-widget .mq-cc-add{margin-top:4px;font:inherit;font-size:13px;font-weight:700;padding:6px 14px;border-radius:6px;border:1.5px solid #d1d5db;background:#fff;color:#111;cursor:pointer}
+    #midasquote-widget .mq-cc-card.on .mq-cc-add{background:#1d4ed8;border-color:#1d4ed8;color:#fff}
+    #midasquote-widget .mq-cc-group + .mq-cc-group{margin-top:12px}
+    #midasquote-widget .mq-cc-group-title{font-size:12px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#374151;margin:0 0 6px}
+    #midasquote-widget .mq-cc-group-desc{font-size:12px;color:#6b7280;margin:-2px 0 8px;line-height:1.4}
+  </style>`;
+  function mqCcEsc(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function mqCcAttr(s) { return mqCcEsc(s).replace(/'/g,'&#39;'); }
+  function mqCcQtyText(n) { return (Math.round(n * 100) / 100).toString(); }
+
+  // Built once from the payload in loadShopData. `allowPro` = this is
+  // MidasQuote Pro (Pro-only categories/options are kept).
+  function mqCcBuild(shop, sortedLineItems, shopPhotos, shopFeatured, allowPro) {
+    let defs = [];
+    try { defs = shop['Custom categories'] ? JSON.parse(shop['Custom categories']) : []; } catch(e) { defs = []; }
+    if (!Array.isArray(defs)) defs = [];
+    const cats = defs
+      .filter(c => c && typeof c.id === 'string' && /^cc_[a-z0-9]+$/i.test(c.id) && (allowPro || !c.proOnly))
+      .map(c => {
+        const items = sortedLineItems
+          .filter(r => r.fields && r.fields['Category'] === c.id && r.fields['Active'] !== false)
+          .map(r => {
+            const f = r.fields;
+            let cfg = {};
+            try { cfg = f['Custom pricing'] ? JSON.parse(f['Custom pricing']) : {}; } catch(e) { cfg = {}; }
+            if (!cfg || typeof cfg !== 'object') cfg = {};
+            const key = photoKeyFor(c.id, f['Name'] || '');
+            return {
+              id: r.id,
+              name: (f['Name'] || '').trim(),
+              desc: f['Description'] || '',
+              rate: parseFloat(f['Rate']) || 0,
+              how: ['flat','each','base_lf','upper_lf','all_lf','pct'].includes(cfg.how) ? cfg.how : 'flat',
+              unit: String(cfg.unit || '').trim(),
+              min: parseFloat(cfg.min) || 0,
+              showIf: typeof cfg.showIf === 'string' ? cfg.showIf : '',
+              proOnly: !!cfg.proOnly,
+              photoUrl: (shopPhotos || {})[key] || '',
+              featured: !!(shopFeatured || {})[key],
+              visibleRooms: effectiveVisibleRooms(parseVisibleRooms(f), c.id),
+              groupName: (f['Group name'] || '').trim(),
+              groupOrder: f['Group sort order'] || 0,
+              groupDesc: f['Group description'] || '',
+            };
+          })
+          .filter(it => it.name && (allowPro || !it.proOnly));
+        return {
+          id: c.id,
+          name: String(c.name || 'Extras'),
+          description: String(c.description || ''),
+          answer: c.answer === 'one' ? 'one' : 'any',
+          required: !!c.required,
+          showIf: typeof c.showIf === 'string' ? c.showIf : '',
+          items,
+        };
+      })
+      .filter(c => c.items.length);
+    return cats;
+  }
+
+  function mqCcRoom(p) { const el = document.getElementById(`mq-${p}-room`); return el ? el.value : ''; }
+  function mqCcRoomOk(it, room) { const v = it.visibleRooms || []; return !v.length || v.includes(room); }
+  function mqCcNum(id) { const el = document.getElementById(id); const v = el ? parseFloat(el.value) : 0; return isNaN(v) ? 0 : v; }
+  function mqCcFind(itemId) {
+    for (const cat of (window._mqCustomCats || [])) {
+      const it = cat.items.find(i => i.id === itemId);
+      if (it) return { cat, it };
+    }
+    return null;
+  }
+  // Is this option currently picked by the customer (ignores visibility)?
+  function mqCcPickedRaw(p, cat, it) {
+    if (cat.answer === 'one') { const sel = document.getElementById(`mq-${p}-cc-${cat.id}`); return !!sel && sel.value === it.id; }
+    if (it.how === 'each') return mqCcNum(`mq-${p}-ccq-${it.id}`) > 0;
+    const cb = document.getElementById(`mq-${p}-cck-${it.id}`);
+    return !!cb && cb.checked;
+  }
+  // Picked AND actually showing — used by show-if rules, so a rule never
+  // fires off an option the customer can't currently see.
+  function mqCcPickedLive(p, itemId, room, depth) {
+    const hit = mqCcFind(itemId);
+    if (!hit || depth > 6) return false;
+    return mqCcCatOn(p, hit.cat, room, depth + 1) && mqCcItemOn(p, hit.cat, hit.it, room, depth + 1) && mqCcPickedRaw(p, hit.cat, hit.it);
+  }
+  function mqCcItemOn(p, cat, it, room, depth) {
+    if (!mqCcRoomOk(it, room)) return false;
+    // A rule pointing at an option that no longer exists is ignored.
+    if (cat.answer === 'any' && it.showIf && mqCcFind(it.showIf)) return mqCcPickedLive(p, it.showIf, room, (depth || 0) + 1);
+    return true;
+  }
+  function mqCcCatOn(p, cat, room, depth) {
+    if (cat.showIf && mqCcFind(cat.showIf) && !mqCcPickedLive(p, cat.showIf, room, (depth || 0) + 1)) return false;
+    return cat.items.some(it => mqCcRoomOk(it, room));
+  }
+
+  function mqCcCardHTML(p, cat, it) {
+    const safeName = mqCcEsc(it.name);
+    const thumb = it.photoUrl
+      ? `<img class="mq-spec-thumb" src="${mqCcAttr(it.photoUrl)}" alt="${safeName}" onclick="event.stopPropagation();mqPhotoLightbox('${it.photoUrl.replace(/'/g,"\\'")}','${it.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')" onerror="this.outerHTML='<div class=\\'mq-spec-thumb-placeholder\\'>✨</div>'"/>`
+      : `<div class="mq-spec-thumb-placeholder">✨</div>`;
+    const featured = it.featured ? `<span class="mq-vpicker-featured-badge" style="background:${window._mqBadgeColor||'#f59e0b'}">🏆 ${(window._mqBadgeLabel||'Best seller').replace(/</g,'&lt;')}</span>` : '';
+    const auto = { base_lf: 'Uses your base cabinet length', upper_lf: 'Uses your upper cabinet length', all_lf: 'Uses your total cabinet length', pct: '' }[it.how];
+    const control = it.how === 'each'
+      ? `<div class="mq-qty-ctrl">
+          <button class="mq-qty-btn" type="button" aria-label="Less" onclick="event.stopPropagation();mqCcAdj('${p}','${it.id}',-1)">−</button>
+          <input type="text" inputmode="decimal" id="mq-${p}-ccq-${it.id}" value="0" onclick="event.stopPropagation();this.select()" style="width:44px;text-align:center;font-size:16px;font-weight:500;border:1px solid #d1d5db;border-radius:4px;padding:2px 4px;font-family:inherit;box-shadow:none"/>
+          <button class="mq-qty-btn" type="button" aria-label="More" onclick="event.stopPropagation();mqCcAdj('${p}','${it.id}',1)">+</button>
+        </div>
+        <span style="font-size:11px;font-weight:600;color:#6b7280">${mqCcEsc(it.unit || 'quantity')}</span>`
+      : `<input type="checkbox" id="mq-${p}-cck-${it.id}" style="display:none"/>
+        <button type="button" class="mq-cc-add" id="mq-${p}-cckb-${it.id}" onclick="event.stopPropagation();mqCcToggle('${p}','${it.id}')">+ Add</button>`;
+    return `<div class="mq-spec-item mq-cc-card" id="mq-${p}-ccc-${it.id}" data-cc-item="${it.id}">
+        <div class="mq-spec-top">
+          <div style="position:relative;flex-shrink:0">${thumb}${featured}</div>
+          <div style="flex:1;min-width:0">
+            <span class="mq-spec-name">${safeName}</span>
+            ${it.desc ? `<div style="font-size:11px;color:#6b7280;margin-top:2px;line-height:1.3">${mqCcEsc(it.desc)}</div>` : ''}
+            ${auto ? `<div style="font-size:11px;color:#166534;margin-top:6px;line-height:1.3">📐 ${auto}</div>` : ''}
+          </div>
+        </div>
+        <div class="mq-spec-bottom">${control}</div>
       </div>`;
   }
+
+  // Every custom category step for one cabinet form (prefix 'c' or 'b').
+  function mqCcSectionsHTML(p) {
+    const cats = window._mqCustomCats || [];
+    if (!cats.length) return '';
+    return MQ_CC_CSS + cats.map(cat => {
+      const key = `${p}-cc-${cat.id}`;
+      let body;
+      if (cat.answer === 'one') {
+        const opts = cat.items.map(it => ({
+          value: it.id, label: it.name, photoUrl: it.photoUrl, featured: it.featured, icon: '✨', price: it.rate,
+          visibleRooms: it.visibleRooms, groupName: it.groupName, groupOrder: it.groupOrder, groupDesc: it.groupDesc,
+        }));
+        const list = sortBadgeAndGroupItems(cat.required ? opts : [{ value: 'none', label: 'None', icon: '🚫' }, ...opts]);
+        // Badges ($/$$/$$$) only mean something for a plain price — a %
+        // option's "rate" is a percentage, not dollars.
+        list.forEach(o => { const hit = cat.items.find(i => i.id === o.value); if (hit && hit.how === 'pct') delete o.badge; });
+        body = `${pickerRow(`mq-${p}-cc-${cat.id}`, list, null, cat.id)}
+          <select id="mq-${p}-cc-${cat.id}" style="display:none">${list.map(o => `<option value="${o.value}">${mqCcEsc(o.label)}</option>`).join('')}</select>
+          <div id="mq-${p}-ccqw-${cat.id}" style="display:none;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px">
+            <label class="mq-label" style="margin:0">How many?</label>
+            <div class="mq-qty-ctrl">
+              <button class="mq-qty-btn" type="button" aria-label="Less" onclick="event.stopPropagation();mqCcAdj('${p}','${cat.id}',-1)">−</button>
+              <input type="text" inputmode="decimal" id="mq-${p}-ccq-${cat.id}" value="1" onclick="event.stopPropagation();this.select()" style="width:44px;text-align:center;font-size:16px;font-weight:500;border:1px solid #d1d5db;border-radius:4px;padding:2px 4px;font-family:inherit;box-shadow:none"/>
+              <button class="mq-qty-btn" type="button" aria-label="More" onclick="event.stopPropagation();mqCcAdj('${p}','${cat.id}',1)">+</button>
+            </div>
+            <span id="mq-${p}-ccqu-${cat.id}" style="font-size:12px;font-weight:600;color:#6b7280"></span>
+          </div>`;
+      } else {
+        // Groups (from My Products) become small headings; ungrouped last.
+        const names = [...new Set(cat.items.filter(i => i.groupName).sort((a, b) => (a.groupOrder || 0) - (b.groupOrder || 0)).map(i => i.groupName))];
+        const buckets = names.map(n => ({ name: n, desc: (cat.items.find(i => i.groupName === n && i.groupDesc) || {}).groupDesc || '', items: cat.items.filter(i => i.groupName === n) }));
+        const loose = cat.items.filter(i => !i.groupName);
+        if (loose.length) buckets.push({ name: names.length ? 'Other' : '', desc: '', items: loose });
+        body = buckets.map((b, bi) => `<div class="mq-cc-group" data-cc-group="${bi}">
+            ${b.name ? `<div class="mq-cc-group-title">${mqCcEsc(b.name)}</div>${b.desc ? `<div class="mq-cc-group-desc">${mqCcEsc(b.desc)}</div>` : ''}` : ''}
+            ${mqHscrollWrap(`${p}-cc-${cat.id}-g${bi}`, 'mq-cc-items', b.items.map(it => mqCcCardHTML(p, cat, it)).join(''))}
+          </div>`).join('');
+      }
+      return `<div class="mq-sec mq-cc-sec" id="mq-${key}-sec" data-mq-cc="${cat.id}" onclick="mqOpenIfClosed('${key}')">
+        ${collapsibleHeader(key, mqCcEsc(cat.name))}
+        ${cat.description && !window._mqFxOn ? `<div style="font-size:13px;color:#4b5563;margin-bottom:10px;line-height:1.5">${mqCcEsc(cat.description)}</div>` : ''}
+        <div id="mq-${key}-body" style="display:none">${body}</div>
+      </div>`;
+    }).join('');
+  }
+
+  window.mqCcAdj = function(p, id, delta) {
+    const el = document.getElementById(`mq-${p}-ccq-${id}`);
+    if (!el) return;
+    const next = Math.max(0, Math.round(((parseFloat(el.value) || 0) + delta) * 100) / 100);
+    el.value = mqCcQtyText(next);
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+  };
+  window.mqCcToggle = function(p, itemId) {
+    const cb = document.getElementById(`mq-${p}-cck-${itemId}`);
+    if (!cb) return;
+    cb.checked = !cb.checked;
+    cb.dispatchEvent(new Event('change', { bubbles: true }));
+  };
+
+  // Brings everything on screen in line with the current answers and project
+  // type: which steps/cards show (project type + show-if rules), the "added"
+  // look on cards, and the count box for a per-unit pick-one option.
+  window.mqCcSync = function(p) {
+    const cats = window._mqCustomCats || [];
+    if (!cats.length || (p !== 'c' && p !== 'b')) return;
+    const room = mqCcRoom(p);
+    let changed = false;
+    cats.forEach(cat => {
+      const sec = document.getElementById(`mq-${p}-cc-${cat.id}-sec`);
+      if (!sec) return;
+      const want = mqCcCatOn(p, cat, room, 0) ? '' : 'none';
+      if (sec.style.display !== want) { sec.style.display = want; changed = true; }
+      if (cat.answer === 'one') {
+        const sel = document.getElementById(`mq-${p}-cc-${cat.id}`);
+        const it = cat.items.find(i => i.id === (sel && sel.value));
+        const qw = document.getElementById(`mq-${p}-ccqw-${cat.id}`);
+        if (qw) qw.style.display = (it && it.how === 'each') ? 'flex' : 'none';
+        const qu = document.getElementById(`mq-${p}-ccqu-${cat.id}`);
+        if (qu) qu.textContent = (it && it.unit) || '';
+        return;
+      }
+      cat.items.forEach(it => {
+        const card = document.getElementById(`mq-${p}-ccc-${it.id}`);
+        if (!card) return;
+        card.style.display = mqCcItemOn(p, cat, it, room, 0) ? '' : 'none';
+        const on = mqCcPickedRaw(p, cat, it);
+        card.classList.toggle('on', on);
+        const btn = document.getElementById(`mq-${p}-cckb-${it.id}`);
+        if (btn) btn.textContent = on ? '✓ Added' : '+ Add';
+      });
+      sec.querySelectorAll('.mq-cc-group').forEach(g => {
+        g.style.display = [...g.querySelectorAll('.mq-cc-card')].some(c => c.style.display !== 'none') ? '' : 'none';
+      });
+    });
+    if (changed && window.mqRenumberSteps) {
+      window.mqRenumberSteps(p);
+      if (window.mqUpdateStepFocus) window.mqUpdateStepFocus(p);
+    }
+    if (window.mqUpdateAllPickerArrows) window.mqUpdateAllPickerArrows();
+  };
+
+  // Back to a blank state (project type change, Reset quote).
+  window.mqCcReset = function(p) {
+    (window._mqCustomCats || []).forEach(cat => {
+      if (cat.answer === 'one') {
+        const first = document.querySelector(`[data-vpicker-for="mq-${p}-cc-${cat.id}"] .mq-vpicker-select-btn`);
+        if (first && window.mqPickVisual) window.mqPickVisual(`mq-${p}-cc-${cat.id}`, first);
+        const q = document.getElementById(`mq-${p}-ccq-${cat.id}`);
+        if (q) q.value = '1';
+        return;
+      }
+      cat.items.forEach(it => {
+        const q = document.getElementById(`mq-${p}-ccq-${it.id}`);
+        if (q) q.value = '0';
+        const cb = document.getElementById(`mq-${p}-cck-${it.id}`);
+        if (cb) cb.checked = false;
+      });
+    });
+    window.mqCcSync(p);
+  };
+
+  // Price lines for calcCabinet. ctx = { uFt, bFt, base } where base is the
+  // cabinet estimate so far (what a % option is a percentage of).
+  window.mqCcCost = function(p, ctx) {
+    const out = { total: 0, lines: [] };
+    const cats = window._mqCustomCats || [];
+    if (!cats.length || (p !== 'c' && p !== 'b')) return out;
+    const room = mqCcRoom(p);
+    const uFt = (ctx && ctx.uFt) || 0, bFt = (ctx && ctx.bFt) || 0, base = (ctx && ctx.base) || 0;
+    cats.forEach(cat => {
+      if (!mqCcCatOn(p, cat, room, 0)) return;
+      cat.items.forEach(it => {
+        if (!mqCcItemOn(p, cat, it, room, 0) || !mqCcPickedRaw(p, cat, it)) return;
+        let qty = 1, qtyTxt = '', cost = 0;
+        if (it.how === 'each') {
+          qty = mqCcNum(cat.answer === 'one' ? `mq-${p}-ccq-${cat.id}` : `mq-${p}-ccq-${it.id}`);
+          cost = it.rate * qty; qtyTxt = `${mqCcQtyText(qty)}${it.unit ? ' ' + it.unit : ''}`;
+        } else if (it.how === 'base_lf' || it.how === 'upper_lf' || it.how === 'all_lf') {
+          qty = it.how === 'base_lf' ? bFt : (it.how === 'upper_lf' ? uFt : uFt + bFt);
+          cost = it.rate * qty; qtyTxt = `${mqCcQtyText(qty)} lin ft`;
+        } else if (it.how === 'pct') {
+          cost = base * it.rate / 100; qtyTxt = `${mqCcQtyText(it.rate)}%`;
+        } else {
+          cost = it.rate;
+        }
+        if (it.how !== 'flat' && it.how !== 'pct' && qty <= 0) return;
+        if (it.min > 0 && cost >= 0) cost = Math.max(cost, it.min);
+        if (!cost) return;
+        out.total += cost;
+        out.lines.push({ label: qtyTxt ? `${it.name} (${qtyTxt})` : it.name, cost: Math.round(cost) });
+      });
+    });
+    return out;
+  };
+
+  // Keeps the cards/steps in sync with every answer, including values put
+  // back by the multi-project cart's restore (which fires input/change).
+  // Capture phase so this runs before the live estimate recalculates.
+  ['input', 'change'].forEach(evt => document.addEventListener(evt, e => {
+    const id = (e.target && e.target.id) || '';
+    const m = id.match(/^mq-(c|b)-(cc|room)/);
+    if (m && window.mqCcSync) window.mqCcSync(m[1]);
+  }, true));
 
   function mqTravelNote() {
     const radius = window._mqLocalRadius || 15;
@@ -3668,7 +4075,7 @@
         const q = Array.isArray(qtyArr) ? (qtyArr[vi] || 0) : 0;
         let badge = chip.querySelector('.mq-spec-variant-qty-badge');
         if (q > 0) {
-          const unitSuffix = s.perSqFt ? ' sf' : (s.perFt ? ' ft' : '×');
+          const unitSuffix = s.perSqFt ? ' sf' : (s.perFt ? ' ft' : (s.customUnit ? ' ' + s.customUnit : '×'));
           if (!badge) {
             badge = document.createElement('span');
             badge.className = 'mq-spec-variant-qty-badge';
@@ -3981,6 +4388,7 @@
         specSec.style.display = anySpecItemVisible ? '' : 'none';
         if (window.mqRenumberSteps) window.mqRenumberSteps(prefix);
       }
+      if (window.mqCcSync) window.mqCcSync(prefix);
       mqReorderSpecCategoryGroups(prefix, roomId);
       mqReorderSpecItemsWithinCategories(prefix, roomId);
     };
@@ -4141,6 +4549,7 @@
       descEl.innerHTML = ''; // clear previous content before rebuilding
       if (coverImg) {
         const img = document.createElement('img');
+        if (window._mqFxOn) img.loading = 'lazy';
         img.src = coverImg;
         img.style.cssText = 'width:100%;max-height:160px;object-fit:cover;border-radius:6px;margin-bottom:8px;display:block;cursor:zoom-in';
         img.onerror = () => { img.style.display = 'none'; };
@@ -4273,6 +4682,7 @@
           slide.appendChild(mqBuildVideoEmbedEl(video, src));
         } else {
           const img = document.createElement('img');
+          if (window._mqFxOn) img.loading = 'lazy';
           img.src = src;
           img.style.cssText = 'width:100%;height:auto;max-height:480px;object-fit:contain;display:block;cursor:zoom-in;border-radius:6px';
           img.onerror = () => { slide.style.display = 'none'; };
@@ -4375,6 +4785,7 @@
           guideEl.appendChild(mqBuildVideoEmbedEl(singleVideo, allImages[0]));
         } else {
         const img = document.createElement('img');
+        if (window._mqFxOn) img.loading = 'lazy';
         img.src = allImages[0];
         img.className = 'mq-measure-guide-img';
         // height:auto + object-fit:contain (not cover) so the whole image
@@ -5186,6 +5597,7 @@
     // carrying over numbers or selections that may not even make sense for
     // the newly picked type.
     function mqResetCabinetForm(prefix) {
+      if (window.mqCcReset) window.mqCcReset(prefix);
       const siSel = document.getElementById(`mq-${prefix}-si`);
       if (siSel) siSel.selectedIndex = 0;
 
@@ -5730,6 +6142,32 @@
 
     // Clears the whole running quote and resets every tab's form back to
     // its starting state, so the customer can start completely over.
+    // Clears every specialty item on one tab: quantities (every variant),
+    // the selected card highlight, supply/install mode, install quantity,
+    // and the chosen variant. Same steps mqOnProjectTypeChange already runs
+    // on a project-type switch — Reset quote (and widget.js's "clear this
+    // project") never did, so specialty items silently survived a reset
+    // and came straight back into the next estimate (Oct 2026).
+    function mqResetSpecItems(prefix) {
+      if (!specQty[prefix]) return;
+      Object.keys(specQty[prefix]).forEach(i => {
+        mqSpecQtyResetAll(prefix, i);
+        const qtyInput = document.getElementById(`mq-qty-${prefix}-${i}`);
+        if (qtyInput) qtyInput.value = 0;
+        document.getElementById(`mq-sp-${prefix}-${i}`)?.classList.remove('on');
+        mqUpdateSpecVariantBadge(prefix, i);
+        const modeSel = document.getElementById(`mq-spec-mode-${prefix}-${i}`);
+        if (modeSel) modeSel.selectedIndex = 0;
+        if (installQty[prefix]) installQty[prefix][i] = 0;
+        const installQtyInput = document.getElementById(`mq-installqty-${prefix}-${i}`);
+        if (installQtyInput) installQtyInput.value = 0;
+        const installQtyRow = document.getElementById(`mq-spec-installqty-${prefix}-${i}`);
+        if (installQtyRow) installQtyRow.style.display = 'none';
+        if (specVariant[prefix] && specVariant[prefix][i] !== 0 && specs[i] && specs[i].variants && specs[i].variants.length) {
+          window.mqPickSpecVariant(prefix, i, 0);
+        }
+      });
+    }
     window.mqResetEntireQuote = function() {
       if ((window._mqQuoteCart||[]).length && !confirm('Clear your whole quote and start over?')) return;
       window._mqQuoteCart = [];
@@ -5738,6 +6176,7 @@
       mqResetCabinetForm('c');
       mqResetCabinetForm('b');
       mqResetCountertopStandalone('ct');
+      ['c','b','ct'].forEach(mqResetSpecItems);
       // Hide every tab's already-calculated result panel too -- resetting
       // the form fields above doesn't do this on its own, so without this
       // a tab that had a result showing before "Reset quote" was clicked
@@ -5756,6 +6195,7 @@
     // cart entries (other project types already added) are untouched.
     window.mqResetCurrentProject = function(prefix) {
       if (prefix === 'ct') { mqResetCountertopStandalone(prefix); } else { mqResetCabinetForm(prefix); }
+      mqResetSpecItems(prefix);
       window._mqLivePreview = null;
       _mqStepIndex[prefix] = 0;
       document.getElementById(`mq-${prefix}-result`)?.classList.remove('show');
@@ -6080,9 +6520,10 @@
     window.mqToggleSpec=(prefix,i)=>{if(mqSpecQtyGet(prefix,i)===0){if(!mqSpecModeChosen(prefix,i))return;mqAdjQty(prefix,i,1);}else mqAdjQty(prefix,i,-mqSpecQtyGet(prefix,i));};
     window.mqAdjQty=(prefix,i,d)=>{
       if (d > 0 && !mqSpecModeChosen(prefix,i)) return;
-      const allowDecimal = specs[i] && (specs[i].perFt || specs[i].perSqFt);
+      const allowDecimal = specs[i] && (specs[i].perFt || specs[i].perSqFt || specs[i].customUnit);
+      const dp = specs[i] && specs[i].customUnit ? 100 : 10; // Per custom: 2 decimals (2.25 hours); lin/sq ft: 1
       let next = Math.max(0, mqSpecQtyGet(prefix,i) + d);
-      if (allowDecimal) next = Math.round(next * 10) / 10; // keep to one decimal place
+      if (allowDecimal) next = Math.round(next * dp) / dp;
       mqSpecQtySet(prefix,i,next);
       const el=document.getElementById(`mq-qty-${prefix}-${i}`);
       if(el) { el.value=next; el.dispatchEvent(new Event('input', { bubbles: true })); }
@@ -6090,9 +6531,10 @@
       mqUpdateSpecVariantBadge(prefix,i);
     };
     window.mqSetQty=(prefix,i,val)=>{
-      const allowDecimal = specs[i] && (specs[i].perFt || specs[i].perSqFt);
+      const allowDecimal = specs[i] && (specs[i].perFt || specs[i].perSqFt || specs[i].customUnit);
+      const dp = specs[i] && specs[i].customUnit ? 100 : 10;
       const n = allowDecimal
-        ? Math.max(0, Math.round((parseFloat(val)||0) * 10) / 10) // one decimal — e.g. linear/sq ft items
+        ? Math.max(0, Math.round((parseFloat(val)||0) * dp) / dp) // decimals — lin/sq ft (1 place) or Per custom (2 places)
         : Math.max(0, parseInt(val,10)||0); // whole numbers — plain quantity items
       if (n > 0 && !mqSpecModeChosen(prefix,i)) {
         const el=document.getElementById(`mq-qty-${prefix}-${i}`);
@@ -6149,17 +6591,19 @@
       row.style.display = (sel && sel.value === 'install') ? 'block' : 'none';
     };
     window.mqAdjInstallQty=(prefix,i,d)=>{
-      const allowDecimal = specs[i] && (specs[i].installPerFt || specs[i].installPerSqFt);
+      const allowDecimal = specs[i] && (specs[i].installPerFt || specs[i].installPerSqFt || specs[i].installCustomUnit);
+      const dp = specs[i] && specs[i].installCustomUnit ? 100 : 10;
       let next = Math.max(0, (installQty[prefix][i]||0) + d);
-      if (allowDecimal) next = Math.round(next * 10) / 10;
+      if (allowDecimal) next = Math.round(next * dp) / dp;
       installQty[prefix][i]=next;
       const el=document.getElementById(`mq-installqty-${prefix}-${i}`);
       if(el) { el.value=installQty[prefix][i]; el.dispatchEvent(new Event('input', { bubbles: true })); }
     };
     window.mqSetInstallQty=(prefix,i,val)=>{
-      const allowDecimal = specs[i] && (specs[i].installPerFt || specs[i].installPerSqFt);
+      const allowDecimal = specs[i] && (specs[i].installPerFt || specs[i].installPerSqFt || specs[i].installCustomUnit);
+      const dp = specs[i] && specs[i].installCustomUnit ? 100 : 10;
       const n = allowDecimal
-        ? Math.max(0, Math.round((parseFloat(val)||0) * 10) / 10)
+        ? Math.max(0, Math.round((parseFloat(val)||0) * dp) / dp)
         : Math.max(0, parseInt(val,10)||0);
       installQty[prefix][i]=n;
     };
@@ -6729,8 +7173,8 @@
           // (perFt/perSqFt), same as the dashboard only shows the field
           // then.
           let supplyCost = entry.price * entry.qty;
-          if ((s.perFt || s.perSqFt) && entry.minPrice > 0) supplyCost = Math.max(supplyCost, entry.minPrice);
-          const supplyQtyLabel = s.perSqFt?`${entry.qty} sqft`:(s.perFt?`${entry.qty} ft`:(entry.qty>1?`× ${entry.qty}`:''));
+          if ((s.perFt || s.perSqFt || s.customUnit) && entry.minPrice > 0) supplyCost = Math.max(supplyCost, entry.minPrice);
+          const supplyQtyLabel = s.perSqFt?`${entry.qty} sqft`:(s.perFt?`${entry.qty} ft`:(s.customUnit?`${entry.qty} ${s.customUnit}`:(entry.qty>1?`× ${entry.qty}`:'')));
           specTotal += supplyCost;
           lines.push({label:supplyQtyLabel?`${entry.label} (${supplyQtyLabel})${supplySuffix}`:`${entry.label}${supplySuffix}`,cost:Math.round(supplyCost)});
         });
@@ -6748,22 +7192,27 @@
         // parsing comment above where these get built) — when install's
         // pricing method matches supply's, its quantity is simply every
         // variant's supply quantity added together.
-        const supplyKind = s.perFt ? 'linear' : (s.perSqFt ? 'sqft' : 'item');
-        const installKind = s.installPerFt ? 'linear' : (s.installPerSqFt ? 'sqft' : 'item');
+        const supplyKind = s.perFt ? 'linear' : (s.perSqFt ? 'sqft' : (s.customUnit ? 'custom:' + s.customUnit.toLowerCase() : 'item'));
+        const installKind = s.installPerFt ? 'linear' : (s.installPerSqFt ? 'sqft' : (s.installCustomUnit ? 'custom:' + s.installCustomUnit.toLowerCase() : 'item'));
         const totalSupplyQty = supplyEntries.reduce((a,e)=>a+e.qty, 0);
         const installQtyVal = (installKind !== supplyKind) ? (installQty[prefix][i] || 0) : totalSupplyQty;
         let installCost = s.installPrice * installQtyVal;
-        if ((s.installPerFt || s.installPerSqFt) && s.installMinPrice > 0 && installQtyVal > 0) installCost = Math.max(installCost, s.installMinPrice);
-        const installQtyLabel = s.installPerSqFt?`${installQtyVal} sqft`:(s.installPerFt?`${installQtyVal} ft`:(installQtyVal>1?`× ${installQtyVal}`:''));
+        if ((s.installPerFt || s.installPerSqFt || s.installCustomUnit) && s.installMinPrice > 0 && installQtyVal > 0) installCost = Math.max(installCost, s.installMinPrice);
+        const installQtyLabel = s.installPerSqFt?`${installQtyVal} sqft`:(s.installPerFt?`${installQtyVal} ft`:(s.installCustomUnit?`${installQtyVal} ${s.installCustomUnit}`:(installQtyVal>1?`× ${installQtyVal}`:'')));
         specTotal += installCost;
         lines.push({label:installQtyLabel?`${s.label} (${installQtyLabel}) — Install`:`${s.label} — Install`,cost:Math.round(installCost)});
       });
+
+      // Custom pricing categories (Pricing tab) — % options use the cabinet
+      // estimate so far as their base.
+      const ccRes = window.mqCcCost ? window.mqCcCost(prefix, { uFt, bFt, base: uCost+bCost+islandCost+drawerAdjCost+specTotal+tallCabTotal+trimCost }) : { total: 0, lines: [] };
+      lines.push(...ccRes.lines);
 
       const remEl=document.getElementById(`mq-${prefix}-removal`);
       const remCost=remEl&&remEl.value==='yes'?(uFt+bFt)*removalRate:0;
       if(remCost>0) lines.push({label:'Cabinet removal',cost:Math.round(remCost)});
 
-      const sub=uCost+bCost+islandCost+drawerAdjCost+specTotal+tallCabTotal+remCost+trimCost;
+      const sub=uCost+bCost+islandCost+drawerAdjCost+specTotal+tallCabTotal+remCost+trimCost+ccRes.total;
       const totalMult = (100 + totalAdjPct) / 100;
       const total = sub * totalMult;
       lines.push({label:'Subtotal (before tax)',cost:Math.round(total),bold:true});
@@ -8087,9 +8536,9 @@
     buildCTMAT(data);
     buildTRIM(data);
     buildTALLCAB(data);
-    container.innerHTML = buildWidgetHTML(shop, specs, data);
+    container.innerHTML = mqFxLazyImgs(buildWidgetHTML(shop, specs, data));
     wireWidget(data);
-    if (window._mqIsDemoPlan) mqInjectDemoWatermark(container);
+    // Free plan (Oct 2026): no DEMO watermark — the widget is free to use on a shop's own site. Photos still show as placeholders (loadShopData).
     if (window.mqFxInit) window.mqFxInit();
     // Fresh estimate — nothing calculated yet, so hide any leftover sticky
     // bar from before and let it re-earn its spot once they Calculate again.
@@ -8854,6 +9303,19 @@
     }
   }
 
+  // The "Having trouble loading" card with a Try again button (used when the shop data
+  // can't be fetched AND when something goes wrong while building the widget itself,
+  // so a visitor is never left looking at a spinner that will never finish).
+  function mqRenderLoadError(container) {
+    container.innerHTML=`<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:2.5rem 1.5rem;text-align:center;color:#4b5563;font-size:14px;line-height:1.6">
+        <div style="font-size:2rem;margin-bottom:0.75rem">⚠️</div>
+        <div style="font-weight:600;color:#111;font-size:15px;margin-bottom:6px">Having trouble loading your estimate</div>
+        <div style="margin-bottom:1rem">This is usually just a slow or dropped connection. Please try again.</div>
+        <button onclick="this.closest('#midasquote-widget').dispatchEvent(new Event('mq-retry'))" style="background:#1a1a1a;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Try again</button>
+      </div>`;
+    container.addEventListener('mq-retry', () => init(), { once: true });
+  }
+
   async function init() {
     const container=document.getElementById('midasquote-widget');
     if(!container){console.error('MidasQuote: Add <div id="midasquote-widget"></div> to your page.');return;}
@@ -8868,9 +9330,13 @@
     // very next tick clears this on its own instead of needing a matching
     // clearInterval() threaded into every one of those branches.
     let mqLoadingPhraseIdx = 0;
+    const mqLoadingStart = Date.now();
     const mqLoadingInterval = setInterval(() => {
       const el = document.getElementById('mq-loading-phrase');
       if (!el) { clearInterval(mqLoadingInterval); return; }
+      // After a few seconds stop the playful phrases and say what's going on, so a slow
+      // connection never just looks like a frozen page.
+      if (Date.now() - mqLoadingStart > 6000) { el.textContent = 'Still loading — your connection looks a bit slow. Hang tight…'; return; }
       mqLoadingPhraseIdx = (mqLoadingPhraseIdx + 1) % MQ_LOADING_PHRASES.length;
       el.textContent = MQ_LOADING_PHRASES[mqLoadingPhraseIdx];
     }, 900);
@@ -8879,13 +9345,7 @@
       data = await loadShopData(shopToken);
     } catch (err) {
       console.error('MidasQuote: failed to load shop data', err);
-      container.innerHTML=`<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:2.5rem 1.5rem;text-align:center;color:#4b5563;font-size:14px;line-height:1.6">
-        <div style="font-size:2rem;margin-bottom:0.75rem">⚠️</div>
-        <div style="font-weight:600;color:#111;font-size:15px;margin-bottom:6px">Having trouble loading your estimate</div>
-        <div style="margin-bottom:1rem">This is usually just a slow or dropped connection. Please try again.</div>
-        <button onclick="this.closest('#midasquote-widget').dispatchEvent(new Event('mq-retry'))" style="background:#1a1a1a;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Try again</button>
-      </div>`;
-      container.addEventListener('mq-retry', () => init(), { once: true });
+      mqRenderLoadError(container);
       return;
     }
     if(!data) {
@@ -8925,22 +9385,30 @@
     // watermark and shows every item's plain placeholder icon instead of any
     // photo — see mqInjectDemoWatermark, mqShowRoomDescription, and
     // mqRefreshMeasureGuide for the rest of what Demo affects.
-    injectStyles(
-      shop['Brand colour']||'#1a1a1a',
-      shop['Focal colour'],
-      shop['Box border colour'],
-      shop['Box background colour'],
-      shop['Box text colour']
-    );
-    buildCTMAT(data);
-    buildTRIM(data);
-    buildTALLCAB(data);
-    container.innerHTML=buildWidgetHTML(shop,specs,data);
-    wireWidget(data);
-    if (window._mqIsDemoPlan) mqInjectDemoWatermark(container);
-    if (window.mqFxInit) window.mqFxInit();
-    mqSetupModalOverlays();
-    mqSetupStickyBar();
+    try {
+      injectStyles(
+        shop['Brand colour']||'#1a1a1a',
+        shop['Focal colour'],
+        shop['Box border colour'],
+        shop['Box background colour'],
+        shop['Box text colour']
+      );
+      buildCTMAT(data);
+      buildTRIM(data);
+      buildTALLCAB(data);
+      container.innerHTML=mqFxLazyImgs(buildWidgetHTML(shop,specs,data));
+      wireWidget(data);
+      // Free plan (Oct 2026): no DEMO watermark — the widget is free to use on a shop's own site. Photos still show as placeholders (loadShopData).
+      if (window.mqFxInit) window.mqFxInit();
+      mqSetupModalOverlays();
+      mqSetupStickyBar();
+    } catch (err) {
+      // Building the widget threw (very old browser, or odd data). Show the retry card
+      // rather than leaving the spinner up forever.
+      console.error('MidasQuote: failed to build the estimator', err);
+      mqRenderLoadError(container);
+      return;
+    }
     // Delegated so it automatically covers every input/select/checkbox in
     // the widget, including ones added later (surface cards, tall cabinet
     // rows, etc.) — no need to individually wire each one.
@@ -9072,6 +9540,11 @@
     if (ends('b-ct-options-sec')) return { t: 'Now, your countertops', l: 'Countertops', s: 'Choose your material and how you’d like it supplied.' };
     if (ends('b-ct-surfaces-sec')) return { t: 'Any other countertop areas?', l: 'More surfaces', s: 'Bar tops, a separate vanity, an island — add them here, or just continue.' };
     if (ends('ct-surfaces-sec')) return { t: 'Tell us about your countertops', l: 'Countertops', s: 'Add each surface you need. You can add more than one.' };
+    if (sec.classList.contains('mq-cc-sec')) {
+      // Custom pricing category: the shop's own name and description.
+      const cat = (window._mqCustomCats || []).find(c => c.id === sec.getAttribute('data-mq-cc'));
+      if (cat) return { t: cat.name, l: cat.name, s: cat.description || (cat.answer === 'one' ? 'Pick the option that fits your project.' : 'Add anything you’d like, or just continue.') };
+    }
     const titleEl = sec.querySelector('.mq-sec-title');
     const fallbackT = (titleEl ? titleEl.textContent.replace(/^\s*\d+\s*/, '').trim() : '') || 'Next';
     return { t: fallbackT, l: fallbackT, s: '' };
@@ -9273,7 +9746,7 @@
     const isLast = index >= total - 1;
     const back = index > 0
       ? `<button type="button" class="mq-step-back-btn" onclick="event.stopPropagation();mqStepBack('${prefix}')">← Back</button>`
-      : `<button type="button" class="mq-step-back-btn" onclick="event.stopPropagation();mqFxToChooser()">← Exit</button>`;
+      : `<button type="button" class="mq-step-back-btn" onclick="event.stopPropagation();mqFxToChooser()">← Back</button>`;
     return `${back}<button type="button" class="mq-step-continue-btn" onclick="event.stopPropagation();mqStepContinue('${prefix}')">${isLast ? 'See my estimate ✨' : 'Continue →'}</button>`;
   };
 
@@ -9336,7 +9809,7 @@
   };
 
   // Leaving the full-screen view (✕ Exit, Esc, the side panel's "Exit quote",
-  // or "← Exit" on step 1) ends the quote: everything is wiped and the
+  // or "← Back" on step 1, which is labelled Back so people reach for it instead of the browser's Back button) ends the quote: everything is wiped and the
   // customer lands back on the chooser, so coming back never drops them in
   // the middle of an old quote at, say, step 9. It's the same full rebuild
   // as "Start new estimate" (mqStartNewEstimate), so every answer, result
@@ -9387,6 +9860,45 @@
     window.mqFxScrollToStep();
   };
 
+  // The slow "project types" ticker on each chooser card: one type name at a time
+  // drifts in from the right edge toward the left and fades out (via the box's CSS
+  // mask) well before it reaches the arrow; the next name follows right behind it.
+  // Pure requestAnimationFrame + transform; paused while off-screen, while the
+  // card's list is open, or while the chooser is hidden; people who ask their device
+  // for reduced motion get a gentle fade-free swap every few seconds instead.
+  window.mqFxStartTickers = function(root) {
+    const reduce = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    const SPEED = 36, GAP = 34; // px per second, px between names
+    root.querySelectorAll('.mq-fx-ptick').forEach(box => {
+      let names = [];
+      try { names = JSON.parse(box.getAttribute('data-names') || '[]').filter(n => typeof n === 'string' && n); } catch (e) {}
+      if (!names.length) return;
+      const mk = txt => { const el = document.createElement('span'); el.className = 'mq-fx-ptick-i'; el.textContent = txt; box.appendChild(el); return el; };
+      if (reduce) {
+        const el = mk(names[0]); let i = 0;
+        const iv = setInterval(() => { if (!box.isConnected) { clearInterval(iv); return; } if (!box.clientWidth) return; i = (i + 1) % names.length; el.textContent = names[i]; }, 2600);
+        return;
+      }
+      let next = Math.floor(Math.random() * names.length), items = [], last = 0, onScreen = true;
+      if (window.IntersectionObserver) new IntersectionObserver(es => { onScreen = es[es.length - 1].isIntersecting; }).observe(box);
+      const spawn = x => { const el = mk(names[next]); next = (next + 1) % names.length; const it = { el, x, w: el.offsetWidth }; el.style.transform = 'translateX(' + x + 'px)'; items.push(it); };
+      const frame = ts => {
+        if (!box.isConnected) return; // chooser was rebuilt: this loop ends
+        const cw = box.clientWidth, dt = Math.min(0.05, Math.max(0, (ts - last) / 1000));
+        last = ts;
+        if (cw && onScreen && !box.closest('.mq-fx-ptog-open')) {
+          items.forEach(it => { it.x -= SPEED * dt; it.el.style.transform = 'translateX(' + it.x + 'px)'; });
+          items = items.filter(it => { if (it.x + it.w < -6) { it.el.remove(); return false; } return true; });
+          const tail = items[items.length - 1];
+          if (!tail) spawn(cw * (0.3 + Math.random() * 0.45));
+          else if (tail.x + tail.w + GAP <= cw) spawn(cw);
+        }
+        requestAnimationFrame(frame);
+      };
+      requestAnimationFrame(frame);
+    });
+  };
+
   // Collapsible "project types" list under a chooser card. Opening one closes
   // the others so the first screen never grows much.
   window.mqFxToggleTypes = function(tabId, btn) {
@@ -9402,8 +9914,7 @@
       if (mine && open) p.removeAttribute('hidden'); else p.setAttribute('hidden', '');
       b.setAttribute('aria-expanded', mine && open ? 'true' : 'false');
       b.classList.toggle('mq-fx-ptog-open', mine && open);
-      const t = b.querySelector('.mq-fx-ptog-t');
-      if (t) t.textContent = mine && open ? 'Hide project types' : 'Tap to see project types';
+      // (the label stays "Project types"; aria-expanded + the turning arrow show the state)
     });
   };
   // A project type picked from that list: start the same flow the card
@@ -9584,6 +10095,9 @@
       #mq-fx-chooser .mq-fx-ptog{display:flex;align-items:center;justify-content:flex-start;gap:8px;width:100%;background:none;border:0;border-top:1px solid #e5e7eb;padding:12px 16px;font-family:inherit;font-size:13.5px;font-weight:700;color:var(--mq-card-ink,#1a1a1a);cursor:pointer;text-align:left;transition:background .15s}
       #mq-fx-chooser .mq-fx-ptog:focus-visible{background:var(--mq-card-tint,#f3f4f6);outline:none}
       @media (hover:hover){#mq-fx-chooser .mq-fx-ptog:hover{background:var(--mq-card-tint,#f3f4f6)}}
+      #mq-fx-chooser .mq-fx-ptick{position:relative;flex:1 1 0;min-width:0;height:22px;margin-left:12px;overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 34px,#000 calc(100% - 18px),transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 34px,#000 calc(100% - 18px),transparent 100%)}
+      #mq-fx-chooser .mq-fx-ptick-i{position:absolute;left:0;top:0;line-height:22px;white-space:nowrap;font-size:13.5px;font-weight:400;color:var(--mq-card-fg,#fff);will-change:transform}
+      #mq-fx-chooser .mq-fx-ptog-open .mq-fx-ptick{visibility:hidden}
       #mq-fx-chooser .mq-fx-ptog-c{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .2s}
       #mq-fx-chooser .mq-fx-ptog-open .mq-fx-ptog-c{transform:rotate(90deg)}
       #mq-fx-chooser .mq-fx-ptypes{background:#f9fafb;border-top:1px solid #e5e7eb;padding:12px 12px 14px;animation:mqFxInNext .25s ease backwards}
@@ -9597,6 +10111,13 @@
       #mq-fx-chooser .mq-fx-pt:hover .mq-fx-pt-img,#mq-fx-chooser .mq-fx-pt:focus-visible .mq-fx-pt-img{border-color:var(--mq-card-a,#1a1a1a);transform:translateY(-2px)}
       #mq-fx-chooser .mq-fx-pt:focus-visible{outline:none}
       #mq-fx-chooser .mq-fx-pt-name{font-size:12.5px;font-weight:700;color:#111827;line-height:1.25;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+      #mq-fx-chooser .mq-fx-pills{max-width:820px;margin:22px auto 0;padding-top:18px;border-top:1px solid #eceef1}
+      #mq-fx-chooser .mq-fx-pills-lbl{font-size:13px;font-weight:600;color:#6b7280;letter-spacing:.01em;margin-bottom:12px}
+      #mq-fx-chooser .mq-fx-pills-row{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+      #mq-fx-chooser .mq-fx-pill{display:inline-flex;align-items:center;max-width:100%;padding:8px 15px;border-radius:999px;border:1.5px solid var(--mq-card-a,#1a1a1a);background:#fff;color:var(--mq-card-ink,#1a1a1a);font-family:inherit;font-size:13.5px;font-weight:600;line-height:1.2;cursor:pointer;transition:background .15s,color .15s,transform .15s,box-shadow .15s;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+      #mq-fx-chooser .mq-fx-pill:focus-visible{outline:none;box-shadow:0 0 0 3px var(--mq-card-tint,#e5e7eb)}
+      #mq-fx-chooser .mq-fx-pill:active{background:var(--mq-card-a,#1a1a1a);color:var(--mq-card-fg,#fff)}
+      @media (hover:hover){#mq-fx-chooser .mq-fx-pill:hover{background:var(--mq-card-a,#1a1a1a);color:var(--mq-card-fg,#fff);transform:translateY(-1px)}}
       #mq-fx-chooser .mq-fx-trust{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 16px;margin:-6px auto 20px;font-size:13px;font-weight:600;color:#4b5563}
       #mq-fx-chooser .mq-fx-trust span{display:inline-flex;align-items:center;gap:6px}
       #mq-fx-chooser .mq-fx-trust svg{width:15px;height:15px;color:var(--mq-card-ink,#1a1a1a);flex-shrink:0}
@@ -9696,8 +10217,15 @@
         #midasquote-widget.mq-fx-onres #mq-fx-side .mq-fx-side-foot{margin-top:auto}
       }
 
-      /* Chooser cards: white, with a brand-colour gradient border */
-      #mq-fx-chooser .mq-fx-cardwrap{background:linear-gradient(#fff,#fff) padding-box,linear-gradient(135deg,var(--mq-card-a,#1a1a1a),var(--mq-card-b,#888)) border-box;border:2px solid transparent;box-shadow:0 4px 14px rgba(0,0,0,.07)}
+      /* Chooser cards: filled with the shop's brand colour. Text, arrow chip and dividers
+         switch light/dark by the colour's lightness (set in JS as --mq-card-fg etc.). */
+      #mq-fx-chooser .mq-fx-cardwrap{background:linear-gradient(160deg,var(--mq-card-a,#1a1a1a),var(--mq-card-deep,#111));border:2px solid var(--mq-card-a,#1a1a1a);box-shadow:0 4px 14px rgba(0,0,0,.10)}
+      #mq-fx-chooser .mq-fx-card-title{color:var(--mq-card-fg,#fff)}
+      #mq-fx-chooser .mq-fx-card-sub{color:var(--mq-card-fg-soft,rgba(255,255,255,.78))}
+      #mq-fx-chooser .mq-fx-card-arrow{background:var(--mq-card-chip,rgba(255,255,255,.18));color:var(--mq-card-fg,#fff)}
+      #mq-fx-chooser .mq-fx-ptog{color:var(--mq-card-fg,#fff);border-top-color:var(--mq-card-line,rgba(255,255,255,.22))}
+      #mq-fx-chooser .mq-fx-ptog:focus-visible{background:var(--mq-card-chip,rgba(255,255,255,.18))}
+      @media (hover:hover){#mq-fx-chooser .mq-fx-ptog:hover{background:var(--mq-card-chip,rgba(255,255,255,.18))}}
       #mq-fx-chooser .mq-fx-card:hover,#mq-fx-chooser .mq-fx-card:focus-visible{transform:none;box-shadow:none;outline:none}
       #mq-fx-chooser .mq-fx-cardwrap:has(.mq-fx-card:hover),#mq-fx-chooser .mq-fx-cardwrap:has(.mq-fx-card:focus-visible){transform:translateY(-3px);box-shadow:0 14px 30px rgba(0,0,0,.16),0 0 0 4px var(--mq-card-tint,#e5e7eb)}
       #mq-fx-chooser .mq-fx-card-current{box-shadow:0 0 0 4px var(--mq-card-tint,#e5e7eb),0 4px 14px rgba(0,0,0,.07)}
@@ -9838,6 +10366,42 @@
     });
   }
 
+  // Focused layout, page speed: the first screen is just the chooser, but the
+  // widget HTML also contains every hidden step's photos (cover images,
+  // measuring-guide pictures, material/door thumbnails, three times over for
+  // the three tabs). Browsers fetch those immediately, so the handful of
+  // photos the visitor can actually SEE queue behind megabytes they can't.
+  // In Focused every <img> in the page markup (the header logo excepted) is
+  // marked lazy; mqFxWarmImages() brings them in once the first screen is
+  // done. Classic is untouched.
+  function mqFxLazyImgs(html) {
+    if (!window._mqFxOn) return html;
+    // (A regex look-behind used to do the "skip the logo" part here, but older iPhones
+    // (iOS 16.3 and earlier) can't even parse a look-behind, which killed the WHOLE
+    // widget script before it ran. So the check is done by hand instead.)
+    const LOGO = 'class="mq-logo-real">';
+    return String(html).replace(/<img (?![^>]*\bloading=)/g, (m, off, str) => str.slice(Math.max(0, off - LOGO.length), off) === LOGO ? m : '<img loading="lazy" ');
+  }
+
+  // After the chooser's own photos have arrived (or a few seconds, whichever
+  // is first), let the browser fetch the hidden steps' images in the background
+  // so steps still open with their pictures ready.
+  function mqFxWarmImages() {
+    if (window._mqFxWarmTimer) return;
+    const warm = () => {
+      window._mqFxWarmTimer = null;
+      document.querySelectorAll('#midasquote-widget .mq-tab-content img[loading="lazy"]').forEach(i => { i.loading = 'eager'; });
+    };
+    const started = Date.now();
+    const tick = () => {
+      const vis = [...document.querySelectorAll('#mq-fx-chooser .mq-fx-card-photo img')];
+      const done = vis.every(i => i.complete) || Date.now() - started > 5000;
+      if (done) { window._mqFxWarmTimer = setTimeout(warm, 400); return; }
+      window._mqFxWarmTimer = setTimeout(tick, 150);
+    };
+    window._mqFxWarmTimer = setTimeout(tick, 150);
+  }
+
   window.mqFxInit = function() {
     const container = document.getElementById('midasquote-widget');
     if (!container || !window._mqFxOn) return;
@@ -9912,18 +10476,35 @@
       const ptHTML = t => {
         const list = typesFor(t.id);
         if (list.length < 2) return '';
-        return `<button type="button" class="mq-fx-ptog" aria-expanded="false" onclick="mqFxToggleTypes('${t.id}',this)"><span class="mq-fx-ptog-t">Tap to see project types</span><span class="mq-fx-ptog-c" aria-hidden="true"><svg viewBox="0 0 16 16" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8h11M9.5 4l4 4-4 4"/></svg></span></button>`
+        return `<button type="button" class="mq-fx-ptog" aria-expanded="false" onclick="mqFxToggleTypes('${t.id}',this)"><span class="mq-fx-ptog-t">${list.length} project types</span><span class="mq-fx-ptog-c" aria-hidden="true"><svg viewBox="0 0 16 16" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8h11M9.5 4l4 4-4 4"/></svg></span><span class="mq-fx-ptick" aria-hidden="true" data-names="${escH(JSON.stringify(list.map(r => r.name)))}"></span></button>`
           + `<div class="mq-fx-ptypes" hidden><div class="mq-fx-pgrid">${list.map(r => { const u = ptPhoto(r); return `<button type="button" class="mq-fx-pt" onclick="mqFxStartType('${t.id}','${escH(r.id)}')"><span class="mq-fx-pt-img"><span class="mq-fx-pt-ico">${t.icon}</span>${u ? `<img src="${u}" alt="" loading="lazy" decoding="async" onerror="this.remove()">` : ''}</span><span class="mq-fx-pt-name">${escH(r.name)}</span></button>`; }).join('')}</div></div>`;
       };
-      const imgs = id => photosFor(id).map(u => `<img src="${u}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`).join('');
+      const imgs = id => photosFor(id).map(u => `<img src="${u}" alt="" fetchpriority="high" decoding="async" onerror="this.remove()">`).join('');
       const TR = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
       const trust = `<div class="mq-fx-trust"><span>${TR('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>')}About 5 minutes</span><span>${TR('<path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/>')}No obligation</span><span>${TR('<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>')}Instant ballpark</span></div>`;
+      // "Or jump straight to a project": every project type as a tappable pill, shown
+      // right under the cards, so people can see at a glance that the three cards are
+      // only starting points (e.g. a doors-only job lives under a project type, not a
+      // card). A cabinet-side project type starts the full "Cabinets + countertops" quote
+      // when the shop offers it (a lot of refacing/restaining/etc. customers want new
+      // counters too), and falls back to Cabinets only when it doesn't; a countertop
+      // project type starts the Countertops-only quote. (Reaching a project type by way of
+      // the three cards or their "project types" lists is unchanged: that card's own flow.)
+      const cabTab = shown.find(t => t.id === 'both') || shown.find(t => t.id === 'cabinets');
+      const ctTab = shown.find(t => t.id === 'countertops');
+      const pillItems = [].concat(
+        cabTab ? typesFor(cabTab.id).map(r => ({ tab: cabTab.id, r })) : [],
+        ctTab ? typesFor(ctTab.id).map(r => ({ tab: ctTab.id, r })) : []
+      );
+      const pillsHTML = pillItems.length >= 2
+        ? `<div class="mq-fx-pills"><div class="mq-fx-pills-lbl">Or jump straight to a project</div><div class="mq-fx-pills-row">${pillItems.map(p => `<button type="button" class="mq-fx-pill" onclick="mqFxStartType('${p.tab}','${escH(p.r.id)}')">${escH(p.r.name)}</button>`).join('')}</div></div>`
+        : '';
       ch.innerHTML = `<div class="mq-fx-ch-title">${one ? 'Ready for your estimate?' : 'What would you like a quote for?'}</div>
         <div class="mq-fx-ch-sub">${one ? 'Answer a few quick questions to get your estimate.' : 'Pick one to get started.'}</div>
         ${trust}
         <div class="mq-fx-cards mq-fx-cards-${shown.length}">${shown.map(t =>
           `<div class="mq-fx-cardwrap"><button type="button" class="mq-fx-card" data-tab="${t.id}" onclick="mqFxStart('${t.id}')"><span class="mq-fx-card-photo"><span class="mq-fx-card-icon">${t.icon}</span>${imgs(t.id)}</span><span class="mq-fx-card-body"><span class="mq-fx-card-text"><span class="mq-fx-card-title">${one ? t.startTitle : t.title}</span><span class="mq-fx-card-sub">${one ? 'Takes about 5 minutes' : t.sub}</span></span><span class="mq-fx-card-arrow">›</span></span></button>${ptHTML(t)}</div>`).join('')}
-        </div>`;
+        </div>${pillsHTML}`;
       // Cards are white with a gradient BORDER of the shop's own Brand colour
       // (brand -> a lighter shade of it); the icon tile is a soft tint of the
       // brand colour. A light brand (e.g. yellow) gets a darker icon so it
@@ -9937,9 +10518,39 @@
       ch.style.setProperty('--mq-card-b', mix(bcRaw, 0.45, 255));
       ch.style.setProperty('--mq-card-tint', bcRaw + '1a');
       ch.style.setProperty('--mq-card-ink', lum > 0.42 ? mix(bcRaw, 0.5, 0) : bcRaw);
+      // Cards are filled with the brand colour, so their text follows its lightness:
+      // white on dark/medium colours, near-black on light ones (the switch point,
+      // lum ~0.2, is where black and white give equal contrast).
+      const darkText = lum > 0.2;
+      ch.style.setProperty('--mq-card-deep', mix(bcRaw, 0.22, 0));
+      ch.style.setProperty('--mq-card-fg', darkText ? '#111827' : '#ffffff');
+      ch.style.setProperty('--mq-card-fg-soft', darkText ? 'rgba(17,24,39,.72)' : 'rgba(255,255,255,.80)');
+      ch.style.setProperty('--mq-card-chip', darkText ? 'rgba(17,24,39,.12)' : 'rgba(255,255,255,.18)');
+      ch.style.setProperty('--mq-card-line', darkText ? 'rgba(17,24,39,.18)' : 'rgba(255,255,255,.22)');
+      // Give every card's coloured header the same height as the tallest one in its
+      // row (a long title like "Cabinets + countertops" wraps to two lines and would
+      // otherwise make its header taller than its neighbours').
+      const eqHeads = () => {
+        const bodies = [...ch.querySelectorAll('.mq-fx-card-body')];
+        bodies.forEach(b => { b.style.minHeight = ''; });
+        if (!ch.clientWidth) return; // hidden: measure when it's shown
+        const rows = new Map();
+        bodies.forEach(b => { const w = b.closest('.mq-fx-cardwrap'); const k = w ? Math.round(w.offsetTop) : 0; if (!rows.has(k)) rows.set(k, []); rows.get(k).push(b); });
+        rows.forEach(list => {
+          if (list.length < 2) return;
+          const h = Math.max(...list.map(b => b.getBoundingClientRect().height));
+          list.forEach(b => { b.style.minHeight = h + 'px'; });
+        });
+      };
+      let eqW = -1;
+      if (window.ResizeObserver) new ResizeObserver(() => { const w = ch.clientWidth; if (w === eqW) return; eqW = w; eqHeads(); }).observe(ch);
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { eqW = -1; eqHeads(); });
+      setTimeout(eqHeads, 400);
       const tabBar = container.querySelector('.mq-tab-bar');
       if (tabBar) tabBar.insertAdjacentElement('afterend', ch); else container.appendChild(ch);
+      if (window.mqFxStartTickers) window.mqFxStartTickers(ch);
     }
+    mqFxWarmImages();
     // Top bar (Exit button; shop name on phones) and desktop side stepper —
     // only visible in full-screen mode (CSS).
     if (!document.getElementById('mq-fx-top')) {
@@ -10013,9 +10624,12 @@
     window.mqFxApply(window._mqActiveTabPrefix || 'b');
   };
 
-  init();
-  mqInitMobileFontFix();
-  mqInitBottomBounceAutoOpen();
+  // Start as soon as the page has the <div id="midasquote-widget"> to fill. If this script
+  // happens to run before that div exists (script placed in the page <head>, or loaded
+  // early by a site builder), wait for the page to finish parsing instead of giving up.
+  const mqStart = () => { init(); mqInitMobileFontFix(); mqInitBottomBounceAutoOpen(); };
+  if (document.getElementById('midasquote-widget') || document.readyState !== 'loading') mqStart();
+  else document.addEventListener('DOMContentLoaded', mqStart, { once: true });
 
 
 })();
