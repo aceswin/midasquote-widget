@@ -36,8 +36,13 @@ let wizardBaseline = null;
   const mqphMm = (inches) => Math.round(inches * 25.4);
   const mqphMmTag = (inches) => `<span class="mqph-mm">(${mqphMm(inches).toLocaleString()}mm)</span>`;
 
-  const AT_BASE_URL = () => `https://api.airtable.com/v0/${shopRecord._baseId}`;
-  const AT_HEADS = () => ({ 'Authorization': `Bearer ${shopRecord._token}`, 'Content-Type': 'application/json' });
+  // Data access goes through dashboard.js's secure functions (window.mqDashApi,
+  // Oct 2026) — the Worker checks the logged-in member and limits every call to
+  // their own shop. No Airtable token lives in this file anymore.
+  function mqphApi() {
+    if (!window.mqDashApi) throw new Error('MidasQuote dashboard not loaded — pricing data is unavailable.');
+    return window.mqDashApi;
+  }
 
   // A UK (or any non-North-American) shop can pick their own currency
   // symbol on the dashboard's Shop Info tab — everywhere in the pricing
@@ -69,54 +74,11 @@ let wizardBaseline = null;
   // and the loop actually reaches every page. The 50-page (5,000 record)
   // backstop is just against a runaway loop, not a real limit any shop's
   // Line Items table would ever approach.
-  async function atGet(table, formula) {
-    let allRecords = [];
-    let offset;
-    let pages = 0;
-    do {
-      const offsetParam = offset ? `&offset=${offset}` : '';
-      const url = `${AT_BASE_URL()}/${table}?filterByFormula=${encodeURIComponent(formula)}&pageSize=100${offsetParam}`;
-      const res = await fetch(url, { headers: AT_HEADS() });
-      if (!res.ok) {
-        const errBody = await res.text().catch(() => '');
-        throw new Error(`Airtable GET ${table} failed: ${res.status} ${errBody}`);
-      }
-      const data = await res.json();
-      allRecords = allRecords.concat(data.records || []);
-      offset = data.offset;
-      pages++;
-    } while (offset && pages < 50);
-    return allRecords;
-  }
-  async function atCreate(table, fields) {
-    // typecast:true lets Airtable auto-add a new option to a Single Select
-    // field instead of rejecting the request with a 422 when the value
-    // isn't already one of the field's known choices.
-    const res = await fetch(`${AT_BASE_URL()}/${table}`, { method: 'POST', headers: AT_HEADS(), body: JSON.stringify({ fields, typecast: true }) });
-    if (!res.ok) {
-      const errBody = await res.text().catch(() => '');
-      console.error(`Airtable CREATE ${table} failed: ${res.status}`, errBody);
-      throw new Error(`Airtable CREATE ${table} failed: ${res.status} ${errBody}`);
-    }
-    return await res.json();
-  }
-  async function atUpdate(table, id, fields) {
-    const res = await fetch(`${AT_BASE_URL()}/${table}/${id}`, { method: 'PATCH', headers: AT_HEADS(), body: JSON.stringify({ fields, typecast: true }) });
-    if (!res.ok) {
-      const errBody = await res.text().catch(() => '');
-      console.error(`Airtable UPDATE ${table} failed: ${res.status}`, errBody);
-      throw new Error(`Airtable UPDATE ${table} failed: ${res.status} ${errBody}`);
-    }
-    return await res.json();
-  }
-  async function atDelete(table, id) {
-    const res = await fetch(`${AT_BASE_URL()}/${table}/${id}`, { method: 'DELETE', headers: AT_HEADS() });
-    if (!res.ok) {
-      const errBody = await res.text().catch(() => '');
-      throw new Error(`Airtable DELETE ${table} failed: ${res.status} ${errBody}`);
-    }
-    return await res.json();
-  }
+  async function atGet(table, formula) { return mqphApi().atGet(table, formula); }
+  async function atCreate(table, fields) { return mqphApi().atCreate(table, fields); }
+  async function atUpdate(table, id, fields) { return mqphApi().atUpdate(table, id, fields); }
+  async function atDelete(table, id) { return mqphApi().atDelete(table, id); }
+
 
   // ============================================================
   // STYLES
@@ -252,6 +214,17 @@ let wizardBaseline = null;
       .mqph-field input,.mqph-field select,.mqph-field textarea{font-family:inherit !important;font-size:13px !important;color:#111 !important;background:#fff !important;border:1px solid #d1d5db !important;border-radius:8px !important;padding:8px 10px !important;width:100% !important}
       .mqph-field input:focus,.mqph-field select:focus{outline:none !important;border-color:#1a1a1a !important}
       .mqph-field textarea{resize:vertical !important;min-height:60px !important}
+      /* Island panel pricing section (Jordan 2026-10-04): tighter spacing, and the price boxes sit beside their labels at a sensible width instead of stretching full width */
+      #mqph-scope-islandpanel .mqph-field{margin-bottom:0.6rem !important;gap:4px !important}
+      #mqph-scope-islandpanel .mqph-field.mqph-field-inline{flex-direction:row !important;align-items:center !important;justify-content:space-between !important;gap:6px 16px !important;flex-wrap:wrap !important}
+      #mqph-scope-islandpanel .mqph-field.mqph-field-inline label{flex:1 1 260px !important;line-height:1.4 !important}
+      #mqph-scope-islandpanel .mqph-field.mqph-field-inline input{flex:0 0 130px !important;width:130px !important}
+      .mqph-info-h{font-size:11px !important;font-weight:800 !important;letter-spacing:0.06em !important;text-transform:uppercase !important;color:#1d4ed8 !important;margin:0 0 6px !important}
+      .mqph-info-sec{padding:16px 0 14px !important;border-top:1px solid #bfdbfe !important}
+      .mqph-info-sec:first-child{border-top:none !important;padding-top:4px !important}
+      .mqph-info-sec:last-child{padding-bottom:2px !important}
+      .mqph-info-sec p{margin:0 0 8px !important;line-height:1.55 !important}
+      .mqph-info-sec p:last-child{margin-bottom:0 !important}
       .mqph-msg{padding:10px 14px !important;border-radius:8px !important;font-size:13px !important;margin-bottom:1rem !important;display:none !important}
       .mqph-msg-success{background:#dcfce7 !important;color:#166534 !important;border:1px solid #86efac !important}
       .mqph-msg-error{background:#fee2e2 !important;color:#991b1b !important;border:1px solid #fca5a5 !important}
@@ -265,6 +238,50 @@ let wizardBaseline = null;
       .mqph-ct-inp span{font-size:13px !important;color:#6b7280 !important}
       .mqph-ct-inp input{width:90px !important;text-align:right !important;font-family:inherit !important;font-size:13px !important;color:#111 !important;background:#fff !important;border:1px solid #d1d5db !important;border-radius:8px !important;padding:7px 10px !important}
       .mqph-ct-inp input:focus{outline:none !important;border-color:#1a1a1a !important}
+
+       /* MidasQuote Premium v4 — visual refinements only; no pricing logic or field changes. */
+       #mq-pricing-helper-v2{max-width:1180px !important;width:100% !important;margin:0 auto !important;padding:8px 0 40px !important;color:#0f172a !important}
+       #mq-pricing-helper-v2 .mqph-cat-block,#mq-pricing-helper-v2 .mqph-setup-card,#mq-pricing-helper-v2 .mqph-ct-block{background:#fff !important;border:1px solid #e5ebf3 !important;border-radius:20px !important;box-shadow:0 12px 30px rgba(15,23,42,.045) !important;margin-bottom:14px !important;overflow:hidden !important}
+       #mq-pricing-helper-v2 .mqph-cat-header,#mq-pricing-helper-v2 .mqph-setup-header{background:linear-gradient(180deg,#ffffff,#f9fafc) !important;border-bottom:1px solid #eaf0f6 !important;padding:19px 22px !important;min-height:68px !important;gap:12px !important}
+       #mq-pricing-helper-v2 .mqph-cat-header:hover{background:linear-gradient(180deg,#fffdf8,#fff6e2) !important}
+       #mq-pricing-helper-v2 .mqph-cat-title{font-size:14px !important;font-weight:800 !important;letter-spacing:0.015em !important;color:#152134 !important;text-transform:none !important;line-height:1.45 !important}
+       #mq-pricing-helper-v2 .mqph-setup-title{font-size:15px !important;font-weight:800 !important;letter-spacing:-.01em !important;color:#172033 !important}
+       #mq-pricing-helper-v2 .mqph-setup-sub{font-size:12px !important;line-height:1.55 !important;color:#64748b !important;max-width:850px !important}
+       #mq-pricing-helper-v2 .mqph-chip-row{padding:20px 22px !important;gap:9px !important}
+       #mq-pricing-helper-v2 .mqph-chip{background:#f8fafc !important;border:1px solid #e2e8f0 !important;color:#26364b !important;border-radius:999px !important;padding:9px 12px !important;box-shadow:0 2px 6px rgba(15,23,42,.025) !important}
+       #mq-pricing-helper-v2 .mqph-chip-input{border:1px dashed #cbd5e1 !important;border-radius:999px !important;background:#fff !important}
+       #mq-pricing-helper-v2 .mqph-chip-input button{border-radius:999px !important;background:#181b22 !important;padding:7px 12px !important}
+       #mq-pricing-helper-v2 .mqph-row{padding:14px 20px !important;gap:12px !important;border-bottom:1px solid #edf2f6 !important;min-height:62px !important}
+       #mq-pricing-helper-v2 .mqph-row:hover{background:#f9fafb !important}
+       #mq-pricing-helper-v2 .mqph-row-name{font-weight:700 !important;color:#172033 !important}
+       #mq-pricing-helper-v2 .mqph-row-desc{font-size:12px !important;color:#64748b !important;line-height:1.5 !important}
+       #mq-pricing-helper-v2 .mqph-row-rate{font-size:14px !important;font-weight:800 !important;color:#172033 !important}
+       #mq-pricing-helper-v2 .mqph-row-unit{color:#64748b !important}
+       #mq-pricing-helper-v2 .mqph-btn{border-radius:11px !important;padding:10px 17px !important;font-weight:750 !important;letter-spacing:0 !important;box-shadow:0 1px 3px rgba(15,23,42,.045) !important}
+       #mq-pricing-helper-v2 .mqph-btn-primary{background:linear-gradient(180deg,#1c2029,#11141a) !important;box-shadow:0 9px 22px rgba(15,23,42,.14) !important}
+       #mq-pricing-helper-v2 .mqph-btn-secondary{background:#fff !important;border:1px solid #dbe3ed !important;color:#253246 !important}
+       #mq-pricing-helper-v2 .mqph-btn-secondary:hover{background:#f8fafc !important}
+       #mq-pricing-helper-v2 .mqph-btn-danger{border:1px solid #fecaca !important;color:#b91c1c !important;background:#fff !important;box-shadow:none !important}
+       #mq-pricing-helper-v2 .mqph-btn-sm{padding:7px 12px !important;font-size:12px !important}
+       #mq-pricing-helper-v2 .mqph-wizard-card{border:1px solid #e4eaf2 !important;border-radius:24px !important;box-shadow:0 18px 42px rgba(15,23,42,.08) !important;max-width:980px !important;margin:0 auto 24px !important}
+       #mq-pricing-helper-v2 .mqph-wizard-header{background:linear-gradient(120deg,#151922,#232633) !important;padding:25px 30px !important}
+       #mq-pricing-helper-v2 .mqph-wizard-header h2{font-size:21px !important;font-weight:800 !important;letter-spacing:-.02em !important}
+       #mq-pricing-helper-v2 .mqph-progress .dot.done{background:#f4cb62 !important}
+       #mq-pricing-helper-v2 .mqph-progress .dot.active{background:#fff0bd !important}
+       #mq-pricing-helper-v2 .mqph-wizard-body{padding:27px 30px !important}
+       #mq-pricing-helper-v2 .mqph-wizard-nav{padding:20px 30px !important;background:#f8fafc !important;border-color:#e8edf4 !important}
+       #mq-pricing-helper-v2 .mqph-step-title{font-size:21px !important;font-weight:800 !important;letter-spacing:-.02em !important}
+       #mq-pricing-helper-v2 .mqph-step-sub{font-size:14px !important;color:#64748b !important}
+       #mq-pricing-helper-v2 .mqph-modal{border:1px solid #e2e8f0 !important;border-radius:22px !important;box-shadow:0 28px 80px rgba(15,23,42,.25) !important}
+       #mq-pricing-helper-v2 .mqph-modal-hdr{padding:22px 24px !important;background:#fcfdff !important;border-color:#e9eef5 !important}
+       #mq-pricing-helper-v2 .mqph-modal-body{padding:24px !important}
+       #mq-pricing-helper-v2 .mqph-modal-footer{padding:18px 24px !important;background:#f8fafc !important}
+       #mq-pricing-helper-v2 .mqph-field input,#mq-pricing-helper-v2 .mqph-field select,#mq-pricing-helper-v2 .mqph-field textarea{border-radius:12px !important;border:1px solid #d8e0e9 !important;padding:10px 12px !important}
+       #mq-pricing-helper-v2 .mqph-field input:focus,#mq-pricing-helper-v2 .mqph-field select:focus,#mq-pricing-helper-v2 .mqph-input-row input:focus{border-color:#cda84b !important;box-shadow:0 0 0 4px rgba(212,175,55,.12) !important}
+       #mq-pricing-helper-v2 .mqph-ct-row{padding:15px 20px !important;border-color:#edf2f6 !important}
+       #mq-pricing-helper-v2 .mqph-ct-block{max-width:none !important;width:100% !important}
+       #mq-pricing-helper-v2 .mqph-info,#mq-pricing-helper-v2 .mqph-warn,#mq-pricing-helper-v2 .mqph-hl,#mq-pricing-helper-v2 .mqph-spec-box{border-radius:14px !important;line-height:1.7 !important}
+       @media(max-width:700px){#mq-pricing-helper-v2{padding:6px 0 26px !important}#mq-pricing-helper-v2 .mqph-cat-header,#mq-pricing-helper-v2 .mqph-setup-header{padding:15px 16px !important}#mq-pricing-helper-v2 .mqph-row{padding:13px 15px !important}#mq-pricing-helper-v2 .mqph-wizard-header,#mq-pricing-helper-v2 .mqph-wizard-body,#mq-pricing-helper-v2 .mqph-wizard-nav{padding:18px !important}#mq-pricing-helper-v2 .mqph-modal{border-radius:0 !important}}
     `;
     document.head.appendChild(s);
   }
@@ -2160,6 +2177,7 @@ window.mqphGoToWizard = function() {
       if (c === 'trim') return; // handled by buildTrimHtml()
       if (c === 'tall_cabinet') return; // handled by buildTallCabHtml()
       if (c === 'drawer_config') return; // config chips — not shown in editor, only in Edit Shop Items
+      if (/^cc_/.test(c)) return; // custom pricing categories — handled by buildCustomCatsHtml()
       if (!groups[c]) groups[c] = [];
       groups[c].push(r);
     });
@@ -2167,10 +2185,7 @@ window.mqphGoToWizard = function() {
 
     return `
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;gap:1rem;flex-wrap:wrap">
-        <div>
-          <h2 style="font-size:20px;font-weight:700;color:#111;margin-bottom:4px">⚙️ Pricing</h2>
-          <p style="font-size:13px;color:#6b7280">Your rates — changes apply to your widget immediately.</p>
-        </div>
+        <div style="font-size:12px;color:#64748b;font-weight:700;letter-spacing:.06em;text-transform:uppercase">Manage your rates</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
           ${wizardHasRun ? `<div style="font-size:12px;color:#6b7280;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:8px 12px;max-width:340px;line-height:1.5">✨ Add new items using the <strong>+ Add</strong> buttons below, or <button class="mqph-btn-ghost" style="font-size:12px;padding:0;color:#1d4ed8;text-decoration:underline;cursor:pointer;background:none;border:none;font-family:inherit" onclick="mqphGoToWizard()">re-run the pricing wizard</button> to reprice everything.</div>` : `<button class="mqph-btn mqph-btn-secondary" onclick="mqphStartItemSetup()">🛠️ Edit shop items</button>`}
           <button class="mqph-btn mqph-btn-secondary" onclick="mqphGoToWizard()">🧙 Re-run pricing wizard</button>
@@ -2251,6 +2266,7 @@ window.mqphGoToWizard = function() {
       ${buildTrimHtml()}
       ${buildTallCabHtml()}
       ${buildIslandPanelHtml()}
+      ${buildCustomCatsHtml()}
 
       <!-- Bulk price edit overlay — Doors, Box Materials, Crown, Valance only -->
       <div class="mqph-overlay" id="mqph-bulk-overlay">
@@ -4450,6 +4466,22 @@ window.mqphGoToWizard = function() {
     shopRecord.fields['Island panel styles'] = JSON.stringify(styles);
   }
 
+  // Panel INSTALL prices (Jordan 2026-10-04): install labour is the same no
+  // matter which door style a panel goes on, so there are exactly TWO shop-
+  // wide numbers — one for installing a flat panel, one for a decorative
+  // panel (furniture kick install included) — each quoted per 24" × 34.5"
+  // panel, same as the panel price itself. Deliberately NOT part of any
+  // style (an earlier version asked for it again on every style card).
+  // Stored as JSON {flat, decorative} in the Shops table's 'Island panel
+  // install rates' field (Long text). Blank/missing = $0 (optional).
+  function getIslandInstallRates() {
+    try {
+      const o = shopRecord.fields['Island panel install rates'] ? JSON.parse(shopRecord.fields['Island panel install rates']) : {};
+      return { flat: parseFloat(o.flat) || 0, decorative: parseFloat(o.decorative) || 0 };
+    } catch(e) { return { flat: 0, decorative: 0 }; }
+  }
+  window._mqIslandInstallPending = window._mqIslandInstallPending || null;
+
   // Badge shown next to a door's name in the Door Styles catalog list,
   // reflecting which island panel style (if any) it's tagged to — replaces
   // the old 🎨 "Decorative panel" badge, which tracked the retired
@@ -4685,8 +4717,9 @@ window.mqphGoToWizard = function() {
         This door style offers flat panels
       </label>
       ${offersFlat ? `
-      <div class="mqph-field"><label>Price you'd charge for a 24" × 34.5" finished flat panel in this style's material</label>
+      <div class="mqph-field mqph-field-inline"><label>Price you'd charge for a 24" × 34.5" finished flat panel in this style's material</label>
         <input type="number" id="mqph-style-${style.id}-panelcost" step="0.01" placeholder="0.00" value="${panelCostVal}" oninput="mqphSetIslandStyleField('${style.id}','panelFlatQuote',this.value);mqphCalcStylePanelPct('${style.id}')"/>
+      </div>
       </div>` : ''}
       <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin:10px 0">
         <input type="checkbox" id="mqph-style-${style.id}-offersdec" ${offersDecorative?'checked':''} onchange="mqphSetIslandStyleField('${style.id}','offersDecorative',this.checked)" style="width:auto"/>
@@ -4706,7 +4739,7 @@ window.mqphGoToWizard = function() {
       </div>
       <div style="font-size:12px;color:#065f46;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:8px 10px;margin:4px 0 8px">Using that style's decorative ratio for this one too — no separate decorative price needed here. Switch to "Enter manually" any time to quote your own.</div>
       ` : `
-      <div class="mqph-field"><label>Price you'd charge for a 24" × 34.5" decorative panel to match</label>
+      <div class="mqph-field mqph-field-inline"><label>Price you'd charge for a 24" × 34.5" decorative panel to match <span style="display:inline-block;margin-top:4px;font-size:13px;font-weight:800;color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:2px 8px;text-transform:none;letter-spacing:0">⚠️ (If this includes furniture kick, please include that with the panel price)</span></label>
         <input type="number" id="mqph-style-${style.id}-deccost" step="0.01" placeholder="0.00" value="${decCostVal}" oninput="mqphSetIslandStyleField('${style.id}','decorativeFlatQuote',this.value);mqphCalcStylePanelPct('${style.id}')"/>
       </div>`}
       ` : ''}
@@ -4716,7 +4749,7 @@ window.mqphGoToWizard = function() {
         ${taggableGroups.length ? `
         <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;align-items:center;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:8px 10px">
           <span style="font-size:12px;color:#374151;white-space:nowrap">Tag a whole group:</span>
-          <select id="mqph-style-${style.id}-grouptag" style="flex:1;min-width:160px;font-size:12px;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px">
+          <select id="mqph-style-${style.id}-grouptag" onchange="mqphOnIslandGroupPicked('${style.id}')" style="flex:1;min-width:160px;font-size:12px;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px">
             <option value="">— pick a group —</option>
             ${taggableGroups.map(g => `<option value="${g.name.replace(/"/g,'&quot;')}">${g.name} (${g.count} door${g.count===1?'':'s'})</option>`).join('')}
           </select>
@@ -4777,19 +4810,42 @@ window.mqphGoToWizard = function() {
           <span class="mqph-cat-title"><span id="mqph-cat-arrow-islandpanel" style="display:inline-block;margin-right:6px;transition:transform 0.2s;font-size:12px">▶</span>🏝️ Island panel pricing <span style="font-size:12px;font-weight:400;color:${summaryColor}">(${summary})</span></span>
         </div>
         <div id="mqph-cat-body-islandpanel" style="display:none">
+          <div style="margin:12px 16px 0">
+            ${typeof window.mqTrainingVideoBlockHTML === 'function' ? window.mqTrainingVideoBlockHTML('islandPanel') : ''}
+          </div>
           <div class="mqph-info" style="margin:12px 16px;line-height:1.6">
             <div style="display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:600" onclick="mqphToggleIslandInfo()">
               <span id="mqph-island-info-arrow" style="display:inline-block;font-size:11px;transition:transform 0.2s;${window._mqIslandInfoExpanded?'transform:rotate(90deg)':''}">▶</span>
               <span>How island panel pricing works</span>
             </div>
             <div id="mqph-island-info-body" style="display:${window._mqIslandInfoExpanded?'block':'none'};margin-top:8px">
-              <p style="margin:0 0 10px">Islands tend to cost more because of finished side panels and back panels. To make this very simple, we'll create a ratio cost for your panels (flat or decorative) based on your different door styles.</p>
-              <p style="margin:0 0 10px">For example, if you have flat doors, shaker doors, and raised panel doors, you'd create those three distinct styles below.</p>
-              <p style="margin:0 0 10px">For each style, you decide whether that door style offers decorative panels, just flat panels, or both — then enter the price of a flat panel and/or a decorative panel based on one door you select to represent that style.</p>
-              <p style="margin:0 0 10px">For example, if the style is Shaker and you choose Maple Shaker as the door to price against, you simply quote the flat panel cost you'd charge for an island with Maple Shaker doors, and the decorative panel cost you'd charge for the same island.</p>
-              <p style="margin:0 0 10px">This creates a ratio for each — maybe the flat panel works out to 75% of the door's linear-foot cost, and the decorative panel works out to 90%. From then on, whenever a customer adds an island and has a Shaker door selected, that ratio scales with whatever door is chosen — so if it's a Cherry Shaker door that costs more, the panel cost will be 75% of that door's cost per linear foot.</p>
-              <p style="margin:0 0 10px">Since a raised panel door is more expensive than a shaker door, we need a separate price for that style. If you use Maple Raised Panel as your door to price against, you'll likely use the same flat panel price as you did for Maple Shaker, but the ratio will differ — and that ratio then applies to all the raised panel doors. Conversely, your decorative panel ratio will likely be the same as it was for Maple Shaker, so you could reuse that ratio instead of requoting.</p>
-              <p style="margin:0">Style names are internal only — customers never see them. Feel free to watch the video to help make this clearer.</p>
+              <div class="mqph-info-sec">
+                <div class="mqph-info-h">The idea</div>
+                <p>Islands tend to cost more because of finished side panels and back panels. To make this very simple, we'll create a ratio cost for your panels (flat or decorative) based on your different door styles.</p>
+                <p>For example, if you have flat doors, shaker doors, and raised panel doors, you'd create those three distinct styles below.</p>
+              </div>
+              <div class="mqph-info-sec">
+                <div class="mqph-info-h">What you enter for each style</div>
+                <p>For each style, you decide whether that door style offers decorative panels, just flat panels, or both — then enter the price of a flat panel and/or a decorative panel based on one door you select to represent that style.</p>
+                <p>For example, if the style is Shaker and you choose Maple Shaker as the door to price against, you simply quote the flat panel cost you'd charge for an island with Maple Shaker doors, and the decorative panel cost you'd charge for the same island.</p>
+              </div>
+              <div class="mqph-info-sec">
+                <div class="mqph-info-h">How the ratio works</div>
+                <p>This creates a ratio for each — maybe the flat panel works out to 75% of the door's linear-foot cost, and the decorative panel works out to 90%. From then on, whenever a customer adds an island and has a Shaker door selected, that ratio scales with whatever door is chosen — so if it's a Cherry Shaker door that costs more, the panel cost will be 75% of that door's cost per linear foot.</p>
+              </div>
+              <div class="mqph-info-sec">
+                <div class="mqph-info-h">Different styles, different ratios</div>
+                <p>Since a raised panel door is more expensive than a shaker door, we need a separate price for that style. If you use Maple Raised Panel as your door to price against, you'll likely use the same flat panel price as you did for Maple Shaker, but the ratio will differ — and that ratio then applies to all the raised panel doors. Conversely, your decorative panel ratio will likely be the same as it was for Maple Shaker, so you could reuse that ratio instead of requoting.</p>
+              </div>
+              <div class="mqph-info-sec">
+                <div class="mqph-info-h">Furniture kick &amp; installation</div>
+                <p>If furniture kick comes with your decorative panels, include it in your decorative panel price — and include its installation in your decorative panel install price.</p>
+                <p>Installation prices are entered once, in their own box below your styles, and apply to every style.</p>
+              </div>
+              <div class="mqph-info-sec">
+                <div class="mqph-info-h">Good to know</div>
+                <p>Style names are internal only — customers never see them. Feel free to watch the video above to help make this clearer.</p>
+              </div>
             </div>
           </div>
           ${showFlash ? `<div id="mqph-island-flash" style="margin:0 16px 12px;background:#d1fae5;border:1px solid #6ee7b7;color:#065f46;border-radius:8px;padding:10px 14px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px">✅ All doors tagged!</div>` : ''}
@@ -4801,6 +4857,25 @@ window.mqphGoToWizard = function() {
             <button class="mqph-btn mqph-btn-secondary" style="width:100%" onclick="mqphAddIslandStyle()">+ ${allStyles.length>0?'Add another':'Add a'} door style</button>
           </div>
           `}
+          ${(() => {
+            const saved = getIslandInstallRates();
+            const pend = window._mqIslandInstallPending;
+            const flatVal = pend ? pend.flat : (saved.flat || '');
+            const decVal = pend ? pend.decorative : (saved.decorative || '');
+            const isDirty = !!pend;
+            return `
+          <div id="mqph-island-install-box" style="margin:6px 16px 16px;border:2px solid #e5e7eb;border-radius:10px;padding:12px 14px;background:#f9fafb">
+            <div style="font-weight:700;font-size:14px;color:#111827;margin-bottom:2px">🔧 Panel installation prices <span style="font-weight:400;font-size:12px;color:#6b7280">(separate from your styles above)</span></div>
+            <div style="font-size:12px;color:#6b7280;margin-bottom:10px;line-height:1.5">Entered once — these apply to every style. Optional (leave 0.00 if you don't charge extra). Only added to a quote when the customer picks supply + install.</div>
+            <div class="mqph-field mqph-field-inline"><label>Price you'd charge to INSTALL a 24" × 34.5" flat panel</label>
+              <input type="number" id="mqph-island-install-flat" step="0.01" min="0" placeholder="0.00" value="${flatVal}" oninput="mqphOnIslandInstallInput()"/>
+            </div>
+            <div class="mqph-field mqph-field-inline"><label>Price you'd charge to INSTALL a 24" × 34.5" decorative panel <span style="font-weight:400;color:#6b7280">(furniture kick install included)</span></label>
+              <input type="number" id="mqph-island-install-dec" step="0.01" min="0" placeholder="0.00" value="${decVal}" oninput="mqphOnIslandInstallInput()"/>
+            </div>
+            <button class="mqph-btn ${isDirty ? 'mqph-btn-primary' : 'mqph-btn-saved'}" id="mqph-island-install-save-btn" style="width:100%" onclick="mqphSaveIslandInstallRates()">${isDirty ? 'Save install prices →' : '✓ Install prices saved'}</button>
+          </div>`;
+          })()}
         </div>
       </div>`;
   }
@@ -4958,6 +5033,45 @@ window.mqphGoToWizard = function() {
   // door-search/sort toggles. The underlying flag still persists across a
   // full re-render triggered by anything else (see buildIslandPanelHtml),
   // so saving a style elsewhere doesn't snap this back shut.
+  window.mqphOnIslandInstallInput = function() {
+    window._mqIslandInstallPending = {
+      flat: document.getElementById('mqph-island-install-flat')?.value ?? '',
+      decorative: document.getElementById('mqph-island-install-dec')?.value ?? '',
+    };
+    const btn = document.getElementById('mqph-island-install-save-btn');
+    if (btn && btn.classList.contains('mqph-btn-saved')) {
+      btn.classList.remove('mqph-btn-saved');
+      btn.classList.add('mqph-btn-primary');
+      btn.textContent = 'Save install prices →';
+    }
+  };
+
+  window.mqphSaveIslandInstallRates = async function() {
+    const parse = (id, label) => {
+      const raw = document.getElementById(id)?.value;
+      const v = (raw !== '' && raw != null) ? parseFloat(raw) : 0;
+      if (isNaN(v) || v < 0) { alert('Enter a valid ' + label + ' install price (0 or higher), or leave it blank.'); return undefined; }
+      return v;
+    };
+    const flat = parse('mqph-island-install-flat', 'flat panel');
+    if (flat === undefined) return;
+    const decorative = parse('mqph-island-install-dec', 'decorative panel');
+    if (decorative === undefined) return;
+    const btn = document.getElementById('mqph-island-install-save-btn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+    try {
+      const json = JSON.stringify({ flat, decorative });
+      await atUpdate(SHOPS_TABLE, shopRecord.id, { 'Island panel install rates': json });
+      shopRecord.fields['Island panel install rates'] = json;
+      window._mqIslandInstallPending = null;
+      mqphRerenderIslandPanelSection();
+    } catch(e) {
+      console.error('Failed to save island panel install rates', e);
+      alert('Something went wrong saving this — please try again.');
+      if (btn) { btn.disabled = false; btn.textContent = 'Save install prices →'; }
+    }
+  };
+
   window.mqphToggleIslandInfo = function() {
     window._mqIslandInfoExpanded = !window._mqIslandInfoExpanded;
     const body = document.getElementById('mqph-island-info-body');
@@ -5216,7 +5330,34 @@ window.mqphGoToWizard = function() {
       const failedIds = new Set(failed.map(d => d.id));
       toTag.forEach(d => { if (failedIds.has(d.id)) d.fields['Island panel style'] = prevTags.get(d.id); });
       alert(`${toTag.length - failed.length} of ${toTag.length} doors in "${groupName}" were tagged — ${failed.length} failed and were rolled back. Try tagging the group again to pick up the rest.`);
-      mqphRerenderIslandPanelSection();
+    }
+    // Re-render unconditionally, success or failure (Jordan 2026-10-03:
+    // "even after is checkboxed the doors it still showed 'tagging 2
+    // doors'... having it say that after successfully tagging makes it
+    // look like its not working even though it is") — this was the actual
+    // bug: that only happened above when `failed.length` was truthy, so a
+    // fully successful batch left the button stuck on "Tagging N…"
+    // forever with no further render to clear it, even though every door
+    // really had been tagged.
+    mqphRerenderIslandPanelSection();
+  };
+
+  // Highlights the "Tag group" button the moment a group is actually
+  // picked, so it's obvious there's one more click needed — Jordan
+  // 2026-10-03: "as soon as they select a group lets highlight the 'tag
+  // group' button so they know they need to click it." A direct class
+  // swap, not a re-render, so it doesn't interrupt picking from the
+  // dropdown.
+  window.mqphOnIslandGroupPicked = function(styleId) {
+    const sel = document.getElementById(`mqph-style-${styleId}-grouptag`);
+    const btn = document.getElementById(`mqph-style-${styleId}-grouptag-btn`);
+    if (!sel || !btn) return;
+    if (sel.value) {
+      btn.classList.remove('mqph-btn-secondary');
+      btn.classList.add('mqph-btn-primary');
+    } else {
+      btn.classList.remove('mqph-btn-primary');
+      btn.classList.add('mqph-btn-secondary');
     }
   };
 
@@ -6143,10 +6284,493 @@ window.mqphGoToWizard = function() {
     if (trimBlock) trimBlock.style.display = countertopsOnly ? 'none' : '';
     const tallcabBlock = document.getElementById('mqph-scope-tallcab');
     if (tallcabBlock) tallcabBlock.style.display = countertopsOnly ? 'none' : '';
+    // Custom pricing categories only show on the Cabinets/Both tabs.
+    const customBlock = document.getElementById('mqph-scope-custom');
+    if (customBlock) customBlock.style.display = countertopsOnly ? 'none' : '';
     const ctBlock = document.getElementById('mqph-scope-countertop');
     if (ctBlock) ctBlock.style.display = cabinetsOnly ? 'none' : '';
   }
   window.mqphApplyEstimatorTabScope = mqphApplyEstimatorTabScope;
+
+
+  // ============================================================
+  // CUSTOM PRICING CATEGORIES (Phase 1, Oct 2026)
+  // ============================================================
+  // Shop-made priced categories (e.g. "Finishing & extras", "Site access")
+  // that show on the widget as their own numbered step. Category settings
+  // are saved on the shop as 'Custom categories' (Long text, JSON):
+  //   [{ id:'cc_xxxx', name, description, answer:'one'|'any', required,
+  //      showIf:'<option record id>'|'', proOnly }]
+  // Each option is a normal Line Items row (Category = the category's id),
+  // so My Products handles its photo, group and project types like any other
+  // item. The option's pricing rule is in 'Custom pricing' (Long text, JSON):
+  //   { how:'flat'|'each'|'base_lf'|'upper_lf'|'all_lf'|'pct', unit, min,
+  //     showIf, proOnly }  — Rate holds the price (or the % for 'pct').
+  // widget.js / widgetpro.js read both (see mqCcBuild there).
+  const MQCC_HOW = {
+    flat:     { label: 'Flat price', short: 'flat' },
+    each:     { label: 'Per unit — customer enters how many', short: 'per unit' },
+    base_lf:  { label: 'Per base cabinet lin ft (automatic)', short: 'per base lin ft' },
+    upper_lf: { label: 'Per upper cabinet lin ft (automatic)', short: 'per upper lin ft' },
+    all_lf:   { label: 'Per total cabinet lin ft (automatic)', short: 'per cabinet lin ft' },
+    pct:      { label: '% of the cabinet estimate', short: 'of cabinets' },
+  };
+  let mqccEditCat = null;   // category id being edited in the settings modal (null = new)
+  let mqccEditItem = null;  // { cid, id } option being edited (id null = new)
+
+  function mqccEsc(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function mqccMoney(n) { return CUR() + (Number(n) || 0).toLocaleString(undefined, { maximumFractionDigits: 2 }); }
+  function mqccShopFields() {
+    // dashboard.js may have swapped in a freshly fetched shop record since
+    // this file was initialised — always prefer the newest copy.
+    return (window._mqShopRecord && window._mqShopRecord.id === shopRecord.id && window._mqShopRecord.fields) || shopRecord.fields || {};
+  }
+  function mqccCats() {
+    let a = [];
+    try { a = JSON.parse(mqccShopFields()['Custom categories'] || '[]'); } catch(e) { a = []; }
+    return Array.isArray(a) ? a.filter(c => c && c.id) : [];
+  }
+  async function mqccSaveCats(cats) {
+    const json = JSON.stringify(cats);
+    await atUpdate(SHOPS_TABLE, shopRecord.id, { 'Custom categories': json });
+    shopRecord.fields['Custom categories'] = json;
+    if (window._mqShopRecord && window._mqShopRecord.fields) window._mqShopRecord.fields['Custom categories'] = json;
+    // So My Products picks the change up the next time it's opened.
+    if (window._mqLastFetchTimes) window._mqLastFetchTimes['products'] = 0;
+  }
+  function mqccCfg(r) {
+    let c = {};
+    try { c = JSON.parse((r && r.fields && r.fields['Custom pricing']) || '{}'); } catch(e) { c = {}; }
+    return (c && typeof c === 'object') ? c : {};
+  }
+  function mqccItems(cid) {
+    return lineItems.filter(r => r.fields && r.fields['Category'] === cid)
+      .sort((a, b) => (a.fields['Sort order'] || 0) - (b.fields['Sort order'] || 0));
+  }
+  function mqccPriceText(r) {
+    const c = mqccCfg(r), rate = Number(r.fields['Rate']) || 0, how = MQCC_HOW[c.how] ? c.how : 'flat';
+    if (how === 'pct') return `${rate.toLocaleString(undefined, { maximumFractionDigits: 2 })}% of cabinets`;
+    if (how === 'flat') return mqccMoney(rate);
+    if (how === 'each') return `${mqccMoney(rate)} each (${mqccEsc(c.unit || 'unit')})`;
+    return `${mqccMoney(rate)} ${MQCC_HOW[how].short}`;
+  }
+  function mqccOptionLabel(id) {
+    const r = lineItems.find(x => x.id === id);
+    if (!r) return '';
+    const cat = mqccCats().find(c => c.id === r.fields['Category']);
+    return `${cat ? cat.name + ': ' : ''}${r.fields['Name'] || ''}`;
+  }
+  // Every option that could be used in a "show only if" rule.
+  function mqccAllOptions(excludeCid, excludeId) {
+    const out = [];
+    mqccCats().forEach(c => {
+      if (c.id === excludeCid && !excludeId) return; // a category can't depend on its own options
+      mqccItems(c.id).forEach(r => { if (r.id !== excludeId) out.push({ id: r.id, label: `${c.name}: ${r.fields['Name'] || ''}` }); });
+    });
+    return out;
+  }
+  function mqccChip(text, tone) {
+    const tones = { gold: 'background:#fffbeb;border-color:#fde68a;color:#92400e', blue: 'background:#eff6ff;border-color:#bfdbfe;color:#1e40af', gray: 'background:#f9fafb;border-color:#e5e7eb;color:#4b5563' };
+    return `<span style="display:inline-block;font-size:10px;font-weight:700;letter-spacing:.03em;padding:2px 7px;border:1px solid;border-radius:10px;${tones[tone] || tones.gray};white-space:nowrap">${text}</span>`;
+  }
+
+  function buildCustomCatsHtml() {
+    const cats = mqccCats();
+    const catBlocks = cats.map((c, ci) => {
+      const key = c.id;
+      const items = mqccItems(c.id);
+      const chips = [
+        mqccChip(c.answer === 'one' ? 'Pick one' : 'Pick any', 'blue'),
+        c.answer === 'one' && c.required ? mqccChip('Must choose', 'gray') : '',
+        c.proOnly ? mqccChip('⚡ Pro only', 'gold') : '',
+        c.showIf ? mqccChip('Only if ' + mqccEsc(mqccOptionLabel(c.showIf) || 'option removed'), 'gray') : '',
+      ].join(' ');
+      const rows = items.map((r, ri) => {
+        const cfg = mqccCfg(r);
+        const notes = [
+          cfg.min > 0 ? `min ${mqccMoney(cfg.min)}` : '',
+          cfg.showIf ? 'only if ' + mqccEsc(mqccOptionLabel(cfg.showIf) || 'option removed') : '',
+        ].filter(Boolean).join(' · ');
+        return `<div class="mqph-row">
+          <div style="display:flex;flex-direction:column;gap:2px">
+            <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" style="padding:0 6px" title="Move up" ${ri === 0 ? 'disabled' : ''} onclick="mqccMoveItem('${c.id}','${r.id}',-1)">↑</button>
+            <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" style="padding:0 6px" title="Move down" ${ri === items.length - 1 ? 'disabled' : ''} onclick="mqccMoveItem('${c.id}','${r.id}',1)">↓</button>
+          </div>
+          <div style="flex:1;min-width:0">
+            <div class="mqph-row-name">${mqccEsc(r.fields['Name'] || '—')} ${cfg.proOnly ? mqccChip('⚡ Pro only', 'gold') : ''}</div>
+            ${r.fields['Description'] ? `<div class="mqph-row-desc">${mqccEsc(r.fields['Description'])}</div>` : ''}
+            ${notes ? `<div class="mqph-row-desc" style="color:#6b7280 !important">${notes}</div>` : ''}
+          </div>
+          <div class="mqph-row-rate" style="min-width:150px !important">${mqccPriceText(r)}</div>
+          <div style="width:36px;text-align:center"><div class="mqph-toggle ${r.fields['Active'] !== false ? 'on' : ''}" title="Show on widget" onclick="mqphToggle('${r.id}',this)"></div></div>
+          <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="mqccOpenItem('${c.id}','${r.id}')">Edit</button>
+          <button class="mqph-btn mqph-btn-danger mqph-btn-sm" onclick="mqccDeleteItem('${r.id}')">Delete</button>
+        </div>`;
+      }).join('');
+      return `<div class="mqph-cat-block" data-mq-cat="${key}" style="margin:0 0 12px !important">
+        <div class="mqph-cat-header" onclick="mqphToggleCategory('${key}')" style="cursor:pointer;gap:10px">
+          <span style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0">
+            <span class="mqph-cat-title"><span id="mqph-cat-arrow-${key}" style="display:inline-block;margin-right:6px;transition:transform 0.2s;font-size:12px">▶</span>${mqccEsc(c.name)} <span style="font-size:12px;font-weight:400;color:#9ca3af;text-transform:none;letter-spacing:0">(${items.length})</span></span>
+            ${chips}
+          </span>
+          <span style="display:flex;gap:6px;flex-shrink:0" onclick="event.stopPropagation()">
+            <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" title="Move up" ${ci === 0 ? 'disabled' : ''} onclick="mqccMoveCat('${c.id}',-1)">↑</button>
+            <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" title="Move down" ${ci === cats.length - 1 ? 'disabled' : ''} onclick="mqccMoveCat('${c.id}',1)">↓</button>
+            <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="mqccOpenCat('${c.id}')">Settings</button>
+            <button class="mqph-btn mqph-btn-primary mqph-btn-sm" onclick="mqccOpenItem('${c.id}',null)">+ Add option</button>
+          </span>
+        </div>
+        <div id="mqph-cat-body-${key}" style="display:none">
+          ${c.description ? `<div style="padding:10px 16px 0;font-size:12px;color:#6b7280;line-height:1.5">Customers see: “${mqccEsc(c.description)}”</div>` : ''}
+          ${items.length ? rows : `<div style="padding:16px;font-size:12px;color:#6b7280;line-height:1.5">No options yet. Click <strong>+ Add option</strong> to add the first one.</div>`}
+        </div>
+      </div>`;
+    }).join('');
+
+    const howOpts = Object.entries(MQCC_HOW).map(([v, o]) => `<option value="${v}">${o.label}</option>`).join('');
+    return `
+      <div class="mqph-cat-block" id="mqph-scope-custom" style="padding:16px !important">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:${cats.length ? '14px' : '0'}">
+          <div style="min-width:0;max-width:620px">
+            <div class="mqph-cat-title">✨ Custom pricing categories</div>
+            <div style="font-size:12px;color:#6b7280;margin-top:6px;line-height:1.55">Make your own priced steps for anything not covered above — finished ends, site access, delivery, hourly work. Each category is its own step on your widget (Cabinets and Both tabs). Photos, groups and which project types each option shows for are set in <strong>My Products</strong>, same as everything else.</div>
+          </div>
+          <button class="mqph-btn mqph-btn-primary mqph-btn-sm" onclick="mqccOpenCat(null)">+ New category</button>
+        </div>
+        ${catBlocks}
+        <div id="mqcc-msg" class="mqph-msg" style="margin-top:10px"></div>
+      </div>
+
+      <div class="mqph-overlay" id="mqcc-cat-overlay">
+        <div class="mqph-modal">
+          <div class="mqph-modal-hdr">
+            <div><h3 id="mqcc-cat-title">New category</h3><p>This becomes its own step on your widget.</p></div>
+            <button class="mqph-modal-hdr-close" onclick="mqccClose('mqcc-cat-overlay')">×</button>
+          </div>
+          <div class="mqph-modal-body">
+            <div class="mqph-field"><label>Category name</label><input type="text" id="mqcc-cat-name" maxlength="60" placeholder="Finishing &amp; extras"/></div>
+            <div class="mqph-field"><label>Short description for customers (optional)</label><input type="text" id="mqcc-cat-desc" maxlength="200" placeholder="A few finishing details that make the install look built-in."/></div>
+            <div class="mqph-field"><label>How customers answer</label>
+              <select id="mqcc-cat-answer" onchange="mqccCatAnswerChanged()">
+                <option value="any">Pick any — they add whatever they want (like specialty items)</option>
+                <option value="one">Pick one — they choose a single option (like door styles)</option>
+              </select>
+            </div>
+            <label id="mqcc-cat-required-wrap" style="display:none;align-items:center;gap:8px;font-size:13px;margin:0 0 14px;cursor:pointer">
+              <input type="checkbox" id="mqcc-cat-required" style="width:16px;height:16px"/> Customers must choose one (no “None” option)
+            </label>
+            <div class="mqph-field"><label>Show this step</label>
+              <select id="mqcc-cat-showif"></select>
+            </div>
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin:4px 0 0;cursor:pointer">
+              <input type="checkbox" id="mqcc-cat-pro" style="width:16px;height:16px"/> ⚡ MidasQuote Pro only (hidden on your public widget)
+            </label>
+          </div>
+          <div class="mqph-modal-footer">
+            <button class="mqph-btn mqph-btn-danger mqph-btn-sm" id="mqcc-cat-delete" onclick="mqccDeleteCat()" style="display:none">Delete category</button>
+            <button class="mqph-btn mqph-btn-secondary" onclick="mqccClose('mqcc-cat-overlay')" style="margin-left:auto">Cancel</button>
+            <button class="mqph-btn mqph-btn-primary" id="mqcc-cat-save" onclick="mqccSaveCat()">Save category</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="mqph-overlay" id="mqcc-item-overlay">
+        <div class="mqph-modal">
+          <div class="mqph-modal-hdr">
+            <div><h3 id="mqcc-item-title">New option</h3><p id="mqcc-item-sub"></p></div>
+            <button class="mqph-modal-hdr-close" onclick="mqccClose('mqcc-item-overlay')">×</button>
+          </div>
+          <div class="mqph-modal-body">
+            <div class="mqph-field"><label>Option name</label><input type="text" id="mqcc-item-name" maxlength="80" placeholder="Finished end panels"/></div>
+            <div class="mqph-field"><label>Description for customers (optional)</label><input type="text" id="mqcc-item-desc" maxlength="200"/></div>
+            <div class="mqph-field"><label>How it's priced</label><select id="mqcc-item-how" onchange="mqccItemHowChanged()">${howOpts}</select></div>
+            <div class="mqph-field" id="mqcc-item-unit-wrap"><label>What are you counting?</label><input type="text" id="mqcc-item-unit" maxlength="30" placeholder="panels, hours, trips…"/></div>
+            <div class="mqph-field"><label id="mqcc-item-rate-label">Price</label>
+              <div style="display:flex;align-items:center;gap:6px"><span id="mqcc-item-rate-pfx" style="font-size:13px;color:#6b7280"></span><input type="number" id="mqcc-item-rate" step="0.01" style="flex:1"/><span id="mqcc-item-rate-sfx" style="font-size:13px;color:#6b7280"></span></div>
+            </div>
+            <div id="mqcc-calc-wrap" style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin:-4px 0 14px">
+              <div style="font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Work it out from a job you know</div>
+              <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:13px;color:#374151">
+                <span id="mqcc-calc-a-pre">A job with</span>
+                <input type="number" id="mqcc-calc-a" step="0.01" style="width:84px" oninput="mqccCalc()"/>
+                <span id="mqcc-calc-a-post">units</span>
+                <span id="mqcc-calc-b-pre">cost</span> <span>${CUR()}</span>
+                <input type="number" id="mqcc-calc-b" step="0.01" style="width:96px" oninput="mqccCalc()"/>
+              </div>
+              <div id="mqcc-calc-out" style="font-size:12px;color:#166534;margin-top:6px;min-height:16px"></div>
+            </div>
+            <div class="mqph-field" id="mqcc-item-min-wrap"><label>Minimum charge (optional)</label>
+              <div style="display:flex;align-items:center;gap:6px"><span style="font-size:13px;color:#6b7280">${CUR()}</span><input type="number" id="mqcc-item-min" step="0.01" min="0" style="flex:1"/></div>
+            </div>
+            <div class="mqph-field" id="mqcc-item-showif-wrap"><label>Show this option</label><select id="mqcc-item-showif"></select></div>
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin:4px 0 0;cursor:pointer">
+              <input type="checkbox" id="mqcc-item-pro" style="width:16px;height:16px"/> ⚡ MidasQuote Pro only (hidden on your public widget)
+            </label>
+          </div>
+          <div class="mqph-modal-footer">
+            <button class="mqph-btn mqph-btn-secondary" onclick="mqccClose('mqcc-item-overlay')" style="margin-left:auto">Cancel</button>
+            <button class="mqph-btn mqph-btn-primary" id="mqcc-item-save" onclick="mqccSaveItem()">Save option</button>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  function mqccMsg(text, isError) {
+    const el = document.getElementById('mqcc-msg');
+    if (!el) return;
+    el.textContent = text;
+    el.className = 'mqph-msg ' + (isError ? 'mqph-msg-error' : 'mqph-msg-success');
+    el.style.setProperty('display', 'block', 'important');
+    clearTimeout(el._t); el._t = setTimeout(() => { el.style.setProperty('display', 'none', 'important'); }, 4000);
+  }
+  // .mqph-field sets display with !important, so plain style.display can't hide it.
+  function mqccShow(id, on, shownAs) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (on) { if (shownAs) el.style.setProperty('display', shownAs, 'important'); else el.style.removeProperty('display'); }
+    else el.style.setProperty('display', 'none', 'important');
+  }
+  window.mqccClose = function(id) { document.getElementById(id)?.classList.remove('show'); };
+  function mqccRerender(openKey) {
+    if (openKey) _mqphExpandedCats.add(openKey);
+    mqphRerenderPricingPage();
+    mqphApplyEstimatorTabScope();
+  }
+  function mqccShowIfOptions(selectEl, list, current, alwaysLabel) {
+    selectEl.innerHTML = `<option value="">${alwaysLabel}</option>` + list.map(o => `<option value="${o.id}">Only if “${mqccEsc(o.label)}” is picked</option>`).join('');
+    selectEl.value = list.some(o => o.id === current) ? current : '';
+  }
+
+  // ── Category settings ──
+  window.mqccOpenCat = function(cid) {
+    mqccEditCat = cid;
+    const c = cid ? mqccCats().find(x => x.id === cid) : null;
+    document.getElementById('mqcc-cat-title').textContent = c ? 'Category settings' : 'New category';
+    document.getElementById('mqcc-cat-name').value = c ? c.name : '';
+    document.getElementById('mqcc-cat-desc').value = c ? (c.description || '') : '';
+    document.getElementById('mqcc-cat-answer').value = c && c.answer === 'one' ? 'one' : 'any';
+    document.getElementById('mqcc-cat-required').checked = !!(c && c.required);
+    document.getElementById('mqcc-cat-pro').checked = !!(c && c.proOnly);
+    mqccShowIfOptions(document.getElementById('mqcc-cat-showif'), mqccAllOptions(cid, null), c ? c.showIf : '', 'Always (for the project types set in My Products)');
+    document.getElementById('mqcc-cat-delete').style.display = c ? '' : 'none';
+    mqccCatAnswerChanged();
+    document.getElementById('mqcc-cat-overlay').classList.add('show');
+    setTimeout(() => document.getElementById('mqcc-cat-name')?.focus(), 50);
+  };
+  window.mqccCatAnswerChanged = function() {
+    const one = document.getElementById('mqcc-cat-answer').value === 'one';
+    mqccShow('mqcc-cat-required-wrap', one, 'flex');
+  };
+  window.mqccSaveCat = async function() {
+    const name = document.getElementById('mqcc-cat-name').value.trim();
+    if (!name) { alert('Give the category a name.'); return; }
+    const btn = document.getElementById('mqcc-cat-save');
+    btn.disabled = true;
+    const cats = mqccCats();
+    const answer = document.getElementById('mqcc-cat-answer').value === 'one' ? 'one' : 'any';
+    const data = {
+      name,
+      description: document.getElementById('mqcc-cat-desc').value.trim(),
+      answer,
+      required: answer === 'one' && document.getElementById('mqcc-cat-required').checked,
+      showIf: document.getElementById('mqcc-cat-showif').value || '',
+      proOnly: document.getElementById('mqcc-cat-pro').checked,
+    };
+    let id = mqccEditCat;
+    if (id) {
+      const i = cats.findIndex(c => c.id === id);
+      if (i >= 0) cats[i] = { ...cats[i], ...data };
+    } else {
+      id = 'cc_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+      cats.push({ id, ...data });
+    }
+    try {
+      await mqccSaveCats(cats);
+      mqccClose('mqcc-cat-overlay');
+      mqccRerender(id);
+      mqccMsg(mqccEditCat ? '✓ Category saved.' : '✓ Category added — now add its options.');
+    } catch(e) { alert('Could not save: ' + e.message); }
+    btn.disabled = false;
+  };
+  window.mqccDeleteCat = async function() {
+    const cid = mqccEditCat;
+    const c = mqccCats().find(x => x.id === cid);
+    if (!c) return;
+    const items = mqccItems(cid);
+    if (!confirm(`Delete "${c.name}"${items.length ? ` and its ${items.length} option${items.length === 1 ? '' : 's'}` : ''}? This can't be undone.`)) return;
+    try {
+      for (const r of items) { await atDelete(LINE_ITEMS_TABLE, r.id); }
+      const gone = new Set(items.map(r => r.id));
+      lineItems = lineItems.filter(r => !gone.has(r.id));
+      const cats = mqccCats().filter(x => x.id !== cid).map(x => (gone.has(x.showIf) ? { ...x, showIf: '' } : x));
+      await mqccSaveCats(cats);
+      await mqccClearShowIfRefs(gone);
+      mqccClose('mqcc-cat-overlay');
+      mqccRerender(null);
+      mqccMsg('✓ Category deleted.');
+    } catch(e) { alert('Could not delete: ' + e.message); }
+  };
+  window.mqccMoveCat = async function(cid, dir) {
+    const cats = mqccCats();
+    const i = cats.findIndex(c => c.id === cid), j = i + dir;
+    if (i < 0 || j < 0 || j >= cats.length) return;
+    [cats[i], cats[j]] = [cats[j], cats[i]];
+    try { await mqccSaveCats(cats); mqccRerender(null); } catch(e) { alert('Could not save: ' + e.message); }
+  };
+
+  // ── Options ──
+  window.mqccOpenItem = function(cid, id) {
+    const c = mqccCats().find(x => x.id === cid);
+    if (!c) return;
+    mqccEditItem = { cid, id };
+    const r = id ? lineItems.find(x => x.id === id) : null;
+    const cfg = mqccCfg(r);
+    document.getElementById('mqcc-item-title').textContent = r ? 'Edit option' : 'New option';
+    document.getElementById('mqcc-item-sub').textContent = c.name;
+    document.getElementById('mqcc-item-name').value = r ? (r.fields['Name'] || '') : '';
+    document.getElementById('mqcc-item-desc').value = r ? (r.fields['Description'] || '') : '';
+    document.getElementById('mqcc-item-how').value = MQCC_HOW[cfg.how] ? cfg.how : 'flat';
+    document.getElementById('mqcc-item-unit').value = cfg.unit || '';
+    document.getElementById('mqcc-item-rate').value = r && r.fields['Rate'] != null ? r.fields['Rate'] : '';
+    document.getElementById('mqcc-item-min').value = cfg.min > 0 ? cfg.min : '';
+    document.getElementById('mqcc-item-pro').checked = !!cfg.proOnly;
+    document.getElementById('mqcc-calc-a').value = '';
+    document.getElementById('mqcc-calc-b').value = '';
+    document.getElementById('mqcc-calc-out').textContent = '';
+    // Show-if rules are for "pick any" categories — a pick-one category
+    // already shows exactly one choice at a time.
+    mqccShow('mqcc-item-showif-wrap', c.answer === 'any');
+    mqccShowIfOptions(document.getElementById('mqcc-item-showif'), mqccAllOptions(cid, id || '__new__'), cfg.showIf || '', 'Always');
+    mqccItemHowChanged();
+    document.getElementById('mqcc-item-overlay').classList.add('show');
+    setTimeout(() => document.getElementById('mqcc-item-name')?.focus(), 50);
+  };
+  window.mqccItemHowChanged = function() {
+    const how = document.getElementById('mqcc-item-how').value;
+    const isPct = how === 'pct';
+    mqccShow('mqcc-item-unit-wrap', how === 'each');
+    mqccShow('mqcc-item-min-wrap', how !== 'flat');
+    document.getElementById('mqcc-item-rate-label').textContent = isPct ? 'Percentage (use a minus for a discount)' : (how === 'flat' ? 'Price' : (how === 'each' ? 'Price per unit' : 'Price per lin ft'));
+    document.getElementById('mqcc-item-rate-pfx').textContent = isPct ? '' : CUR();
+    document.getElementById('mqcc-item-rate-sfx').textContent = isPct ? '% of the cabinet estimate' : '';
+    mqccShow('mqcc-calc-wrap', how !== 'flat');
+    const unit = document.getElementById('mqcc-item-unit').value.trim() || 'units';
+    const words = {
+      each: ['A job with', unit, 'cost'],
+      base_lf: ['A job with', 'ft of base cabinets', 'cost'],
+      upper_lf: ['A job with', 'ft of upper cabinets', 'cost'],
+      all_lf: ['A job with', 'ft of cabinets', 'cost'],
+      pct: ['On a', 'cabinet job, this added', ''],
+    }[how] || ['', '', ''];
+    document.getElementById('mqcc-calc-a-pre').textContent = words[0] + (how === 'pct' ? ' ' + CUR() : '');
+    document.getElementById('mqcc-calc-a-post').textContent = words[1];
+    document.getElementById('mqcc-calc-b-pre').textContent = words[2];
+    mqccCalc();
+  };
+  window.mqccCalc = function() {
+    const how = document.getElementById('mqcc-item-how').value;
+    const a = parseFloat(document.getElementById('mqcc-calc-a').value);
+    const b = parseFloat(document.getElementById('mqcc-calc-b').value);
+    const out = document.getElementById('mqcc-calc-out');
+    if (!(a > 0) || isNaN(b)) { out.innerHTML = ''; return; }
+    const rate = how === 'pct' ? (b / a) * 100 : b / a;
+    const r2 = Math.round(rate * 100) / 100;
+    out.innerHTML = `= <strong>${how === 'pct' ? r2 + '%' : mqccMoney(r2) + ' per ' + (how === 'each' ? mqccEsc(document.getElementById('mqcc-item-unit').value.trim() || 'unit') : 'lin ft')}</strong> <button type="button" class="mqph-btn mqph-btn-secondary mqph-btn-sm" style="margin-left:6px" onclick="document.getElementById('mqcc-item-rate').value='${r2}'">Use this</button>`;
+  };
+  window.mqccSaveItem = async function() {
+    const ed = mqccEditItem;
+    if (!ed) return;
+    const name = document.getElementById('mqcc-item-name').value.trim();
+    if (!name) { alert('Give the option a name.'); return; }
+    if (lineItems.some(r => r.fields && r.fields['Category'] === ed.cid && r.id !== ed.id && (r.fields['Name'] || '').trim().toLowerCase() === name.toLowerCase())) {
+      alert('This category already has an option with that name — photos are matched by name, so each one needs its own.'); return;
+    }
+    const how = document.getElementById('mqcc-item-how').value;
+    const rate = parseFloat(document.getElementById('mqcc-item-rate').value);
+    if (isNaN(rate)) { alert(how === 'pct' ? 'Enter the percentage.' : 'Enter the price.'); return; }
+    const unit = document.getElementById('mqcc-item-unit').value.trim();
+    if (how === 'each' && !unit) { alert('Say what the customer is counting (e.g. panels, hours).'); return; }
+    const min = parseFloat(document.getElementById('mqcc-item-min').value);
+    const cfg = {
+      how,
+      unit: how === 'each' ? unit : '',
+      min: how !== 'flat' && min > 0 ? Math.round(min * 100) / 100 : 0,
+      showIf: document.getElementById('mqcc-item-showif-wrap').style.display === 'none' ? '' : (document.getElementById('mqcc-item-showif').value || ''),
+      proOnly: document.getElementById('mqcc-item-pro').checked,
+    };
+    const fields = {
+      Name: name,
+      Description: document.getElementById('mqcc-item-desc').value.trim(),
+      Rate: Math.round(rate * 100) / 100,
+      'Custom pricing': JSON.stringify(cfg),
+    };
+    const btn = document.getElementById('mqcc-item-save');
+    btn.disabled = true;
+    try {
+      if (ed.id) {
+        await atUpdate(LINE_ITEMS_TABLE, ed.id, fields);
+        const r = lineItems.find(x => x.id === ed.id);
+        if (r) Object.assign(r.fields, fields);
+      } else {
+        const existing = mqccItems(ed.cid);
+        const sort = existing.length ? Math.max(...existing.map(r => r.fields['Sort order'] || 0)) + 1 : 1;
+        const rec = await atCreate(LINE_ITEMS_TABLE, { shop: [shopRecord._recordId], Category: ed.cid, Active: true, 'Sort order': sort, ...fields });
+        if (rec && rec.id) lineItems.push({ id: rec.id, fields: { ...(rec.fields || {}), Category: ed.cid, Active: true, 'Sort order': sort, ...fields } });
+      }
+      if (window._mqLastFetchTimes) window._mqLastFetchTimes['products'] = 0;
+      mqccClose('mqcc-item-overlay');
+      mqccRerender(ed.cid);
+      mqccMsg('✓ Option saved. Add a photo or pick its project types in My Products.');
+    } catch(e) { alert('Could not save: ' + e.message); }
+    btn.disabled = false;
+  };
+  window.mqccDeleteItem = async function(id) {
+    const r = lineItems.find(x => x.id === id);
+    if (!r || !confirm(`Delete "${r.fields['Name'] || 'this option'}"?`)) return;
+    try {
+      await atDelete(LINE_ITEMS_TABLE, id);
+      lineItems = lineItems.filter(x => x.id !== id);
+      const gone = new Set([id]);
+      const cats = mqccCats();
+      if (cats.some(c => c.showIf === id)) await mqccSaveCats(cats.map(c => (c.showIf === id ? { ...c, showIf: '' } : c)));
+      await mqccClearShowIfRefs(gone);
+      if (window._mqLastFetchTimes) window._mqLastFetchTimes['products'] = 0;
+      mqccRerender(r.fields['Category']);
+      mqccMsg('✓ Option deleted.');
+    } catch(e) { alert('Could not delete: ' + e.message); }
+  };
+  // Options whose "show only if" pointed at something just deleted go back
+  // to always showing.
+  async function mqccClearShowIfRefs(goneIds) {
+    const cats = new Set(mqccCats().map(c => c.id));
+    for (const r of lineItems) {
+      if (!r.fields || !cats.has(r.fields['Category'])) continue;
+      const cfg = mqccCfg(r);
+      if (cfg.showIf && goneIds.has(cfg.showIf)) {
+        cfg.showIf = '';
+        const json = JSON.stringify(cfg);
+        await atUpdate(LINE_ITEMS_TABLE, r.id, { 'Custom pricing': json });
+        r.fields['Custom pricing'] = json;
+      }
+    }
+  }
+  window.mqccMoveItem = async function(cid, id, dir) {
+    const items = mqccItems(cid);
+    const i = items.findIndex(r => r.id === id), j = i + dir;
+    if (i < 0 || j < 0 || j >= items.length) return;
+    [items[i], items[j]] = [items[j], items[i]];
+    try {
+      // Renumber the whole list 1..n so equal/missing sort orders can't stick.
+      for (let k = 0; k < items.length; k++) {
+        if ((items[k].fields['Sort order'] || 0) !== k + 1) {
+          await atUpdate(LINE_ITEMS_TABLE, items[k].id, { 'Sort order': k + 1 });
+          items[k].fields['Sort order'] = k + 1;
+        }
+      }
+      mqccRerender(cid);
+    } catch(e) { alert('Could not save: ' + e.message); }
+  };
+
 
   async function loadAndRender() {
     const container=document.getElementById('mq-pricing-helper-v2');
@@ -6180,8 +6804,6 @@ window.mqphGoToWizard = function() {
       ...passedShopRecord,
       _recordId: passedShopRecord.id,
       _shopToken: (passedShopRecord.fields && passedShopRecord.fields['Shop token']) || '',
-      _baseId:   'app4zrMlVLwF2xn4h',
-      _token:    'patBtaoCbxqqQzRId.4342548ea07fbac4e5998244a4eaa09db09e9ab6494efb175664bd1f9e0462b3',
       _pricingTable: 'tblu6AYZs8h7SIaQl',
     };
     pricingRecord = passedPricingRecord;
