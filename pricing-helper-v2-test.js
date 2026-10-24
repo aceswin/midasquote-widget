@@ -6423,12 +6423,14 @@ window.mqphGoToWizard = function() {
         <div id="mqph-cat-body-${key}" style="display:none">
           ${c.description ? `<div style="padding:10px 16px 0;font-size:12px;color:#6b7280;line-height:1.5">Customers see: “${mqccEsc(c.description)}”</div>` : ''}
           ${items.length ? rows : `<div style="padding:16px;font-size:12px;color:#6b7280;line-height:1.5">No options yet. Click <strong>+ Add option</strong> to add the first one.</div>`}
+          ${items.length ? mqccPreviewShell(c) : ''}
         </div>
       </div>`;
     }).join('');
 
     const howOpts = Object.entries(MQCC_HOW).map(([v, o]) => `<option value="${v}">${o.label}</option>`).join('');
     return `
+      <style>@media(max-width:760px){#mqph-scope-custom .mqcc-pv-grid{grid-template-columns:1fr !important}}</style>
       <div class="mqph-cat-block" id="mqph-scope-custom" style="padding:16px !important">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:${cats.length ? '14px' : '0'}">
           <div style="min-width:0;max-width:620px">
@@ -6484,9 +6486,10 @@ window.mqphGoToWizard = function() {
             <div class="mqph-field"><label>Option name</label><input type="text" id="mqcc-item-name" maxlength="80" placeholder="Finished end panels"/></div>
             <div class="mqph-field"><label>Description for customers (optional)</label><input type="text" id="mqcc-item-desc" maxlength="200"/></div>
             <div class="mqph-field"><label>How it's priced</label><select id="mqcc-item-how" onchange="mqccItemHowChanged()">${howOpts}</select></div>
-            <div class="mqph-field" id="mqcc-item-unit-wrap"><label>What are you counting?</label><input type="text" id="mqcc-item-unit" maxlength="30" placeholder="panels, hours, trips…"/></div>
+            <div class="mqph-field" id="mqcc-item-unit-wrap"><label>What are you counting?</label><input type="text" id="mqcc-item-unit" maxlength="30" placeholder="panels, hours, trips…" oninput="mqccItemHowChanged()"/></div>
             <div class="mqph-field"><label id="mqcc-item-rate-label">Price</label>
-              <div style="display:flex;align-items:center;gap:6px"><span id="mqcc-item-rate-pfx" style="font-size:13px;color:#6b7280"></span><input type="number" id="mqcc-item-rate" step="0.01" style="flex:1"/><span id="mqcc-item-rate-sfx" style="font-size:13px;color:#6b7280"></span></div>
+              <div style="display:flex;align-items:center;gap:6px"><span id="mqcc-item-rate-pfx" style="font-size:13px;color:#6b7280"></span><input type="number" id="mqcc-item-rate" step="0.01" style="flex:1" oninput="mqccCheck()"/><span id="mqcc-item-rate-sfx" style="font-size:13px;color:#6b7280"></span></div>
+              <div id="mqcc-item-check" style="display:none;font-size:12px;color:#1e3a8a;background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:6px 10px;margin-top:6px;line-height:1.45"></div>
             </div>
             <div id="mqcc-calc-wrap" style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin:-4px 0 14px">
               <div style="font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Work it out from a job you know</div>
@@ -6500,7 +6503,7 @@ window.mqphGoToWizard = function() {
               <div id="mqcc-calc-out" style="font-size:12px;color:#166534;margin-top:6px;min-height:16px"></div>
             </div>
             <div class="mqph-field" id="mqcc-item-min-wrap"><label>Minimum charge (optional)</label>
-              <div style="display:flex;align-items:center;gap:6px"><span style="font-size:13px;color:#6b7280">${CUR()}</span><input type="number" id="mqcc-item-min" step="0.01" min="0" style="flex:1"/></div>
+              <div style="display:flex;align-items:center;gap:6px"><span style="font-size:13px;color:#6b7280">${CUR()}</span><input type="number" id="mqcc-item-min" step="0.01" min="0" style="flex:1" oninput="mqccCheck()"/></div>
             </div>
             <div class="mqph-field" id="mqcc-item-showif-wrap"><label>Show this option</label><select id="mqcc-item-showif"></select></div>
             <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin:4px 0 0;cursor:pointer">
@@ -6666,6 +6669,7 @@ window.mqphGoToWizard = function() {
     document.getElementById('mqcc-calc-a-post').textContent = words[1];
     document.getElementById('mqcc-calc-b-pre').textContent = words[2];
     mqccCalc();
+    mqccCheck();
   };
   window.mqccCalc = function() {
     const how = document.getElementById('mqcc-item-how').value;
@@ -6675,7 +6679,7 @@ window.mqphGoToWizard = function() {
     if (!(a > 0) || isNaN(b)) { out.innerHTML = ''; return; }
     const rate = how === 'pct' ? (b / a) * 100 : b / a;
     const r2 = Math.round(rate * 100) / 100;
-    out.innerHTML = `= <strong>${how === 'pct' ? r2 + '%' : mqccMoney(r2) + ' per ' + (how === 'each' ? mqccEsc(document.getElementById('mqcc-item-unit').value.trim() || 'unit') : 'lin ft')}</strong> <button type="button" class="mqph-btn mqph-btn-secondary mqph-btn-sm" style="margin-left:6px" onclick="document.getElementById('mqcc-item-rate').value='${r2}'">Use this</button>`;
+    out.innerHTML = `= <strong>${how === 'pct' ? r2 + '%' : mqccMoney(r2) + ' per ' + (how === 'each' ? mqccEsc(document.getElementById('mqcc-item-unit').value.trim() || 'unit') : 'lin ft')}</strong> <button type="button" class="mqph-btn mqph-btn-secondary mqph-btn-sm" style="margin-left:6px" onclick="document.getElementById('mqcc-item-rate').value='${r2}';mqccCheck()">Use this</button>`;
   };
   window.mqccSaveItem = async function() {
     const ed = mqccEditItem;
@@ -6771,6 +6775,226 @@ window.mqphGoToWizard = function() {
     } catch(e) { alert('Could not save: ' + e.message); }
   };
 
+
+
+  // ── Customer preview (dashboard only, nothing saved) ──
+  // Each custom category on the Pricing tab shows a clickable copy of its
+  // widget step plus the price lines it would add, using sample job numbers
+  // the shop can change. Mirrors widget.js's mqCcCost/mqCcSync rules (show-if,
+  // minimums, % of the cabinet estimate). Turned-off options are left out,
+  // same as the widget; project types aren't applied (the preview shows every
+  // option). Pro-only options/categories show with a ⚡ tag.
+  const mqccPv = { base: 14, upper: 12, est: 9840, qty: {}, on: {}, one: {}, oneQty: {} };
+
+  function mqccPvItems(cid) {
+    return mqccItems(cid).filter(r => r.fields['Active'] !== false).map(r => {
+      const cfg = mqccCfg(r);
+      return { id: r.id, name: r.fields['Name'] || '', desc: r.fields['Description'] || '', rate: Number(r.fields['Rate']) || 0,
+        how: MQCC_HOW[cfg.how] ? cfg.how : 'flat', unit: cfg.unit || '', min: Number(cfg.min) || 0, showIf: cfg.showIf || '', proOnly: !!cfg.proOnly,
+        groupName: (r.fields['Group name'] || '').trim(), groupOrder: r.fields['Group sort order'] || 0 };
+    });
+  }
+  function mqccPvPhoto(cid, name) {
+    let photos = {};
+    try { photos = JSON.parse(mqccShopFields()['Photos'] || '{}'); } catch(e) { photos = {}; }
+    const base = String(name || '').replace(/\s*—\s*(uppers|bases|some drawers|mostly drawers|with doors|no doors)\s*$/i, '').trim();
+    return photos[`li_${cid}_${base.replace(/[^a-z0-9]/gi, '_').toLowerCase()}`] || '';
+  }
+  function mqccPvOneVal(c, items) {
+    const v = mqccPv.one[c.id];
+    if (v && (v === 'none' ? !c.required : items.some(i => i.id === v))) return v;
+    return c.required ? (items[0] ? items[0].id : 'none') : 'none';
+  }
+  function mqccPvFind(id) {
+    for (const c of mqccCats()) { const it = mqccPvItems(c.id).find(i => i.id === id); if (it) return { c, it }; }
+    return null;
+  }
+  function mqccPvPicked(c, it, items) {
+    if (c.answer === 'one') return mqccPvOneVal(c, items) === it.id;
+    if (it.how === 'each') return (mqccPv.qty[it.id] || 0) > 0;
+    return !!mqccPv.on[it.id];
+  }
+  function mqccPvLive(id, depth) {
+    const hit = mqccPvFind(id);
+    if (!hit || depth > 6) return false;
+    const items = mqccPvItems(hit.c.id);
+    return mqccPvCatOn(hit.c, depth + 1) && mqccPvItemOn(hit.c, hit.it, depth + 1) && mqccPvPicked(hit.c, hit.it, items);
+  }
+  function mqccPvItemOn(c, it, depth) {
+    if (c.answer === 'any' && it.showIf && mqccPvFind(it.showIf)) return mqccPvLive(it.showIf, (depth || 0) + 1);
+    return true;
+  }
+  function mqccPvCatOn(c, depth) {
+    if (c.showIf && mqccPvFind(c.showIf)) return mqccPvLive(c.showIf, (depth || 0) + 1);
+    return true;
+  }
+  // Same math as widget.js mqCcCost. Returns { cost, qtyTxt, minUsed } or null.
+  function mqccPvPrice(it, qty) {
+    let cost = 0, qtyTxt = '', q = 1;
+    if (it.how === 'each') { q = qty; cost = it.rate * q; qtyTxt = `${Math.round(q * 100) / 100}${it.unit ? ' ' + it.unit : ''}`; }
+    else if (it.how === 'base_lf' || it.how === 'upper_lf' || it.how === 'all_lf') {
+      q = it.how === 'base_lf' ? mqccPv.base : (it.how === 'upper_lf' ? mqccPv.upper : mqccPv.base + mqccPv.upper);
+      cost = it.rate * q; qtyTxt = `${Math.round(q * 100) / 100} lin ft`;
+    } else if (it.how === 'pct') { cost = mqccPv.est * it.rate / 100; qtyTxt = `${it.rate}%`; }
+    else cost = it.rate;
+    if (it.how !== 'flat' && it.how !== 'pct' && !(q > 0)) return null;
+    let minUsed = false;
+    if (it.min > 0 && cost >= 0 && cost < it.min) { cost = it.min; minUsed = true; }
+    return { cost, qtyTxt, minUsed };
+  }
+  function mqccPvLines(c) {
+    const items = mqccPvItems(c.id);
+    if (!mqccPvCatOn(c, 0)) return [];
+    const out = [];
+    items.forEach(it => {
+      if (!mqccPvItemOn(c, it, 0) || !mqccPvPicked(c, it, items)) return;
+      const qty = it.how === 'each' ? (c.answer === 'one' ? (mqccPv.oneQty[c.id] == null ? 1 : mqccPv.oneQty[c.id]) : (mqccPv.qty[it.id] || 0)) : 1;
+      const p = mqccPvPrice(it, qty);
+      if (!p || !p.cost) return;
+      out.push({ label: p.qtyTxt ? `${it.name} (${p.qtyTxt})` : it.name, cost: Math.round(p.cost), minUsed: p.minUsed, pro: it.proOnly });
+    });
+    return out;
+  }
+  function mqccPvMoney(n) { return (n < 0 ? '−' : '') + CUR() + Math.abs(Math.round(n)).toLocaleString(); }
+  function mqccPvThumb(cid, it, size) {
+    const url = mqccPvPhoto(cid, it.name);
+    return url
+      ? `<img src="${mqccEsc(url)}" alt="" style="width:${size}px;height:${size}px;object-fit:cover;border-radius:6px;border:1px solid #e5e7eb;flex-shrink:0;background:#f3f4f6" onerror="this.replaceWith(Object.assign(document.createElement('div'),{textContent:'✨',style:'width:${size}px;height:${size}px;border-radius:6px;background:#f3f4f6;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid #e5e7eb'}))"/>`
+      : `<div style="width:${size}px;height:${size}px;border-radius:6px;background:#f3f4f6;border:1px solid #e5e7eb;display:flex;align-items:center;justify-content:center;font-size:${Math.round(size / 3)}px;flex-shrink:0">${it.id === 'none' ? '🚫' : '✨'}</div>`;
+  }
+  const MQCC_PV_BTN = 'font:inherit;font-size:12px;font-weight:700;border-radius:6px;cursor:pointer;padding:5px 12px;';
+  function mqccPvStepper(onMinus, onPlus, val, unit) {
+    const b = 'width:24px;height:24px;border:1px solid #d1d5db;border-radius:5px;background:#fff;color:#111;font:inherit;font-size:14px;cursor:pointer;padding:0;line-height:1';
+    return `<span style="display:inline-flex;align-items:center;gap:6px"><button type="button" style="${b}" onclick="${onMinus}">−</button><span style="min-width:26px;text-align:center;font-size:14px;font-weight:600">${Math.round(val * 100) / 100}</span><button type="button" style="${b}" onclick="${onPlus}">+</button><span style="font-size:11px;font-weight:600;color:#6b7280">${mqccEsc(unit || 'quantity')}</span></span>`;
+  }
+
+  function mqccPvViewHtml(c) {
+    const items = mqccPvItems(c.id);
+    const catOn = mqccPvCatOn(c, 0);
+    const proTag = ' <span style="font-size:9px;font-weight:800;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:1px 5px;vertical-align:middle;letter-spacing:0;text-transform:none">⚡ Pro</span>';
+    let body = '';
+    if (c.answer === 'one') {
+      const val = mqccPvOneVal(c, items);
+      const list = (c.required ? [] : [{ id: 'none', name: 'None' }]).concat(items);
+      body = `<div style="display:flex;flex-wrap:wrap;gap:8px">${list.map(it => {
+        const sel = val === it.id;
+        return `<button type="button" onclick="mqccPvPickOne('${c.id}','${it.id}')" style="width:104px;padding:6px;border-radius:9px;border:${sel ? '2px solid #111' : '1px solid #e5e7eb'};background:#fff;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;font:inherit">
+          ${mqccPvThumb(c.id, it, 88)}
+          <span style="font-size:11px;font-weight:${sel ? 700 : 500};color:#111;line-height:1.25;text-align:center">${mqccEsc(it.name)}${it.proOnly ? proTag : ''}</span>
+          <span style="font-size:10px;font-weight:700;border-radius:10px;padding:2px 8px;${sel ? 'background:#111;color:#fff' : 'border:1px solid #d1d5db;color:#374151'}">${sel ? '✓ Selected' : 'Select'}</span>
+        </button>`;
+      }).join('')}</div>`;
+      const cur = items.find(i => i.id === val);
+      if (cur && cur.how === 'each') {
+        const q = mqccPv.oneQty[c.id] == null ? 1 : mqccPv.oneQty[c.id];
+        body += `<div style="display:flex;align-items:center;gap:10px;margin-top:10px;font-size:13px;font-weight:600;color:#374151">How many? ${mqccPvStepper(`mqccPvOneQty('${c.id}',-1)`, `mqccPvOneQty('${c.id}',1)`, q, cur.unit)}</div>`;
+      }
+    } else {
+      const names = [...new Set(items.filter(i => i.groupName).sort((a, b) => (a.groupOrder || 0) - (b.groupOrder || 0)).map(i => i.groupName))];
+      const buckets = names.map(n => ({ name: n, items: items.filter(i => i.groupName === n) }));
+      const loose = items.filter(i => !i.groupName);
+      if (loose.length) buckets.push({ name: names.length ? 'Other' : '', items: loose });
+      const auto = { base_lf: 'Uses the base cabinet length', upper_lf: 'Uses the upper cabinet length', all_lf: 'Uses the total cabinet length' };
+      body = buckets.map(b => `${b.name ? `<div style="font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#374151;margin:10px 0 6px">${mqccEsc(b.name)}</div>` : ''}
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px">${b.items.map(it => {
+          const shown = mqccPvItemOn(c, it, 0);
+          const on = shown && mqccPvPicked(c, it, items);
+          const rule = it.showIf ? (mqccPvFind(it.showIf) || {}).it : null;
+          const control = it.how === 'each'
+            ? mqccPvStepper(`mqccPvQty('${it.id}',-1)`, `mqccPvQty('${it.id}',1)`, mqccPv.qty[it.id] || 0, it.unit)
+            : `<button type="button" onclick="mqccPvToggle('${it.id}')" style="${MQCC_PV_BTN}border:1.5px solid ${on ? '#1d4ed8' : '#d1d5db'};background:${on ? '#1d4ed8' : '#fff'};color:${on ? '#fff' : '#111'}">${on ? '✓ Added' : '+ Add'}</button>`;
+          return `<div style="display:flex;gap:10px;padding:8px 10px;border-radius:8px;border:1px ${shown ? 'solid' : 'dashed'} ${on ? '#93c5fd' : '#e5e7eb'};background:${on ? '#eff6ff' : '#fff'};${shown ? '' : 'opacity:.55'}">
+            ${mqccPvThumb(c.id, it, 56)}
+            <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px">
+              <div style="font-size:13px;line-height:1.2;color:${on ? '#1d4ed8' : '#111'}">${mqccEsc(it.name)}${it.proOnly ? proTag : ''}</div>
+              ${it.desc ? `<div style="font-size:11px;color:#6b7280;line-height:1.3">${mqccEsc(it.desc)}</div>` : ''}
+              ${auto[it.how] ? `<div style="font-size:11px;color:#166534">📐 ${auto[it.how]}</div>` : ''}
+              ${shown ? `<div style="margin-top:3px">${control}</div>` : `<div style="font-size:11px;color:#92400e;margin-top:3px">Hidden until “${mqccEsc(rule ? rule.name : '')}” is picked</div>`}
+            </div>
+          </div>`;
+        }).join('')}</div>`).join('');
+    }
+    const ruleTarget = c.showIf ? (mqccPvFind(c.showIf) || {}).it : null;
+    return `<div style="background:#fff;border:1.5px solid ${catOn ? '#93c5fd' : '#e5e7eb'};border-radius:10px;padding:12px 14px;${catOn ? '' : 'opacity:.6'}">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <span style="width:22px;height:22px;border-radius:50%;background:#1d4ed8;color:#fff;font-size:11px;font-weight:800;display:inline-flex;align-items:center;justify-content:center">✨</span>
+        <span style="font-size:13px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#111">${mqccEsc(c.name)}</span>${c.proOnly ? proTag : ''}
+      </div>
+      ${c.description ? `<div style="font-size:12px;color:#4b5563;margin-bottom:10px;line-height:1.5">${mqccEsc(c.description)}</div>` : ''}
+      ${!catOn ? `<div style="font-size:12px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:6px 10px;margin-bottom:10px">This step is hidden until “${mqccEsc(ruleTarget ? ruleTarget.name : '')}” is picked.</div>` : ''}
+      ${items.length ? body : '<div style="font-size:12px;color:#9ca3af">Turned-off options don’t show to customers.</div>'}
+    </div>`;
+  }
+  function mqccPvLinesHtml(c) {
+    const lines = mqccPvLines(c);
+    const total = lines.reduce((a, l) => a + l.cost, 0);
+    return lines.length
+      ? `${lines.map(l => `<div style="display:flex;justify-content:space-between;gap:10px;font-size:12px;padding:5px 0;border-bottom:1px solid #f3f4f6"><span style="color:#374151">${mqccEsc(l.label)}${l.minUsed ? ' <span style="color:#92400e">(minimum)</span>' : ''}${l.pro ? ' <span style="color:#92400e">⚡</span>' : ''}</span><strong style="white-space:nowrap">${mqccPvMoney(l.cost)}</strong></div>`).join('')}
+        <div style="display:flex;justify-content:space-between;font-size:13px;padding-top:8px"><span style="font-weight:700">Adds to the estimate</span><strong>${total >= 0 ? '+' : ''}${mqccPvMoney(total)}</strong></div>`
+      : `<div style="font-size:12px;color:#9ca3af;line-height:1.5">Pick or add something on the left to see what it adds.</div>`;
+  }
+  function mqccPreviewShell(c) {
+    const inp = (k, label, pfx) => `<label style="display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;color:#374151;margin-bottom:6px">${label}<span style="display:inline-flex;align-items:center;gap:4px">${pfx ? `<span style="color:#6b7280">${pfx}</span>` : ''}<input type="number" min="0" step="0.5" data-mqcc-pv="${k}" value="${mqccPv[k]}" oninput="mqccPvSample('${k}',this.value)" style="width:84px;font-size:12px;padding:4px 6px;border:1px solid #d1d5db;border-radius:5px"/></span></label>`;
+    return `<div style="border-top:1px solid #eef0f3;padding:14px 16px 16px;background:#fafbfc">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+        <div style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#6b7280">👁 Customer preview</div>
+        <div style="font-size:11px;color:#9ca3af">Click around like a customer — nothing here is saved</div>
+      </div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:14px;align-items:start" class="mqcc-pv-grid">
+        <div id="mqcc-pv-view-${c.id}" data-mqcc-pv-cat="${c.id}">${mqccPvViewHtml(c)}</div>
+        <div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:12px">
+          <div style="font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#374151;margin-bottom:8px">Sample job</div>
+          ${inp('base', 'Base cabinets (lin ft)')}
+          ${inp('upper', 'Upper cabinets (lin ft)')}
+          ${inp('est', 'Cabinet estimate', CUR())}
+          <div id="mqcc-pv-lines-${c.id}" style="margin-top:8px;border-top:1px solid #e5e7eb;padding-top:6px">${mqccPvLinesHtml(c)}</div>
+        </div>
+      </div>
+    </div>`;
+  }
+  // Show-if rules can cross categories, so every preview refreshes together.
+  function mqccPvRefresh() {
+    mqccCats().forEach(c => {
+      const v = document.getElementById(`mqcc-pv-view-${c.id}`);
+      if (v) v.innerHTML = mqccPvViewHtml(c);
+      const l = document.getElementById(`mqcc-pv-lines-${c.id}`);
+      if (l) l.innerHTML = mqccPvLinesHtml(c);
+    });
+  }
+  window.mqccPvPickOne = function(cid, id) { mqccPv.one[cid] = id; mqccPvRefresh(); };
+  window.mqccPvOneQty = function(cid, d) { const q = mqccPv.oneQty[cid] == null ? 1 : mqccPv.oneQty[cid]; mqccPv.oneQty[cid] = Math.max(0, q + d); mqccPvRefresh(); };
+  window.mqccPvQty = function(id, d) { mqccPv.qty[id] = Math.max(0, (mqccPv.qty[id] || 0) + d); mqccPvRefresh(); };
+  window.mqccPvToggle = function(id) { mqccPv.on[id] = !mqccPv.on[id]; mqccPvRefresh(); };
+  window.mqccPvSample = function(k, v) {
+    mqccPv[k] = Math.max(0, parseFloat(v) || 0);
+    document.querySelectorAll(`[data-mqcc-pv="${k}"]`).forEach(i => { if (i !== document.activeElement) i.value = v; });
+    mqccCats().forEach(c => { const l = document.getElementById(`mqcc-pv-lines-${c.id}`); if (l) l.innerHTML = mqccPvLinesHtml(c); });
+  };
+
+  // One-line check in the option editor, updated as the shop types.
+  window.mqccCheck = function() {
+    const el = document.getElementById('mqcc-item-check');
+    if (!el) return;
+    const how = document.getElementById('mqcc-item-how').value;
+    const rate = parseFloat(document.getElementById('mqcc-item-rate').value);
+    if (isNaN(rate)) { el.style.display = 'none'; return; }
+    const min = parseFloat(document.getElementById('mqcc-item-min').value) || 0;
+    const unit = document.getElementById('mqcc-item-unit').value.trim() || 'units';
+    const it = { how, rate, min: how === 'flat' ? 0 : min, unit };
+    const p = mqccPvPrice(it, 3);
+    const amt = p ? mqccPvMoney(p.cost) : mqccPvMoney(0);
+    const minNote = p && p.minUsed ? ' (minimum applied)' : '';
+    const text = {
+      flat: `Adds <strong>${amt}</strong> when a customer picks it.`,
+      each: `A customer who enters 3 ${mqccEsc(unit)} → <strong>${amt}</strong>${minNote}`,
+      base_lf: `On a job with ${mqccPv.base} ft of base cabinets → <strong>${amt}</strong>${minNote}`,
+      upper_lf: `On a job with ${mqccPv.upper} ft of upper cabinets → <strong>${amt}</strong>${minNote}`,
+      all_lf: `On a job with ${mqccPv.base + mqccPv.upper} ft of cabinets → <strong>${amt}</strong>${minNote}`,
+      pct: `On a ${mqccPvMoney(mqccPv.est)} cabinet estimate → ${rate < 0 ? 'takes off' : 'adds'} <strong>${mqccPvMoney(Math.abs(p ? p.cost : 0))}</strong>`,
+    }[how] || '';
+    el.innerHTML = '🧮 ' + text;
+    el.style.display = 'block';
+  };
 
   async function loadAndRender() {
     const container=document.getElementById('mq-pricing-helper-v2');
