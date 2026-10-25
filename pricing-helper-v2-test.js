@@ -6395,7 +6395,7 @@ window.mqphGoToWizard = function() {
     if (!t || !t.cat || !Array.isArray(t.names) || !t.names.length) return '';
     const lab = (MQCC_TIE_CATS.find(x => x[0] === t.cat) || ['', t.cat])[1].toLowerCase();
     const shown = t.names.slice(0, 3).join(', ') + (t.names.length > 3 ? ` +${t.names.length - 3} more` : '');
-    return `only with ${lab}: ${shown}`;
+    return `linked to ${lab}: ${shown}`;
   }
   // Names the shop can tie to, straight from their own pricing items.
   function mqccTieNames(cat) {
@@ -6408,11 +6408,11 @@ window.mqphGoToWizard = function() {
     else names = act.filter(r => r.fields['Category'] === cat).map(r => r.fields['Name']);
     return [...new Set(names.map(n => String(n || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b));
   }
-  function mqccTieFieldHtml(pfx, what) {
-    return `<div class="mqph-field"><label>Only show ${what} with these picks (optional)</label>
+  function mqccTieFieldHtml(pfx) {
+    return `<div class="mqph-field"><label>Link to another pick (optional — like crown &amp; door styles)</label>
       <select id="mqcc-${pfx}-tiecat" onchange="mqccTieRender('${pfx}', [])">
-        <option value="">Always — not tied to other picks</option>
-        ${MQCC_TIE_CATS.map(([v, l]) => `<option value="${v}">Tie to a ${l.toLowerCase()}</option>`).join('')}
+        <option value="">Not linked</option>
+        ${MQCC_TIE_CATS.map(([v, l]) => `<option value="${v}">Link to a ${l.toLowerCase()}</option>`).join('')}
       </select>
       <div id="mqcc-${pfx}-tienames" style="display:none;max-height:170px;overflow-y:auto;border:1px solid #e5e7eb;border-radius:8px;padding:6px 10px;margin-top:6px"></div>
     </div>`;
@@ -6425,7 +6425,7 @@ window.mqphGoToWizard = function() {
     const sel = new Set((selected || []).map(n => String(n).toLowerCase()));
     box.style.display = 'block';
     box.innerHTML = names.length
-      ? `<div style="font-size:11px;color:#6b7280;margin:2px 0 6px">Shows only when the customer picks one of these:</div>` + names.map(n => `<label style="display:flex;align-items:center;gap:8px;font-size:13px;padding:3px 0;cursor:pointer"><input type="checkbox" value="${mqccEsc(n)}" ${sel.has(n.toLowerCase()) ? 'checked' : ''} style="width:15px;height:15px"/> ${mqccEsc(n)}</label>`).join('')
+      ? `<div style="font-size:11px;color:#6b7280;margin:2px 0 6px;line-height:1.45">When the customer picks one of these, this option is chosen for them automatically (they can still change it). It's hidden the rest of the time.</div>` + names.map(n => `<label style="display:flex;align-items:center;gap:8px;font-size:13px;padding:3px 0;cursor:pointer"><input type="checkbox" value="${mqccEsc(n)}" ${sel.has(n.toLowerCase()) ? 'checked' : ''} style="width:15px;height:15px"/> ${mqccEsc(n)}</label>`).join('')
       : `<div style="font-size:12px;color:#9ca3af;padding:4px 0">You don’t have any of these set up in Pricing yet.</div>`;
   };
   function mqccTieRead(pfx) {
@@ -6468,7 +6468,6 @@ window.mqphGoToWizard = function() {
         c.answer === 'one' && c.required ? mqccChip('Must choose', 'gray') : '',
         c.proOnly ? mqccChip('⚡ Pro only', 'gold') : '',
         c.showIf ? mqccChip('Only if ' + mqccEsc(mqccOptionLabel(c.showIf) || 'option removed'), 'gray') : '',
-        c.tie ? mqccChip(mqccEsc(mqccTieText(c.tie)).replace(/^only/, 'Only'), 'gray') : '',
         c.after && c.after !== 'specialty' ? mqccChip('📍 ' + mqccEsc(((MQCC_PLACES.find(x => x[0] === c.after) || ['', ''])[1]).replace(' (default)', '')), 'gray') : '',
       ].join(' ');
       const rows = items.map((r, ri) => {
@@ -6557,7 +6556,7 @@ window.mqphGoToWizard = function() {
             <div class="mqph-field"><label>Show this step</label>
               <select id="mqcc-cat-showif"></select>
             </div>
-            ${mqccTieFieldHtml('cat', 'this step')}
+
             <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin:4px 0 0;cursor:pointer">
               <input type="checkbox" id="mqcc-cat-pro" style="width:16px;height:16px"/> ⚡ MidasQuote Pro only (hidden on your public widget)
             </label>
@@ -6602,7 +6601,7 @@ window.mqphGoToWizard = function() {
               <div style="display:flex;align-items:center;gap:6px"><span style="font-size:13px;color:#6b7280">${CUR()}</span><input type="number" id="mqcc-item-min" step="0.01" min="0" style="flex:1" oninput="mqccCheck()"/></div>
             </div>
             <div class="mqph-field" id="mqcc-item-showif-wrap"><label>Show this option</label><select id="mqcc-item-showif"></select></div>
-            ${mqccTieFieldHtml('item', 'this option')}
+            ${mqccTieFieldHtml('item')}
             <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin:4px 0 0;cursor:pointer">
               <input type="checkbox" id="mqcc-item-pro" style="width:16px;height:16px"/> ⚡ MidasQuote Pro only (hidden on your public widget)
             </label>
@@ -6653,7 +6652,6 @@ window.mqphGoToWizard = function() {
     document.getElementById('mqcc-cat-pro').checked = !!(c && c.proOnly);
     mqccShowIfOptions(document.getElementById('mqcc-cat-showif'), mqccAllOptions(cid, null), c ? c.showIf : '', 'Always (for the project types set in My Products)');
     document.getElementById('mqcc-cat-after').value = (c && MQCC_PLACES.some(x => x[0] === c.after)) ? c.after : 'specialty';
-    mqccTieLoad('cat', c ? c.tie : null);
     document.getElementById('mqcc-cat-delete').style.display = c ? '' : 'none';
     mqccCatAnswerChanged();
     document.getElementById('mqcc-cat-overlay').classList.add('show');
@@ -6678,12 +6676,11 @@ window.mqphGoToWizard = function() {
       showIf: document.getElementById('mqcc-cat-showif').value || '',
       proOnly: document.getElementById('mqcc-cat-pro').checked,
       after: document.getElementById('mqcc-cat-after').value || 'specialty',
-      tie: mqccTieRead('cat'),
     };
     let id = mqccEditCat;
     if (id) {
       const i = cats.findIndex(c => c.id === id);
-      if (i >= 0) cats[i] = { ...cats[i], ...data };
+      if (i >= 0) { cats[i] = { ...cats[i], ...data }; delete cats[i].tie; } // links live on options only
     } else {
       id = 'cc_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
       cats.push({ id, ...data });
@@ -7083,7 +7080,6 @@ window.mqphGoToWizard = function() {
         <span style="font-size:13px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#111">${mqccEsc(c.name)}</span>${c.proOnly ? proTag : ''}
       </div>
       ${c.description ? `<div style="font-size:12px;color:#4b5563;margin-bottom:10px;line-height:1.5">${mqccEsc(c.description)}</div>` : ''}
-      ${c.tie ? `<div style="font-size:11px;color:#6b7280;margin-bottom:8px">🔗 ${mqccEsc(mqccTieText(c.tie)).replace(/^only/, 'Only')} (always shown in this preview)</div>` : ''}
       ${!catOn ? `<div style="font-size:12px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:6px 10px;margin-bottom:10px">This step is hidden until “${mqccEsc(ruleTarget ? ruleTarget.name : '')}” is picked.</div>` : ''}
       ${items.length ? body : '<div style="font-size:12px;color:#9ca3af">Turned-off options don’t show to customers.</div>'}
     </div>`;
@@ -7101,7 +7097,7 @@ window.mqphGoToWizard = function() {
     return `<div style="border-top:1px solid #eef0f3;padding:14px 16px 16px;background:#fafbfc">
       <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:10px">
         <div style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#6b7280">👁 Customer preview</div>
-        <div style="font-size:11px;color:#9ca3af">Click around like a customer — nothing here is saved. Tied options (🔗) always show here.</div>
+        <div style="font-size:11px;color:#9ca3af">Click around like a customer — nothing here is saved. Linked options (🔗) always show here.</div>
       </div>
       <div style="display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:14px;align-items:start" class="mqcc-pv-grid">
         <div id="mqcc-pv-view-${c.id}" data-mqcc-pv-cat="${c.id}">${mqccPvViewHtml(c)}</div>
