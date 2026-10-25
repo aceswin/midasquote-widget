@@ -3177,11 +3177,26 @@
           answer: c.answer === 'one' ? 'one' : 'any',
           required: !!c.required,
           showIf: typeof c.showIf === 'string' ? c.showIf : '',
-          after: MQ_CC_ANCHORS.includes(c.after) ? c.after : 'specialty',
+          // A built-in step key, or 'cc:<id>' = right after another custom step.
+          after: (MQ_CC_ANCHORS.includes(c.after) || /^cc:cc_[a-z0-9]+$/i.test(String(c.after || ''))) ? c.after : 'specialty',
           items,
         };
       })
       .filter(c => c.items.length);
+    // A step placed after another custom step that isn't on this widget
+    // (Pro-only, or no options left) takes that step's spot instead.
+    const defById = {};
+    defs.forEach(d => { if (d && d.id) defById[d.id] = d; });
+    const present = new Set(cats.map(c => c.id));
+    cats.forEach(c => {
+      let a = c.after, guard = 0;
+      while (/^cc:/.test(a) && !present.has(a.slice(3)) && guard++ < 30) {
+        const d = defById[a.slice(3)];
+        a = d && typeof d.after === 'string' ? d.after : 'specialty';
+      }
+      if (/^cc:/.test(a) && (!present.has(a.slice(3)) || a.slice(3) === c.id)) a = 'specialty';
+      c.after = (MQ_CC_ANCHORS.includes(a) || /^cc:/.test(a)) ? a : 'specialty';
+    });
     return cats;
   }
 
@@ -3436,8 +3451,13 @@
   function mqCcPlace(p) {
     const cats = window._mqCustomCats || [];
     const last = {};
+    const placed = new Set();
+    // Steps placed after a built-in step, each followed by any steps placed
+    // after it (and so on), in the shop's Pricing-tab order.
+    const chain = key => cats.filter(c => c.after === key && !placed.has(c.id)).flatMap(c => { placed.add(c.id); return [c, ...chain('cc:' + c.id)]; });
     MQ_CC_ANCHORS.forEach((key, ki) => {
-      const group = cats.filter(c => c.after === key);
+      const group = chain(key);
+      if (key === 'countertops') group.push(...cats.filter(c => !placed.has(c.id))); // anything left (e.g. a loop) goes last
       if (!group.length) return;
       let ref = null;
       for (let k = ki; k >= 0 && !ref; k--) ref = last[MQ_CC_ANCHORS[k]] || mqCcAnchorEl(p, MQ_CC_ANCHORS[k]);
