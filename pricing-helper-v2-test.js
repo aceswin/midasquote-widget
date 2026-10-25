@@ -6519,6 +6519,11 @@ window.mqphGoToWizard = function() {
     return `
       <style>@media(max-width:760px){#mqph-scope-custom .mqcc-pv-grid{grid-template-columns:1fr !important}}
         #mqcc-cat-tienames label,#mqcc-item-tienames label{display:flex !important;align-items:center !important;gap:8px !important;text-transform:none !important;letter-spacing:0 !important;font-weight:400 !important;font-size:13px !important;color:#111 !important;margin:0 !important;padding:3px 0 !important;cursor:pointer}
+        #mqph-scope-custom ~ .mqph-overlay .mqcc-wide, .mqcc-wide{max-width:980px !important}
+        .mqcc-modal-grid{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:22px;align-items:start}
+        .mqcc-modal-pv{position:sticky;top:0;max-height:calc(90vh - 190px);overflow-y:auto;background:#f8fafc !important;border:1px solid #e5e7eb !important;border-radius:12px !important;padding:14px !important}
+        .mqcc-modal-pv-label{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#6b7280;margin-bottom:10px}
+        @media(max-width:900px){.mqcc-modal-grid{grid-template-columns:1fr}.mqcc-modal-pv{position:static;max-height:none}}
         #mqcc-cat-tienames input,#mqcc-item-tienames input{width:15px !important;height:15px !important;min-width:15px !important;flex:none !important;margin:0 !important;padding:0 !important;box-shadow:none !important}</style>
       <div class="mqph-cat-block" id="mqph-scope-custom" style="padding:16px !important">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:${cats.length ? '14px' : '0'}">
@@ -6533,12 +6538,12 @@ window.mqphGoToWizard = function() {
       </div>
 
       <div class="mqph-overlay" id="mqcc-cat-overlay">
-        <div class="mqph-modal">
+        <div class="mqph-modal mqcc-wide">
           <div class="mqph-modal-hdr">
             <div><h3 id="mqcc-cat-title">New category</h3><p>This becomes its own step on your widget.</p></div>
             <button class="mqph-modal-hdr-close" onclick="mqccClose('mqcc-cat-overlay')">×</button>
           </div>
-          <div class="mqph-modal-body">
+          <div class="mqph-modal-body"><div class="mqcc-modal-grid"><div>
             <div class="mqph-field"><label>Category name</label><input type="text" id="mqcc-cat-name" maxlength="60" placeholder="Finishing &amp; extras"/></div>
             <div class="mqph-field"><label>Short description for customers (optional)</label><input type="text" id="mqcc-cat-desc" maxlength="200" placeholder="A few finishing details that make the install look built-in."/></div>
             <div class="mqph-field"><label>How customers answer</label>
@@ -6561,6 +6566,8 @@ window.mqphGoToWizard = function() {
               <input type="checkbox" id="mqcc-cat-pro" style="width:16px;height:16px"/> ⚡ MidasQuote Pro only (hidden on your public widget)
             </label>
           </div>
+            <div class="mqcc-modal-pv"><div class="mqcc-modal-pv-label">👁 Live preview — what customers will see</div><div id="mqcc-cat-pv"></div></div></div>
+          </div>
           <div class="mqph-modal-footer">
             <button class="mqph-btn mqph-btn-danger mqph-btn-sm" id="mqcc-cat-delete" onclick="mqccDeleteCat()" style="display:none">Delete category</button>
             <button class="mqph-btn mqph-btn-secondary" onclick="mqccClose('mqcc-cat-overlay')" style="margin-left:auto">Cancel</button>
@@ -6570,12 +6577,12 @@ window.mqphGoToWizard = function() {
       </div>
 
       <div class="mqph-overlay" id="mqcc-item-overlay">
-        <div class="mqph-modal">
+        <div class="mqph-modal mqcc-wide">
           <div class="mqph-modal-hdr">
             <div><h3 id="mqcc-item-title">New option</h3><p id="mqcc-item-sub"></p></div>
             <button class="mqph-modal-hdr-close" onclick="mqccClose('mqcc-item-overlay')">×</button>
           </div>
-          <div class="mqph-modal-body">
+          <div class="mqph-modal-body"><div class="mqcc-modal-grid"><div>
             <div class="mqph-field"><label>Option name</label><input type="text" id="mqcc-item-name" maxlength="80" placeholder="Finished end panels"/></div>
             <div class="mqph-field"><label>Description for customers (optional)</label><input type="text" id="mqcc-item-desc" maxlength="200"/></div>
             <div class="mqph-field"><label>What it's priced on</label><select id="mqcc-item-how" onchange="mqccItemHowChanged()">${howOpts}</select></div>
@@ -6605,6 +6612,8 @@ window.mqphGoToWizard = function() {
             <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin:4px 0 0;cursor:pointer">
               <input type="checkbox" id="mqcc-item-pro" style="width:16px;height:16px"/> ⚡ MidasQuote Pro only (hidden on your public widget)
             </label>
+          </div>
+            <div class="mqcc-modal-pv"><div class="mqcc-modal-pv-label">👁 Live preview — what customers will see</div><div id="mqcc-item-pv"></div></div></div>
           </div>
           <div class="mqph-modal-footer">
             <button class="mqph-btn mqph-btn-secondary" onclick="mqccClose('mqcc-item-overlay')" style="margin-left:auto">Cancel</button>
@@ -6654,7 +6663,10 @@ window.mqphGoToWizard = function() {
     document.getElementById('mqcc-cat-after').value = (c && MQCC_PLACES.some(x => x[0] === c.after)) ? c.after : 'specialty';
     document.getElementById('mqcc-cat-delete').style.display = c ? '' : 'none';
     mqccCatAnswerChanged();
-    document.getElementById('mqcc-cat-overlay').classList.add('show');
+    const catOv = document.getElementById('mqcc-cat-overlay');
+    catOv.oninput = catOv.onchange = () => mqccDraftCatPreview();
+    mqccDraftCatPreview();
+    catOv.classList.add('show');
     setTimeout(() => document.getElementById('mqcc-cat-name')?.focus(), 50);
   };
   window.mqccCatAnswerChanged = function() {
@@ -6753,7 +6765,10 @@ window.mqphGoToWizard = function() {
     mqccShow('mqcc-item-showif-wrap', c.answer === 'any');
     mqccShowIfOptions(document.getElementById('mqcc-item-showif'), mqccAllOptions(cid, id || '__new__'), cfg.showIf || '', 'Always');
     mqccItemHowChanged();
-    document.getElementById('mqcc-item-overlay').classList.add('show');
+    const itemOv = document.getElementById('mqcc-item-overlay');
+    itemOv.oninput = itemOv.onchange = () => mqccDraftItemPreview();
+    mqccDraftItemPreview();
+    itemOv.classList.add('show');
     setTimeout(() => document.getElementById('mqcc-item-name')?.focus(), 50);
   };
   function mqccPerWord(how) {
@@ -7023,8 +7038,10 @@ window.mqphGoToWizard = function() {
     return `<span style="display:inline-flex;align-items:center;gap:6px"><button type="button" style="${b}" onclick="${onMinus}">−</button><span style="min-width:26px;text-align:center;font-size:14px;font-weight:600">${Math.round(val * 100) / 100}</span><button type="button" style="${b}" onclick="${onPlus}">+</button><span style="font-size:11px;font-weight:600;color:#6b7280">${mqccEsc(unit || 'quantity')}</span></span>`;
   }
 
-  function mqccPvViewHtml(c) {
-    const items = mqccPvItems(c.id);
+  function mqccPvViewHtml(c, itemsOverride, hiId) {
+    const items = itemsOverride || mqccPvItems(c.id);
+    const hi = id => id && id === hiId ? 'box-shadow:0 0 0 3px #fbbf24;' : '';
+    const hiA = id => id && id === hiId ? ' data-mqcc-hi="1"' : '';
     const catOn = mqccPvCatOn(c, 0);
     const proTag = ' <span style="font-size:9px;font-weight:800;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:1px 5px;vertical-align:middle;letter-spacing:0;text-transform:none">⚡ Pro</span>';
     let body = '';
@@ -7033,7 +7050,7 @@ window.mqphGoToWizard = function() {
       const list = (c.required ? [] : [{ id: 'none', name: 'None' }]).concat(items);
       body = `<div style="display:flex;flex-wrap:wrap;gap:8px">${list.map(it => {
         const sel = val === it.id;
-        return `<button type="button" onclick="mqccPvPickOne('${c.id}','${it.id}')" style="width:104px;padding:6px;border-radius:9px;border:${sel ? '2px solid #111' : '1px solid #e5e7eb'};background:#fff;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;font:inherit">
+        return `<button type="button"${hiA(it.id)} onclick="mqccPvPickOne('${c.id}','${it.id}')" style="${hi(it.id)}width:104px;padding:6px;border-radius:9px;border:${sel ? '2px solid #111' : '1px solid #e5e7eb'};background:#fff;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;font:inherit">
           ${mqccPvThumb(c.id, it, 88)}
           <span style="font-size:11px;font-weight:${sel ? 700 : 500};color:#111;line-height:1.25;text-align:center">${mqccEsc(it.name)}${it.proOnly ? proTag : ''}${it.tie ? ` <span title="${mqccEsc(mqccTieText(it.tie))}">🔗</span>` : ''}</span>
           <span style="font-size:10px;font-weight:700;border-radius:10px;padding:2px 8px;${sel ? 'background:#111;color:#fff' : 'border:1px solid #d1d5db;color:#374151'}">${sel ? '✓ Selected' : 'Select'}</span>
@@ -7060,7 +7077,7 @@ window.mqphGoToWizard = function() {
           const control = it.how === 'each'
             ? mqccPvStepper(`mqccPvQty('${it.id}',-1)`, `mqccPvQty('${it.id}',1)`, mqccPv.qty[it.id] || 0, it.unit)
             : `<button type="button" onclick="mqccPvToggle('${it.id}')" style="${MQCC_PV_BTN}border:1.5px solid ${on ? '#1d4ed8' : '#d1d5db'};background:${on ? '#1d4ed8' : '#fff'};color:${on ? '#fff' : '#111'}">${on ? '✓ Added' : '+ Add'}</button>`;
-          return `<div style="display:flex;gap:10px;padding:8px 10px;border-radius:8px;border:1px ${shown ? 'solid' : 'dashed'} ${on ? '#93c5fd' : '#e5e7eb'};background:${on ? '#eff6ff' : '#fff'};${shown ? '' : 'opacity:.55'}">
+          return `<div${hiA(it.id)} style="${hi(it.id)}display:flex;gap:10px;padding:8px 10px;border-radius:8px;border:1px ${shown ? 'solid' : 'dashed'} ${on ? '#93c5fd' : '#e5e7eb'};background:${on ? '#eff6ff' : '#fff'};${shown ? '' : 'opacity:.55'}">
             ${mqccPvThumb(c.id, it, 56)}
             <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px">
               <div style="font-size:13px;line-height:1.2;color:${on ? '#1d4ed8' : '#111'}">${mqccEsc(it.name)}${it.proOnly ? proTag : ''}</div>
@@ -7119,12 +7136,62 @@ window.mqphGoToWizard = function() {
   }
   // Show-if rules can cross categories, so every preview refreshes together.
   function mqccPvRefresh() {
+    if (document.getElementById('mqcc-cat-overlay')?.classList.contains('show')) mqccDraftCatPreview();
+    if (document.getElementById('mqcc-item-overlay')?.classList.contains('show')) mqccDraftItemPreview();
     mqccCats().forEach(c => {
       const v = document.getElementById(`mqcc-pv-view-${c.id}`);
       if (v) v.innerHTML = mqccPvViewHtml(c);
       const l = document.getElementById(`mqcc-pv-lines-${c.id}`);
       if (l) l.innerHTML = mqccPvLinesHtml(c);
     });
+  }
+  // Live previews inside the New/Edit category and option windows, built
+  // from what's typed so far (nothing saved until Save).
+  function mqccDraftCatPreview() {
+    const box = document.getElementById('mqcc-cat-pv');
+    if (!box) return;
+    const answer = document.getElementById('mqcc-cat-answer').value === 'one' ? 'one' : 'any';
+    const c = {
+      id: mqccEditCat || '__newcat', name: document.getElementById('mqcc-cat-name').value.trim() || 'Your category name',
+      description: document.getElementById('mqcc-cat-desc').value.trim(), answer,
+      required: answer === 'one' && document.getElementById('mqcc-cat-required').checked,
+      proOnly: document.getElementById('mqcc-cat-pro').checked, showIf: '',
+    };
+    let items = mqccEditCat ? mqccPvItems(mqccEditCat) : [];
+    const sample = !items.length;
+    if (sample) items = ['Option 1', 'Option 2', 'Option 3'].map((n, i) => ({ id: '__s' + i, name: n, desc: '', rate: 0, how: i === 1 ? 'each' : 'flat', unit: i === 1 ? 'units' : '', min: 0, showIf: '', proOnly: false, src: '', pctCc: '', tie: null, groupName: '', groupOrder: 0 }));
+    const place = (MQCC_PLACES.find(x => x[0] === document.getElementById('mqcc-cat-after').value) || ['', ''])[1].replace(' (default)', '');
+    const rule = document.getElementById('mqcc-cat-showif');
+    box.innerHTML = `${mqccPvViewHtml(c, items)}
+      <div style="font-size:11px;color:#6b7280;line-height:1.5;margin-top:10px">📍 Step goes: <strong>${mqccEsc(place)}</strong>${rule && rule.value ? `<br>👁 Only shows when “${mqccEsc(mqccOptionLabel(rule.value))}” is picked` : ''}${sample ? '<br>Sample options shown — add your real ones after saving.' : ''}</div>`;
+  }
+  function mqccDraftItemPreview() {
+    const box = document.getElementById('mqcc-item-pv');
+    const ed = mqccEditItem;
+    if (!box || !ed) return;
+    const c = mqccCats().find(x => x.id === ed.cid);
+    if (!c) return;
+    const how = document.getElementById('mqcc-item-how').value;
+    const draft = {
+      id: ed.id || '__draft__', name: document.getElementById('mqcc-item-name').value.trim() || 'New option',
+      desc: document.getElementById('mqcc-item-desc').value.trim(), rate: parseFloat(document.getElementById('mqcc-item-rate').value) || 0,
+      how, unit: document.getElementById('mqcc-item-unit').value.trim(), min: parseFloat(document.getElementById('mqcc-item-min').value) || 0,
+      showIf: c.answer === 'any' ? (document.getElementById('mqcc-item-showif').value || '') : '',
+      proOnly: document.getElementById('mqcc-item-pro').checked,
+      src: how === 'opt' ? document.getElementById('mqcc-item-src').value : '', pctCc: how === 'pct_cc' ? document.getElementById('mqcc-item-pctcc').value : '',
+      tie: mqccTieRead('item'), groupName: '', groupOrder: 0,
+    };
+    const saved = mqccPvItems(c.id);
+    const i = saved.findIndex(x => x.id === draft.id);
+    const items = i >= 0 ? saved.map(x => (x.id === draft.id ? { ...x, ...draft, groupName: x.groupName, groupOrder: x.groupOrder } : x)) : saved.concat([draft]);
+    box.innerHTML = `${mqccPvViewHtml(c, items, draft.id)}
+      <div style="font-size:11px;color:#6b7280;line-height:1.5;margin-top:10px">The highlighted ${c.answer === 'one' ? 'choice' : 'card'} is this option, shown with the rest of “${mqccEsc(c.name)}”. Click it to try it — the price check is under the price box.</div>`;
+    // Keep this option in view inside the preview panel (desktop).
+    const hiEl = box.querySelector('[data-mqcc-hi]'), pane = box.closest('.mqcc-modal-pv');
+    if (hiEl && pane && pane.scrollHeight > pane.clientHeight) {
+      const top = hiEl.getBoundingClientRect().top - pane.getBoundingClientRect().top + pane.scrollTop;
+      if (top < pane.scrollTop || top + hiEl.offsetHeight > pane.scrollTop + pane.clientHeight) pane.scrollTop = Math.max(0, top - 40);
+    }
   }
   window.mqccPvPickOne = function(cid, id) { mqccPv.one[cid] = id; mqccPvRefresh(); };
   window.mqccPvOneQty = function(cid, d) { const q = mqccPv.oneQty[cid] == null ? 1 : mqccPv.oneQty[cid]; mqccPv.oneQty[cid] = Math.max(0, q + d); mqccPvRefresh(); };
@@ -7161,6 +7228,7 @@ window.mqphGoToWizard = function() {
     }
     el.innerHTML = '🧮 ' + text;
     el.style.display = 'block';
+    if (document.getElementById('mqcc-item-overlay')?.classList.contains('show')) mqccDraftItemPreview();
   };
 
   async function loadAndRender() {
