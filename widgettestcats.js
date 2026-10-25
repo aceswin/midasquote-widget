@@ -3086,6 +3086,25 @@
   function mqCcAttr(s) { return mqCcEsc(s).replace(/'/g,'&#39;'); }
   function mqCcQtyText(n) { return (Math.round(n * 100) / 100).toString(); }
 
+  // v2 (Oct 24): an option can be priced off almost anything the quote
+  // already knows (`how`): flat | each (customer enters a count) | opt
+  // (another option's count, `src`) | base_lf | upper_lf | all_lf |
+  // island_lf | crown_lf | valance_lf | drawers | tallcabs | pct (% of the
+  // cabinet estimate) | pct_all (% of the cabinet estimate incl. extras) |
+  // pct_cc (% of one custom category, `pctCc`). An option or a whole
+  // category can be tied to the customer's other picks (`tie` =
+  // {cat:'door'|'material'|'drawer'|'hinge'|'crown'|'valance', names:[…]}),
+  // like crown is tied to door styles. A category's `after` says which
+  // built-in step it follows (see MQ_CC_ANCHORS).
+  const MQ_CC_HOWS = ['flat','each','opt','base_lf','upper_lf','all_lf','island_lf','crown_lf','valance_lf','drawers','tallcabs','pct','pct_all','pct_cc'];
+  const MQ_CC_PCT = ['pct','pct_all','pct_cc'];
+  const MQ_CC_ANCHORS = ['measuring','si','selections','measurements','drawers','tallcabs','trim','specialty','countertops'];
+  function mqCcTieClean(t) {
+    if (!t || typeof t !== 'object' || !['door','material','drawer','hinge','crown','valance'].includes(t.cat) || !Array.isArray(t.names)) return null;
+    const names = t.names.map(n => String(n || '').trim().toLowerCase()).filter(Boolean);
+    return names.length ? { cat: t.cat, names } : null;
+  }
+
   // Built once from the payload in loadShopData. `allowPro` = this is
   // MidasQuote Pro (Pro-only categories/options are kept).
   function mqCcBuild(shop, sortedLineItems, shopPhotos, shopFeatured, allowPro) {
@@ -3108,7 +3127,10 @@
               name: (f['Name'] || '').trim(),
               desc: f['Description'] || '',
               rate: parseFloat(f['Rate']) || 0,
-              how: ['flat','each','base_lf','upper_lf','all_lf','pct'].includes(cfg.how) ? cfg.how : 'flat',
+              how: MQ_CC_HOWS.includes(cfg.how) ? cfg.how : 'flat',
+              src: typeof cfg.src === 'string' ? cfg.src : '',
+              pctCc: typeof cfg.pctCc === 'string' ? cfg.pctCc : '',
+              tie: mqCcTieClean(cfg.tie),
               unit: String(cfg.unit || '').trim(),
               min: parseFloat(cfg.min) || 0,
               showIf: typeof cfg.showIf === 'string' ? cfg.showIf : '',
@@ -3129,6 +3151,8 @@
           answer: c.answer === 'one' ? 'one' : 'any',
           required: !!c.required,
           showIf: typeof c.showIf === 'string' ? c.showIf : '',
+          tie: mqCcTieClean(c.tie),
+          after: MQ_CC_ANCHORS.includes(c.after) ? c.after : 'specialty',
           items,
         };
       })
@@ -3146,6 +3170,35 @@
     }
     return null;
   }
+  // What the customer currently has picked in a built-in category, by name
+  // (lower case) — read from the hidden <select>s the photo pickers drive.
+  // A step that's hidden for this project type counts as nothing picked.
+  function mqCcSelNames(p, cat) {
+    const hidden = id => { const e = document.getElementById(id); return !!e && e.style.display === 'none'; };
+    const txt = id => {
+      const s = document.getElementById(id);
+      if (!s || s.selectedIndex < 0 || !s.value || s.value === 'none') return '';
+      return String(s.options[s.selectedIndex].text || '').trim().toLowerCase();
+    };
+    const split = !!(window._mqDiffOn || {})[p];
+    const both = k => split ? [txt(`mq-${p}-u-${k}`), txt(`mq-${p}-b-${k}`)] : [txt(`mq-${p}-${k}`)];
+    let out = [];
+    if (cat === 'material' || cat === 'door' || cat === 'hinge') {
+      if (hidden(`mq-${p}-cabinet-selections-sec`)) return [];
+      out = both(cat === 'material' ? 'mat' : cat);
+    } else if (cat === 'drawer') {
+      if (hidden(`mq-${p}-drawers-sec`) || !txt(`mq-${p}-drawer-tier`)) return [];
+      out = [txt(`mq-${p}-drawer-config`)];
+    } else if (cat === 'crown' || cat === 'valance') {
+      if (hidden(`mq-${p}-trim-sec`)) return [];
+      out = [txt(`mq-${p}-trim-${cat}`)];
+    }
+    return out.filter(Boolean);
+  }
+  function mqCcTieOk(p, tie) {
+    if (!tie) return true;
+    return mqCcSelNames(p, tie.cat).some(n => tie.names.includes(n));
+  }
   // Is this option currently picked by the customer (ignores visibility)?
   function mqCcPickedRaw(p, cat, it) {
     if (cat.answer === 'one') { const sel = document.getElementById(`mq-${p}-cc-${cat.id}`); return !!sel && sel.value === it.id; }
@@ -3161,14 +3214,15 @@
     return mqCcCatOn(p, hit.cat, room, depth + 1) && mqCcItemOn(p, hit.cat, hit.it, room, depth + 1) && mqCcPickedRaw(p, hit.cat, hit.it);
   }
   function mqCcItemOn(p, cat, it, room, depth) {
-    if (!mqCcRoomOk(it, room)) return false;
+    if (!mqCcRoomOk(it, room) || !mqCcTieOk(p, it.tie)) return false;
     // A rule pointing at an option that no longer exists is ignored.
     if (cat.answer === 'any' && it.showIf && mqCcFind(it.showIf)) return mqCcPickedLive(p, it.showIf, room, (depth || 0) + 1);
     return true;
   }
   function mqCcCatOn(p, cat, room, depth) {
     if (cat.showIf && mqCcFind(cat.showIf) && !mqCcPickedLive(p, cat.showIf, room, (depth || 0) + 1)) return false;
-    return cat.items.some(it => mqCcRoomOk(it, room));
+    if (!mqCcTieOk(p, cat.tie)) return false;
+    return cat.items.some(it => mqCcRoomOk(it, room) && mqCcTieOk(p, it.tie));
   }
 
   function mqCcCardHTML(p, cat, it) {
@@ -3177,7 +3231,13 @@
       ? `<img class="mq-spec-thumb" src="${mqCcAttr(it.photoUrl)}" alt="${safeName}" onclick="event.stopPropagation();mqPhotoLightbox('${it.photoUrl.replace(/'/g,"\\'")}','${it.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')" onerror="this.outerHTML='<div class=\\'mq-spec-thumb-placeholder\\'>✨</div>'"/>`
       : `<div class="mq-spec-thumb-placeholder">✨</div>`;
     const featured = it.featured ? `<span class="mq-vpicker-featured-badge" style="background:${window._mqBadgeColor||'#f59e0b'}">🏆 ${(window._mqBadgeLabel||'Best seller').replace(/</g,'&lt;')}</span>` : '';
-    const auto = { base_lf: 'Uses your base cabinet length', upper_lf: 'Uses your upper cabinet length', all_lf: 'Uses your total cabinet length', pct: '' }[it.how];
+    const srcHit = it.how === 'opt' ? mqCcFind(it.src) : null;
+    const auto = {
+      base_lf: 'Uses your base cabinet length', upper_lf: 'Uses your upper cabinet length', all_lf: 'Uses your total cabinet length',
+      island_lf: 'Uses your island length', crown_lf: 'Uses your crown moulding length', valance_lf: 'Uses your valance length',
+      drawers: 'Uses your number of drawers', tallcabs: 'Uses your number of tall cabinets',
+      opt: srcHit ? `Uses your number of ${srcHit.it.unit || srcHit.it.name}` : '',
+    }[it.how];
     const control = it.how === 'each'
       ? `<div class="mq-qty-ctrl">
           <button class="mq-qty-btn" type="button" aria-label="Less" onclick="event.stopPropagation();mqCcAdj('${p}','${it.id}',-1)">−</button>
@@ -3263,18 +3323,86 @@
   // Brings everything on screen in line with the current answers and project
   // type: which steps/cards show (project type + show-if rules), the "added"
   // look on cards, and the count box for a per-unit pick-one option.
+  function mqCcAnchorEl(p, key) {
+    const ids = {
+      measuring: [`mq-${p}-measuring-sec`], si: [`mq-${p}-si-field`],
+      // Focused layout splits doors into their own step right after this one.
+      selections: [`mq-${p}-cabinet-doors-sec`, `mq-${p}-cabinet-selections-sec`],
+      measurements: [`mq-${p}-cabinet-measurements-sec`], drawers: [`mq-${p}-drawers-sec`],
+      tallcabs: [`mq-${p}-tallcabs-sec`], trim: [`mq-${p}-trim-sec`], specialty: [`mq-${p}-specialty-sec`],
+      // Both tab: after the whole countertop part. Cabinets tab has none, so
+      // it falls back to the end of the cabinet steps.
+      countertops: p === 'b' ? ['mq-b-countertop-details-sec'] : [],
+    }[key] || [];
+    for (const id of ids) { const e = document.getElementById(id); if (e) return e; }
+    return null;
+  }
+  // Puts each custom step right after the built-in step the shop picked.
+  // Only moves a step when it's out of place, so normally this does nothing.
+  function mqCcPlace(p) {
+    const cats = window._mqCustomCats || [];
+    const last = {};
+    MQ_CC_ANCHORS.forEach((key, ki) => {
+      const group = cats.filter(c => c.after === key);
+      if (!group.length) return;
+      let ref = null;
+      for (let k = ki; k >= 0 && !ref; k--) ref = last[MQ_CC_ANCHORS[k]] || mqCcAnchorEl(p, MQ_CC_ANCHORS[k]);
+      if (!ref || !ref.parentNode) return;
+      group.forEach(c => {
+        const node = document.getElementById(`mq-${p}-cc-${c.id}-sec`);
+        if (!node) return;
+        if (ref.nextElementSibling !== node) ref.parentNode.insertBefore(node, ref.nextSibling);
+        ref = node;
+      });
+      last[key] = ref;
+    });
+  }
+  // The built-in pickers re-show their own chips whenever they refresh
+  // (project type, door change, collections) — run our tie rules after.
+  function mqCcHookPickers() {
+    if (window._mqCcHooked || typeof window.mqRefreshAllPickerVisibility !== 'function') return;
+    const orig = window.mqRefreshAllPickerVisibility;
+    window.mqRefreshAllPickerVisibility = function(p) {
+      const r = orig.apply(this, arguments);
+      try { if (p === 'c' || p === 'b') window.mqCcSync(p); } catch(e) {}
+      return r;
+    };
+    window._mqCcHooked = true;
+  }
+
   window.mqCcSync = function(p) {
     const cats = window._mqCustomCats || [];
     if (!cats.length || (p !== 'c' && p !== 'b')) return;
+    mqCcHookPickers();
+    const before = window.mqGetVisibleSections ? window.mqGetVisibleSections(p).map(s => s.id).join('|') : '';
+    mqCcPlace(p);
     const room = mqCcRoom(p);
-    let changed = false;
+    let changed = false, reshow = false;
     cats.forEach(cat => {
       const sec = document.getElementById(`mq-${p}-cc-${cat.id}-sec`);
       if (!sec) return;
       const want = mqCcCatOn(p, cat, room, 0) ? '' : 'none';
       if (sec.style.display !== want) { sec.style.display = want; changed = true; }
       if (cat.answer === 'one') {
-        const sel = document.getElementById(`mq-${p}-cc-${cat.id}`);
+        const selId = `mq-${p}-cc-${cat.id}`;
+        let sel = document.getElementById(selId);
+        // Options tied to another pick (e.g. only with Cherry doors): hide
+        // the chip, and move off it if it was the one selected.
+        let selTiedOut = false;
+        cat.items.forEach(it2 => {
+          const chip = document.querySelector(`[data-vpicker-for="${selId}"][data-value="${it2.id}"]`);
+          if (!chip) return;
+          if (!mqCcTieOk(p, it2.tie)) {
+            chip.style.display = 'none'; chip.dataset.mqCcTied = '1';
+            if (sel && sel.value === it2.id) selTiedOut = true;
+          } else if (chip.dataset.mqCcTied) { delete chip.dataset.mqCcTied; reshow = true; }
+        });
+        if (selTiedOut && window.mqPickVisual) {
+          const chips = [...document.querySelectorAll(`[data-vpicker-for="${selId}"]`)];
+          const next = chips.find(c => c.getAttribute('data-value') === 'none') || chips.find(c => c.style.display !== 'none');
+          const btn = next && next.querySelector('.mq-vpicker-select-btn');
+          if (btn) window.mqPickVisual(selId, btn);
+        }
         const it = cat.items.find(i => i.id === (sel && sel.value));
         const qw = document.getElementById(`mq-${p}-ccqw-${cat.id}`);
         if (qw) qw.style.display = (it && it.how === 'each') ? 'flex' : 'none';
@@ -3295,6 +3423,13 @@
         g.style.display = [...g.querySelectorAll('.mq-cc-card')].some(c => c.style.display !== 'none') ? '' : 'none';
       });
     });
+    // A chip that was hidden only by a tie rule is shown again by the
+    // pickers' own refresh (which knows about project types and collections).
+    if (reshow && !window._mqCcReshowing && window.mqRefreshAllPickerVisibility) {
+      window._mqCcReshowing = true;
+      try { window.mqRefreshAllPickerVisibility(p); } finally { window._mqCcReshowing = false; }
+    }
+    if (!changed && window.mqGetVisibleSections && window.mqGetVisibleSections(p).map(s => s.id).join('|') !== before) changed = true;
     if (changed && window.mqRenumberSteps) {
       window.mqRenumberSteps(p);
       if (window.mqUpdateStepFocus) window.mqUpdateStepFocus(p);
@@ -3322,36 +3457,82 @@
     window.mqCcSync(p);
   };
 
-  // Price lines for calcCabinet. ctx = { uFt, bFt, base } where base is the
-  // cabinet estimate so far (what a % option is a percentage of).
+  // The number an option is priced on (1 for flat/% options).
+  // ctx = { uFt, bFt, base, crownFt, valanceFt, tallCount } from calcCabinet.
+  function mqCcQty(p, cat, it, ctx, room, depth) {
+    const show = el => !!el && el.style.display !== 'none';
+    switch (it.how) {
+      case 'each': return mqCcNum(cat.answer === 'one' ? `mq-${p}-ccq-${cat.id}` : `mq-${p}-ccq-${it.id}`);
+      case 'base_lf': return ctx.bFt || 0;
+      case 'upper_lf': return ctx.uFt || 0;
+      case 'all_lf': return (ctx.uFt || 0) + (ctx.bFt || 0);
+      case 'island_lf': return show(document.getElementById(`mq-${p}-island-fields-wrap`)) ? mqCcNum(`mq-${p}-islandft`) : 0;
+      case 'crown_lf': return ctx.crownFt || 0;
+      case 'valance_lf': return ctx.valanceFt || 0;
+      case 'drawers': {
+        const tier = document.getElementById(`mq-${p}-drawer-tier`);
+        const sec = document.getElementById(`mq-${p}-drawers-sec`);
+        return (tier && tier.value && tier.value !== 'none' && !(sec && sec.style.display === 'none')) ? mqCcNum(`mq-${p}-drawer-count`) : 0;
+      }
+      case 'tallcabs': return ctx.tallCount || 0;
+      case 'opt': {
+        const hit = mqCcFind(it.src);
+        if (!hit || (depth || 0) > 6 || !mqCcPickedLive(p, it.src, room, 0)) return 0;
+        return mqCcQty(p, hit.cat, hit.it, ctx, room, (depth || 0) + 1);
+      }
+      default: return 1;
+    }
+  }
+  function mqCcQtyLabel(it, qty) {
+    const q = mqCcQtyText(qty);
+    switch (it.how) {
+      case 'each': return `${q}${it.unit ? ' ' + it.unit : ''}`;
+      case 'base_lf': case 'upper_lf': case 'all_lf': case 'island_lf': case 'crown_lf': case 'valance_lf': return `${q} lin ft`;
+      case 'drawers': return `${q} drawer${qty === 1 ? '' : 's'}`;
+      case 'tallcabs': return `${q} tall cabinet${qty === 1 ? '' : 's'}`;
+      case 'opt': { const hit = mqCcFind(it.src); return `${q}${hit && hit.it.unit ? ' ' + hit.it.unit : ''}`; }
+      default: return '';
+    }
+  }
+
+  // Price lines for calcCabinet. Count-based options first; % options after,
+  // since they can be a % of other options (a whole category, or the cabinet
+  // estimate including extras).
   window.mqCcCost = function(p, ctx) {
     const out = { total: 0, lines: [] };
     const cats = window._mqCustomCats || [];
     if (!cats.length || (p !== 'c' && p !== 'b')) return out;
+    ctx = ctx || {};
     const room = mqCcRoom(p);
-    const uFt = (ctx && ctx.uFt) || 0, bFt = (ctx && ctx.bFt) || 0, base = (ctx && ctx.base) || 0;
+    const picked = [];
     cats.forEach(cat => {
       if (!mqCcCatOn(p, cat, room, 0)) return;
-      cat.items.forEach(it => {
-        if (!mqCcItemOn(p, cat, it, room, 0) || !mqCcPickedRaw(p, cat, it)) return;
-        let qty = 1, qtyTxt = '', cost = 0;
-        if (it.how === 'each') {
-          qty = mqCcNum(cat.answer === 'one' ? `mq-${p}-ccq-${cat.id}` : `mq-${p}-ccq-${it.id}`);
-          cost = it.rate * qty; qtyTxt = `${mqCcQtyText(qty)}${it.unit ? ' ' + it.unit : ''}`;
-        } else if (it.how === 'base_lf' || it.how === 'upper_lf' || it.how === 'all_lf') {
-          qty = it.how === 'base_lf' ? bFt : (it.how === 'upper_lf' ? uFt : uFt + bFt);
-          cost = it.rate * qty; qtyTxt = `${mqCcQtyText(qty)} lin ft`;
-        } else if (it.how === 'pct') {
-          cost = base * it.rate / 100; qtyTxt = `${mqCcQtyText(it.rate)}%`;
-        } else {
-          cost = it.rate;
-        }
-        if (it.how !== 'flat' && it.how !== 'pct' && qty <= 0) return;
-        if (it.min > 0 && cost >= 0) cost = Math.max(cost, it.min);
-        if (!cost) return;
-        out.total += cost;
-        out.lines.push({ label: qtyTxt ? `${it.name} (${qtyTxt})` : it.name, cost: Math.round(cost) });
-      });
+      cat.items.forEach(it => { if (mqCcItemOn(p, cat, it, room, 0) && mqCcPickedRaw(p, cat, it)) picked.push({ cat, it }); });
+    });
+    const res = new Map();
+    const catSum = {};
+    let extras = 0;
+    const finish = (it, cost) => (it.min > 0 && cost >= 0 && cost < it.min) ? it.min : cost;
+    picked.filter(x => !MQ_CC_PCT.includes(x.it.how)).forEach(({ cat, it }) => {
+      const qty = mqCcQty(p, cat, it, ctx, room, 0);
+      if (it.how !== 'flat' && !(qty > 0)) return;
+      const cost = finish(it, it.how === 'flat' ? it.rate : it.rate * qty);
+      if (!cost) return;
+      res.set(it.id, { label: it.how === 'flat' ? it.name : `${it.name} (${mqCcQtyLabel(it, qty)})`, cost });
+      catSum[cat.id] = (catSum[cat.id] || 0) + cost;
+      extras += cost;
+    });
+    picked.filter(x => MQ_CC_PCT.includes(x.it.how)).forEach(({ it }) => {
+      const base = it.how === 'pct' ? (ctx.base || 0) : (it.how === 'pct_all' ? (ctx.base || 0) + extras : (catSum[it.pctCc] || 0));
+      const cost = finish(it, base * it.rate / 100);
+      if (!cost) return;
+      res.set(it.id, { label: `${it.name} (${mqCcQtyText(it.rate)}%)`, cost });
+    });
+    picked.forEach(({ it }) => {
+      const r = res.get(it.id);
+      if (!r) return;
+      out.total += r.cost;
+      out.lines.push({ label: r.label, cost: Math.round(r.cost) });
     });
     return out;
   };
@@ -3362,7 +3543,17 @@
   ['input', 'change'].forEach(evt => document.addEventListener(evt, e => {
     const id = (e.target && e.target.id) || '';
     const m = id.match(/^mq-(c|b)-(cc|room)/);
-    if (m && window.mqCcSync) window.mqCcSync(m[1]);
+    if (m && window.mqCcSync) { window.mqCcSync(m[1]); return; }
+    // Anything else in a cabinet form (door style, drawers, crown…) can
+    // change which tied options show — check once the form has settled.
+    const o = id.match(/^mq-(c|b)-/);
+    if (o && window.mqCcSync && (window._mqCustomCats || []).length) {
+      window._mqCcPending = window._mqCcPending || {};
+      if (!window._mqCcPending[o[1]]) {
+        window._mqCcPending[o[1]] = true;
+        setTimeout(() => { window._mqCcPending[o[1]] = false; window.mqCcSync(o[1]); }, 0);
+      }
+    }
   }, true));
 
   function mqTravelNote() {
@@ -4007,6 +4198,7 @@
     const ctDepth  = 25.5;
 
     const diffOn={},specQty={},installQty={},specVariant={},surfCounts={},surfs={},tallCabs={},tallCabCounts={};
+    window._mqDiffOn = diffOn; // custom pricing ties read upper/base split state
     let pendingCb=null;
     // specVariant tracks which variant index is currently active for each
     // specialty item with variants (0 = the default, same convention as
@@ -7068,6 +7260,7 @@
       // contributes its own cost (base price + door/material/install/hinge
       // upcharges) and its own linear footage toward crown/valance trim.
       let tallCabTotal = 0;
+      let ccTallCount = 0, ccCrownFt = 0, ccValanceFt = 0; // for custom pricing options
       let tcLinFtForTrim = 0;
       const tallCabLines = [];
       Object.keys(tallCabs[prefix] || {}).forEach(id => {
@@ -7108,6 +7301,7 @@
         tcUnitPrice += tcHingeRate * tcLinFt * 2.25;
 
         const tcCost = Math.round(tcUnitPrice * tcQty);
+        ccTallCount += tcQty;
         tallCabTotal += tcCost;
         const tcDoorLabel = doorKey==='none'?'No doors':(door[doorKey]?.label||'');
         tallCabLines.push({label:`${tc.label} (${tcQty} × ${tcWidthIn}") · ${tcDoorLabel} · ${si==='install'?'Supply + install':'Supply only'}`, cost: tcCost});
@@ -7121,6 +7315,7 @@
         const trim = TRIM[crownKey];
         const returns = gn(`mq-${prefix}-trim-crown-returns`, 0);
         const trimFt = useManualTrimFt ? (manualTrimFt + returns) : (uFt + returns + tcLinFtForTrim);
+        ccCrownFt = trimFt;
         const cost = trimFt * (trim.ps + trim.pi);
         trimCost += cost;
         const tcNote = (!useManualTrimFt && tcLinFtForTrim > 0) ? ` + ${tcLinFtForTrim.toFixed(1)} ft tall cabs` : '';
@@ -7132,6 +7327,7 @@
         const trim = TRIM[valanceKey];
         const returns = gn(`mq-${prefix}-trim-valance-returns`, 0);
         const trimFt = useManualTrimFt ? (manualTrimFt + returns) : (uFt + returns + tcLinFtForTrim);
+        ccValanceFt = trimFt;
         const cost = trimFt * (trim.ps + trim.pi);
         trimCost += cost;
         const tcNote = (!useManualTrimFt && tcLinFtForTrim > 0) ? ` + ${tcLinFtForTrim.toFixed(1)} ft tall cabs` : '';
@@ -7205,7 +7401,7 @@
 
       // Custom pricing categories (Pricing tab) — % options use the cabinet
       // estimate so far as their base.
-      const ccRes = window.mqCcCost ? window.mqCcCost(prefix, { uFt, bFt, base: uCost+bCost+islandCost+drawerAdjCost+specTotal+tallCabTotal+trimCost }) : { total: 0, lines: [] };
+      const ccRes = window.mqCcCost ? window.mqCcCost(prefix, { uFt, bFt, crownFt: ccCrownFt, valanceFt: ccValanceFt, tallCount: ccTallCount, base: uCost+bCost+islandCost+drawerAdjCost+specTotal+tallCabTotal+trimCost }) : { total: 0, lines: [] };
       lines.push(...ccRes.lines);
 
       const remEl=document.getElementById(`mq-${prefix}-removal`);
