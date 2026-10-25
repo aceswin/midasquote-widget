@@ -9841,7 +9841,20 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         // doesn't change how anything looks (no styling of its own), just
         // gives the search something to find and hide/show.
         const dataName = item.baseName.toLowerCase().replace(/"/g,'&quot;');
-        return `<div class="mq-product-card-wrap" data-name="${dataName}">${card}${badge}</div>`;
+        // Custom pricing option with variants (Pricing tab): each variant gets
+        // its own photo card, keyed <option key>_v<variant id> — same idea as
+        // Specialty Items' variant photos. The widget shows the picked
+        // variant's photo, and the showroom lists each one.
+        let variantCards = '';
+        if (/^cc_/.test(cat)) {
+          const rec = (lineItemsData || []).find(x => x.id === item.id);
+          let cfg = {}; try { cfg = JSON.parse((rec && rec.fields && rec.fields['Custom pricing']) || '{}') || {}; } catch(e) { cfg = {}; }
+          (Array.isArray(cfg.variants) ? cfg.variants : []).filter(v => v && v.id && String(v.label || '').trim()).forEach(v => {
+            const vName = `${item.baseName} — ${String(v.label).trim()}`;
+            variantCards += `<div class="mq-product-card-wrap" data-name="${vName.toLowerCase().replace(/"/g,'&quot;')}" style="background:#fffdf5;border:1px solid #fde68a;border-radius:10px;padding:5px">${photoCard(key + '_v' + v.id, vName, '✨', cat, null, null)}</div>`;
+          });
+        }
+        return `<div class="mq-product-card-wrap" data-name="${dataName}">${card}${badge}</div>${variantCards}`;
       };
 
       if (!GROUPABLE_CATS.includes(cat) || !items.some(i => i.groupName)) {
@@ -10621,6 +10634,10 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   }
 
   function mqShowroomDefaultCatName(catKey) {
+    if (/^cc_/.test(catKey)) {
+      const cc = mqCustomCatsOf(window._mqShopRecord).find(c => c.id === catKey);
+      return '✨ ' + (cc ? cc.name : 'Custom category');
+    }
     const emoji = PRICING_SHOWROOM_CAT_EMOJI[catKey] ? PRICING_SHOWROOM_CAT_EMOJI[catKey] + ' ' : '';
     return emoji + (CAT_DISPLAY_NAMES[catKey] || catKey);
   }
@@ -10643,9 +10660,22 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       if (!byCategory[cat]) byCategory[cat] = [];
       const baseName = (r.fields['Name'] || '').replace(/\s*—\s*(uppers|bases|some drawers|mostly drawers|with doors|no doors)\s*$/i,'').trim();
       if (ITEM_EXCLUDE.test(baseName)) return;
+      // Custom pricing options: Pro-only ones never go on the public
+      // showroom, and their variants are listed one card each.
+      if (/^cc_/.test(cat)) {
+        let cfg = {}; try { cfg = JSON.parse(r.fields['Custom pricing'] || '{}') || {}; } catch(e) { cfg = {}; }
+        if (cfg.proOnly) return;
+        if (!byCategory[cat].find(x => x.baseName === baseName)) byCategory[cat].push({ baseName, variants: Array.isArray(cfg.variants) ? cfg.variants.filter(v => v && v.id && String(v.label || '').trim()) : [] });
+        return;
+      }
       if (!byCategory[cat].find(x => x.baseName === baseName)) byCategory[cat].push({ baseName });
     });
     return byCategory;
+  }
+  // The shop's custom pricing categories that belong on the public showroom
+  // (not Pro-only), in their Pricing tab order.
+  function mqShowroomPricedCustomIds() {
+    return mqCustomCatsOf(window._mqShopRecord).filter(c => !c.proOnly).map(c => c.id);
   }
 
   // Currently-showing items for one priced/specialty category — has a
@@ -10672,7 +10702,12 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const items = (window._mqShowroomByCategory && window._mqShowroomByCategory[catKey]) || [];
     return items.flatMap(item => {
       const itemKey = `li_${catKey}_${item.baseName.replace(/[^a-z0-9]/gi,'_').toLowerCase()}`;
-      return (photos[itemKey] && !hiddenItems[itemKey]) ? [{ itemKey, name: item.baseName, photo: photos[itemKey] }] : [];
+      const own = (photos[itemKey] && !hiddenItems[itemKey]) ? [{ itemKey, name: item.baseName, photo: photos[itemKey] }] : [];
+      const vars = (item.variants || []).flatMap(v => {
+        const vKey = itemKey + '_v' + v.id;
+        return (photos[vKey] && !hiddenItems[vKey]) ? [{ itemKey: vKey, name: `${item.baseName} — ${String(v.label).trim()}`, photo: photos[vKey] }] : [];
+      });
+      return own.concat(vars);
     });
   }
 
@@ -10686,7 +10721,9 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   function mqShowroomFullOrder() {
     const settings = window._mqShowroomSettings || { order: [] };
     const customIds = (window._mqShowroomCats || []).map(c => c.id);
-    const allKeys = [...PRICING_SHOWROOM_CAT_KEYS, ...customIds];
+    // Custom pricing categories sit with the other priced ones, before Specialty Items.
+    const pricedKeys = PRICING_SHOWROOM_CAT_KEYS.filter(k => k !== 'specialty').concat(mqShowroomPricedCustomIds(), ['specialty']);
+    const allKeys = [...pricedKeys, ...customIds];
     const saved = (settings.order || []).filter(k => allKeys.includes(k));
     const missing = allKeys.filter(k => !saved.includes(k));
     return [...saved, ...missing];
@@ -10711,7 +10748,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // disappears from view, which is exactly the confusion we're avoiding.
     const intro = el('mq-showroom-cats-intro');
     if (intro) intro.textContent = mode === 'custom'
-      ? 'Use the ▲▼ arrows to reorder. Only your custom categories and Specialty Items show here while Build My Own is active. Every change saves right away — no separate "Save" button on this tab.'
+      ? 'Use the ▲▼ arrows to reorder. While Build My Own is active, your own categories show, and Specialty Items and your custom pricing categories start hidden — click 👁️ Show category on any you want on your showroom. Every change saves right away — no separate "Save" button on this tab.'
       : 'Use the ▲▼ arrows to reorder. Only your regular priced categories and Specialty Items show here while Default showroom is active — rename or hide any of them for the showroom only, or remove one of their items, without changing anything about your pricing. Every change saves right away — no separate "Save" button on this tab.';
     const addBtn = el('mq-showroom-addcat-btn');
     const addNote = el('mq-showroom-addcat-note');
@@ -10863,6 +10900,11 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       order:  Array.isArray(settingsRaw.order) ? settingsRaw.order : [],
       names:  (settingsRaw.names  && typeof settingsRaw.names  === 'object') ? settingsRaw.names  : {},
       hidden: (settingsRaw.hidden && typeof settingsRaw.hidden === 'object') ? settingsRaw.hidden : {},
+      // Build My Own only: Specialty Items and custom pricing categories are
+      // hidden there by default (Jordan, Oct 25) — a key set true here means
+      // the shop turned it on for Build My Own. Default style ignores this
+      // and keeps using `hidden` above.
+      byoShow: (settingsRaw.byoShow && typeof settingsRaw.byoShow === 'object') ? settingsRaw.byoShow : {},
       // 'default' = the classic showroom (priced categories + Specialty
       // Items, old behavior); 'custom' = only Specialty Items + this shop's
       // own categories below. Defaults to 'default' for any shop that's
@@ -10994,7 +11036,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // against this filtered view).
     const isRelevantNow = catKey => customById[catKey]
       ? mode === 'custom'
-      : (catKey === 'specialty' ? true : mode === 'default');
+      : (mqShowroomBYOKey(catKey) ? true : mode === 'default');
     const visibleOrder = order.filter(isRelevantNow);
 
     wrap.innerHTML = visibleOrder.map((catKey, idx) => {
@@ -11031,8 +11073,10 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         </div>`;
       }
 
-      // Priced/specialty category
-      const isHidden = !!settings.hidden[catKey];
+      // Priced/specialty category. In Build My Own, Specialty Items and
+      // custom pricing categories start hidden and are shown only if turned on.
+      const byoDefault = mode === 'custom' && mqShowroomBYOKey(catKey);
+      const isHidden = byoDefault ? !(settings.byoShow || {})[catKey] : !!settings.hidden[catKey];
       const displayName = settings.names[catKey] || mqShowroomDefaultCatName(catKey);
       const items = mqShowroomVisibleItemsFor(catKey);
       const collapsed = mqShowroomIsCollapsed(catKey, isHidden || !items.length); // empty categories start tucked away too
@@ -11163,11 +11207,20 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     catch(e) { showMsg('mq-showroom-msg', 'Error saving — please try again.', 'error'); }
   };
 
+  // Specialty Items + custom pricing categories: the ones Build My Own hides by default.
+  function mqShowroomBYOKey(k) { return k === 'specialty' || /^cc_/.test(k); }
   window.mqShowroomToggleHideCat = async function(catKey) {
     const settings = window._mqShowroomSettings;
-    if (settings.hidden[catKey]) delete settings.hidden[catKey];
-    else settings.hidden[catKey] = true;
-    const nowHidden = !!settings.hidden[catKey];
+    let nowHidden;
+    if (settings.mode === 'custom' && mqShowroomBYOKey(catKey)) {
+      settings.byoShow = settings.byoShow || {};
+      if (settings.byoShow[catKey]) delete settings.byoShow[catKey]; else settings.byoShow[catKey] = true;
+      nowHidden = !settings.byoShow[catKey];
+    } else {
+      if (settings.hidden[catKey]) delete settings.hidden[catKey];
+      else settings.hidden[catKey] = true;
+      nowHidden = !!settings.hidden[catKey];
+    }
     // Hiding a category also collapses it right away, so the list actually
     // shrinks instead of just graying out — matches what hiding is for.
     if (nowHidden) { window._mqShowroomCollapsed = window._mqShowroomCollapsed || {}; window._mqShowroomCollapsed[catKey] = true; }
@@ -11188,7 +11241,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // currently hidden from view, with no visible change on screen. Reorder
     // just the relevant subsequence, then splice it back into the full
     // order so every hidden-right-now category keeps its own slot intact.
-    const isRelevantNow = k => customIds.includes(k) ? mode === 'custom' : (k === 'specialty' ? true : mode === 'default');
+    const isRelevantNow = k => customIds.includes(k) ? mode === 'custom' : (mqShowroomBYOKey(k) ? true : mode === 'default');
     const relevant = order.filter(isRelevantNow);
     const idx = relevant.indexOf(catKey);
     const swapIdx = idx + dir;

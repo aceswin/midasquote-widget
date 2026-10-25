@@ -6347,7 +6347,7 @@ window.mqphGoToWizard = function() {
   let mqccEditItem = null;  // { cid, id } option being edited (id null = new)
 
   function mqccEsc(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-  function mqccMoney(n) { return CUR() + (Number(n) || 0).toLocaleString(undefined, { maximumFractionDigits: 2 }); }
+  function mqccMoney(n) { const v = Number(n) || 0; return CUR() + v.toLocaleString(undefined, { minimumFractionDigits: v % 1 ? 2 : 0, maximumFractionDigits: 2 }); }
   function mqccShopFields() {
     // dashboard.js may have swapped in a freshly fetched shop record since
     // this file was initialised — always prefer the newest copy.
@@ -6388,6 +6388,12 @@ window.mqphGoToWizard = function() {
     const pct = `${rate.toLocaleString(undefined, { maximumFractionDigits: 2 })}%`;
     if (how === 'pct_cc') { const cat = mqccCats().find(x => x.id === c.pctCc); return `${pct} of ${mqccEsc(cat ? cat.name : 'a removed category')}`; }
     if (MQCC_PCT.includes(how)) return `${pct} ${MQCC_HOW[how].short}`;
+    if (Array.isArray(c.variants) && c.variants.length && ['each', 'sqft', 'lft'].includes(how)) {
+      const ps = c.variants.map(v => Number(v.price) || 0);
+      const lo = Math.min(...ps), hi = Math.max(...ps);
+      const per = how === 'each' ? mqccEsc(c.unit || 'unit') : MQCC_HOW[how].per;
+      return `${lo === hi ? mqccMoney(lo) : mqccMoney(lo) + '–' + mqccMoney(hi)} per ${per.replace(/s$/, '')} <span style="font-weight:400;color:#6b7280">(${c.variants.length} variants)</span>`;
+    }
     if (how === 'flat') return mqccMoney(rate);
     if (how === 'each') return `${mqccMoney(rate)} each (${mqccEsc(c.unit || 'unit')})`;
     if (how === 'opt') return `${mqccMoney(rate)} per ${mqccEsc(mqccSrcUnit(c.src))} <span style="font-weight:400;color:#6b7280">(from ${mqccEsc((lineItems.find(x => x.id === c.src) || { fields: {} }).fields['Name'] || 'a removed option')})</span>`;
@@ -6467,7 +6473,7 @@ window.mqphGoToWizard = function() {
       const items = mqccItems(c.id);
       const chips = [
         mqccChip(c.answer === 'one' ? 'Pick one' : 'Pick any', 'blue'),
-        c.answer === 'one' && c.required ? mqccChip('Must choose', 'gray') : '',
+        c.required ? mqccChip(c.answer === 'one' ? 'Must choose' : 'Must answer', 'gray') : '',
         c.proOnly ? mqccChip('⚡ Pro only', 'gold') : '',
         c.showIf ? mqccChip('Only if ' + mqccEsc(mqccOptionLabel(c.showIf) || 'option removed'), 'gray') : '',
         c.after && c.after !== 'specialty' ? mqccChip('📍 ' + mqccEsc(((MQCC_PLACES.find(x => x[0] === c.after) || ['', ''])[1]).replace(' (default)', '')), 'gray') : '',
@@ -6478,6 +6484,8 @@ window.mqphGoToWizard = function() {
           cfg.min > 0 ? `min ${mqccMoney(cfg.min)}` : '',
           cfg.showIf ? 'only if ' + mqccEsc(mqccOptionLabel(cfg.showIf) || 'option removed') : '',
           mqccEsc(mqccTieText(cfg.tie)),
+          cfg.install && cfg.install.price > 0 ? `install ${mqccMoney(cfg.install.price)}${cfg.install.how === 'flat' ? ' flat' : ' each'}` : '',
+          cfg.adj ? 'uses project type %' : '',
         ].filter(Boolean).join(' · ');
         return `<div class="mqph-row">
           <div style="display:flex;flex-direction:column;gap:2px">
@@ -6492,6 +6500,7 @@ window.mqphGoToWizard = function() {
           <div class="mqph-row-rate" style="min-width:150px !important">${mqccPriceText(r)}</div>
           <div style="width:36px;text-align:center"><div class="mqph-toggle ${r.fields['Active'] !== false ? 'on' : ''}" title="Show on widget" onclick="mqphToggle('${r.id}',this)"></div></div>
           <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="mqccOpenItem('${c.id}','${r.id}')">Edit</button>
+          <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" title="Copy this option and all its settings, variants and photos" onclick="mqccDuplicateItem('${r.id}')">⧉ Duplicate</button>
           <button class="mqph-btn mqph-btn-danger mqph-btn-sm" onclick="mqccDeleteItem('${r.id}')">Delete</button>
         </div>`;
       }).join('');
@@ -6505,6 +6514,7 @@ window.mqphGoToWizard = function() {
             <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" title="Move up" ${ci === 0 ? 'disabled' : ''} onclick="mqccMoveCat('${c.id}',-1)">↑</button>
             <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" title="Move down" ${ci === cats.length - 1 ? 'disabled' : ''} onclick="mqccMoveCat('${c.id}',1)">↓</button>
             <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="mqccOpenCat('${c.id}')">Settings</button>
+            <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" title="Copy this category with all its options and photos" onclick="mqccDuplicateCat('${c.id}')">⧉ Duplicate</button>
             <button class="mqph-btn mqph-btn-primary mqph-btn-sm" onclick="mqccOpenItem('${c.id}',null)">+ Add option</button>
           </span>
         </div>
@@ -6524,6 +6534,14 @@ window.mqphGoToWizard = function() {
         #mqph-scope-custom ~ .mqph-overlay .mqcc-wide, .mqcc-wide{max-width:980px !important}
         .mqcc-modal-grid{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:22px;align-items:start}
         .mqcc-modal-pv{position:sticky;top:0;max-height:calc(90vh - 190px);overflow-y:auto;background:#f8fafc !important;border:1px solid #e5e7eb !important;border-radius:12px !important;padding:14px !important}
+        .mqcc-subbox{background:#f9fafb !important;border:1px solid #e5e7eb !important;border-radius:8px !important;padding:10px 12px !important;margin:0 0 14px !important}
+        .mqcc-subbox-title{font-size:11px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.05em}
+        .mqcc-subbox-note{font-size:11px;color:#6b7280;line-height:1.45;margin-top:4px}
+        .mqcc-check{display:flex !important;align-items:flex-start !important;gap:8px !important;font-size:13px !important;font-weight:600 !important;color:#111 !important;cursor:pointer;text-transform:none !important;letter-spacing:0 !important}
+        .mqcc-check input{width:16px !important;height:16px !important;min-width:16px !important;margin:1px 0 0 !important;flex:none !important}
+        .mqcc-var-row{background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:8px;margin-top:8px}
+        .mqcc-var-row input,.mqcc-var-row select{font-size:12px !important;padding:5px 7px !important;height:auto !important}
+        .mqcc-var-line{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:12px;color:#374151}
         .mqcc-modal-pv-label{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#6b7280;margin-bottom:10px}
         @media(max-width:900px){.mqcc-modal-grid{grid-template-columns:1fr}.mqcc-modal-pv{position:static;max-height:none}}
         #mqcc-cat-tienames input,#mqcc-item-tienames input{width:15px !important;height:15px !important;min-width:15px !important;flex:none !important;margin:0 !important;padding:0 !important;box-shadow:none !important}</style>
@@ -6554,8 +6572,8 @@ window.mqphGoToWizard = function() {
                 <option value="one">Pick one — they choose a single option (like door styles)</option>
               </select>
             </div>
-            <label id="mqcc-cat-required-wrap" style="display:none;align-items:center;gap:8px;font-size:13px;margin:0 0 14px;cursor:pointer">
-              <input type="checkbox" id="mqcc-cat-required" style="width:16px;height:16px"/> Customers must choose one (no “None” option)
+            <label id="mqcc-cat-required-wrap" style="display:flex;align-items:center;gap:8px;font-size:13px;margin:0 0 14px;cursor:pointer">
+              <input type="checkbox" id="mqcc-cat-required" style="width:16px;height:16px"/> <span id="mqcc-cat-required-txt">Customers must choose one (no “None” option)</span>
             </label>
             <div class="mqph-field"><label>Where it goes on your widget</label>
               <select id="mqcc-cat-after">${MQCC_PLACES.map(([v, l]) => `<option value="${v}">${l}</option>`).join('')}</select>
@@ -6609,6 +6627,28 @@ window.mqphGoToWizard = function() {
             <div class="mqph-field" id="mqcc-item-min-wrap"><label>Minimum charge (optional)</label>
               <div style="display:flex;align-items:center;gap:6px"><span style="font-size:13px;color:#6b7280">${CUR()}</span><input type="number" id="mqcc-item-min" step="0.01" min="0" style="flex:1" oninput="mqccCheck()"/></div>
             </div>
+            <div id="mqcc-item-var-wrap" class="mqcc-subbox">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
+                <div class="mqcc-subbox-title">Variants (optional)</div>
+                <span style="display:flex;gap:6px"><button type="button" class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="mqccVarAdd(false)">+ Add variant</button><button type="button" class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="mqccVarAdd(true)">📏 + Add sized variant</button></span>
+              </div>
+              <div class="mqcc-subbox-note" id="mqcc-var-note">Like specialty items: one option with several versions (e.g. sizes or species), each with its own price, minimum and photo (photos in My Products). Customers pick a variant and how many of each. A sized variant works its price out from its size and a rate.</div>
+              <div id="mqcc-var-list"></div>
+            </div>
+            <div id="mqcc-item-inst-wrap" class="mqcc-subbox">
+              <label class="mqcc-check"><input type="checkbox" id="mqcc-item-inst-on" onchange="mqccInstToggle()"/> Offer installation for this option</label>
+              <div class="mqcc-subbox-note">Customers get a Supply only / Supply + install choice on this option. It starts on whatever they picked in your Supply + install step, and they can change it.</div>
+              <div id="mqcc-item-inst-fields" style="display:none;margin-top:8px">
+                <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:13px;color:#374151">
+                  Install price <span style="color:#6b7280">${CUR()}</span><input type="number" id="mqcc-item-inst-price" step="0.01" min="0" style="width:96px" oninput="mqccCheck()"/>
+                  <select id="mqcc-item-inst-how" onchange="mqccCheck()" style="width:auto"><option value="same">for each unit (same count as the item)</option><option value="flat">flat, once</option></select>
+                </div>
+                <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:13px;color:#374151;margin-top:8px">
+                  Install minimum (optional) <span style="color:#6b7280">${CUR()}</span><input type="number" id="mqcc-item-inst-min" step="0.01" min="0" style="width:96px" oninput="mqccCheck()"/>
+                </div>
+              </div>
+            </div>
+            <label class="mqcc-check" id="mqcc-item-adj-wrap" style="margin:0 0 14px"><input type="checkbox" id="mqcc-item-adj"/> Apply this project type's % adjustments (materials % to the price, install % to the installation)</label>
             <div class="mqph-field" id="mqcc-item-showif-wrap"><label>Show this option</label><select id="mqcc-item-showif"></select></div>
             ${mqccTieFieldHtml('item')}
             <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin:4px 0 0;cursor:pointer">
@@ -6673,8 +6713,11 @@ window.mqphGoToWizard = function() {
   };
   window.mqccCatAnswerChanged = function() {
     const one = document.getElementById('mqcc-cat-answer').value === 'one';
-    mqccShow('mqcc-cat-required-wrap', one, 'flex');
+    document.getElementById('mqcc-cat-required-txt').textContent = one
+      ? 'Customers must choose one (no “None” option)'
+      : 'Customers must add at least one before continuing';
   };
+
   window.mqccSaveCat = async function() {
     const name = document.getElementById('mqcc-cat-name').value.trim();
     if (!name) { alert('Give the category a name.'); return; }
@@ -6686,7 +6729,7 @@ window.mqphGoToWizard = function() {
       name,
       description: document.getElementById('mqcc-cat-desc').value.trim(),
       answer,
-      required: answer === 'one' && document.getElementById('mqcc-cat-required').checked,
+      required: document.getElementById('mqcc-cat-required').checked,
       showIf: document.getElementById('mqcc-cat-showif').value || '',
       proOnly: document.getElementById('mqcc-cat-pro').checked,
       after: document.getElementById('mqcc-cat-after').value || 'specialty',
@@ -6759,6 +6802,15 @@ window.mqphGoToWizard = function() {
     document.getElementById('mqcc-item-rate').value = r && r.fields['Rate'] != null ? r.fields['Rate'] : '';
     document.getElementById('mqcc-item-min').value = cfg.min > 0 ? cfg.min : '';
     document.getElementById('mqcc-item-pro').checked = !!cfg.proOnly;
+    const inst = cfg.install && typeof cfg.install === 'object' ? cfg.install : null;
+    document.getElementById('mqcc-item-inst-on').checked = !!(inst && inst.price > 0);
+    document.getElementById('mqcc-item-inst-price').value = inst && inst.price > 0 ? inst.price : '';
+    document.getElementById('mqcc-item-inst-how').value = inst && inst.how === 'flat' ? 'flat' : 'same';
+    document.getElementById('mqcc-item-inst-min').value = inst && inst.min > 0 ? inst.min : '';
+    mqccInstToggle();
+    document.getElementById('mqcc-item-adj').checked = !!cfg.adj;
+    mqccVarDraft = Array.isArray(cfg.variants) ? cfg.variants.map(v => ({ ...v })) : [];
+    mqccVarRender();
     document.getElementById('mqcc-calc-a').value = '';
     document.getElementById('mqcc-calc-b').value = '';
     document.getElementById('mqcc-calc-out').textContent = '';
@@ -6785,6 +6837,13 @@ window.mqphGoToWizard = function() {
     mqccShow('mqcc-item-src-wrap', how === 'opt');
     mqccShow('mqcc-item-pctcc-wrap', how === 'pct_cc');
     mqccShow('mqcc-item-min-wrap', how !== 'flat');
+    const catNow = mqccEditItem ? mqccCats().find(x => x.id === mqccEditItem.cid) : null;
+    mqccShow('mqcc-item-var-wrap', !!catNow && catNow.answer === 'any' && ['each', 'sqft', 'lft'].includes(how));
+    mqccShow('mqcc-item-inst-wrap', !isPct);
+    mqccShow('mqcc-item-adj-wrap', !isPct, 'flex');
+    const vnote = document.getElementById('mqcc-var-note');
+    if (vnote) vnote.dataset.per = how === 'each' ? '' : ((MQCC_HOW[how] && MQCC_HOW[how].per) || '');
+    if (document.getElementById('mqcc-var-list')) mqccVarRender();
     const per = mqccPerWord(how);
     document.getElementById('mqcc-item-rate-label').textContent = isPct ? 'Percentage (use a minus for a discount)' : (how === 'flat' ? 'Price' : `Price per ${per}`);
     document.getElementById('mqcc-item-rate-pfx').textContent = isPct ? '' : CUR();
@@ -6820,8 +6879,15 @@ window.mqphGoToWizard = function() {
       alert('This category already has an option with that name — photos are matched by name, so each one needs its own.'); return;
     }
     const how = document.getElementById('mqcc-item-how').value;
-    const rate = parseFloat(document.getElementById('mqcc-item-rate').value);
-    if (isNaN(rate)) { alert(how === 'pct' ? 'Enter the percentage.' : 'Enter the price.'); return; }
+    const varOn = getComputedStyle(document.getElementById('mqcc-item-var-wrap')).display !== 'none';
+    const vars = varOn ? mqccVarDraft.filter(v => String(v.label || '').trim()) : [];
+    if (varOn && mqccVarDraft.some(v => !String(v.label || '').trim())) { alert('Give every variant a name (or remove the empty ones).'); return; }
+    let rate = parseFloat(document.getElementById('mqcc-item-rate').value);
+    if (isNaN(rate) && vars.length) rate = 0; // each variant carries its own price
+    if (isNaN(rate)) { alert(MQCC_PCT.includes(how) ? 'Enter the percentage.' : 'Enter the price.'); return; }
+    const instOn = !MQCC_PCT.includes(how) && document.getElementById('mqcc-item-inst-on').checked;
+    const instPrice = parseFloat(document.getElementById('mqcc-item-inst-price').value);
+    if (instOn && !(instPrice > 0)) { alert('Enter the install price (or untick "Offer installation").'); return; }
     const unit = document.getElementById('mqcc-item-unit').value.trim();
     if (how === 'each' && !unit) { alert('Say what the customer is counting (e.g. panels, hours).'); return; }
     const src = document.getElementById('mqcc-item-src').value;
@@ -6836,6 +6902,12 @@ window.mqphGoToWizard = function() {
     };
     if (how === 'opt') cfg.src = src;
     if (how === 'pct_cc') cfg.pctCc = document.getElementById('mqcc-item-pctcc').value;
+    if (instOn) {
+      const imin = parseFloat(document.getElementById('mqcc-item-inst-min').value);
+      cfg.install = { price: Math.round(instPrice * 100) / 100, how: document.getElementById('mqcc-item-inst-how').value === 'flat' ? 'flat' : 'same', min: imin > 0 ? Math.round(imin * 100) / 100 : 0 };
+    }
+    if (!MQCC_PCT.includes(how) && document.getElementById('mqcc-item-adj').checked) cfg.adj = true;
+    if (vars.length) cfg.variants = vars.map(v => { const o = { id: v.id, label: String(v.label).trim(), price: Math.round((parseFloat(v.price) || 0) * 100) / 100, min: Math.round((parseFloat(v.min) || 0) * 100) / 100 }; if (v.sized) Object.assign(o, { sized: true, dimA: v.dimA, dimB: v.dimB, unit: v.unit === 'mm' ? 'mm' : 'in', swap: !!v.swap, rateMode: v.rateMode || 'flat', rate: parseFloat(v.rate) || 0 }); return o; });
     const tie = mqccTieRead('item');
     if (tie) cfg.tie = tie;
     const fields = {
@@ -6863,6 +6935,172 @@ window.mqphGoToWizard = function() {
       mqccMsg('✓ Option saved. Add a photo or pick its project types in My Products.');
     } catch(e) { alert('Could not save: ' + e.message); }
     btn.disabled = false;
+  };
+  // ── Variants editor (same idea as Specialty Items' variants) ──
+  let mqccVarDraft = [];
+  function mqccVarId() { return 'v' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5); }
+  // Sized variant: label and price worked out from its two dimensions and a
+  // rate — same maths as Specialty Items (mqApplySizedVariantCalcs): $/sq ft
+  // uses both, $/lin ft uses the longer side.
+  function mqccVarSized(v) {
+    if (!v || !v.sized) return;
+    const a = parseFloat(v.dimA) || 0, b = parseFloat(v.dimB) || 0;
+    const mm = v.unit === 'mm';
+    if (a || b) { const u = mm ? 'mm' : '"'; v.label = v.swap ? `${b}${u} x ${a}${u}` : `${a}${u} x ${b}${u}`; }
+    const mode = v.rateMode || 'flat';
+    if (mode !== 'flat' && v.rate) {
+      const ft = n => mm ? n / 304.8 : n / 12;
+      v.price = Math.round((mode === 'sqft' ? ft(a) * ft(b) * v.rate : Math.max(ft(a), ft(b)) * v.rate) * 100) / 100;
+    }
+  }
+  function mqccVarRender() {
+    const list = document.getElementById('mqcc-var-list');
+    if (!list) return;
+    const perRaw = (document.getElementById('mqcc-var-note') || { dataset: {} }).dataset.per || '';
+    const per = perRaw ? 'per ' + perRaw : 'each';
+    list.innerHTML = mqccVarDraft.map((v, i) => {
+      const lock = v.sized ? 'readonly style="background:#f3f4f6;width:130px"' : 'style="width:130px"';
+      const priceLock = v.sized && (v.rateMode || 'flat') !== 'flat' ? 'readonly style="background:#f3f4f6;width:84px"' : 'style="width:84px"';
+      return `<div class="mqcc-var-row">
+        <div class="mqcc-var-line">
+          <input type="text" placeholder="Variant name" value="${mqccEsc(v.label || '')}" ${lock} oninput="mqccVarSet(${i},'label',this.value)" id="mqcc-var-label-${i}"/>
+          <span>${CUR()}</span><input type="number" step="0.01" placeholder="Price" value="${v.price != null && v.price !== '' ? v.price : ''}" ${priceLock} oninput="mqccVarSet(${i},'price',this.value)" id="mqcc-var-price-${i}"/><span style="color:#6b7280">${mqccEsc(per)}</span>
+          <span style="color:#6b7280">min ${CUR()}</span><input type="number" step="0.01" min="0" placeholder="0" value="${v.min > 0 ? v.min : ''}" style="width:64px" oninput="mqccVarSet(${i},'min',this.value)"/>
+          <label style="display:inline-flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;text-transform:none;letter-spacing:0;font-weight:600;margin:0"><input type="checkbox" ${v.sized ? 'checked' : ''} onchange="mqccVarSet(${i},'sized',this.checked,true)" style="width:14px;height:14px"/> 📏 Sized</label>
+          <button type="button" class="mqph-btn mqph-btn-secondary mqph-btn-sm" title="Duplicate this variant" onclick="mqccVarDup(${i})">⧉</button>
+          <button type="button" class="mqph-btn mqph-btn-danger mqph-btn-sm" title="Remove" onclick="mqccVarDel(${i})">✕</button>
+        </div>
+        ${v.sized ? `<div class="mqcc-var-line" style="margin-top:6px">
+          Size <input type="number" step="0.01" min="0" value="${v.dimA || ''}" style="width:64px" oninput="mqccVarSet(${i},'dimA',this.value)"/> x
+          <input type="number" step="0.01" min="0" value="${v.dimB || ''}" style="width:64px" oninput="mqccVarSet(${i},'dimB',this.value)"/>
+          <select onchange="mqccVarSet(${i},'unit',this.value)" style="width:auto"><option value="in" ${v.unit !== 'mm' ? 'selected' : ''}>inches</option><option value="mm" ${v.unit === 'mm' ? 'selected' : ''}>mm</option></select>
+          <label style="display:inline-flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;text-transform:none;letter-spacing:0;margin:0"><input type="checkbox" ${v.swap ? 'checked' : ''} onchange="mqccVarSet(${i},'swap',this.checked)" style="width:14px;height:14px"/> show 2nd size first</label>
+          · Price <select onchange="mqccVarSet(${i},'rateMode',this.value,true)" style="width:auto"><option value="flat" ${(v.rateMode || 'flat') === 'flat' ? 'selected' : ''}>flat (type it)</option><option value="sqft" ${v.rateMode === 'sqft' ? 'selected' : ''}>per sq ft</option><option value="lft" ${v.rateMode === 'lft' ? 'selected' : ''}>per lin ft</option></select>
+          ${(v.rateMode || 'flat') !== 'flat' ? `${CUR()}<input type="number" step="0.01" min="0" value="${v.rate || ''}" style="width:72px" oninput="mqccVarSet(${i},'rate',this.value)"/>` : ''}
+        </div>` : ''}
+      </div>`;
+    }).join('') || '<div style="font-size:12px;color:#9ca3af;margin-top:6px">No variants — the option uses its own price above.</div>';
+  }
+  window.mqccVarSet = function(i, k, val, rerender) {
+    const v = mqccVarDraft[i];
+    if (!v) return;
+    v[k] = val;
+    mqccVarSized(v);
+    if (rerender) { mqccVarRender(); }
+    else if (v.sized) {
+      const l = document.getElementById('mqcc-var-label-' + i), p = document.getElementById('mqcc-var-price-' + i);
+      if (l && document.activeElement !== l) l.value = v.label || '';
+      if (p && document.activeElement !== p) p.value = v.price != null ? v.price : '';
+    }
+    mqccDraftItemPreview();
+  };
+  window.mqccVarAdd = function(sized) {
+    mqccVarDraft.push(sized ? { id: mqccVarId(), label: '', price: '', min: 0, sized: true, unit: 'in', rateMode: 'sqft', rate: '' } : { id: mqccVarId(), label: '', price: '', min: 0 });
+    mqccVarRender(); mqccDraftItemPreview();
+  };
+  window.mqccVarDup = function(i) {
+    const v = mqccVarDraft[i];
+    if (!v) return;
+    mqccVarDraft.splice(i + 1, 0, { ...v, id: mqccVarId() });
+    mqccVarRender(); mqccDraftItemPreview();
+  };
+  window.mqccVarDel = function(i) { mqccVarDraft.splice(i, 1); mqccVarRender(); mqccDraftItemPreview(); };
+  window.mqccInstToggle = function() {
+    const on = document.getElementById('mqcc-item-inst-on').checked;
+    document.getElementById('mqcc-item-inst-fields').style.display = on ? 'block' : 'none';
+    if (typeof mqccCheck === 'function') mqccCheck();
+  };
+
+  // ── Duplicate (same idea as Specialty Items' ⧉ Duplicate) ──
+  // Photos / "hide from showroom" / best-seller live on the shop record keyed
+  // li_<category>_<name>[_v<variant>], so those are copied to the new keys.
+  function mqccPhotoKey(cid, name) {
+    const base = String(name || '').replace(/\s*—\s*(uppers|bases|some drawers|mostly drawers|with doors|no doors)\s*$/i, '').trim();
+    return `li_${cid}_${base.replace(/[^a-z0-9]/gi, '_').toLowerCase()}`;
+  }
+  async function mqccCopyShopKeys(pairs, extraFields) {
+    const f = mqccShopFields();
+    const parse = k => { try { const o = JSON.parse(f[k] || '{}'); return o && typeof o === 'object' ? o : {}; } catch(e) { return {}; } };
+    const maps = { 'Photos': parse('Photos'), 'Hidden': parse('Hidden'), 'Featured items': parse('Featured items') };
+    const upd = {};
+    Object.entries(maps).forEach(([field, m]) => {
+      let changed = false;
+      pairs.forEach(([from, to]) => { if (m[from] !== undefined && from !== to) { m[to] = m[from]; changed = true; } });
+      if (changed) upd[field] = JSON.stringify(m);
+    });
+    Object.assign(upd, extraFields || {});
+    if (!Object.keys(upd).length) return;
+    await atUpdate(SHOPS_TABLE, shopRecord.id, upd);
+    Object.entries(upd).forEach(([k, v]) => { shopRecord.fields[k] = v; if (window._mqShopRecord && window._mqShopRecord.fields) window._mqShopRecord.fields[k] = v; });
+  }
+  function mqccKeyPairs(oldCid, oldName, newCid, newName, cfg) {
+    const a = mqccPhotoKey(oldCid, oldName), b = mqccPhotoKey(newCid, newName);
+    return [[a, b], ...((cfg && Array.isArray(cfg.variants)) ? cfg.variants.map(v => [a + '_v' + v.id, b + '_v' + v.id]) : [])];
+  }
+  const MQCC_COPY_FIELDS = ['Name', 'Description', 'Rate', 'Active', 'Sort order', 'Custom pricing', 'Visible rooms', 'Group name', 'Group description', 'Group sort order'];
+  window.mqccDuplicateItem = async function(id) {
+    const r = lineItems.find(x => x.id === id);
+    if (!r) return;
+    const cid = r.fields['Category'];
+    const names = new Set(mqccItems(cid).map(x => (x.fields['Name'] || '').trim().toLowerCase()));
+    const base = (r.fields['Name'] || 'Option').trim();
+    let name = `${base} - Copy`, n = 2;
+    while (names.has(name.toLowerCase())) name = `${base} - Copy ${n++}`;
+    const fields = { shop: [shopRecord._recordId], Category: cid };
+    MQCC_COPY_FIELDS.forEach(k => { if (r.fields[k] !== undefined && r.fields[k] !== null && r.fields[k] !== '') fields[k] = r.fields[k]; });
+    fields.Name = name;
+    fields['Sort order'] = (r.fields['Sort order'] || 0) + 0.5;
+    try {
+      const rec = await atCreate(LINE_ITEMS_TABLE, fields);
+      if (rec && rec.id) lineItems.push({ id: rec.id, fields: { ...(rec.fields || {}), ...fields } });
+      await mqccCopyShopKeys(mqccKeyPairs(cid, base, cid, name, mqccCfg(r)));
+      if (window._mqLastFetchTimes) window._mqLastFetchTimes['products'] = 0;
+      mqccRerender(cid);
+      mqccMsg(`✓ Duplicated as "${name}" — click Edit to change it.`);
+    } catch(e) { alert('Could not duplicate: ' + e.message); }
+  };
+  window.mqccDuplicateCat = async function(cid) {
+    const cats = mqccCats();
+    const c = cats.find(x => x.id === cid);
+    if (!c) return;
+    const catNames = new Set(cats.map(x => (x.name || '').trim().toLowerCase()));
+    let name = `${c.name} - Copy`, n = 2;
+    while (catNames.has(name.toLowerCase())) name = `${c.name} - Copy ${n++}`;
+    const newId = 'cc_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+    const items = mqccItems(cid);
+    try {
+      // Copy the options first (new record ids), then point any rules that
+      // referred to options inside this category at their copies.
+      const idMap = {}, pairs = [];
+      for (const r of items) {
+        const fields = { shop: [shopRecord._recordId], Category: newId };
+        MQCC_COPY_FIELDS.forEach(k => { if (r.fields[k] !== undefined && r.fields[k] !== null && r.fields[k] !== '') fields[k] = r.fields[k]; });
+        const rec = await atCreate(LINE_ITEMS_TABLE, fields);
+        if (rec && rec.id) { idMap[r.id] = rec.id; lineItems.push({ id: rec.id, fields: { ...(rec.fields || {}), ...fields } }); }
+        pairs.push(...mqccKeyPairs(cid, r.fields['Name'], newId, r.fields['Name'], mqccCfg(r)));
+      }
+      for (const oldId of Object.keys(idMap)) {
+        const nr = lineItems.find(x => x.id === idMap[oldId]);
+        const cfg = mqccCfg(nr);
+        let changed = false;
+        if (cfg.showIf && idMap[cfg.showIf]) { cfg.showIf = idMap[cfg.showIf]; changed = true; }
+        if (cfg.src && idMap[cfg.src]) { cfg.src = idMap[cfg.src]; changed = true; }
+        if (cfg.pctCc === cid) { cfg.pctCc = newId; changed = true; }
+        if (changed) { const json = JSON.stringify(cfg); await atUpdate(LINE_ITEMS_TABLE, nr.id, { 'Custom pricing': json }); nr.fields['Custom pricing'] = json; }
+      }
+      const copy = { ...c, id: newId, name, showIf: idMap[c.showIf] || c.showIf || '' };
+      const i = cats.findIndex(x => x.id === cid);
+      cats.splice(i + 1, 0, copy);
+      await mqccSaveCats(cats);
+      // Category-level project types and "Pick a collection" label come along too.
+      const f = mqccShopFields(), extra = {};
+      try { const cr = JSON.parse(f['Category rooms'] || '{}'); if (cr && cr[cid]) { cr[newId] = cr[cid]; extra['Category rooms'] = JSON.stringify(cr); } } catch(e) {}
+      try { const pl = JSON.parse(f['Category picker labels'] || '{}'); if (pl && pl[cid]) { pl[newId] = pl[cid]; extra['Category picker labels'] = JSON.stringify(pl); } } catch(e) {}
+      await mqccCopyShopKeys(pairs, extra);
+      if (window._mqLastFetchTimes) window._mqLastFetchTimes['products'] = 0;
+      mqccRerender(newId);
+      mqccMsg(`✓ Duplicated as "${name}" with ${items.length} option${items.length === 1 ? '' : 's'}.`);
+    } catch(e) { alert('Could not duplicate: ' + e.message); }
   };
   window.mqccDeleteItem = async function(id) {
     const r = lineItems.find(x => x.id === id);
@@ -6921,17 +7159,31 @@ window.mqphGoToWizard = function() {
   // minimums, % of the cabinet estimate). Turned-off options are left out,
   // same as the widget; project types aren't applied (the preview shows every
   // option). Pro-only options/categories show with a ⚡ tag.
-  const mqccPv = { base: 14, upper: 12, est: 9840, island: 6, crown: 12, valance: 8, drawers: 8, tall: 1, qty: {}, on: {}, one: {}, oneQty: {} };
+  const mqccPv = { base: 14, upper: 12, est: 9840, island: 6, crown: 12, valance: 8, drawers: 8, tall: 1, install: false, qty: {}, on: {}, one: {}, oneQty: {}, vq: {}, vcur: {}, si: {} };
   const MQCC_PV_SAMPLE = { island_lf: 'island', crown_lf: 'crown', valance_lf: 'valance', drawers: 'drawers', tallcabs: 'tall' };
 
+  // Turns a saved (or being-edited) option into the shape the preview uses —
+  // same rules as widget.js mqCcBuild.
+  function mqccPvNorm(cid, answer, base, cfg) {
+    const inst = cfg.install && (parseFloat(cfg.install.price) || 0) > 0 ? { price: parseFloat(cfg.install.price) || 0, how: cfg.install.how === 'flat' ? 'flat' : 'same', min: parseFloat(cfg.install.min) || 0 } : null;
+    const variants = (answer === 'any' && ['each', 'sqft', 'lft'].includes(cfg.how) && Array.isArray(cfg.variants))
+      ? cfg.variants.filter(v => v && v.id && String(v.label || '').trim()).map(v => ({ id: v.id, label: String(v.label).trim(), price: parseFloat(v.price) || 0, min: parseFloat(v.min) || 0 })) : [];
+    return Object.assign(base, { inst, adj: !!cfg.adj, variants });
+  }
   function mqccPvItems(cid) {
+    const answer = ((mqccCats().find(x => x.id === cid)) || {}).answer === 'one' ? 'one' : 'any';
     return mqccItems(cid).filter(r => r.fields['Active'] !== false).map(r => {
       const cfg = mqccCfg(r);
+      return mqccPvNorm(cid, answer, mqccPvItemBase(r, cfg), cfg);
+    });
+  }
+  function mqccPvItemBase(r, cfg) {
+    {
       return { id: r.id, name: r.fields['Name'] || '', desc: r.fields['Description'] || '', rate: Number(r.fields['Rate']) || 0,
         how: (cfg.how === 'sqft' || cfg.how === 'lft') ? 'each' : (MQCC_HOW[cfg.how] ? cfg.how : 'flat'), unit: cfg.how === 'sqft' ? 'sq ft' : (cfg.how === 'lft' ? 'lin ft' : (cfg.unit || '')), min: Number(cfg.min) || 0, showIf: cfg.showIf || '', proOnly: !!cfg.proOnly,
         src: cfg.src || '', pctCc: cfg.pctCc || '', tie: cfg.tie || null,
         groupName: (r.fields['Group name'] || '').trim(), groupOrder: r.fields['Group sort order'] || 0 };
-    });
+    }
   }
   function mqccPvPhoto(cid, name) {
     let photos = {};
@@ -6948,8 +7200,17 @@ window.mqphGoToWizard = function() {
     for (const c of mqccCats()) { const it = mqccPvItems(c.id).find(i => i.id === id); if (it) return { c, it }; }
     return null;
   }
+  function mqccPvVq(it, vid) { return mqccPv.vq[it.id + '|' + vid] || 0; }
+  function mqccPvVcur(it) { const v = mqccPv.vcur[it.id]; return it.variants.some(x => x.id === v) ? v : it.variants[0].id; }
+  function mqccPvWantsInst(c, it) {
+    if (!it.inst) return false;
+    const key = c.answer === 'one' ? c.id : it.id;
+    const v = mqccPv.si[key];
+    return v ? v === 'install' : mqccPv.install;
+  }
   function mqccPvPicked(c, it, items) {
     if (c.answer === 'one') return mqccPvOneVal(c, items) === it.id;
+    if (it.variants && it.variants.length) return it.variants.some(v => mqccPvVq(it, v.id) > 0);
     if (it.how === 'each') return (mqccPv.qty[it.id] || 0) > 0;
     return !!mqccPv.on[it.id];
   }
@@ -6970,7 +7231,9 @@ window.mqphGoToWizard = function() {
   // Same math as widget.js mqCcQty/mqCcCost, on the sample job.
   function mqccPvQty(c, it, depth) {
     switch (it.how) {
-      case 'each': return c.answer === 'one' ? (mqccPv.oneQty[c.id] == null ? 0 : mqccPv.oneQty[c.id]) : (mqccPv.qty[it.id] || 0);
+      case 'each':
+        if (it.variants && it.variants.length) return it.variants.reduce((a, v) => a + mqccPvVq(it, v.id), 0);
+        return c.answer === 'one' ? (mqccPv.oneQty[c.id] == null ? 0 : mqccPv.oneQty[c.id]) : (mqccPv.qty[it.id] || 0);
       case 'base_lf': return mqccPv.base;
       case 'upper_lf': return mqccPv.upper;
       case 'all_lf': return mqccPv.base + mqccPv.upper;
@@ -7009,23 +7272,39 @@ window.mqphGoToWizard = function() {
     picked.filter(x => !MQCC_PCT.includes(x.it.how)).forEach(({ c, it }) => {
       const q = mqccPvQty(c, it, 0);
       if (it.how !== 'flat' && !(q > 0)) return;
-      const f = fin(it, it.how === 'flat' ? it.rate : it.rate * q);
-      if (!f.cost) return;
-      res.set(it.id, { label: it.how === 'flat' ? it.name : `${it.name} (${mqccPvQtyLabel(it, q)})`, cost: f.cost, minUsed: f.minUsed, pro: it.proOnly });
-      catSum[c.id] = (catSum[c.id] || 0) + f.cost;
-      extras += f.cost;
+      const doInst = mqccPvWantsInst(c, it);
+      const sfx = it.inst ? (doInst ? ' — Supply' : ' — Supply only') : '';
+      const out = [];
+      const mn = (min, cost) => (min > 0 && cost >= 0 && cost < min) ? { cost: min, minUsed: true } : { cost, minUsed: false };
+      if (it.variants && it.variants.length) {
+        it.variants.forEach(v => { const vq = mqccPvVq(it, v.id); if (!(vq > 0)) return; const f = mn(v.min, v.price * vq); out.push({ label: `${it.name} — ${v.label} (${mqccPvQtyLabel(it, vq)})${sfx}`, cost: f.cost, minUsed: f.minUsed, pro: it.proOnly }); });
+      } else {
+        const f = fin(it, it.how === 'flat' ? it.rate : it.rate * q);
+        const lab = it.how === 'flat' ? it.name : `${it.name} (${mqccPvQtyLabel(it, q)})`;
+        out.push(f.cost ? { label: lab + sfx, cost: f.cost, minUsed: f.minUsed, pro: it.proOnly } : { label: lab + ' — included', cost: 0, included: true, pro: it.proOnly });
+      }
+      if (doInst) {
+        const per = it.inst.how === 'same' && it.how !== 'flat';
+        const f = mn(it.inst.min, it.inst.price * (per ? q : 1));
+        if (f.cost) out.push({ label: per ? `${it.name} (${mqccPvQtyLabel(it, q)}) — Install` : `${it.name} — Install`, cost: f.cost, minUsed: f.minUsed, pro: it.proOnly });
+      }
+      if (!out.length) return;
+      const sum = out.reduce((a, l) => a + l.cost, 0);
+      res.set(it.id, out);
+      catSum[c.id] = (catSum[c.id] || 0) + sum;
+      extras += sum;
     });
     picked.filter(x => MQCC_PCT.includes(x.it.how)).forEach(({ it }) => {
       const base = it.how === 'pct' ? mqccPv.est : (it.how === 'pct_all' ? mqccPv.est + extras : (catSum[it.pctCc] || 0));
       const f = fin(it, base * it.rate / 100);
       if (!f.cost) return;
-      res.set(it.id, { label: `${it.name} (${it.rate}%)`, cost: f.cost, minUsed: f.minUsed, pro: it.proOnly });
+      res.set(it.id, [{ label: `${it.name} (${it.rate}%)`, cost: f.cost, minUsed: f.minUsed, pro: it.proOnly }]);
     });
     return { res, catSum, extras };
   }
   function mqccPvLines(c) {
     const { res } = mqccPvCompute();
-    return mqccPvItems(c.id).map(it => res.get(it.id)).filter(Boolean).map(r => ({ ...r, cost: Math.round(r.cost) }));
+    return mqccPvItems(c.id).flatMap(it => res.get(it.id) || []).map(r => ({ ...r, cost: Math.round(r.cost) }));
   }
   function mqccPvMoney(n) { return (n < 0 ? '−' : '') + CUR() + Math.abs(Math.round(n)).toLocaleString(); }
   function mqccPvThumb(cid, it, size) {
@@ -7063,6 +7342,7 @@ window.mqphGoToWizard = function() {
         const q = mqccPv.oneQty[c.id] == null ? 0 : mqccPv.oneQty[c.id];
         body += `<div style="display:flex;align-items:center;gap:10px;margin-top:10px;font-size:13px;font-weight:600;color:#374151">How many? ${mqccPvStepper(`mqccPvOneQty('${c.id}',-1)`, `mqccPvOneQty('${c.id}',1)`, q, cur.unit)}</div>`;
       }
+      if (cur && cur.inst) body += `<div style="display:flex;align-items:center;gap:10px;margin-top:10px;font-size:13px;font-weight:600;color:#374151">Installation ${mqccPvSiSelect(c.id, mqccPvWantsInst(c, cur))}</div>`;
     } else {
       const names = [...new Set(items.filter(i => i.groupName).sort((a, b) => (a.groupOrder || 0) - (b.groupOrder || 0)).map(i => i.groupName))];
       const buckets = names.map(n => ({ name: n, items: items.filter(i => i.groupName === n) }));
@@ -7076,7 +7356,9 @@ window.mqphGoToWizard = function() {
           const shown = mqccPvItemOn(c, it, 0);
           const on = shown && mqccPvPicked(c, it, items);
           const rule = it.showIf ? (mqccPvFind(it.showIf) || {}).it : null;
-          const control = it.how === 'each'
+          const vcur = it.variants && it.variants.length ? mqccPvVcur(it) : '';
+          const control = vcur ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:5px">${it.variants.map(v => { const vq = mqccPvVq(it, v.id), sel = v.id === vcur; return `<button type="button" onclick="mqccPvVar('${it.id}','${v.id}')" style="font:inherit;font-size:11px;font-weight:600;padding:3px 8px;border-radius:999px;cursor:pointer;border:1px solid ${sel ? '#111' : '#d1d5db'};background:${sel ? '#111' : '#fff'};color:${sel ? '#fff' : '#374151'}">${mqccEsc(v.label)}${vq > 0 ? ` <span style="color:${sel ? '#fbbf24' : '#1d4ed8'}">×${vq}</span>` : ''}</button>`; }).join('')}</div>${mqccPvStepper(`mqccPvVarQty('${it.id}',-1)`, `mqccPvVarQty('${it.id}',1)`, mqccPvVq(it, vcur), it.unit)}`
+            : it.how === 'each'
             ? mqccPvStepper(`mqccPvQty('${it.id}',-1)`, `mqccPvQty('${it.id}',1)`, mqccPv.qty[it.id] || 0, it.unit)
             : `<button type="button" onclick="mqccPvToggle('${it.id}')" style="${MQCC_PV_BTN}border:1.5px solid ${on ? '#1d4ed8' : '#d1d5db'};background:${on ? '#1d4ed8' : '#fff'};color:${on ? '#fff' : '#111'}">${on ? '✓ Added' : '+ Add'}</button>`;
           return `<div${hiA(it.id)} style="${hi(it.id)}display:flex;gap:10px;padding:8px 10px;border-radius:8px;border:1px ${shown ? 'solid' : 'dashed'} ${on ? '#93c5fd' : '#e5e7eb'};background:${on ? '#eff6ff' : '#fff'};${shown ? '' : 'opacity:.55'}">
@@ -7087,7 +7369,7 @@ window.mqphGoToWizard = function() {
               ${auto[it.how] ? `<div style="font-size:11px;color:#166534">📐 ${auto[it.how]}</div>` : ''}
               ${it.how === 'opt' ? `<div style="font-size:11px;color:#166534">📐 Uses the number of ${mqccEsc(mqccSrcUnit(it.src))}</div>` : ''}
               ${it.tie ? `<div style="font-size:11px;color:#6b7280">🔗 ${mqccEsc(mqccTieText(it.tie))}</div>` : ''}
-              ${shown ? `<div style="margin-top:3px">${control}</div>` : `<div style="font-size:11px;color:#92400e;margin-top:3px">Hidden until “${mqccEsc(rule ? rule.name : '')}” is picked</div>`}
+              ${shown ? `<div style="margin-top:3px">${control}</div>${it.inst ? `<div style="margin-top:5px">${mqccPvSiSelect(it.id, mqccPvWantsInst(c, it))}</div>` : ''}` : `<div style="font-size:11px;color:#92400e;margin-top:3px">Hidden until “${mqccEsc(rule ? rule.name : '')}” is picked</div>`}
             </div>
           </div>`;
         }).join('')}</div>`).join('');
@@ -7107,7 +7389,7 @@ window.mqphGoToWizard = function() {
     const lines = mqccPvLines(c);
     const total = lines.reduce((a, l) => a + l.cost, 0);
     return lines.length
-      ? `${lines.map(l => `<div style="display:flex;justify-content:space-between;gap:10px;font-size:12px;padding:5px 0;border-bottom:1px solid #f3f4f6"><span style="color:#374151">${mqccEsc(l.label)}${l.minUsed ? ' <span style="color:#92400e">(minimum)</span>' : ''}${l.pro ? ' <span style="color:#92400e">⚡</span>' : ''}</span><strong style="white-space:nowrap">${mqccPvMoney(l.cost)}</strong></div>`).join('')}
+      ? `${lines.map(l => `<div style="display:flex;justify-content:space-between;gap:10px;font-size:12px;padding:5px 0;border-bottom:1px solid #f3f4f6"><span style="color:#374151">${mqccEsc(l.label)}${l.minUsed ? ' <span style="color:#92400e">(minimum)</span>' : ''}${l.pro ? ' <span style="color:#92400e">⚡</span>' : ''}</span><strong style="white-space:nowrap">${l.included ? 'Included' : mqccPvMoney(l.cost)}</strong></div>`).join('')}
         <div style="display:flex;justify-content:space-between;font-size:13px;padding-top:8px"><span style="font-weight:700">Adds to the estimate</span><strong>${total >= 0 ? '+' : ''}${mqccPvMoney(total)}</strong></div>`
       : `<div style="font-size:12px;color:#9ca3af;line-height:1.5">Pick or add something on the left to see what it adds.</div>`;
   }
@@ -7131,6 +7413,7 @@ window.mqphGoToWizard = function() {
             const labels = { island_lf: 'Island (lin ft)', crown_lf: 'Crown moulding (lin ft)', valance_lf: 'Valance (lin ft)', drawers: 'Drawers', tallcabs: 'Tall cabinets' };
             return Object.keys(labels).filter(h => used.has(h)).map(h => inp(MQCC_PV_SAMPLE[h], labels[h])).join('');
           })()}
+          ${mqccCats().some(cc => mqccPvItems(cc.id).some(it => it.inst)) ? `<label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#374151;margin:2px 0 6px;cursor:pointer;text-transform:none;letter-spacing:0;font-weight:500"><input type="checkbox" data-mqcc-pv-inst ${mqccPv.install ? 'checked' : ''} onchange="mqccPvInstall(this.checked);document.querySelectorAll('[data-mqcc-pv-inst]').forEach(x=>x.checked=this.checked)" style="width:14px;height:14px"/> Customer picked Supply + install</label>` : ''}
           <div id="mqcc-pv-lines-${c.id}" style="margin-top:8px;border-top:1px solid #e5e7eb;padding-top:6px">${mqccPvLinesHtml(c)}</div>
         </div>
       </div>
@@ -7156,7 +7439,7 @@ window.mqphGoToWizard = function() {
     const c = {
       id: mqccEditCat || '__newcat', name: document.getElementById('mqcc-cat-name').value.trim() || 'Your category name',
       description: document.getElementById('mqcc-cat-desc').value.trim(), answer,
-      required: answer === 'one' && document.getElementById('mqcc-cat-required').checked,
+      required: document.getElementById('mqcc-cat-required').checked,
       proOnly: document.getElementById('mqcc-cat-pro').checked, showIf: '',
     };
     let items = mqccEditCat ? mqccPvItems(mqccEditCat) : [];
@@ -7183,6 +7466,16 @@ window.mqphGoToWizard = function() {
       src: how === 'opt' ? document.getElementById('mqcc-item-src').value : '', pctCc: how === 'pct_cc' ? document.getElementById('mqcc-item-pctcc').value : '',
       tie: mqccTieRead('item'), groupName: '', groupOrder: 0,
     };
+    {
+      const instOn = !MQCC_PCT.includes(how) && document.getElementById('mqcc-item-inst-on').checked;
+      const varOn = getComputedStyle(document.getElementById('mqcc-item-var-wrap')).display !== 'none';
+      mqccPvNorm(c.id, c.answer, draft, {
+        how, adj: document.getElementById('mqcc-item-adj').checked,
+        install: instOn ? { price: document.getElementById('mqcc-item-inst-price').value, how: document.getElementById('mqcc-item-inst-how').value, min: document.getElementById('mqcc-item-inst-min').value } : null,
+        variants: varOn ? mqccVarDraft : [],
+      });
+      mqccPvDraftItem = draft;
+    }
     const saved = mqccPvItems(c.id);
     const i = saved.findIndex(x => x.id === draft.id);
     const items = i >= 0 ? saved.map(x => (x.id === draft.id ? { ...x, ...draft, groupName: x.groupName, groupOrder: x.groupOrder } : x)) : saved.concat([draft]);
@@ -7195,6 +7488,26 @@ window.mqphGoToWizard = function() {
       if (top < pane.scrollTop || top + hiEl.offsetHeight > pane.scrollTop + pane.clientHeight) pane.scrollTop = Math.max(0, top - 40);
     }
   }
+  function mqccPvSiSelect(key, isInst) {
+    return `<select onchange="mqccPvSi('${key}',this.value)" style="font:inherit;font-size:11px;font-weight:600;padding:3px 6px;border:1px solid #d1d5db;border-radius:5px;background:#fff;width:auto"><option value="supply" ${isInst ? '' : 'selected'}>Supply only</option><option value="install" ${isInst ? 'selected' : ''}>Supply + install</option></select>`;
+  }
+  window.mqccPvSi = function(key, v) { mqccPv.si[key] = v; mqccPvRefresh(); };
+  function mqccPvFindAny(id) {
+    const hit = mqccPvFind(id);
+    if (hit) return hit.it;
+    // the option being edited in the window isn't saved yet
+    return mqccPvDraftItem && mqccPvDraftItem.id === id ? mqccPvDraftItem : null;
+  }
+  window.mqccPvVar = function(id, vid) { mqccPv.vcur[id] = vid; mqccPvRefresh(); };
+  window.mqccPvVarQty = function(id, d) {
+    const it = mqccPvFindAny(id);
+    if (!it || !it.variants || !it.variants.length) return;
+    const k = id + '|' + mqccPvVcur(it);
+    mqccPv.vq[k] = Math.max(0, (mqccPv.vq[k] || 0) + d);
+    mqccPvRefresh();
+  };
+  window.mqccPvInstall = function(on) { mqccPv.install = !!on; mqccPvRefresh(); };
+  let mqccPvDraftItem = null;
   window.mqccPvPickOne = function(cid, id) { mqccPv.one[cid] = id; mqccPvRefresh(); };
   window.mqccPvOneQty = function(cid, d) { const q = mqccPv.oneQty[cid] == null ? 0 : mqccPv.oneQty[cid]; mqccPv.oneQty[cid] = Math.max(0, q + d); mqccPvRefresh(); };
   window.mqccPvQty = function(id, d) { mqccPv.qty[id] = Math.max(0, (mqccPv.qty[id] || 0) + d); mqccPvRefresh(); };
