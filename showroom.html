@@ -740,9 +740,25 @@
         });
       }
 
-      // Specialty Items show in BOTH modes — useful either way, per the
-      // dashboard's Showroom tab.
-      const visibleSpecs = specs.filter(s => !hidden[s.photoKey] && photos[s.photoKey] && itemVisible(s.visibleRooms));
+      const byoOn = k => !!(settings.byoShow || {})[k];
+      {
+        (SHOWROOM_DATA.pricedCustom || []).filter(cat => mode === 'default' || byoOn(cat.id)).forEach(cat => {
+          const visibleItems = cat.items.filter(it => !hidden[it.photoKey] && photos[it.photoKey] && itemVisible(it.visibleRooms));
+          if (!visibleItems.length) return;
+          sections.push({ key: cat.id, html: `<div class="sr-section" id="cc-${cat.id}">
+            <div class="sr-section-header">
+              <div class="sr-section-eyebrow">Options</div>
+              <div class="sr-section-title">${escHtml(settings.names[cat.id] || cat.name)}</div>
+              ${cat.description ? `<div class="sr-section-desc">${escHtml(cat.description)}</div>` : ''}
+            </div>
+            <div class="sr-grid">${visibleItems.map(it => itemCard(it.name, it.photoKey, photos)).join('')}</div>
+          </div>` });
+        });
+      }
+
+      // Specialty Items: always in Default style; in Build My Own only if the
+      // shop turned them on there (hidden by default, Jordan Oct 25).
+      const visibleSpecs = (mode === 'custom' && !byoOn('specialty')) ? [] : specs.filter(s => !hidden[s.photoKey] && photos[s.photoKey] && itemVisible(s.visibleRooms));
       if (visibleSpecs.length) {
         sections.push({ key: 'specialty', html: `<div class="sr-section" id="specialty">
           <div class="sr-section-header">
@@ -783,7 +799,10 @@
 
     function renderShowroom() {
       const settings = SHOWROOM_DATA.catSettings || { order: [], names: {}, hidden: {} };
-      const visible = buildShowroomSections().filter(s => !settings.hidden[s.key]);
+      // In Build My Own, Specialty Items / custom pricing categories were
+      // already chosen by byoShow in buildShowroomSections.
+      const byoKey = k => k === 'specialty' || /^cc_/.test(k);
+      const visible = buildShowroomSections().filter(s => (settings.mode === 'custom' && byoKey(s.key)) || !settings.hidden[s.key]);
       const order = Array.isArray(settings.order) ? settings.order : [];
       // Stable sort: anything not in the saved order keeps its original
       // relative position, appended after everything that IS ordered.
@@ -881,6 +900,10 @@
           order:  Array.isArray(raw.order) ? raw.order : [],
           names:  (raw.names  && typeof raw.names  === 'object') ? raw.names  : {},
           hidden: (raw.hidden && typeof raw.hidden === 'object') ? raw.hidden : {},
+          // Build My Own only: Specialty Items and custom pricing categories
+          // are hidden unless the shop turned them on (see dashboard
+          // mqShowroomToggleHideCat). Default style uses `hidden` instead.
+          byoShow: (raw.byoShow && typeof raw.byoShow === 'object') ? raw.byoShow : {},
           mode:   raw.mode === 'custom' ? 'custom' : 'default',
           // Build-My-Own-only subheading override, set on the dashboard's
           // Showroom tab. Blank/missing means "use the built-in default
@@ -1093,7 +1116,30 @@
         }));
       });
 
-      SHOWROOM_DATA = { photos, hidden, categoryItems, specs, categoryRooms, allRoomIds, roomTypes, customCategories, catSettings };
+      // Custom pricing categories (dashboard Pricing tab → ✨ Custom pricing
+      // categories) are priced items like doors or materials, so they show
+      // here the same way: one card per option (and per variant), photo key
+      // li_<category id>_<name>[_v<variant id>], hidden/project-type rules
+      // from My Products. Pro-only categories/options stay off the public
+      // showroom.
+      let pricedCustom = [];
+      try { pricedCustom = shop['Custom categories'] ? JSON.parse(shop['Custom categories']) : []; } catch(e) { pricedCustom = []; }
+      pricedCustom = (Array.isArray(pricedCustom) ? pricedCustom : [])
+        .filter(c => c && typeof c.id === 'string' && /^cc_[a-z0-9]+$/i.test(c.id) && !c.proOnly)
+        .map(c => ({
+          id: c.id, name: String(c.name || ''), description: String(c.description || ''),
+          items: lineItems.filter(r => r.fields['Category'] === c.id && r.fields['Active'] !== false).flatMap(r => {
+            let cfg = {}; try { cfg = JSON.parse(r.fields['Custom pricing'] || '{}') || {}; } catch(e) { cfg = {}; }
+            if (cfg.proOnly) return [];
+            const name = (r.fields['Name'] || '').trim();
+            const key = photoKeyFor(c.id, name);
+            const visibleRooms = effectiveVisibleRooms(parseVisibleRooms(r.fields), c.id, categoryRooms, allRoomIds);
+            const vars = Array.isArray(cfg.variants) ? cfg.variants.filter(v => v && v.id && String(v.label || '').trim()) : [];
+            return [{ name, photoKey: key, visibleRooms }].concat(vars.map(v => ({ name: `${name} — ${String(v.label).trim()}`, photoKey: key + '_v' + v.id, visibleRooms })));
+          }),
+        }));
+
+      SHOWROOM_DATA = { photos, hidden, categoryItems, specs, categoryRooms, allRoomIds, roomTypes, customCategories, catSettings, pricedCustom };
       renderFilterBar();
       renderShowroom();
     }
