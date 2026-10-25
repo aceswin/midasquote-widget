@@ -3091,11 +3091,13 @@
   // (another option's count, `src`) | base_lf | upper_lf | all_lf |
   // island_lf | crown_lf | valance_lf | drawers | tallcabs | pct (% of the
   // cabinet estimate) | pct_all (% of the cabinet estimate incl. extras) |
-  // pct_cc (% of one custom category, `pctCc`). An option or a whole
-  // category can be tied to the customer's other picks (`tie` =
-  // {cat:'door'|'material'|'drawer'|'hinge'|'crown'|'valance', names:[…]}),
-  // like crown is tied to door styles. A category's `after` says which
-  // built-in step it follows (see MQ_CC_ANCHORS).
+  // pct_cc (% of one custom category, `pctCc`). An option can be linked to
+  // the customer's other picks (`tie` = {cat:'door'|'material'|'drawer'|
+  // 'hinge'|'crown'|'valance', names:[…]}), like crown is linked to door
+  // styles: it only shows while one of those is picked, and it gets picked
+  // automatically the moment one of them is chosen (Oct 25 — option level
+  // only, per Jordan). A category's `after` says which built-in step it
+  // follows (see MQ_CC_ANCHORS).
   const MQ_CC_HOWS = ['flat','each','opt','base_lf','upper_lf','all_lf','island_lf','crown_lf','valance_lf','drawers','tallcabs','pct','pct_all','pct_cc'];
   const MQ_CC_PCT = ['pct','pct_all','pct_cc'];
   const MQ_CC_ANCHORS = ['measuring','si','selections','measurements','drawers','tallcabs','trim','specialty','countertops'];
@@ -3151,7 +3153,6 @@
           answer: c.answer === 'one' ? 'one' : 'any',
           required: !!c.required,
           showIf: typeof c.showIf === 'string' ? c.showIf : '',
-          tie: mqCcTieClean(c.tie),
           after: MQ_CC_ANCHORS.includes(c.after) ? c.after : 'specialty',
           items,
         };
@@ -3221,7 +3222,6 @@
   }
   function mqCcCatOn(p, cat, room, depth) {
     if (cat.showIf && mqCcFind(cat.showIf) && !mqCcPickedLive(p, cat.showIf, room, (depth || 0) + 1)) return false;
-    if (!mqCcTieOk(p, cat.tie)) return false;
     return cat.items.some(it => mqCcRoomOk(it, room) && mqCcTieOk(p, it.tie));
   }
 
@@ -3378,6 +3378,13 @@
     mqCcPlace(p);
     const room = mqCcRoom(p);
     let changed = false, reshow = false;
+    // What each linked option last saw, so it's only auto-picked when the
+    // customer's other pick actually changes. While the multi-project cart
+    // puts a saved project back, just remember the state (`adopt`) so their
+    // own earlier choices aren't overwritten.
+    window._mqCcTieState = window._mqCcTieState || {};
+    const tieState = window._mqCcTieState[p] = window._mqCcTieState[p] || {};
+    const adopt = !!window._mqCcRestoring;
     cats.forEach(cat => {
       const sec = document.getElementById(`mq-${p}-cc-${cat.id}-sec`);
       if (!sec) return;
@@ -3403,6 +3410,19 @@
           const btn = next && next.querySelector('.mq-vpicker-select-btn');
           if (btn) window.mqPickVisual(selId, btn);
         }
+        // Like crown with doors: when the customer's pick (e.g. Maple doors)
+        // makes a linked option available, choose it for them. Only when
+        // that set changes, so they can still pick something else after.
+        const linked = cat.items.filter(i => i.tie && mqCcRoomOk(i, room) && mqCcTieOk(p, i.tie)).map(i => i.id);
+        const sig = linked.join(',');
+        if (tieState[cat.id] !== sig) {
+          tieState[cat.id] = sig;
+          if (!adopt && linked.length && sel && sel.value !== linked[0] && window.mqPickVisual) {
+            const chip = document.querySelector(`[data-vpicker-for="${selId}"][data-value="${linked[0]}"]`);
+            const btn = chip && chip.querySelector('.mq-vpicker-select-btn');
+            if (btn) window.mqPickVisual(selId, btn);
+          }
+        }
         const it = cat.items.find(i => i.id === (sel && sel.value));
         const qw = document.getElementById(`mq-${p}-ccqw-${cat.id}`);
         if (qw) qw.style.display = (it && it.how === 'each') ? 'flex' : 'none';
@@ -3410,6 +3430,20 @@
         if (qu) qu.textContent = (it && it.unit) || '';
         return;
       }
+      cat.items.forEach(it => {
+        if (!it.tie) return;
+        // Linked option: added for them when its pick appears, taken off
+        // again when it goes away.
+        const ok = mqCcRoomOk(it, room) && mqCcTieOk(p, it.tie);
+        const prev = tieState['i' + it.id];
+        tieState['i' + it.id] = ok;
+        if (adopt || prev === ok || (!ok && prev === undefined)) return;
+        const el = it.how === 'each' ? document.getElementById(`mq-${p}-ccq-${it.id}`) : document.getElementById(`mq-${p}-cck-${it.id}`);
+        if (!el) return;
+        if (it.how === 'each') { if (ok && !(parseFloat(el.value) > 0)) el.value = '1'; else if (!ok) el.value = '0'; else return; }
+        else { if (el.checked === ok) return; el.checked = ok; }
+        el.dispatchEvent(new Event(it.how === 'each' ? 'input' : 'change', { bubbles: true }));
+      });
       cat.items.forEach(it => {
         const card = document.getElementById(`mq-${p}-ccc-${it.id}`);
         if (!card) return;
@@ -3439,6 +3473,7 @@
 
   // Back to a blank state (project type change, Reset quote).
   window.mqCcReset = function(p) {
+    if (window._mqCcTieState) window._mqCcTieState[p] = {}; // linked options re-pick for the fresh form
     (window._mqCustomCats || []).forEach(cat => {
       if (cat.answer === 'one') {
         const first = document.querySelector(`[data-vpicker-for="mq-${p}-cc-${cat.id}"] .mq-vpicker-select-btn`);
@@ -6025,6 +6060,7 @@
     // reset) form for `prefix`.
     function mqRestoreFormState(prefix, snapshot) {
       if (!snapshot) return;
+      window._mqCcRestoring = true; // custom pricing: don't auto-pick linked options over restored answers
       // Split upper/base first — it changes which fields are even visible
       // before the rest of the values get restored into them.
       if (!!diffOn[prefix] !== !!snapshot.diffOn) window.mqTogDiff(prefix);
@@ -6132,6 +6168,8 @@
       mqRefreshAllPickerVisibility(prefix);
       mqRefreshBsFt(prefix);
       if (window.mqRefreshDrawerCount) window.mqRefreshDrawerCount(prefix);
+      if (window.mqCcSync) window.mqCcSync(prefix);
+      window._mqCcRestoring = false;
     }
     // ===================== end snapshot / restore =====================
 
