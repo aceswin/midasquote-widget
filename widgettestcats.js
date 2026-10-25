@@ -3098,7 +3098,7 @@
   // automatically the moment one of them is chosen (Oct 25 — option level
   // only, per Jordan). A category's `after` says which built-in step it
   // follows (see MQ_CC_ANCHORS).
-  const MQ_CC_HOWS = ['flat','each','opt','base_lf','upper_lf','all_lf','island_lf','crown_lf','valance_lf','drawers','tallcabs','pct','pct_all','pct_cc'];
+  const MQ_CC_HOWS = ['flat','each','sqft','lft','opt','base_lf','upper_lf','all_lf','island_lf','crown_lf','valance_lf','drawers','tallcabs','pct','pct_all','pct_cc'];
   const MQ_CC_PCT = ['pct','pct_all','pct_cc'];
   const MQ_CC_ANCHORS = ['measuring','si','selections','measurements','drawers','tallcabs','trim','specialty','countertops'];
   function mqCcTieClean(t) {
@@ -3129,11 +3129,15 @@
               name: (f['Name'] || '').trim(),
               desc: f['Description'] || '',
               rate: parseFloat(f['Rate']) || 0,
-              how: MQ_CC_HOWS.includes(cfg.how) ? cfg.how : 'flat',
+              // sqft / lft = square or linear feet the customer enters (like
+              // specialty items): priced exactly like 'each' with a fixed unit,
+              // plus the measuring calculator next to the box (`entry`).
+              how: MQ_CC_HOWS.includes(cfg.how) ? (cfg.how === 'sqft' || cfg.how === 'lft' ? 'each' : cfg.how) : 'flat',
+              entry: cfg.how === 'sqft' ? 'sqft' : (cfg.how === 'lft' ? 'linear' : ''),
               src: typeof cfg.src === 'string' ? cfg.src : '',
               pctCc: typeof cfg.pctCc === 'string' ? cfg.pctCc : '',
               tie: mqCcTieClean(cfg.tie),
-              unit: String(cfg.unit || '').trim(),
+              unit: cfg.how === 'sqft' ? 'sq ft' : (cfg.how === 'lft' ? 'lin ft' : String(cfg.unit || '').trim()),
               min: parseFloat(cfg.min) || 0,
               showIf: typeof cfg.showIf === 'string' ? cfg.showIf : '',
               proOnly: !!cfg.proOnly,
@@ -3243,6 +3247,7 @@
           <button class="mq-qty-btn" type="button" aria-label="Less" onclick="event.stopPropagation();mqCcAdj('${p}','${it.id}',-1)">−</button>
           <input type="text" inputmode="decimal" id="mq-${p}-ccq-${it.id}" value="0" onclick="event.stopPropagation();this.select()" style="width:44px;text-align:center;font-size:16px;font-weight:500;border:1px solid #d1d5db;border-radius:4px;padding:2px 4px;font-family:inherit;box-shadow:none"/>
           <button class="mq-qty-btn" type="button" aria-label="More" onclick="event.stopPropagation();mqCcAdj('${p}','${it.id}',1)">+</button>
+          ${it.entry ? calcBtn(`mq-${p}-ccq-${it.id}`, it.entry, it.name) : ''}
         </div>
         <span style="font-size:11px;font-weight:600;color:#6b7280">${mqCcEsc(it.unit || 'quantity')}</span>`
       : `<input type="checkbox" id="mq-${p}-cck-${it.id}" style="display:none"/>
@@ -3279,12 +3284,14 @@
         body = `${pickerRow(`mq-${p}-cc-${cat.id}`, list, null, cat.id)}
           <select id="mq-${p}-cc-${cat.id}" style="display:none">${list.map(o => `<option value="${o.value}">${mqCcEsc(o.label)}</option>`).join('')}</select>
           <div id="mq-${p}-ccqw-${cat.id}" style="display:none;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px">
-            <label class="mq-label" style="margin:0">How many?</label>
+            <label class="mq-label" id="mq-${p}-ccql-${cat.id}" style="margin:0">How many?</label>
             <div class="mq-qty-ctrl">
               <button class="mq-qty-btn" type="button" aria-label="Less" onclick="event.stopPropagation();mqCcAdj('${p}','${cat.id}',-1)">−</button>
-              <input type="text" inputmode="decimal" id="mq-${p}-ccq-${cat.id}" value="1" onclick="event.stopPropagation();this.select()" style="width:44px;text-align:center;font-size:16px;font-weight:500;border:1px solid #d1d5db;border-radius:4px;padding:2px 4px;font-family:inherit;box-shadow:none"/>
+              <input type="text" inputmode="decimal" id="mq-${p}-ccq-${cat.id}" value="0" onclick="event.stopPropagation();this.select()" style="width:44px;text-align:center;font-size:16px;font-weight:500;border:1px solid #d1d5db;border-radius:4px;padding:2px 4px;font-family:inherit;box-shadow:none"/>
               <button class="mq-qty-btn" type="button" aria-label="More" onclick="event.stopPropagation();mqCcAdj('${p}','${cat.id}',1)">+</button>
             </div>
+            ${cat.items.some(i => i.entry === 'sqft') ? `<span id="mq-${p}-ccqc-sqft-${cat.id}" style="display:none">${calcBtn(`mq-${p}-ccq-${cat.id}`, 'sqft', cat.name)}</span>` : ''}
+            ${cat.items.some(i => i.entry === 'linear') ? `<span id="mq-${p}-ccqc-linear-${cat.id}" style="display:none">${calcBtn(`mq-${p}-ccq-${cat.id}`, 'linear', cat.name)}</span>` : ''}
             <span id="mq-${p}-ccqu-${cat.id}" style="font-size:12px;font-weight:600;color:#6b7280"></span>
           </div>`;
       } else {
@@ -3428,19 +3435,23 @@
         if (qw) qw.style.display = (it && it.how === 'each') ? 'flex' : 'none';
         const qu = document.getElementById(`mq-${p}-ccqu-${cat.id}`);
         if (qu) qu.textContent = (it && it.unit) || '';
+        const ql = document.getElementById(`mq-${p}-ccql-${cat.id}`);
+        if (ql) ql.textContent = it && it.entry === 'sqft' ? 'How many square feet?' : (it && it.entry === 'linear' ? 'How many linear feet?' : 'How many?');
+        ['sqft', 'linear'].forEach(m => { const c = document.getElementById(`mq-${p}-ccqc-${m}-${cat.id}`); if (c) c.style.display = (it && it.entry === m) ? 'inline-flex' : 'none'; });
         return;
       }
       cat.items.forEach(it => {
         if (!it.tie) return;
         // Linked option: added for them when its pick appears, taken off
-        // again when it goes away.
+        // again when it goes away. Per-unit ones just appear with a count
+        // of 0 (the customer enters how many) and are cleared when it goes.
         const ok = mqCcRoomOk(it, room) && mqCcTieOk(p, it.tie);
         const prev = tieState['i' + it.id];
         tieState['i' + it.id] = ok;
         if (adopt || prev === ok || (!ok && prev === undefined)) return;
         const el = it.how === 'each' ? document.getElementById(`mq-${p}-ccq-${it.id}`) : document.getElementById(`mq-${p}-cck-${it.id}`);
         if (!el) return;
-        if (it.how === 'each') { if (ok && !(parseFloat(el.value) > 0)) el.value = '1'; else if (!ok) el.value = '0'; else return; }
+        if (it.how === 'each') { if (ok || !(parseFloat(el.value) > 0)) return; el.value = '0'; }
         else { if (el.checked === ok) return; el.checked = ok; }
         el.dispatchEvent(new Event(it.how === 'each' ? 'input' : 'change', { bubbles: true }));
       });
@@ -3479,7 +3490,7 @@
         const first = document.querySelector(`[data-vpicker-for="mq-${p}-cc-${cat.id}"] .mq-vpicker-select-btn`);
         if (first && window.mqPickVisual) window.mqPickVisual(`mq-${p}-cc-${cat.id}`, first);
         const q = document.getElementById(`mq-${p}-ccq-${cat.id}`);
-        if (q) q.value = '1';
+        if (q) q.value = '0';
         return;
       }
       cat.items.forEach(it => {

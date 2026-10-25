@@ -6318,7 +6318,9 @@ window.mqphGoToWizard = function() {
   // (`after`).
   const MQCC_HOW = {
     flat:       { label: 'Flat price', short: 'flat', group: 'Simple' },
-    each:       { label: 'A number the customer enters', short: 'each', group: 'Simple', per: 'unit' },
+    each:       { label: 'Per custom unit — customer enters how many (hours, panels…)', short: 'each', group: 'Simple', per: 'unit' },
+    sqft:       { label: 'Per sq ft — customer enters the square feet', short: 'per sq ft', group: 'Simple', per: 'sq ft', word: 'sq ft' },
+    lft:        { label: 'Per linear ft — customer enters the linear feet', short: 'per lin ft', group: 'Simple', per: 'lin ft', word: 'lin ft' },
     opt:        { label: 'Another option’s number', short: '', group: 'From the quote' },
     base_lf:    { label: 'Base cabinet lin ft', short: 'per base lin ft', group: 'From the quote', per: 'lin ft', word: 'ft of base cabinets' },
     upper_lf:   { label: 'Upper cabinet lin ft', short: 'per upper lin ft', group: 'From the quote', per: 'lin ft', word: 'ft of upper cabinets' },
@@ -6334,7 +6336,7 @@ window.mqphGoToWizard = function() {
   };
   const MQCC_PCT = ['pct', 'pct_all', 'pct_cc'];
   // Hows that give a count another option can be priced on.
-  const MQCC_COUNTS = ['each', 'opt', 'base_lf', 'upper_lf', 'all_lf', 'island_lf', 'crown_lf', 'valance_lf', 'drawers', 'tallcabs'];
+  const MQCC_COUNTS = ['each', 'sqft', 'lft', 'opt', 'base_lf', 'upper_lf', 'all_lf', 'island_lf', 'crown_lf', 'valance_lf', 'drawers', 'tallcabs'];
   const MQCC_PLACES = [
     ['measuring', 'After “How to measure”'], ['si', 'After “Supply + install”'], ['selections', 'After cabinet materials & doors'],
     ['measurements', 'After cabinet measurements'], ['drawers', 'After drawers'], ['tallcabs', 'After tall cabinets'],
@@ -6926,7 +6928,7 @@ window.mqphGoToWizard = function() {
     return mqccItems(cid).filter(r => r.fields['Active'] !== false).map(r => {
       const cfg = mqccCfg(r);
       return { id: r.id, name: r.fields['Name'] || '', desc: r.fields['Description'] || '', rate: Number(r.fields['Rate']) || 0,
-        how: MQCC_HOW[cfg.how] ? cfg.how : 'flat', unit: cfg.unit || '', min: Number(cfg.min) || 0, showIf: cfg.showIf || '', proOnly: !!cfg.proOnly,
+        how: (cfg.how === 'sqft' || cfg.how === 'lft') ? 'each' : (MQCC_HOW[cfg.how] ? cfg.how : 'flat'), unit: cfg.how === 'sqft' ? 'sq ft' : (cfg.how === 'lft' ? 'lin ft' : (cfg.unit || '')), min: Number(cfg.min) || 0, showIf: cfg.showIf || '', proOnly: !!cfg.proOnly,
         src: cfg.src || '', pctCc: cfg.pctCc || '', tie: cfg.tie || null,
         groupName: (r.fields['Group name'] || '').trim(), groupOrder: r.fields['Group sort order'] || 0 };
     });
@@ -6968,7 +6970,7 @@ window.mqphGoToWizard = function() {
   // Same math as widget.js mqCcQty/mqCcCost, on the sample job.
   function mqccPvQty(c, it, depth) {
     switch (it.how) {
-      case 'each': return c.answer === 'one' ? (mqccPv.oneQty[c.id] == null ? 1 : mqccPv.oneQty[c.id]) : (mqccPv.qty[it.id] || 0);
+      case 'each': return c.answer === 'one' ? (mqccPv.oneQty[c.id] == null ? 0 : mqccPv.oneQty[c.id]) : (mqccPv.qty[it.id] || 0);
       case 'base_lf': return mqccPv.base;
       case 'upper_lf': return mqccPv.upper;
       case 'all_lf': return mqccPv.base + mqccPv.upper;
@@ -7058,7 +7060,7 @@ window.mqphGoToWizard = function() {
       }).join('')}</div>`;
       const cur = items.find(i => i.id === val);
       if (cur && cur.how === 'each') {
-        const q = mqccPv.oneQty[c.id] == null ? 1 : mqccPv.oneQty[c.id];
+        const q = mqccPv.oneQty[c.id] == null ? 0 : mqccPv.oneQty[c.id];
         body += `<div style="display:flex;align-items:center;gap:10px;margin-top:10px;font-size:13px;font-weight:600;color:#374151">How many? ${mqccPvStepper(`mqccPvOneQty('${c.id}',-1)`, `mqccPvOneQty('${c.id}',1)`, q, cur.unit)}</div>`;
       }
     } else {
@@ -7175,7 +7177,7 @@ window.mqphGoToWizard = function() {
     const draft = {
       id: ed.id || '__draft__', name: document.getElementById('mqcc-item-name').value.trim() || 'New option',
       desc: document.getElementById('mqcc-item-desc').value.trim(), rate: parseFloat(document.getElementById('mqcc-item-rate').value) || 0,
-      how, unit: document.getElementById('mqcc-item-unit').value.trim(), min: parseFloat(document.getElementById('mqcc-item-min').value) || 0,
+      how: (how === 'sqft' || how === 'lft') ? 'each' : how, unit: how === 'sqft' ? 'sq ft' : (how === 'lft' ? 'lin ft' : document.getElementById('mqcc-item-unit').value.trim()), min: parseFloat(document.getElementById('mqcc-item-min').value) || 0,
       showIf: c.answer === 'any' ? (document.getElementById('mqcc-item-showif').value || '') : '',
       proOnly: document.getElementById('mqcc-item-pro').checked,
       src: how === 'opt' ? document.getElementById('mqcc-item-src').value : '', pctCc: how === 'pct_cc' ? document.getElementById('mqcc-item-pctcc').value : '',
@@ -7194,7 +7196,7 @@ window.mqphGoToWizard = function() {
     }
   }
   window.mqccPvPickOne = function(cid, id) { mqccPv.one[cid] = id; mqccPvRefresh(); };
-  window.mqccPvOneQty = function(cid, d) { const q = mqccPv.oneQty[cid] == null ? 1 : mqccPv.oneQty[cid]; mqccPv.oneQty[cid] = Math.max(0, q + d); mqccPvRefresh(); };
+  window.mqccPvOneQty = function(cid, d) { const q = mqccPv.oneQty[cid] == null ? 0 : mqccPv.oneQty[cid]; mqccPv.oneQty[cid] = Math.max(0, q + d); mqccPvRefresh(); };
   window.mqccPvQty = function(id, d) { mqccPv.qty[id] = Math.max(0, (mqccPv.qty[id] || 0) + d); mqccPvRefresh(); };
   window.mqccPvToggle = function(id) { mqccPv.on[id] = !mqccPv.on[id]; mqccPvRefresh(); };
   window.mqccPvSample = function(k, v) {
@@ -7221,10 +7223,10 @@ window.mqphGoToWizard = function() {
       const [cost, note] = withMin(base * rate / 100);
       text = `On ${what} → ${cost < 0 ? 'takes off' : 'adds'} <strong>${mqccPvMoney(Math.abs(cost))}</strong>${note}`;
     } else {
-      const sample = { each: 3, opt: 3, base_lf: mqccPv.base, upper_lf: mqccPv.upper, all_lf: mqccPv.base + mqccPv.upper, island_lf: mqccPv.island, crown_lf: mqccPv.crown, valance_lf: mqccPv.valance, drawers: mqccPv.drawers, tallcabs: mqccPv.tall }[how] || 0;
+      const sample = { each: 3, sqft: 30, lft: 12, opt: 3, base_lf: mqccPv.base, upper_lf: mqccPv.upper, all_lf: mqccPv.base + mqccPv.upper, island_lf: mqccPv.island, crown_lf: mqccPv.crown, valance_lf: mqccPv.valance, drawers: mqccPv.drawers, tallcabs: mqccPv.tall }[how] || 0;
       const [cost, note] = withMin(rate * sample);
       const what = (how === 'each' || how === 'opt') ? `${sample} ${mqccEsc(mqccPerWord(how))}` : `${sample} ${(MQCC_HOW[how] && MQCC_HOW[how].word) || ''}`;
-      text = `${how === 'each' ? 'A customer who enters' : 'On a job with'} ${what} → <strong>${mqccPvMoney(cost)}</strong>${note}`;
+      text = `${['each', 'sqft', 'lft'].includes(how) ? 'A customer who enters' : 'On a job with'} ${what} → <strong>${mqccPvMoney(cost)}</strong>${note}`;
     }
     el.innerHTML = '🧮 ' + text;
     el.style.display = 'block';
