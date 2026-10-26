@@ -1981,7 +1981,7 @@ window.logoutMember = async function () {
                   </label>
                   <div style="font-size:12px;color:#6b7280;line-height:1.5;margin-top:8px">That's all here. It gets its own section in Project types (cover photos, "How to measure", price adjustments), and you give it steps on the Pricing tab.</div>
                   <div style="display:flex;gap:8px;margin-top:10px">
-                    <button type="button" class="mq-btn mq-btn-sm" onclick="mqQtAdd()" style="background:#1a1a1a;color:#fff;border-color:#1a1a1a">Add quote type</button>
+                    <button type="button" class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqQtAdd()">Add quote type</button>
                     <button type="button" class="mq-btn mq-btn-sm" onclick="mqQtShowAdd(false)">Cancel</button>
                   </div>
                 </div>
