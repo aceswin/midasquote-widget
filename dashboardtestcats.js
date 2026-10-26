@@ -2027,7 +2027,7 @@ window.logoutMember = async function () {
               <div id="mq-rooms-list"></div>
               <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px;margin-bottom:1.25rem">
                 <button class="mq-btn mq-btn-sm" onclick="mqAddRoom()">+ Add room</button>
-                <select id="mq-copy-room-select-cab" class="mq-copy-room-select" data-target="cab" onchange="mqCopyRoomInto(this.value,'cab');this.value=''" style="font-size:13px;padding:7px 8px;border:1px solid #d1d5db;border-radius:6px"></select>
+                <button type="button" class="mq-btn mq-btn-sm" onclick="mqCopyRoomPicker('cab')">⧉ Copy an existing project type</button>
                 <select id="mq-restore-room-select" onchange="mqRestoreDefaultRoom(this.value)" style="font-size:13px;padding:7px 8px;border:1px solid #d1d5db;border-radius:6px;display:none">
                   <option value="">↩ Restore a default type…</option>
                 </select>
@@ -2047,7 +2047,7 @@ window.logoutMember = async function () {
               <div id="mq-rooms-list-ct-empty" style="display:none;font-size:12px;color:#9ca3af;padding:4px 0 12px">No countertop project types yet. Add one below if you'd like customers to pick something like "New countertop install" or "Countertop replacement" before they measure — totally optional.</div>
               <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px">
                 <button class="mq-btn mq-btn-sm" onclick="mqAddRoom(true)">+ Add countertop project type</button>
-                <select id="mq-copy-room-select-ct" class="mq-copy-room-select" data-target="ct" onchange="mqCopyRoomInto(this.value,'ct');this.value=''" style="font-size:13px;padding:7px 8px;border:1px solid #d1d5db;border-radius:6px"></select>
+                <button type="button" class="mq-btn mq-btn-sm" onclick="mqCopyRoomPicker('ct')">⧉ Copy an existing project type</button>
                 <select id="mq-restore-room-select-ct" onchange="mqRestoreDefaultRoom(this.value)" style="font-size:13px;padding:7px 8px;border:1px solid #d1d5db;border-radius:6px;display:none">
                   <option value="">↩ Restore a default type…</option>
                 </select>
@@ -5362,21 +5362,42 @@ window.logoutMember = async function () {
   // A default picture the original was only showing automatically is
   // written in, so the copy shows the same pictures wherever it goes.
   function mqRoomGroupOf(r) { return r.forQt ? r.forQt : (r.forCountertops === true ? 'ct' : 'cab'); }
-  function mqFillCopyRoomSelects() {
+  // The picker: every project type the shop has (grouped by section) plus
+  // MidasQuote's defaults, each with its cover photo and description.
+  window.mqCopyRoomPicker = function(target) {
     const rooms = window._mqRooms || [];
     const qts = mqQuoteTypesOf((window._mqShopRecord || {}).fields);
     const esc = mqEscHtml;
-    const groups = [['cab', 'Cabinets'], ['ct', 'Countertops'], ...qts.map(q => [q.id, q.name])];
-    const own = groups.map(([k, label]) => {
-      const list = rooms.filter(r => r.name && mqRoomGroupOf(r) === k);
-      return list.length ? `<optgroup label="Your ${esc(label)} project types">${list.map(r => `<option value="own:${esc(r.id)}">${esc(r.name)}</option>`).join('')}</optgroup>` : '';
-    }).join('');
+    const row = (val, r) => {
+      const cover = (r.coverImage || '').trim() || mqDefaultCoverImageUrlFor(r.id, r.name);
+      return `<button type="button" onclick="document.getElementById('mq-copyroom-overlay').remove();mqCopyRoomInto('${val}','${target}')" style="display:flex;align-items:center;gap:12px;width:100%;max-width:100%;min-width:0;box-sizing:border-box;overflow:hidden;text-align:left;padding:8px;border:1px solid #e5e7eb;border-radius:10px;background:#fff;cursor:pointer;font-family:inherit">
+        <span style="width:56px;height:44px;flex-shrink:0;border-radius:7px;overflow:hidden;background:#f3f4f6;display:flex;align-items:center;justify-content:center;color:#9ca3af">${cover ? `<img src="${esc(cover)}" alt="" style="width:100%;height:100%;object-fit:cover" onerror="this.remove()"/>` : '🖼️'}</span>
+        <span style="flex:1;min-width:0"><span style="display:block;font-size:13.5px;font-weight:600;color:#111">${esc(r.name)}</span><span style="display:block;font-size:12px;color:#6b7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc((r.description || '').trim() || 'No description')}</span></span>
+        <span style="font-size:12px;font-weight:600;color:#1d4ed8;flex-shrink:0">Copy →</span>
+      </button>`;
+    };
+    const groups = [['cab', 'Your Cabinets project types'], ['ct', 'Your Countertops project types'], ...qts.map(q => [q.id, `Your ${q.name} project types`])]
+      .map(([k, label]) => {
+        const list = rooms.filter(r => r.name && mqRoomGroupOf(r) === k);
+        return list.length ? `<div style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#6b7280;margin:14px 0 6px">${esc(label)}</div><div style="display:grid;grid-template-columns:minmax(0,1fr);gap:6px">${list.map(r => row('own:' + r.id, r)).join('')}</div>` : '';
+      }).join('');
     const defs = defaultRoomTypes().concat(defaultCountertopRoomTypes());
-    const defHtml = `<optgroup label="MidasQuote defaults">${defs.map(r => `<option value="def:${esc(r.id)}">${esc(r.name)}</option>`).join('')}</optgroup>`;
-    document.querySelectorAll('.mq-copy-room-select').forEach(sel => {
-      sel.innerHTML = `<option value="">⧉ Copy an existing project type…</option>${own}${defHtml}`;
-    });
-  }
+    const defHtml = `<div style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#6b7280;margin:14px 0 6px">MidasQuote defaults</div><div style="display:grid;grid-template-columns:minmax(0,1fr);gap:6px">${defs.map(r => row('def:' + r.id, r)).join('')}</div>`;
+    document.getElementById('mq-copyroom-overlay')?.remove();
+    const ov = document.createElement('div');
+    ov.id = 'mq-copyroom-overlay';
+    ov.style.cssText = 'position:fixed;inset:0;z-index:100000;background:rgba(17,24,39,.55);display:flex;align-items:center;justify-content:center;padding:20px';
+    ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
+    ov.innerHTML = `<div style="background:#fff;border-radius:16px;width:min(620px,100%);max-height:88vh;display:flex;flex-direction:column;font-family:system-ui,sans-serif;box-shadow:0 24px 60px rgba(0,0,0,.3)">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:18px 20px 12px;border-bottom:1px solid #eef0f3">
+        <div><div style="font-size:17px;font-weight:700;color:#111">Copy an existing project type</div>
+          <div style="font-size:12.5px;color:#6b7280;margin-top:3px">Brings over its description, cover photo and "How to measure" text and pictures. The original isn't changed.</div></div>
+        <button type="button" onclick="document.getElementById('mq-copyroom-overlay').remove()" aria-label="Close" style="background:none;border:0;font-size:24px;line-height:1;cursor:pointer;color:#6b7280">×</button>
+      </div>
+      <div style="overflow-y:auto;overflow-x:hidden;padding:0 20px 18px">${groups}${defHtml}</div>
+    </div>`;
+    document.body.appendChild(ov);
+  };
   window.mqCopyRoomInto = async function(val, target) {
     if (!val) return;
     const [kind, srcId] = [val.slice(0, 3), val.slice(4)];
@@ -6275,7 +6296,7 @@ window.logoutMember = async function () {
             <div style="font-size:12px;color:#9ca3af;padding:4px 0 8px;display:${qtEntries[q.id].length ? 'none' : 'block'}">No project types yet. Add at least one so customers have something to pick.</div>
             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:4px">
               <button class="mq-btn mq-btn-sm" onclick="mqAddRoom('${q.id}')">+ Add project type</button>
-              <select class="mq-copy-room-select" data-target="${q.id}" onchange="mqCopyRoomInto(this.value,'${q.id}');this.value=''" style="font-size:13px;padding:7px 8px;border:1px solid #d1d5db;border-radius:6px"></select>
+              <button type="button" class="mq-btn mq-btn-sm" onclick="mqCopyRoomPicker('${q.id}')">⧉ Copy an existing project type</button>
             </div>
           </div>
         </div>`;
@@ -6284,7 +6305,6 @@ window.logoutMember = async function () {
     }
     mqRoomSecApply();
     mqRefreshRestoreDropdown();
-    mqFillCopyRoomSelects();
   }
 
   // Project types page sections — collapsible, all closed to start (the
