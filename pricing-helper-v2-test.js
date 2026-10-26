@@ -6262,9 +6262,11 @@ window.mqphGoToWizard = function() {
       if (parsed && Array.isArray(parsed.hidden)) hidden = parsed.hidden;
     } catch(e) { /* keep defaults */ }
     return {
-      countertopsOnly: hidden.includes('both') && hidden.includes('cabinets') && !hidden.includes('countertops'),
+      // Business type (Oct 2026): true whenever no built-in cabinet quote is
+      // on -- including a business that only uses its own quote types.
+      countertopsOnly: hidden.includes('both') && hidden.includes('cabinets'),
       // A quote type with the Countertops step still needs countertop pricing.
-      cabinetsOnly: hidden.includes('both') && hidden.includes('countertops') && !hidden.includes('cabinets') && !mqccQts().some(q => q.countertops && q.on !== false),
+      cabinetsOnly: hidden.includes('both') && hidden.includes('countertops') && !mqccQts().some(q => q.countertops && q.on !== false),
     };
   }
 
@@ -6291,6 +6293,14 @@ window.mqphGoToWizard = function() {
     if (customBlock) customBlock.style.display = (countertopsOnly && !mqccQts().length) ? 'none' : '';
     const ctBlock = document.getElementById('mqph-scope-countertop');
     if (ctBlock) ctBlock.style.display = cabinetsOnly ? 'none' : '';
+    // No built-in cabinet quote (Business info): island panels, the handles
+    // tip and the cabinet-side custom steps have nowhere to show either.
+    const islandBlock = document.getElementById('mqph-scope-islandpanel');
+    if (islandBlock) islandBlock.style.display = countertopsOnly ? 'none' : '';
+    const hwNote = document.querySelector('.mq-pricing-hardware-note');
+    if (hwNote) hwNote.style.display = countertopsOnly ? 'none' : '';
+    const cabGroup = document.querySelector('#mqph-scope-custom [data-mqcc-group=""]');
+    if (cabGroup) cabGroup.style.display = countertopsOnly ? 'none' : '';
   }
   window.mqphApplyEstimatorTabScope = mqphApplyEstimatorTabScope;
 
@@ -6584,7 +6594,7 @@ window.mqphGoToWizard = function() {
           const head = `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin:16px 0 6px"><div style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#6b7280">${groupLabel(k)}</div>${k && k !== '__gone' ? `<button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="window._mqccNewCatQt='${k}';mqccOpenCat(null)">+ New step for ${mqccEsc(mqccQtName(k))}</button>` : ''}</div>`;
           if (!list.length && k !== '' && k !== '__gone') return head + `<div style="font-size:12px;color:#9ca3af;margin-bottom:8px">No steps yet — this quote won't show on your widget until it has at least one.</div>`;
           if (!list.length) return '';
-          return head + list.map(c => blockOf(c, cats.indexOf(c))).join('');
+          return `<div data-mqcc-group="${k}">` + head + list.map(c => blockOf(c, cats.indexOf(c))).join('') + `</div>`;
         }).join('')
       : cats.map(blockOf).join('');
 

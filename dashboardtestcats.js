@@ -254,10 +254,10 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       body: `
         <p>Work through the MidasQuote setup tabs in order the first time you set up your shop — each step builds on the one before it, and by the end your widget is ready for real customers.</p>
         <div class="mq-step">
-          <div class="mq-step-head"><span class="mq-step-num">Step 1</span><span class="mq-step-title">Shop info</span></div>
+          <div class="mq-step-head"><span class="mq-step-num">Step 1</span><span class="mq-step-title">Business info</span></div>
           <div class="mq-step-body">
             <p>Your logo, shop name, city, phone number, brand colour, and quote range. This is the foundation everything else is built on top of.</p>
-            <p>Look further in Shop info for on/off toggles to customize your widget even more, such as "display showroom link", "financing available badge", "password protected widget", and more.</p>
+            <p>Look further in Business info for on/off toggles to customize your widget even more, such as "display showroom link", "financing available badge", "password protected widget", and more.</p>
             <p>You can even limit what you offer. Countertops only? No problem. Simply toggle off "cabinets only" and "both" to only offer countertops.</p>
           </div>
         </div>
@@ -346,7 +346,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       `,
       body: `
         <p>This is your at-a-glance summary — how many quotes have come in, and how recently. It's read-only; there's nothing to configure here.</p>
-        <p>If you're just getting started, head to <strong>Shop info</strong> first, then <strong>Project types</strong>, then <strong>Pricing</strong> — that's the order that makes the rest of the dashboard make sense.</p>
+        <p>If you're just getting started, head to <strong>Business info</strong> first, then <strong>Project types</strong>, then <strong>Pricing</strong> — that's the order that makes the rest of the dashboard make sense.</p>
       `
     },
     leads: {
@@ -361,7 +361,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       `
     },
     shop: {
-      title: 'Shop info',
+      title: 'Business info',
       body: `
         <p>The basics that show up at the top of your widget — your logo, shop name, city, and phone number.</p>
         <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
@@ -470,7 +470,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
           <ul style="margin:0;padding-left:1.25rem;line-height:1.8">
             <li>An individual item's own rate — here in Pricing, or in Specialty Items — the actual per-linear-foot, per-square-foot, or flat rate for that one box material, door style, install rate, etc.</li>
             <li>A specific project type's price adjustments (Project Types tab) — nudges Base cabinets, Upper cabinets, Installation, or Total ballpark up or down just for that one project type, like the built-in -5% on Bathroom base cabinets.</li>
-            <li>The widget's overall estimate range (Shop Info → Quote range — low/high) — widens or narrows how far the shown range sits from the calculated price, across every project type at once.</li>
+            <li>The widget's overall estimate range (Business info → Quote range — low/high) — widens or narrows how far the shown range sits from the calculated price, across every project type at once.</li>
           </ul>
         </div>
         <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
@@ -928,7 +928,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
           <br><br>
           Want the bigger picture instead? <strong style="color:#2563eb">📖 Help guide</strong> in the sidebar covers every part of the dashboard in one place, organized by topic — good for a first read-through before you dive in.
           <br><br>
-          Only offer some of what MidasQuote can quote? In Shop Info → <strong>🗂️ Estimator tabs</strong>, you can turn off whichever tabs don't apply to you — a countertops-only shop, for example, can turn off <strong style="color:#2563eb">Full project quote</strong> and <strong style="color:#2563eb">Cabinets only</strong>, so customers only ever see the Countertops tab.
+          Only offer some of what MidasQuote can quote? In Business info → <strong>🗂️ Estimator tabs</strong>, you can turn off whichever tabs don't apply to you — a countertops-only shop, for example, can turn off <strong style="color:#2563eb">Full project quote</strong> and <strong style="color:#2563eb">Cabinets only</strong>, so customers only ever see the Countertops tab.
           <br><br>
           Take your time exploring — there's no rush, and almost everything here autosaves as you go.
           <br><br>
@@ -1590,7 +1590,7 @@ window.logoutMember = async function () {
           </div>
           <div class="mq-sidebar" aria-label="Section pages">
             <div class="mq-nav-item active" data-mq-group="overview" onclick="mqNav('overview',this)">📊 &nbsp; Dashboard</div>
-            <div class="mq-nav-item" data-mq-group="setup" onclick="mqNav('shop',this)"><span class="mq-nav-step">1</span> Shop info</div>
+            <div class="mq-nav-item" data-mq-group="setup" onclick="mqNav('shop',this)"><span class="mq-nav-step">1</span> Business info</div>
             <div class="mq-nav-item" data-mq-group="setup" onclick="mqNav('rooms',this)"><span class="mq-nav-step">2</span> Project types</div>
             <div class="mq-nav-item" data-mq-group="setup" onclick="mqNav('pricing',this)"><span class="mq-nav-step">3</span> Pricing</div>
             <div class="mq-nav-item" data-mq-group="setup" onclick="mqNav('specialty',this)"><span class="mq-nav-step">4</span> Specialty items</div>
@@ -1630,7 +1630,7 @@ window.logoutMember = async function () {
             </div>
             <div class="mq-card">
               <div class="mq-card-title">🔗 Your widget embed code</div>
-              <p style="font-size:13px;color:#6b7280;margin-bottom:8px">Copy and paste this into your website where you want the widget to appear. Whether it shows the Classic or Focused layout is set in Shop Info → 🎛️ Widget layout — changing it there updates this widget instantly, no new code needed.</p>
+              <p style="font-size:13px;color:#6b7280;margin-bottom:8px">Copy and paste this into your website where you want the widget to appear. Whether it shows the Classic or Focused layout is set in Business info → 🎛️ Widget layout — changing it there updates this widget instantly, no new code needed.</p>
               <div class="mq-embed-box" id="mq-embed-preview"><span>${embedCode}</span><button class="mq-copy-btn" id="mq-copy-embed-1">Copy</button></div>
             </div>
           </div>
@@ -1664,19 +1664,28 @@ window.logoutMember = async function () {
           <!-- SHOP INFO -->
           <div class="mq-page" id="mq-page-shop">
             <button class="mq-help-btn" onclick="mqShowHelp('shop')"><span class="mq-help-badge">?</span> Need help?</button>
-            <div class="mq-page-title">Shop info</div>
-            <div class="mq-page-sub">This info appears on your widget and in emails to customers</div>
+            <div class="mq-page-title">Business info</div>
+            <div class="mq-page-sub">What you do, plus the info that appears on your widget and in emails to customers</div>
             ${mqTrainingVideoBlockHTML('shop')}
             <div id="mq-shop-msg"></div>
+
+            <div class="mq-card" id="mq-biz-card">
+              <div class="mq-card-title" style="cursor:default">🧭 What does your business do?</div>
+              <div id="mq-shopsec-biz-body">
+              <div class="mq-hint" style="display:block;margin-bottom:12px">Tick everything you quote. Cabinetry and Countertops turn our built-in quotes (and their pricing sections) on or off. For any other trade, you set up its own quote type.</div>
+              <div id="mq-biz-chips" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+              <div id="mq-biz-trades" style="margin-top:12px"></div>
+              </div>
+            </div>
 
             <div class="mq-card">
               <div class="mq-card-title" onclick="mqToggleShopSection('business')" style="cursor:pointer;user-select:none">
                 <span id="mq-shopsec-business-chevron" style="font-size:11px;color:#6b7280;display:inline-block;transition:transform 0.15s">▶</span>
-                🏢 Business info
+                🏢 Contact &amp; details
               </div>
               <div id="mq-shopsec-business-body" style="display:none">
               <div class="mq-grid2">
-                <div class="mq-field"><label class="mq-label">Shop name</label><input type="text" id="mq-shop-name"/></div>
+                <div class="mq-field"><label class="mq-label">Business name</label><input type="text" id="mq-shop-name"/></div>
                 <div class="mq-field"><label class="mq-label">Phone number</label><input type="tel" id="mq-shop-phone"/></div>
                 <div class="mq-field"><label class="mq-label">City</label><input type="text" id="mq-shop-city"/></div>
                 <div class="mq-field"><label class="mq-label">Website URL</label><input type="url" id="mq-shop-website"/></div>
@@ -2178,7 +2187,7 @@ window.logoutMember = async function () {
                        defaults below are tuned to look right on a plain white page. -->
                   <div style="background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:8px;padding:14px;margin-bottom:1.25rem">
                     <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:2px">🎨 Header &amp; trust bar colors</div>
-                    <div style="font-size:11px;color:#6b7280;margin-bottom:12px">Only matters if you're pasting this onto a page with a dark or unusual background — the defaults already look right on a plain white page. Doesn't touch the widget itself, which has its own colors on the Shop Info tab.</div>
+                    <div style="font-size:11px;color:#6b7280;margin-bottom:12px">Only matters if you're pasting this onto a page with a dark or unusual background — the defaults already look right on a plain white page. Doesn't touch the widget itself, which has its own colors on the Business info tab.</div>
 
                     <div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:8px">Quote page header</div>
                     <div style="display:flex;flex-wrap:wrap;gap:16px;margin-bottom:14px">
@@ -2398,7 +2407,7 @@ window.logoutMember = async function () {
             <div class="mq-card" style="margin-top:1rem">
               <div class="mq-card-title">🔗 Your showroom link</div>
               <p style="font-size:13px;color:#6b7280;margin-bottom:0.75rem">Share this with customers so they can browse your products before getting a quote.</p>
-              <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 12px;margin-bottom:1rem;font-size:12px;color:#1e40af">💡 If <strong>"Show View our products link"</strong> is turned on in your Shop Info tab, this link is automatically included in your widget — no extra setup needed.</div>
+              <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 12px;margin-bottom:1rem;font-size:12px;color:#1e40af">💡 If <strong>"Show View our products link"</strong> is turned on in your Business info tab, this link is automatically included in your widget — no extra setup needed.</div>
               <div class="mq-embed-box"><span id="mq-showroom-link-text"></span><button class="mq-copy-btn" id="mq-showroom-copy-btn">Copy</button></div>
               <button class="mq-btn" style="margin-top:10px" id="mq-showroom-open-btn">Open showroom ↗</button>
             </div>
@@ -2652,7 +2661,7 @@ window.logoutMember = async function () {
                 <label class="mq-label">Your email <span style="color:#dc2626">*</span></label>
                 <div style="display:flex;gap:8px">
                   <input type="email" id="mq-support-email" placeholder="you@example.com" required style="flex:1"/>
-                  <button type="button" class="mq-btn mq-btn-sm" id="mq-support-use-shop-email" onclick="mqUseShopInfoEmail()" style="flex-shrink:0;white-space:nowrap">Use my Shop Info email</button>
+                  <button type="button" class="mq-btn mq-btn-sm" id="mq-support-use-shop-email" onclick="mqUseShopInfoEmail()" style="flex-shrink:0;white-space:nowrap">Use my Business info email</button>
                 </div>
                 <span class="mq-hint">So we know where to send our reply</span>
               </div>
@@ -4025,7 +4034,7 @@ window.logoutMember = async function () {
       emailEl.value = shopEmail;
     } else {
       const statusEl = document.getElementById('mq-support-status');
-      if (statusEl) { statusEl.textContent = "No email found in Shop Info yet — you'll need to type one in."; statusEl.style.color = '#dc2626'; }
+      if (statusEl) { statusEl.textContent = "No email found in Business info yet — you'll need to type one in."; statusEl.style.color = '#dc2626'; }
     }
   };
 
@@ -5074,6 +5083,7 @@ window.logoutMember = async function () {
     // as checkbox options at all, same as the cabinet-only categories.
     if (cat === 'specialty') {
       const { countertopsOnly, cabinetsOnly } = mqComputeTabScope((window._mqShopRecord || {}).fields);
+      if (countertopsOnly && cabinetsOnly) return allRooms.filter(r => r.forQt);
       if (countertopsOnly) return allRooms.filter(r => r.forCountertops || r.forQt);
       if (cabinetsOnly) return allRooms.filter(r => !r.forCountertops);
       return allRooms; // specialty items can go in any quote, the shop's own quote types too
@@ -5101,10 +5111,14 @@ window.logoutMember = async function () {
     } catch(e) { /* keep defaults */ }
     let qtCountertops = false;
     try { const parsed = shopFields && shopFields['Hidden widget tabs'] ? JSON.parse(shopFields['Hidden widget tabs']) : null; qtCountertops = !!(parsed && Array.isArray(parsed.quoteTypes) && parsed.quoteTypes.some(q => q && q.countertops && q.on !== false)); } catch(e) {}
+    // Business type (Oct 2026): "countertopsOnly" now means "no built-in
+    // cabinet quote reaches customers" and "cabinetsOnly" means "no countertop
+    // quote does" -- so a business that only uses its own quote types (a
+    // painter, say) gets BOTH and sees neither side's built-in pricing.
     return {
-      countertopsOnly: hidden.includes('both') && hidden.includes('cabinets') && !hidden.includes('countertops'),
+      countertopsOnly: hidden.includes('both') && hidden.includes('cabinets'),
       // A quote type with the Countertops step still needs countertop pricing.
-      cabinetsOnly: hidden.includes('both') && hidden.includes('countertops') && !hidden.includes('cabinets') && !qtCountertops,
+      cabinetsOnly: hidden.includes('both') && hidden.includes('countertops') && !qtCountertops,
     };
   }
 
@@ -5131,10 +5145,17 @@ window.logoutMember = async function () {
     return `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${MQ_QT_ICONS[key] || MQ_QT_ICONS.grid}</svg>`;
   }
   function mqTabsCfgOf(fields) {
-    const cfg = { hidden: [], applyToPro: false, quoteTypes: [] };
+    const cfg = { hidden: [], applyToPro: false, quoteTypes: [], business: { trades: [], off: [] } };
     try {
       const parsed = fields && fields['Hidden widget tabs'] ? JSON.parse(fields['Hidden widget tabs']) : null;
       if (parsed && Array.isArray(parsed.hidden)) cfg.hidden = parsed.hidden;
+      if (parsed && parsed.business) cfg.business = {
+        trades: Array.isArray(parsed.business.trades) ? parsed.business.trades.filter(t => typeof t === 'string') : [],
+        // 'cabinetry' / 'countertops' unticked on Business info -- MidasQuote
+        // Pro hides those built-in tabs too (the Estimator tab switches alone
+        // only hide them in Pro when "Apply to Pro" is ticked).
+        off: Array.isArray(parsed.business.off) ? parsed.business.off.filter(t => t === 'cabinetry' || t === 'countertops') : [],
+      };
       if (parsed && parsed.applyToPro) cfg.applyToPro = true;
       if (parsed && Array.isArray(parsed.quoteTypes)) cfg.quoteTypes = parsed.quoteTypes.filter(q => q && /^qt_[a-z0-9]+$/i.test(String(q.id || '')));
     } catch(e) { /* keep defaults */ }
@@ -5148,7 +5169,13 @@ window.logoutMember = async function () {
     const shopRec = window._mqShopRecord;
     if (!shopRec) throw new Error('no shop');
     const cfg = Object.assign(mqTabsCfgOf(shopRec.fields), changes || {});
-    const payload = JSON.stringify({ hidden: cfg.hidden, applyToPro: !!cfg.applyToPro, quoteTypes: cfg.quoteTypes });
+    const out = { hidden: cfg.hidden, applyToPro: !!cfg.applyToPro, quoteTypes: cfg.quoteTypes };
+    // Business type (Business info): the extra trades, plus which of
+    // Cabinetry / Countertops the business said it doesn't do (the ticks
+    // themselves are read straight off the built-in tabs).
+    const bz = cfg.business || {};
+    if ((bz.trades && bz.trades.length) || (bz.off && bz.off.length)) out.business = { trades: bz.trades || [], off: bz.off || [] };
+    const payload = JSON.stringify(out);
     await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Hidden widget tabs': payload });
     shopRec.fields['Hidden widget tabs'] = payload;
     return cfg;
@@ -6286,7 +6313,7 @@ window.logoutMember = async function () {
       wrap.insertAdjacentHTML('beforebegin', qts.map(q => {
         const steps = cats.filter(c => c.qt === q.id);
         const hasSomething = steps.length || q.countertops || mqQtHasSpecialty(q.id);
-        const state = q.on === false ? 'Hidden (turned off on Shop Info)' : (q.proOnly ? 'MidasQuote Pro only' : (hasSomething ? 'Showing on your widget' : 'Not showing yet — add a priced step, a specialty item or countertops'));
+        const state = q.on === false ? 'Hidden (turned off on Business info)' : (q.proOnly ? 'MidasQuote Pro only' : (hasSomething ? 'Showing on your widget' : 'Not showing yet — add a priced step, a specialty item or countertops'));
         return `<div class="mq-card mq-rooms-sec mq-rooms-qt-sec" id="mq-rooms-sec-qt-${q.id}" data-mq-rsec="qt:${q.id}" style="margin-top:1.25rem">
           <button type="button" class="mq-rooms-sec-hdr" onclick="mqRoomSecToggle('qt:${q.id}')" aria-expanded="false">
             <span class="mq-rooms-sec-chev">▶</span>
@@ -6301,8 +6328,8 @@ window.logoutMember = async function () {
               <input type="text" id="mq-qt-sub-${q.id}" maxlength="70" value="${mqEscHtml(q.sub || '')}" placeholder="e.g. New doors and fronts on your existing boxes" onchange="mqQtUpdate('${q.id}', { sub: this.value.trim() }, '✓ Saved.')" style="width:100%;max-width:420px;font-size:13px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit"/>
               <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin:10px 0 6px">Icon</label>
               <div style="display:flex;flex-wrap:wrap;gap:6px">${Object.keys(MQ_QT_ICONS).map(k => `<button type="button" title="${k}" aria-label="Icon: ${k}" onclick="mqQtUpdate('${q.id}', { icon: '${k}' }, '✓ Icon updated.')" style="width:38px;height:38px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;${(q.icon || 'grid') === k ? 'background:#1a1a1a;color:#fff;border:1.5px solid #1a1a1a' : 'background:#fff;color:#374151;border:1px solid #d1d5db'}">${mqQtIconSvg(k, 20)}</button>`).join('')}</div>
-              <div style="font-size:12px;color:#6b7280;margin-top:10px;line-height:1.5">The card photo customers see in Focused layout is the cover image of the first project type below. Name, on/off and Pro only are on <a href="#" onclick="event.preventDefault();mqNav('shop', document.querySelector('.mq-nav-item[onclick*=&quot;mqNav(\'shop\'&quot;]'))" style="color:#1d4ed8">Shop info</a>.</div>
-              <div style="margin-top:10px;padding-top:10px;border-top:1px dashed #e5e7eb">
+              <div style="font-size:12px;color:#6b7280;margin-top:10px;line-height:1.5">The card photo customers see in Focused layout is the cover image of the first project type below. Name, on/off and Pro only are on <a href="#" onclick="event.preventDefault();mqNav('shop', document.querySelector('.mq-nav-item[onclick*=&quot;mqNav(\'shop\'&quot;]'))" style="color:#1d4ed8">Business info</a>.</div>
+              <div style="margin-top:10px;padding-top:10px;border-top:1px dashed #e5e7eb;${mqBizOf(window._mqShopRecord.fields).ct ? '' : 'display:none'}">
                 <div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:6px">Include</div>
                 <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;color:#111;cursor:pointer">
                   <input type="checkbox" ${q.countertops ? 'checked' : ''} onchange="mqQtUpdate('${q.id}', { countertops: this.checked }, this.checked ? '✓ Countertops added to ${mqEscHtml(q.name).replace(/'/g, '&#39;')}.' : '✓ Countertops removed.')" style="width:16px;height:16px;margin-top:1px;flex-shrink:0;accent-color:#1a1a1a"/>
@@ -9202,7 +9229,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           window.mqph2Init(shopRec, window._mqPricingRecord);
         }
       }
-      showMsg('mq-shop-msg', '✓ Shop info saved!');
+      showMsg('mq-shop-msg', '✓ Business info saved!');
     } catch(e) { console.error('mqSaveShop failed:', e); showMsg('mq-shop-msg', 'Error saving — please try again.', 'error'); }
   };
 
@@ -11056,8 +11083,10 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     toggle.classList.toggle('on', willBeOn);
     const hidden = ALL_TAB_IDS.filter(id => !(el('mq-tab-' + id + '-toggle')?.classList.contains('on')));
     const applyToPro = !!(el('mq-tabs-applypro-toggle')?.checked);
+    const bzNow = mqTabsCfgOf(shopRec.fields).business;
+    const bzOff = bzNow.off.filter(o => hidden.includes('both') && hidden.includes(o === 'cabinetry' ? 'cabinets' : 'countertops'));
     try {
-      await mqSaveTabsCfg({ hidden, applyToPro });
+      await mqSaveTabsCfg({ hidden, applyToPro, business: { trades: bzNow.trades, off: bzOff } });
 
       // Auto-preload the 6 default countertop project types the moment
       // Countertops or Both ends up visible, if the shop doesn't have ANY
@@ -11079,6 +11108,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       mqApplyEstimatorTabScopeToRoomsPage();
       mqApplyEstimatorTabScopeToPricing();
       mqApplyEstimatorTabScopeToSpecialty();
+      if (window.mqRenderBizTypes) window.mqRenderBizTypes();
     } catch(e) { toggle.classList.toggle('on', isOn); showMsg('mq-shop-msg', 'Error saving.', 'error'); }
   };
   window.mqToggleWidgetTabsApplyPro = async function(checked) {
@@ -11091,6 +11121,132 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       await mqSaveTabsCfg({ hidden, applyToPro: checked });
       showMsg('mq-shop-msg', checked ? '✓ Hidden tabs now also apply to MidasQuote Pro.' : '✓ MidasQuote Pro will show all tabs again.');
     } catch(e) { if (chk) chk.checked = !checked; showMsg('mq-shop-msg', 'Error saving.', 'error'); }
+  };
+
+  // ── Business info: "What does your business do?" (Oct 2026) ──
+  // Cabinetry / Countertops aren't stored anywhere new -- they're read off
+  // (and written to) the built-in Estimator tabs: Cabinetry = the Cabinets
+  // only or Full project tab is on; Countertops = the Countertops only or
+  // Full project tab is on, or a quote type includes the Countertops step.
+  // Other trades are stored as 'Hidden widget tabs'.business.trades.
+  const MQ_BIZ_TRADES = [
+    { id: 'cabinetry', label: 'Cabinetry', builtIn: true },
+    { id: 'countertops', label: 'Countertops', builtIn: true },
+    { id: 'painting', label: 'Painting', icon: 'brush', qtName: 'Painting' },
+    { id: 'flooring', label: 'Flooring', icon: 'grid', qtName: 'Flooring' },
+    { id: 'closets', label: 'Closets & storage', icon: 'closet', qtName: 'Closets' },
+    { id: 'contracting', label: 'Renovations / contracting', icon: 'home', qtName: 'Renovations' },
+    { id: 'other', label: 'Something else', icon: 'sparkle', qtName: '' },
+  ];
+  function mqBizOf(fields) {
+    const cfg = mqTabsCfgOf(fields);
+    const h = cfg.hidden;
+    return {
+      cab: !(h.includes('both') && h.includes('cabinets')),
+      ct: !(h.includes('both') && h.includes('countertops')) || cfg.quoteTypes.some(q => q && q.countertops),
+      trades: cfg.business.trades,
+      off: cfg.business.off,
+    };
+  }
+  window.mqBizOf = mqBizOf;
+  // Keeps the three Estimator tab switches in step with a saved hidden list.
+  function mqSyncTabToggles(hidden) {
+    ['both','cabinets','countertops'].forEach(id => { const t = el('mq-tab-' + id + '-toggle'); if (t) t.classList.toggle('on', !hidden.includes(id)); });
+  }
+  window.mqRenderBizTypes = function() {
+    const chips = el('mq-biz-chips'), tradesEl = el('mq-biz-trades');
+    const shopRec = window._mqShopRecord;
+    if (!chips || !shopRec) return;
+    const biz = mqBizOf(shopRec.fields);
+    const qts = mqQuoteTypesOf(shopRec.fields);
+    const isOn = t => t.id === 'cabinetry' ? biz.cab : (t.id === 'countertops' ? biz.ct : biz.trades.includes(t.id));
+    chips.innerHTML = MQ_BIZ_TRADES.map(t => {
+      const on = isOn(t);
+      return `<button type="button" class="mq-biz-chip" data-mq-biz="${t.id}" aria-pressed="${on}" onclick="mqBizToggle('${t.id}')" style="display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:600;font-family:inherit;padding:8px 13px;border-radius:999px;cursor:pointer;${on ? 'background:#1a1a1a;color:#fff;border:1.5px solid #1a1a1a' : 'background:#fff;color:#374151;border:1.5px solid #d1d5db'}"><span style="width:15px;height:15px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;line-height:1;${on ? 'background:#d7a42e;color:#1a1a1a' : 'border:1.5px solid #9ca3af'}">${on ? '✓' : ''}</span>${mqEscHtml(t.label)}</button>`;
+    }).join('');
+    if (!tradesEl) return;
+    const rows = MQ_BIZ_TRADES.filter(t => !t.builtIn && isOn(t)).map(t => {
+      const match = t.qtName ? qts.find(q => q.name.toLowerCase().includes(t.qtName.toLowerCase()) || t.qtName.toLowerCase().includes(q.name.toLowerCase())) : null;
+      const right = match
+        ? `<span style="color:#15803d;font-weight:600">✓ "${mqEscHtml(match.name)}" quote set up</span> <a href="#" onclick="event.preventDefault();mqQtOpenInRooms('${match.id}')" style="color:#1d4ed8;font-weight:600;text-decoration:none;margin-left:6px">Project types →</a>`
+        : (t.qtName
+          ? `<button type="button" class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqBizAddQt('${t.id}')">+ Add a ${mqEscHtml(t.qtName)} quote</button>`
+          : `<button type="button" class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqBizAddQt('${t.id}')">+ Add a quote type</button>`);
+      return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;border:1px solid #e5e7eb;border-radius:10px;padding:9px 12px;margin-bottom:8px;font-size:13px">
+        <span style="display:inline-flex;align-items:center;gap:8px;font-weight:600;color:#111"><span style="width:30px;height:30px;border-radius:7px;background:#fbf3df;color:#8a6510;display:inline-flex;align-items:center;justify-content:center">${mqQtIconSvg(t.icon, 17)}</span>${mqEscHtml(t.label)}</span>
+        <span>${right}</span>
+      </div>`;
+    });
+    const nothing = !biz.cab && !biz.ct && !qts.some(q => q.on !== false && !q.proOnly);
+    tradesEl.innerHTML = rows.join('') + (nothing ? `<div style="font-size:12.5px;color:#b45309;margin-top:4px">Your widget has no quotes to show yet. Add a quote type for your trade.</div>` : '')
+      + ((!biz.cab || !biz.ct) ? `<div style="font-size:12px;color:#6b7280;margin-top:6px;line-height:1.5">${!biz.cab && !biz.ct ? 'Built-in cabinet and countertop pricing is hidden' : (!biz.cab ? 'Built-in cabinet pricing is hidden' : 'Built-in countertop pricing is hidden')} on the Pricing, My products and Project types tabs, and the matching built-in quote is hidden in MidasQuote Pro too. Nothing is deleted. Tick it again any time to bring it back.</div>` : '');
+  };
+  window.mqBizToggle = async function(id) {
+    const shopRec = window._mqShopRecord;
+    if (!shopRec) return;
+    const cfg = mqTabsCfgOf(shopRec.fields);
+    const biz = mqBizOf(shopRec.fields);
+    if (id !== 'cabinetry' && id !== 'countertops') {
+      const trades = biz.trades.includes(id) ? biz.trades.filter(t => t !== id) : [...biz.trades, id];
+      try { await mqSaveTabsCfg({ business: { trades, off: biz.off } }); mqRenderBizTypes(); }
+      catch(e) { showMsg('mq-shop-msg', 'Error saving.', 'error'); }
+      return;
+    }
+    const cab = id === 'cabinetry' ? !biz.cab : biz.cab;
+    const ct = id === 'countertops' ? !biz.ct : biz.ct;
+    let hidden = cfg.hidden.slice();
+    const hide = t => { if (!hidden.includes(t)) hidden.push(t); };
+    const show = t => { hidden = hidden.filter(x => x !== t); };
+    if (!cab) { hide('cabinets'); hide('both'); }
+    if (!ct) { hide('countertops'); hide('both'); }
+    if (id === 'cabinetry' && cab) { show('cabinets'); if (ct) show('both'); }
+    if (id === 'countertops' && ct) { show('countertops'); if (cab) show('both'); }
+    hidden = ['both','cabinets','countertops'].filter(t => hidden.includes(t));
+    let quoteTypes = cfg.quoteTypes;
+    if (!ct) quoteTypes = quoteTypes.map(q => q.countertops ? Object.assign({}, q, { countertops: false }) : q);
+    const builtOn = 3 - hidden.length;
+    if (!builtOn && !quoteTypes.some(q => q.on !== false && !q.proOnly)) {
+      showMsg('mq-shop-msg', 'Your widget needs at least one quote to show. Add a quote type for your trade first (tick it above), then untick this.', 'error');
+      return;
+    }
+    const removedCt = !ct && cfg.quoteTypes.some(q => q.countertops);
+    const off = [!cab ? 'cabinetry' : '', !ct ? 'countertops' : ''].filter(Boolean);
+    try {
+      await mqSaveTabsCfg({ hidden, quoteTypes, business: { trades: biz.trades, off } });
+      mqSyncTabToggles(hidden);
+      let seeded = false;
+      if (ct && id === 'countertops') {
+        seeded = await mqEnsureCountertopDefaults(shopRec);
+        if (seeded && window._mqRooms) { window._mqRooms = [...window._mqRooms, ...defaultCountertopRoomTypes()]; }
+      }
+      const label = id === 'cabinetry' ? 'Cabinetry' : 'Countertops';
+      const on = id === 'cabinetry' ? cab : ct;
+      showMsg('mq-shop-msg', on
+        ? `✓ ${label} is back on your widget.` + (seeded ? ' Default countertop project types added.' : '')
+        : `✓ ${label} turned off. Its built-in quote is hidden from your widget.` + (removedCt ? ' The Countertops step was taken out of your quote types too.' : ''));
+      if (window._mqRooms) renderRoomsList();
+      mqRenderQuoteTypes();
+      mqApplyEstimatorTabScopeToRoomsPage();
+      mqApplyEstimatorTabScopeToPricing();
+      mqApplyEstimatorTabScopeToSpecialty();
+    } catch(e) { showMsg('mq-shop-msg', 'Error saving.', 'error'); }
+  };
+  // "+ Add a Painting quote" -- same as the Estimator tabs "+ Add a quote
+  // type" (one starter project type with the same name), with the trade's icon.
+  window.mqBizAddQt = async function(tradeId) {
+    const t = MQ_BIZ_TRADES.find(x => x.id === tradeId);
+    if (!t) return;
+    if (!t.qtName) {
+      mqOpenShopSection('tabs');
+      mqQtShowAdd(true);
+      const box = el('mq-qt-add-open'); if (box) box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+    el('mq-qt-add-name').value = t.qtName;
+    el('mq-qt-add-pro').checked = false;
+    window._mqQtAddIcon = t.icon;
+    await mqQtAdd();
+    window._mqQtAddIcon = '';
   };
 
   // ── Shop Info: "Your own quote types" list ──
@@ -11139,6 +11295,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       </div>`;
     }).join('');
     if (editing) { const inp = el('mq-qt-rename-' + editing); if (inp) { inp.focus(); inp.select(); } }
+    if (window.mqRenderBizTypes) window.mqRenderBizTypes();
   };
   window.mqQtShowAdd = function(open) {
     el('mq-qt-add-open').style.display = open ? 'block' : 'none';
@@ -11156,7 +11313,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const builtIn = ['cabinets + countertops', 'cabinets only', 'countertops only', 'cabinets', 'countertops', 'both'];
     if (qts.some(q => q.name.toLowerCase() === name.toLowerCase()) || builtIn.includes(name.toLowerCase())) { showMsg('mq-shop-msg', `You already have a quote called "${name}".`, 'error'); return; }
     const id = 'qt_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
-    const q = { id, name, on: true, proOnly: el('mq-qt-add-pro').checked, sub: '', icon: 'grid' };
+    const q = { id, name, on: true, proOnly: el('mq-qt-add-pro').checked, sub: '', icon: window._mqQtAddIcon || 'grid' };
     try {
       await mqSaveTabsCfg({ quoteTypes: [...qts, q] });
       let rooms = window._mqRooms;
