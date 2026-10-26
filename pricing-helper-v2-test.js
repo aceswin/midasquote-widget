@@ -6286,7 +6286,8 @@ window.mqphGoToWizard = function() {
     if (tallcabBlock) tallcabBlock.style.display = countertopsOnly ? 'none' : '';
     // Custom pricing categories only show on the Cabinets/Both tabs.
     const customBlock = document.getElementById('mqph-scope-custom');
-    if (customBlock) customBlock.style.display = countertopsOnly ? 'none' : '';
+    // Kept when the shop has its own quote types — their steps live here too.
+    if (customBlock) customBlock.style.display = (countertopsOnly && !mqccQts().length) ? 'none' : '';
     const ctBlock = document.getElementById('mqph-scope-countertop');
     if (ctBlock) ctBlock.style.display = cabinetsOnly ? 'none' : '';
   }
@@ -6342,6 +6343,49 @@ window.mqphGoToWizard = function() {
     ['measurements', 'After cabinet measurements'], ['drawers', 'After drawers'], ['tallcabs', 'After tall cabinets'],
     ['trim', 'After crown moulding / valance'], ['specialty', 'After Details & Selections (default)'], ['countertops', 'At the very end (after countertops on the Both tab)'],
   ];
+  // Every place a step can go, in widget order: each built-in step, with the
+  // custom steps already placed after it listed right under it (and steps
+  // placed after those, and so on) — so a new step can go before/after any
+  // of them. `selfId` (the category being edited) and anything chained after
+  // it are left out, so a step can't be placed after itself.
+  // `qt` = which quote the step is in ('' = Cabinets / Both, or one of the
+  // shop's own quote types). A quote type's steps only line up with its own
+  // steps; they all start right after its "Supply + install" question.
+  function mqccPlaceList(selfId, qt) {
+    const cats = mqccCats().filter(c => (c.qt || '') === (qt || ''));
+    const out = [], seen = new Set();
+    const walk = (key, depth) => cats.filter(c => mqccAfterKey(c) === key && !seen.has(c.id)).forEach(c => {
+      seen.add(c.id);
+      if (c.id === selfId) return; // skip itself and its own chain
+      out.push(['cc:' + c.id, `${'\u00a0\u00a0\u00a0'.repeat(depth)}↳ After ✨ ${c.name}`]);
+      walk('cc:' + c.id, depth + 1);
+    });
+    if (qt) {
+      out.push(['si', 'At the start (right after the project type and measuring guide)']);
+      walk('si', 1);
+      return out;
+    }
+    MQCC_PLACES.forEach(([v, l]) => { out.push([v, l]); walk(v, 1); });
+    return out;
+  }
+  // A quote type's step only knows "at the start" or "after another step".
+  function mqccAfterKey(c) {
+    const a = c.after || 'specialty';
+    if (c.qt && !/^cc:/.test(a)) return 'si';
+    return a;
+  }
+  function mqccPlaceLabel(after, qt) {
+    if (/^cc:/.test(after || '')) { const c = mqccCats().find(x => x.id === after.slice(3)); return 'After ✨ ' + (c ? c.name : 'a removed step'); }
+    if (qt) return 'At the start';
+    return ((MQCC_PLACES.find(x => x[0] === after) || ['', 'After Details & Selections'])[1]).replace(' (default)', '');
+  }
+  // The shop's own quote types (Shop Info → Estimator tabs).
+  function mqccQts() {
+    let cfg = null;
+    try { cfg = JSON.parse(mqccShopFields()['Hidden widget tabs'] || 'null'); } catch(e) { cfg = null; }
+    return (cfg && Array.isArray(cfg.quoteTypes)) ? cfg.quoteTypes.filter(q => q && /^qt_[a-z0-9]+$/i.test(String(q.id || ''))) : [];
+  }
+  function mqccQtName(qt) { const q = mqccQts().find(x => x.id === qt); return q ? q.name : ''; }
   const MQCC_TIE_CATS = [['door', 'Door style'], ['material', 'Box material'], ['drawer', 'Drawer type'], ['hinge', 'Hinges'], ['crown', 'Crown moulding'], ['valance', 'Valance']];
   let mqccEditCat = null;   // category id being edited in the settings modal (null = new)
   let mqccEditItem = null;  // { cid, id } option being edited (id null = new)
@@ -6468,7 +6512,12 @@ window.mqphGoToWizard = function() {
 
   function buildCustomCatsHtml() {
     const cats = mqccCats();
-    const catBlocks = cats.map((c, ci) => {
+    // With quote types: Cabinets steps first, then each quote type's own.
+    const qtsAll = mqccQts();
+    const groupOf = c => c.qt ? (qtsAll.some(q => q.id === c.qt) ? c.qt : '__gone') : '';
+    const groupKeys = ['', ...qtsAll.map(q => q.id), '__gone'];
+    const groupLabel = k => k === '' ? 'Cabinets (Cabinets only &amp; Cabinets + countertops)' : (k === '__gone' ? 'A deleted quote type — not showing anywhere' : '🗂️ ' + mqccEsc(mqccQtName(k)));
+    const blockOf = (c, ci) => {
       const key = c.id;
       const items = mqccItems(c.id);
       const chips = [
@@ -6476,7 +6525,8 @@ window.mqphGoToWizard = function() {
         c.required ? mqccChip(c.answer === 'one' ? 'Must choose' : 'Must answer', 'gray') : '',
         c.proOnly ? mqccChip('⚡ Pro only', 'gold') : '',
         c.showIf ? mqccChip('Only if ' + mqccEsc(mqccOptionLabel(c.showIf) || 'option removed'), 'gray') : '',
-        c.after && c.after !== 'specialty' ? mqccChip('📍 ' + mqccEsc(((MQCC_PLACES.find(x => x[0] === c.after) || ['', ''])[1]).replace(' (default)', '')), 'gray') : '',
+        c.qt ? mqccChip('🗂️ ' + mqccEsc(mqccQtName(c.qt) || 'Deleted quote — not showing'), mqccQtName(c.qt) ? 'gold' : 'gray') : '',
+        (c.qt ? /^cc:/.test(c.after || '') : (c.after && c.after !== 'specialty')) ? mqccChip('📍 ' + mqccEsc(mqccPlaceLabel(c.after, c.qt)), 'gray') : '',
       ].join(' ');
       const rows = items.map((r, ri) => {
         const cfg = mqccCfg(r);
@@ -6511,8 +6561,8 @@ window.mqphGoToWizard = function() {
             ${chips}
           </span>
           <span style="display:flex;gap:6px;flex-shrink:0" onclick="event.stopPropagation()">
-            <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" title="Move up" ${ci === 0 ? 'disabled' : ''} onclick="mqccMoveCat('${c.id}',-1)">↑</button>
-            <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" title="Move down" ${ci === cats.length - 1 ? 'disabled' : ''} onclick="mqccMoveCat('${c.id}',1)">↓</button>
+            <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" title="Move up" ${!cats.slice(0, ci).some(x => (x.qt || '') === (c.qt || '')) ? 'disabled' : ''} onclick="mqccMoveCat('${c.id}',-1)">↑</button>
+            <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" title="Move down" ${!cats.slice(ci + 1).some(x => (x.qt || '') === (c.qt || '')) ? 'disabled' : ''} onclick="mqccMoveCat('${c.id}',1)">↓</button>
             <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="mqccOpenCat('${c.id}')">Settings</button>
             <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" title="Copy this category with all its options and photos" onclick="mqccDuplicateCat('${c.id}')">⧉ Duplicate</button>
             <button class="mqph-btn mqph-btn-primary mqph-btn-sm" onclick="mqccOpenItem('${c.id}',null)">+ Add option</button>
@@ -6524,7 +6574,16 @@ window.mqphGoToWizard = function() {
           ${items.length ? mqccPreviewShell(c) : ''}
         </div>
       </div>`;
-    }).join('');
+    };
+    const catBlocks = qtsAll.length || cats.some(c => c.qt)
+      ? groupKeys.map(k => {
+          const list = cats.filter(c => groupOf(c) === k);
+          const head = `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin:16px 0 6px"><div style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#6b7280">${groupLabel(k)}</div>${k && k !== '__gone' ? `<button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="window._mqccNewCatQt='${k}';mqccOpenCat(null)">+ New step for ${mqccEsc(mqccQtName(k))}</button>` : ''}</div>`;
+          if (!list.length && k !== '' && k !== '__gone') return head + `<div style="font-size:12px;color:#9ca3af;margin-bottom:8px">No steps yet — this quote won't show on your widget until it has at least one.</div>`;
+          if (!list.length) return '';
+          return head + list.map(c => blockOf(c, cats.indexOf(c))).join('');
+        }).join('')
+      : cats.map(blockOf).join('');
 
     const howGroups = [...new Set(Object.values(MQCC_HOW).map(o => o.group))];
     const howOpts = howGroups.map(g => `<optgroup label="${g}">${Object.entries(MQCC_HOW).filter(([, o]) => o.group === g).map(([v, o]) => `<option value="${v}">${o.label}</option>`).join('')}</optgroup>`).join('');
@@ -6549,7 +6608,7 @@ window.mqphGoToWizard = function() {
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:${cats.length ? '14px' : '0'}">
           <div style="min-width:0;max-width:620px">
             <div class="mqph-cat-title">✨ Custom pricing categories</div>
-            <div style="font-size:12px;color:#6b7280;margin-top:6px;line-height:1.55">Make your own priced steps for anything not covered above — finished ends, site access, delivery, hourly work. Each category is its own step on your widget (Cabinets and Both tabs). Photos, groups and which project types each option shows for are set in <strong>My Products</strong>, same as everything else.</div>
+            <div style="font-size:12px;color:#6b7280;margin-top:6px;line-height:1.55">Make your own priced steps for anything not covered above — finished ends, site access, delivery, hourly work. Each category is its own step on your widget (Cabinets and Both tabs)${mqccQts().length ? ', or in one of your own quote types' : ''}. Photos, groups and which project types each option shows for are set in <strong>My Products</strong>, same as everything else.</div>
           </div>
           <button class="mqph-btn mqph-btn-primary mqph-btn-sm" onclick="mqccOpenCat(null)">+ New category</button>
         </div>
@@ -6564,6 +6623,10 @@ window.mqphGoToWizard = function() {
             <button class="mqph-modal-hdr-close" onclick="mqccClose('mqcc-cat-overlay')">×</button>
           </div>
           <div class="mqph-modal-body"><div class="mqcc-modal-grid"><div>
+            <div class="mqph-field" id="mqcc-cat-qt-wrap"><label>Which quote is this step in?</label>
+              <select id="mqcc-cat-qt" onchange="mqccCatQtChanged()"></select>
+              <div style="font-size:11px;color:#6b7280;margin-top:4px;line-height:1.45">Your own quote types are added on Shop info → Estimator tabs.</div>
+            </div>
             <div class="mqph-field"><label>Category name</label><input type="text" id="mqcc-cat-name" maxlength="60" placeholder="Finishing &amp; extras"/></div>
             <div class="mqph-field"><label>Short description for customers (optional)</label><input type="text" id="mqcc-cat-desc" maxlength="200" placeholder="A few finishing details that make the install look built-in."/></div>
             <div class="mqph-field"><label>How customers answer</label>
@@ -6576,7 +6639,7 @@ window.mqphGoToWizard = function() {
               <input type="checkbox" id="mqcc-cat-required" style="width:16px;height:16px"/> <span id="mqcc-cat-required-txt">Customers must choose one (no “None” option)</span>
             </label>
             <div class="mqph-field"><label>Where it goes on your widget</label>
-              <select id="mqcc-cat-after">${MQCC_PLACES.map(([v, l]) => `<option value="${v}">${l}</option>`).join('')}</select>
+              <select id="mqcc-cat-after"></select>
             </div>
             <div class="mqph-field"><label>Show this step</label>
               <select id="mqcc-cat-showif"></select>
@@ -6701,8 +6764,17 @@ window.mqphGoToWizard = function() {
     document.getElementById('mqcc-cat-answer').value = c && c.answer === 'one' ? 'one' : 'any';
     document.getElementById('mqcc-cat-required').checked = !!(c && c.required);
     document.getElementById('mqcc-cat-pro').checked = !!(c && c.proOnly);
-    mqccShowIfOptions(document.getElementById('mqcc-cat-showif'), mqccAllOptions(cid, null), c ? c.showIf : '', 'Always (for the project types set in My Products)');
-    document.getElementById('mqcc-cat-after').value = (c && MQCC_PLACES.some(x => x[0] === c.after)) ? c.after : 'specialty';
+    // Which quote: Cabinets / Both, or one of the shop's own quote types.
+    const qts = mqccQts();
+    const qtSel = document.getElementById('mqcc-cat-qt');
+    const curQt = c ? (c.qt || '') : (window._mqccNewCatQt || '');
+    window._mqccNewCatQt = '';
+    qtSel.innerHTML = `<option value="">Cabinets (the Cabinets only and Cabinets + countertops quotes)</option>`
+      + qts.map(q => `<option value="${q.id}">${mqccEsc(q.name)}${q.on === false ? ' (turned off)' : ''}${q.proOnly ? ' — Pro only' : ''}</option>`).join('')
+      + (curQt && !qts.some(q => q.id === curQt) ? `<option value="${mqccEsc(curQt)}">A deleted quote type (not showing anywhere)</option>` : '');
+    qtSel.value = curQt;
+    mqccShow('mqcc-cat-qt-wrap', qts.length > 0 || !!curQt);
+    mqccCatQtFill(c);
     document.getElementById('mqcc-cat-delete').style.display = c ? '' : 'none';
     mqccCatAnswerChanged();
     const catOv = document.getElementById('mqcc-cat-overlay');
@@ -6710,6 +6782,33 @@ window.mqphGoToWizard = function() {
     mqccDraftCatPreview();
     catOv.classList.add('show');
     setTimeout(() => document.getElementById('mqcc-cat-name')?.focus(), 50);
+  };
+  // Fills "Show this step" and "Where it goes" for whichever quote is picked.
+  function mqccCatQtFill(c) {
+    const cid = mqccEditCat;
+    const qt = document.getElementById('mqcc-cat-qt').value || '';
+    const sameQuote = mqccAllOptions(cid, null).filter(o => { const r = lineItems.find(x => x.id === o.id); const oc = r && mqccCats().find(x => x.id === r.fields['Category']); return oc && (oc.qt || '') === qt; });
+    mqccShowIfOptions(document.getElementById('mqcc-cat-showif'), sameQuote, c ? c.showIf : document.getElementById('mqcc-cat-showif').value, 'Always (for the project types set in My Products)');
+    const afterSel = document.getElementById('mqcc-cat-after');
+    const places = mqccPlaceList(cid, qt);
+    afterSel.innerHTML = places.map(([v, l]) => `<option value="${v}">${mqccEsc(l)}</option>`).join('');
+    const keep = c && (c.qt || '') === qt ? (qt ? mqccAfterKey(c) : c.after) : null;
+    if (keep && places.some(x => x[0] === keep)) afterSel.value = keep;
+    else {
+      // New step (or moved to another quote): default to the end of the
+      // steps after Details & Selections — or a quote type's last step — so
+      // adding several in a row keeps them in the order they were made.
+      const start = qt ? 'si' : 'specialty';
+      const k = places.findIndex(x => x[0] === start);
+      let v = start;
+      for (let n = k + 1; n < places.length && /^cc:/.test(places[n][0]); n++) v = places[n][0];
+      afterSel.value = v;
+    }
+  }
+  window.mqccCatQtChanged = function() {
+    const c = mqccEditCat ? mqccCats().find(x => x.id === mqccEditCat) : null;
+    mqccCatQtFill(c);
+    mqccDraftCatPreview();
   };
   window.mqccCatAnswerChanged = function() {
     const one = document.getElementById('mqcc-cat-answer').value === 'one';
@@ -6734,13 +6833,29 @@ window.mqphGoToWizard = function() {
       proOnly: document.getElementById('mqcc-cat-pro').checked,
       after: document.getElementById('mqcc-cat-after').value || 'specialty',
     };
+    const qtPick = document.getElementById('mqcc-cat-qt') ? (document.getElementById('mqcc-cat-qt').value || '') : '';
     let id = mqccEditCat;
+    let moved = true;
     if (id) {
       const i = cats.findIndex(c => c.id === id);
-      if (i >= 0) { cats[i] = { ...cats[i], ...data }; delete cats[i].tie; } // links live on options only
+      if (i >= 0) {
+        moved = (cats[i].after || 'specialty') !== data.after || (cats[i].qt || '') !== qtPick;
+        cats[i] = { ...cats[i], ...data };
+        delete cats[i].tie; // links live on options only
+        if (qtPick) cats[i].qt = qtPick; else delete cats[i].qt;
+      }
     } else {
       id = 'cc_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
-      cats.push({ id, ...data });
+      cats.push(qtPick ? { id, ...data, qt: qtPick } : { id, ...data });
+    }
+    // "After X" means right after X: a new (or moved) step goes ahead of any
+    // steps already sitting after X, so picking "After tall cabinets" puts
+    // it before "Finished ends", and "↳ After ✨ Finished ends" puts it after.
+    if (moved) {
+      const i = cats.findIndex(c => c.id === id);
+      const self = cats.splice(i, 1)[0];
+      const j = cats.findIndex(c => (c.after || 'specialty') === data.after && (c.qt || '') === qtPick);
+      if (j >= 0) cats.splice(j, 0, self); else cats.push(self);
     }
     try {
       await mqccSaveCats(cats);
@@ -6760,7 +6875,8 @@ window.mqphGoToWizard = function() {
       for (const r of items) { await atDelete(LINE_ITEMS_TABLE, r.id); }
       const gone = new Set(items.map(r => r.id));
       lineItems = lineItems.filter(r => !gone.has(r.id));
-      const cats = mqccCats().filter(x => x.id !== cid).map(x => (gone.has(x.showIf) ? { ...x, showIf: '' } : x));
+      const cats = mqccCats().filter(x => x.id !== cid).map(x => (gone.has(x.showIf) ? { ...x, showIf: '' } : x))
+        .map(x => (x.after === 'cc:' + cid ? { ...x, after: c.after || 'specialty' } : x)); // steps placed after it take its spot
       await mqccSaveCats(cats);
       await mqccClearShowIfRefs(gone);
       mqccClose('mqcc-cat-overlay');
@@ -6770,8 +6886,12 @@ window.mqphGoToWizard = function() {
   };
   window.mqccMoveCat = async function(cid, dir) {
     const cats = mqccCats();
-    const i = cats.findIndex(c => c.id === cid), j = i + dir;
-    if (i < 0 || j < 0 || j >= cats.length) return;
+    const i = cats.findIndex(c => c.id === cid);
+    if (i < 0) return;
+    // Swap with the nearest step in the same quote.
+    let j = i + dir;
+    while (j >= 0 && j < cats.length && (cats[j].qt || '') !== (cats[i].qt || '')) j += dir;
+    if (j < 0 || j >= cats.length) return;
     [cats[i], cats[j]] = [cats[j], cats[i]];
     try { await mqccSaveCats(cats); mqccRerender(null); } catch(e) { alert('Could not save: ' + e.message); }
   };
@@ -6790,14 +6910,27 @@ window.mqphGoToWizard = function() {
     document.getElementById('mqcc-item-how').value = MQCC_HOW[cfg.how] ? cfg.how : 'flat';
     // Count options this one can be priced on (never itself).
     const srcList = [];
-    mqccCats().forEach(cc => mqccItems(cc.id).forEach(o => { if (o.id !== id && MQCC_COUNTS.includes(mqccCfg(o).how)) srcList.push(`<option value="${o.id}">${mqccEsc(cc.name + ': ' + (o.fields['Name'] || ''))} (${mqccEsc(mqccSrcUnit(o.id))})</option>`); }));
+    mqccCats().filter(cc => (cc.qt || '') === (c.qt || '')).forEach(cc => mqccItems(cc.id).forEach(o => { if (o.id !== id && MQCC_COUNTS.includes(mqccCfg(o).how)) srcList.push(`<option value="${o.id}">${mqccEsc(cc.name + ': ' + (o.fields['Name'] || ''))} (${mqccEsc(mqccSrcUnit(o.id))})</option>`); }));
     const srcSel = document.getElementById('mqcc-item-src');
     srcSel.innerHTML = srcList.length ? srcList.join('') : '<option value="">No counted options yet — add one priced on “A number the customer enters” first</option>';
     if (cfg.src && srcSel.querySelector(`option[value="${cfg.src}"]`)) srcSel.value = cfg.src;
     const ccSel = document.getElementById('mqcc-item-pctcc');
-    ccSel.innerHTML = mqccCats().map(cc => `<option value="${cc.id}">${mqccEsc(cc.name)}</option>`).join('');
-    ccSel.value = cfg.pctCc && mqccCats().some(cc => cc.id === cfg.pctCc) ? cfg.pctCc : cid;
-    mqccTieLoad('item', cfg.tie);
+    const sameQuoteCats = mqccCats().filter(cc => (cc.qt || '') === (c.qt || ''));
+    ccSel.innerHTML = sameQuoteCats.map(cc => `<option value="${cc.id}">${mqccEsc(cc.name)}</option>`).join('');
+    ccSel.value = cfg.pctCc && sameQuoteCats.some(cc => cc.id === cfg.pctCc) ? cfg.pctCc : cid;
+    // A quote type has no cabinets: nothing to price off cabinet footage,
+    // drawers or doors, and nothing to link to.
+    const inQt = !!c.qt;
+    const CAB_HOWS = ['base_lf', 'upper_lf', 'all_lf', 'island_lf', 'crown_lf', 'valance_lf', 'drawers', 'tallcabs', 'pct'];
+    const howSel = document.getElementById('mqcc-item-how');
+    [...howSel.querySelectorAll('option')].forEach(o => { const off = inQt && CAB_HOWS.includes(o.value); o.hidden = off; o.disabled = off; });
+    [...howSel.querySelectorAll('optgroup')].forEach(g => { g.hidden = [...g.children].every(o => o.hidden); });
+    const pctAllOpt = howSel.querySelector('option[value="pct_all"]');
+    if (pctAllOpt) pctAllOpt.textContent = inQt ? '% of everything else in this quote' : MQCC_HOW.pct_all.label;
+    if (inQt && CAB_HOWS.includes(howSel.value)) howSel.value = 'flat';
+    const tieWrap = document.getElementById('mqcc-item-tiecat') && document.getElementById('mqcc-item-tiecat').closest('.mqph-field');
+    if (tieWrap) tieWrap.style.setProperty('display', inQt ? 'none' : '', inQt ? 'important' : '');
+    mqccTieLoad('item', inQt ? null : cfg.tie);
     document.getElementById('mqcc-item-unit').value = cfg.unit || '';
     document.getElementById('mqcc-item-rate').value = r && r.fields['Rate'] != null ? r.fields['Rate'] : '';
     document.getElementById('mqcc-item-min').value = cfg.min > 0 ? cfg.min : '';
@@ -6817,7 +6950,7 @@ window.mqphGoToWizard = function() {
     // Show-if rules are for "pick any" categories — a pick-one category
     // already shows exactly one choice at a time.
     mqccShow('mqcc-item-showif-wrap', c.answer === 'any');
-    mqccShowIfOptions(document.getElementById('mqcc-item-showif'), mqccAllOptions(cid, id || '__new__'), cfg.showIf || '', 'Always');
+    mqccShowIfOptions(document.getElementById('mqcc-item-showif'), mqccAllOptions(cid, id || '__new__').filter(o => { const rr = lineItems.find(x => x.id === o.id); const oc = rr && mqccCats().find(x => x.id === rr.fields['Category']); return oc && (oc.qt || '') === (c.qt || ''); }), cfg.showIf || '', 'Always');
     mqccItemHowChanged();
     const itemOv = document.getElementById('mqcc-item-overlay');
     itemOv.oninput = itemOv.onchange = () => mqccDraftItemPreview();
@@ -7295,7 +7428,10 @@ window.mqphGoToWizard = function() {
       extras += sum;
     });
     picked.filter(x => MQCC_PCT.includes(x.it.how)).forEach(({ it }) => {
-      const base = it.how === 'pct' ? mqccPv.est : (it.how === 'pct_all' ? mqccPv.est + extras : (catSum[it.pctCc] || 0));
+      // A quote type has no cabinet estimate — its % is of the rest of that quote.
+      const ownCat = mqccCats().find(cc => mqccPvItems(cc.id).some(x => x.id === it.id));
+      const est = ownCat && ownCat.qt ? 0 : mqccPv.est;
+      const base = it.how === 'pct' ? est : (it.how === 'pct_all' ? est + extras : (catSum[it.pctCc] || 0));
       const f = fin(it, base * it.rate / 100);
       if (!f.cost) return;
       res.set(it.id, [{ label: `${it.name} (${it.rate}%)`, cost: f.cost, minUsed: f.minUsed, pro: it.proOnly }]);
@@ -7404,10 +7540,10 @@ window.mqphGoToWizard = function() {
         <div id="mqcc-pv-view-${c.id}" data-mqcc-pv-cat="${c.id}">${mqccPvViewHtml(c)}</div>
         <div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:12px">
           <div style="font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#374151;margin-bottom:8px">Sample job</div>
-          ${inp('base', 'Base cabinets (lin ft)')}
+          ${c.qt ? '' : `${inp('base', 'Base cabinets (lin ft)')}
           ${inp('upper', 'Upper cabinets (lin ft)')}
-          ${inp('est', 'Cabinet estimate', CUR())}
-          ${(() => {
+          ${inp('est', 'Cabinet estimate', CUR())}`}
+          ${c.qt ? '' : (() => {
             const used = new Set();
             mqccCats().forEach(cc => mqccPvItems(cc.id).forEach(it => { if (MQCC_PV_SAMPLE[it.how]) used.add(it.how); }));
             const labels = { island_lf: 'Island (lin ft)', crown_lf: 'Crown moulding (lin ft)', valance_lf: 'Valance (lin ft)', drawers: 'Drawers', tallcabs: 'Tall cabinets' };
@@ -7445,7 +7581,7 @@ window.mqphGoToWizard = function() {
     let items = mqccEditCat ? mqccPvItems(mqccEditCat) : [];
     const sample = !items.length;
     if (sample) items = ['Option 1', 'Option 2', 'Option 3'].map((n, i) => ({ id: '__s' + i, name: n, desc: '', rate: 0, how: i === 1 ? 'each' : 'flat', unit: i === 1 ? 'units' : '', min: 0, showIf: '', proOnly: false, src: '', pctCc: '', tie: null, groupName: '', groupOrder: 0 }));
-    const place = (MQCC_PLACES.find(x => x[0] === document.getElementById('mqcc-cat-after').value) || ['', ''])[1].replace(' (default)', '');
+    const place = mqccPlaceLabel(document.getElementById('mqcc-cat-after').value);
     const rule = document.getElementById('mqcc-cat-showif');
     box.innerHTML = `${mqccPvViewHtml(c, items)}
       <div style="font-size:11px;color:#6b7280;line-height:1.5;margin-top:10px">📍 Step goes: <strong>${mqccEsc(place)}</strong>${rule && rule.value ? `<br>👁 Only shows when “${mqccEsc(mqccOptionLabel(rule.value))}” is picked` : ''}${sample ? '<br>Sample options shown — add your real ones after saving.' : ''}</div>`;
