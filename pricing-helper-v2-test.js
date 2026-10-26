@@ -6263,7 +6263,8 @@ window.mqphGoToWizard = function() {
     } catch(e) { /* keep defaults */ }
     return {
       countertopsOnly: hidden.includes('both') && hidden.includes('cabinets') && !hidden.includes('countertops'),
-      cabinetsOnly: hidden.includes('both') && hidden.includes('countertops') && !hidden.includes('cabinets'),
+      // A quote type with the Countertops step still needs countertop pricing.
+      cabinetsOnly: hidden.includes('both') && hidden.includes('countertops') && !hidden.includes('cabinets') && !mqccQts().some(q => q.countertops && q.on !== false),
     };
   }
 
@@ -6363,6 +6364,8 @@ window.mqphGoToWizard = function() {
     if (qt) {
       out.push(['si', 'At the start (right after the project type and measuring guide)']);
       walk('si', 1);
+      out.push(['specialty', 'After Details & Selections (its specialty items, if it has any)']);
+      walk('specialty', 1);
       return out;
     }
     MQCC_PLACES.forEach(([v, l]) => { out.push([v, l]); walk(v, 1); });
@@ -6371,12 +6374,12 @@ window.mqphGoToWizard = function() {
   // A quote type's step only knows "at the start" or "after another step".
   function mqccAfterKey(c) {
     const a = c.after || 'specialty';
-    if (c.qt && !/^cc:/.test(a)) return 'si';
+    if (c.qt && !/^cc:/.test(a)) return a === 'specialty' ? 'specialty' : 'si';
     return a;
   }
   function mqccPlaceLabel(after, qt) {
     if (/^cc:/.test(after || '')) { const c = mqccCats().find(x => x.id === after.slice(3)); return 'After ✨ ' + (c ? c.name : 'a removed step'); }
-    if (qt) return 'At the start';
+    if (qt) return after === 'specialty' ? 'After Details & Selections' : 'At the start';
     return ((MQCC_PLACES.find(x => x[0] === after) || ['', 'After Details & Selections'])[1]).replace(' (default)', '');
   }
   // The shop's own quote types (Shop Info → Estimator tabs).
@@ -6526,7 +6529,7 @@ window.mqphGoToWizard = function() {
         c.proOnly ? mqccChip('⚡ Pro only', 'gold') : '',
         c.showIf ? mqccChip('Only if ' + mqccEsc(mqccOptionLabel(c.showIf) || 'option removed'), 'gray') : '',
         c.qt ? mqccChip('🗂️ ' + mqccEsc(mqccQtName(c.qt) || 'Deleted quote — not showing'), mqccQtName(c.qt) ? 'gold' : 'gray') : '',
-        (c.qt ? /^cc:/.test(c.after || '') : (c.after && c.after !== 'specialty')) ? mqccChip('📍 ' + mqccEsc(mqccPlaceLabel(c.after, c.qt)), 'gray') : '',
+        (c.qt ? (/^cc:/.test(c.after || '') || c.after === 'specialty') : (c.after && c.after !== 'specialty')) ? mqccChip('📍 ' + mqccEsc(mqccPlaceLabel(c.after, c.qt)), 'gray') : '',
       ].join(' ');
       const rows = items.map((r, ri) => {
         const cfg = mqccCfg(r);

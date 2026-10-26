@@ -505,7 +505,7 @@
     // Custom pricing categories — see mqCcBuild. Pro-only ones are left out here.
     window._mqCustomCats = mqCcBuild(shop, sorted, shopPhotos, shopFeatured, false);
     // The shop's own quote types (Shop Info) — see mqQtBuild.
-    window._mqQuoteTypes = mqQtBuild(shop, false);
+    window._mqQuoteTypes = mqQtBuild(shop, false, specs, roomTypes);
     if (window._mqHiddenTabsAll) {
       window._mqHiddenTabsAll = false;
       if (!window._mqQuoteTypes.length) window._mqHiddenTabs = [];
@@ -3903,7 +3903,7 @@
 
   // Built once in loadShopData, after the custom categories (a quote type
   // with no priced steps yet isn't shown). allowPro = MidasQuote Pro.
-  function mqQtBuild(shop, allowPro) {
+  function mqQtBuild(shop, allowPro, specs, rooms) {
     let cfg = null;
     try { cfg = shop['Hidden widget tabs'] ? JSON.parse(shop['Hidden widget tabs']) : null; } catch(e) { cfg = null; }
     const list = (cfg && Array.isArray(cfg.quoteTypes)) ? cfg.quoteTypes : [];
@@ -3916,8 +3916,17 @@
         sub: String(q.sub || '').trim(),
         icon: MQ_QT_ICONS[q.icon] ? q.icon : 'grid',
         proOnly: !!q.proOnly,
+        // Building blocks the shop ticked on Project types: the countertop
+        // step (same surfaces builder as the Countertops tab).
+        countertops: !!q.countertops,
       }))
-      .filter(q => cats.some(c => c.qt === q.id));
+      // Shown once it has something to price: a custom pricing step of its
+      // own, or a specialty item picked for one of its project types.
+      .filter(q => {
+        if (q.countertops || cats.some(c => c.qt === q.id)) return true;
+        const ids = (rooms || []).filter(r => r.forQt === q.id).map(r => r.id);
+        return (specs || []).some(s => (s.visibleRooms || []).some(id => ids.includes(id)));
+      });
   }
 
   function mqQtCss(bc) {
@@ -3951,7 +3960,10 @@
     const shop = data.shop || {};
     const rooms = (data.roomTypes || []).filter(r => r.forQt === q.id && roomOk(r));
     const cats = mqCcCatsFor(p);
-    const hasInst = cats.some(c => c.items.some(i => i.inst));
+    const roomIds = rooms.map(r => r.id);
+    // Specialty items picked (in Specialty items) for one of its project types.
+    const hasSpec = (data.specs || []).some(s => (s.visibleRooms || []).some(id => roomIds.includes(id)));
+    const hasInst = q.countertops || cats.some(c => c.items.some(i => i.inst)) || (hasSpec && (data.specs || []).some(s => s.offersInstallChoice && (s.visibleRooms || []).some(id => roomIds.includes(id))));
     const single = rooms.length <= 1;
     const pw = `<div class="mq-powered-by"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Powered by <a href="https://www.midasquote.com" target="_blank" rel="noopener">MidasQuote</a></div>`;
     return `
@@ -3965,7 +3977,7 @@
               <span class="mq-step-badge" style="width:26px;height:26px;font-size:14px">1</span>
               ${single ? mqCcEsc(q.name) : (shop['Project type title'] || 'Start here — choose your project type')}
             </label>
-            <select id="mq-${p}-room" onfocus="window._mqPrevRoomId=window._mqPrevRoomId||{};window._mqPrevRoomId['${p}']=this.value" onchange="mqCommitCurrentConfig('${p}');mqShowRoomDescription('${p}');mqRefreshMeasureGuide('${p}');mqRefreshAllPickerVisibility('${p}');mqOnProjectTypeChange('${p}')" style="font-size:15px;font-weight:600;padding:10px 12px${single ? ';display:none' : ''}">${rooms.map(r => `<option value="${mqCcAttr(r.id)}">${mqCcEsc(r.name)}</option>`).join('')}</select>
+            <select id="mq-${p}-room" onfocus="window._mqPrevRoomId=window._mqPrevRoomId||{};window._mqPrevRoomId['${p}']=this.value" onchange="mqCommitCurrentConfig('${p}');mqRefreshRoomVisibility('${p}');mqShowRoomDescription('${p}');mqRefreshMeasureGuide('${p}');mqRefreshAllPickerVisibility('${p}');mqOnProjectTypeChange('${p}')" style="font-size:15px;font-weight:600;padding:10px 12px${single ? ';display:none' : ''}">${rooms.map(r => `<option value="${mqCcAttr(r.id)}">${mqCcEsc(r.name)}</option>`).join('')}</select>
             ${single
               ? (q.sub ? `<p class="mq-hint mq-focal-box-label" style="display:block;margin-top:2px;font-weight:500">${mqCcEsc(q.sub)}</p>` : '')
               : `<p class="mq-hint mq-focal-box-label" style="display:block;margin-top:8px;font-weight:500">${shop['Project type hint'] || 'After calculating your first quote, you can continue adding other project types.'}</p>`}
@@ -3989,7 +4001,24 @@
             </div>
           </div>
         </div>` : ''}
+        ${hasSpec ? `<div class="mq-sec" id="mq-${p}-specialty-sec" onclick="mqOpenIfClosed('${p}-specialty')">
+          ${collapsibleHeader(`${p}-specialty`, 'Details & Selections')}
+          <div style="font-size:13px;color:#4b5563;margin-bottom:10px;line-height:1.5">⭐ Pick what you'd like — add quantities or sizes where asked.</div>
+          <div id="mq-${p}-specialty-body" style="display:none">
+            <div class="mq-spec-grid">${specHTML(data.specs || [], p)}</div>
+          </div>
+        </div>` : ''}
         ${mqCcSectionsHTML(p)}
+        ${q.countertops ? `<div class="mq-sec" id="mq-${p}-ct-surfaces-sec" onclick="mqOpenIfClosed('${p}-ct-surfaces')">
+          ${collapsibleHeader(`${p}-ct-surfaces`, 'Countertops', false, `mq-${p}-ct-surfaces-title`)}
+          <div style="font-size:13px;color:#4b5563;margin-bottom:10px;line-height:1.5">🪨 Need countertops too? Add each counter you'd like priced — or just continue if you don't need any.</div>
+          <div id="mq-${p}-ct-surfaces-body" style="display:none">
+            <div id="mq-${p}-ct-surfaces"></div>
+            <button class="mq-add-surface-btn" onclick="mqAddSurface('${p}')">+ Add another surface</button>
+            <div class="mq-empty-calc-msg" id="mq-${p}-surface-add-msg" style="display:none"></div>
+            <p class="mq-hint" style="margin-top:10px">These materials may not reflect our full inventory. If you don't see yours, please feel free to contact us.</p>
+          </div>
+        </div>` : ''}
         <button class="mq-calc-btn" id="mq-${p}-calc-btn" onclick="mqCalcQt('${p}')">Calculate my estimate</button>
         <div class="mq-empty-calc-msg" id="mq-${p}-empty-calc-msg" style="display:none">Nothing has been picked yet — please choose at least one option before calculating.</div>
         <div class="mq-loading" id="mq-${p}-loading">Building your estimate...</div>
@@ -4737,7 +4766,7 @@
     // garbage pullout under one "Pullouts" specialty item, each priced and
     // quoted separately). Before this, picking a different variant chip
     // just swapped which price was "active" against one shared quantity.
-    ['c','ct','b'].forEach(p=>{diffOn[p]=false;specQty[p]=specs.map(s=>(s.variants&&s.variants.length)?new Array(s.variants.length).fill(0):0);installQty[p]=new Array(specs.length).fill(0);specVariant[p]=new Array(specs.length).fill(0);surfCounts[p]=0;surfs[p]={};tallCabs[p]={};tallCabCounts[p]=0;});
+    ['c','ct','b',...(window._mqQuoteTypes||[]).map(q=>q.prefix)].forEach(p=>{diffOn[p]=false;specQty[p]=specs.map(s=>(s.variants&&s.variants.length)?new Array(s.variants.length).fill(0):0);installQty[p]=new Array(specs.length).fill(0);specVariant[p]=new Array(specs.length).fill(0);surfCounts[p]=0;surfs[p]={};tallCabs[p]={};tallCabCounts[p]=0;});
 
     // --- specQty per-item helpers -------------------------------------
     // Centralize every read/write of a specialty item's quantity so the
@@ -5074,7 +5103,10 @@
       document.querySelectorAll(`[id^="mq-sp-${prefix}-"]`).forEach(el=>{
         let rooms=[];
         try { rooms = JSON.parse(el.getAttribute('data-rooms')||'[]'); } catch(e) { rooms=[]; }
-        const visible = rooms.length ? rooms.includes(roomId) : !roomIsCountertop;
+        // No project types picked = every cabinet project type — not
+        // countertop ones, and not the shop's own quote types (those are
+        // picked one by one in Specialty items).
+        const visible = rooms.length ? rooms.includes(roomId) : (!roomIsCountertop && !mqIsQt(prefix));
         el.style.display = visible ? '' : 'none';
         if (!visible) {
           const idx = parseInt(el.id.split('-').pop(), 10);
@@ -5641,7 +5673,9 @@
             row.querySelectorAll('.mq-vpicker-chip').forEach(chip=>{
               let rooms=[];
               try { rooms = JSON.parse(chip.getAttribute('data-rooms')||'[]'); } catch(e) { rooms=[]; }
-              const roomOk = !rooms.length || rooms.includes(roomId);
+              // A quote type's countertop step offers every countertop material
+              // (those are set up for countertop project types, not this one's).
+              const roomOk = !rooms.length || rooms.includes(roomId) || (mqIsQt(prefix) && rowSelectId.startsWith('mqs'));
               const chipGroup = chip.getAttribute('data-group');
               const groupOk = !groupFilter || chipGroup === groupFilter || chipGroup === '__always__';
               // "None" stays available regardless of door — it's an opt-out,
@@ -6452,6 +6486,10 @@
     // Supply + install question.
     function mqResetQtForm(prefix) {
       if (window.mqCcReset) window.mqCcReset(prefix);
+      mqResetSpecItems(prefix);
+      // Countertop step (if the quote type has one): back to one blank surface.
+      const surfC = document.getElementById(`mq-${prefix}-ct-surfaces`);
+      if (surfC) { surfC.innerHTML = ''; surfs[prefix] = {}; addSurfaceInternal(prefix); }
       const siSel = document.getElementById(`mq-${prefix}-si`);
       if (siSel) siSel.selectedIndex = 0;
       window.mqRefreshAllPickerVisibility(prefix);
@@ -6663,6 +6701,10 @@
       // mqAddSurface collapses whichever surface was open right before it,
       // so recreating 2+ saved surfaces here would otherwise flash several
       // "stored" confirmations the customer never actually triggered.
+      if (mqIsQt(prefix) && (snapshot.surfaces || []).length) {
+        const surfC = document.getElementById(`mq-${prefix}-ct-surfaces`);
+        if (surfC) { surfC.innerHTML = ''; surfs[prefix] = {}; }
+      }
       window._mqRestoringSurfaces = true;
       (snapshot.surfaces || []).forEach(surfFields => {
         // Goes through mqAddSurface (not the raw internal call) so that,
@@ -7572,6 +7614,74 @@
       return { rateU:m.rateU??m.rate??0, rateB:m.rateB??m.rate??0, label:m.label||'' };
     }
 
+    // Specialty items' price lines for one form (moved out of calcCabinet
+    // unchanged, Oct 2026, so a shop's own quote types can use them too).
+    function mqSpecCost(prefix, lines) {
+      let specTotal=0;
+      specs.forEach((s,i)=>{
+        // An item with variants now charges for EVERY variant that has its
+        // own quantity set (Jordan, 2026-09-12: "each variant to be
+        // treated as their own items" — e.g. 2 recycling pullouts + 1
+        // garbage pullout under one "Pullouts" item, each its own line at
+        // its own price), not just whichever variant chip is currently
+        // showing. A plain item with no variants prices exactly as before.
+        const qtyArr = specQty[prefix][i];
+        const supplyEntries = Array.isArray(qtyArr)
+          ? s.variants.map((v,vi)=>({
+              price: v.price || 0,
+              minPrice: v.min || 0,
+              label: v.label ? `${s.label} — ${v.label}` : s.label,
+              qty: qtyArr[vi] || 0,
+            })).filter(e => e.qty > 0)
+          : (qtyArr > 0 ? [{ price: s.price, minPrice: s.minPrice, label: s.label, qty: qtyArr }] : []);
+        if (!supplyEntries.length) return;
+
+        const modeSel = s.offersInstallChoice ? document.getElementById(`mq-spec-mode-${prefix}-${i}`) : null;
+        const mode = modeSel ? modeSel.value : 'supply';
+        const doInstall = s.offersInstallChoice && mode === 'install';
+        const supplySuffix = s.offersInstallChoice ? (doInstall ? ' — Supply' : ' — Supply only') : '';
+
+        // Supply — one line per variant that has a quantity (or the one
+        // line a non-variant item has always had).
+        supplyEntries.forEach(entry => {
+          // A tiny order can still cost the shop full price to make (a
+          // small door takes a full sheet and the same labor as a bigger
+          // one) — the minimum only applies to size-based items
+          // (perFt/perSqFt), same as the dashboard only shows the field
+          // then.
+          let supplyCost = entry.price * entry.qty;
+          if ((s.perFt || s.perSqFt || s.customUnit) && entry.minPrice > 0) supplyCost = Math.max(supplyCost, entry.minPrice);
+          const supplyQtyLabel = s.perSqFt?`${entry.qty} sqft`:(s.perFt?`${entry.qty} ft`:(s.customUnit?`${entry.qty} ${s.customUnit}`:(entry.qty>1?`× ${entry.qty}`:'')));
+          specTotal += supplyCost;
+          lines.push({label:supplyQtyLabel?`${entry.label} (${supplyQtyLabel})${supplySuffix}`:`${entry.label}${supplySuffix}`,cost:Math.round(supplyCost)});
+        });
+
+        if (!doInstall) return;
+
+        // Install price is its own rate, never a replacement for supply —
+        // "6 sqft supply + 12 sqft install" means both get charged and
+        // added together, not one overriding the other. Two separate line
+        // items too, so the customer can actually see the math instead of
+        // one merged, unexplained number. Install stays ONE shared
+        // quantity/line for the whole item, even across multiple variants
+        // (Jordan, 2026-09-12 — install price/min are item-level, not
+        // per-variant, same as they always have been; see the Variants
+        // parsing comment above where these get built) — when install's
+        // pricing method matches supply's, its quantity is simply every
+        // variant's supply quantity added together.
+        const supplyKind = s.perFt ? 'linear' : (s.perSqFt ? 'sqft' : (s.customUnit ? 'custom:' + s.customUnit.toLowerCase() : 'item'));
+        const installKind = s.installPerFt ? 'linear' : (s.installPerSqFt ? 'sqft' : (s.installCustomUnit ? 'custom:' + s.installCustomUnit.toLowerCase() : 'item'));
+        const totalSupplyQty = supplyEntries.reduce((a,e)=>a+e.qty, 0);
+        const installQtyVal = (installKind !== supplyKind) ? (installQty[prefix][i] || 0) : totalSupplyQty;
+        let installCost = s.installPrice * installQtyVal;
+        if ((s.installPerFt || s.installPerSqFt || s.installCustomUnit) && s.installMinPrice > 0 && installQtyVal > 0) installCost = Math.max(installCost, s.installMinPrice);
+        const installQtyLabel = s.installPerSqFt?`${installQtyVal} sqft`:(s.installPerFt?`${installQtyVal} ft`:(s.installCustomUnit?`${installQtyVal} ${s.installCustomUnit}`:(installQtyVal>1?`× ${installQtyVal}`:'')));
+        specTotal += installCost;
+        lines.push({label:installQtyLabel?`${s.label} (${installQtyLabel}) — Install`:`${s.label} — Install`,cost:Math.round(installCost)});
+      });
+      return specTotal;
+    }
+
     function calcCabinet(prefix) {
       const {mat,door,drawer,hinge,blMatKey,installUWithDoors,installUNoDoors,installBWithDoors,installBNoDoors,installBSome,installBMostly,removalRate}=P();
       // If the Cabinet measurements section is hidden (no real box material
@@ -7918,68 +8028,7 @@
       }
       lines.push(...tallCabLines);
 
-      let specTotal=0;
-      specs.forEach((s,i)=>{
-        // An item with variants now charges for EVERY variant that has its
-        // own quantity set (Jordan, 2026-09-12: "each variant to be
-        // treated as their own items" — e.g. 2 recycling pullouts + 1
-        // garbage pullout under one "Pullouts" item, each its own line at
-        // its own price), not just whichever variant chip is currently
-        // showing. A plain item with no variants prices exactly as before.
-        const qtyArr = specQty[prefix][i];
-        const supplyEntries = Array.isArray(qtyArr)
-          ? s.variants.map((v,vi)=>({
-              price: v.price || 0,
-              minPrice: v.min || 0,
-              label: v.label ? `${s.label} — ${v.label}` : s.label,
-              qty: qtyArr[vi] || 0,
-            })).filter(e => e.qty > 0)
-          : (qtyArr > 0 ? [{ price: s.price, minPrice: s.minPrice, label: s.label, qty: qtyArr }] : []);
-        if (!supplyEntries.length) return;
-
-        const modeSel = s.offersInstallChoice ? document.getElementById(`mq-spec-mode-${prefix}-${i}`) : null;
-        const mode = modeSel ? modeSel.value : 'supply';
-        const doInstall = s.offersInstallChoice && mode === 'install';
-        const supplySuffix = s.offersInstallChoice ? (doInstall ? ' — Supply' : ' — Supply only') : '';
-
-        // Supply — one line per variant that has a quantity (or the one
-        // line a non-variant item has always had).
-        supplyEntries.forEach(entry => {
-          // A tiny order can still cost the shop full price to make (a
-          // small door takes a full sheet and the same labor as a bigger
-          // one) — the minimum only applies to size-based items
-          // (perFt/perSqFt), same as the dashboard only shows the field
-          // then.
-          let supplyCost = entry.price * entry.qty;
-          if ((s.perFt || s.perSqFt || s.customUnit) && entry.minPrice > 0) supplyCost = Math.max(supplyCost, entry.minPrice);
-          const supplyQtyLabel = s.perSqFt?`${entry.qty} sqft`:(s.perFt?`${entry.qty} ft`:(s.customUnit?`${entry.qty} ${s.customUnit}`:(entry.qty>1?`× ${entry.qty}`:'')));
-          specTotal += supplyCost;
-          lines.push({label:supplyQtyLabel?`${entry.label} (${supplyQtyLabel})${supplySuffix}`:`${entry.label}${supplySuffix}`,cost:Math.round(supplyCost)});
-        });
-
-        if (!doInstall) return;
-
-        // Install price is its own rate, never a replacement for supply —
-        // "6 sqft supply + 12 sqft install" means both get charged and
-        // added together, not one overriding the other. Two separate line
-        // items too, so the customer can actually see the math instead of
-        // one merged, unexplained number. Install stays ONE shared
-        // quantity/line for the whole item, even across multiple variants
-        // (Jordan, 2026-09-12 — install price/min are item-level, not
-        // per-variant, same as they always have been; see the Variants
-        // parsing comment above where these get built) — when install's
-        // pricing method matches supply's, its quantity is simply every
-        // variant's supply quantity added together.
-        const supplyKind = s.perFt ? 'linear' : (s.perSqFt ? 'sqft' : (s.customUnit ? 'custom:' + s.customUnit.toLowerCase() : 'item'));
-        const installKind = s.installPerFt ? 'linear' : (s.installPerSqFt ? 'sqft' : (s.installCustomUnit ? 'custom:' + s.installCustomUnit.toLowerCase() : 'item'));
-        const totalSupplyQty = supplyEntries.reduce((a,e)=>a+e.qty, 0);
-        const installQtyVal = (installKind !== supplyKind) ? (installQty[prefix][i] || 0) : totalSupplyQty;
-        let installCost = s.installPrice * installQtyVal;
-        if ((s.installPerFt || s.installPerSqFt || s.installCustomUnit) && s.installMinPrice > 0 && installQtyVal > 0) installCost = Math.max(installCost, s.installMinPrice);
-        const installQtyLabel = s.installPerSqFt?`${installQtyVal} sqft`:(s.installPerFt?`${installQtyVal} ft`:(s.installCustomUnit?`${installQtyVal} ${s.installCustomUnit}`:(installQtyVal>1?`× ${installQtyVal}`:'')));
-        specTotal += installCost;
-        lines.push({label:installQtyLabel?`${s.label} (${installQtyLabel}) — Install`:`${s.label} — Install`,cost:Math.round(installCost)});
-      });
+      const specTotal = mqSpecCost(prefix, lines);
 
       // Custom pricing categories (Pricing tab) — % options use the cabinet
       // estimate so far as their base.
@@ -8012,7 +8061,7 @@
         }
       }
       const {removalRate}=P();
-      const ctSiId=prefix==='ct'?'mq-ct-si':'mq-b-ct-si';
+      const ctSiId=prefix==='ct'?'mq-ct-si':(mqIsQt(prefix)?`mq-${prefix}-si`:'mq-b-ct-si'); // a quote type's surfaces follow its own Supply + install answer
       // Same 3-field price-adjustment concept calcCabinet already applies
       // for 'b'/'c' (a project type can carry its own install % and a final
       // ballpark-wide %) -- countertops only ever have a project type to read
@@ -8227,9 +8276,19 @@
       const matAdjPct = roomObj ? (parseFloat(roomObj.materialAdjPct) || 0) : 0;
       const instAdjPct = roomObj ? (parseFloat(roomObj.installAdjPct) || 0) : 0;
       const totalAdjPct = roomObj ? (parseFloat(roomObj.totalAdjPct) || 0) : 0;
+      const lines = [];
+      const specTotal = mqSpecCost(prefix, lines); // specialty items picked for this quote type's project types
       const ccRes = window.mqCcCost ? window.mqCcCost(prefix, { matAdjPct, instAdjPct, base: 0 }) : { total: 0, lines: [] };
-      const lines = [...ccRes.lines];
-      const total = ccRes.total * (100 + totalAdjPct) / 100;
+      lines.push(...ccRes.lines);
+      // Countertop step: the same countertop pricing as the Countertops tab
+      // (before any discount — that comes off the whole quote below).
+      let ctTotal = 0;
+      if (document.getElementById(`mq-${prefix}-ct-surfaces`)) {
+        const ctR = calcCountertop(prefix);
+        ctTotal = ctR.discount ? ctR.discount.preTotal : (ctR.total || 0);
+        lines.push(...(ctR.lines || []).filter(l => !l.bold));
+      }
+      const total = (specTotal + ccRes.total + ctTotal) * (100 + totalAdjPct) / 100;
       lines.push({label:'Subtotal (before tax)',cost:Math.round(total),bold:true});
       const low = Math.round(total*(window._mqRangeLow||0.95)/10)*10, high = Math.round(total*(window._mqRangeHigh||1.20)/10)*10;
       const qtName = q ? q.name : 'Quote';
@@ -8238,7 +8297,7 @@
       // project type already says it, or there's no project type).
       const cartLabel = !roomName ? qtName : (roomName.toLowerCase().includes(qtName.toLowerCase()) ? roomName : `${qtName} · ${roomName}`);
       const si = gv(`mq-${prefix}-si`) || 'supply';
-      return mqApplyDiscount({ lines, sub: Math.round(total), total: Math.round(total), low, high, roomLabel: cartLabel, roomName, cartLabel, qtName, si, hasLines: ccRes.lines.length > 0 });
+      return mqApplyDiscount({ lines, sub: Math.round(total), total: Math.round(total), low, high, roomLabel: cartLabel, roomName, cartLabel, qtName, si, hasLines: lines.length > 0 });
     }
     window._mqCalcQt = calcQt;
     function mqQtResultSub(prefix, r) {
@@ -8358,6 +8417,7 @@
     // Calculate on one of the shop's own quote types — same flow as Cabinets.
     window.mqCalcQt=(prefix)=>{
       if (window.mqCcCheckRequired && !window.mqCcCheckRequired(prefix)) return;
+      if (!mqValidateInstallQty(prefix)) return;
       const dry = calcQt(prefix);
       if (!(dry.total > 0) && !dry.hasLines) {
         const btn = document.getElementById(`mq-${prefix}-calc-btn`);
@@ -8868,7 +8928,7 @@
       // snapshot-restore replay above, omit opts and keep scrolling exactly
       // as before.
       if (!opts || opts.scroll !== false) {
-        const titleEl = document.getElementById(prefix==='ct' ? 'mq-ct-surfaces-title' : 'mq-b-ct-surfaces-title');
+        const titleEl = document.getElementById(prefix==='ct' ? 'mq-ct-surfaces-title' : (mqIsQt(prefix) ? `mq-${prefix}-ct-surfaces-title` : 'mq-b-ct-surfaces-title'));
         const newCard = document.getElementById('mqsc-'+newId);
         (titleEl || newCard)?.scrollIntoView({behavior:'smooth', block:'start'});
       }
@@ -9356,6 +9416,8 @@
     mqRefreshSectionVisibility('ct');
     // The shop's own quote types: same first-load treatment.
     (window._mqQuoteTypes || []).forEach(q => {
+      if (document.getElementById(`mq-${q.prefix}-ct-surfaces`)) addSurfaceInternal(q.prefix);
+      mqRefreshRoomVisibility(q.prefix);
       mqShowRoomDescription(q.prefix);
       mqRefreshMeasureGuide(q.prefix);
       mqRefreshAllPickerVisibility(q.prefix);
@@ -10416,6 +10478,7 @@
     if (ends('-specialty-sec')) return { t: 'Any extras?', l: 'Extras', s: 'Pull-outs, special features and more — add what you like, or just continue.' };
     if (ends('b-ct-options-sec')) return { t: 'Now, your countertops', l: 'Countertops', s: 'Choose your material and how you’d like it supplied.' };
     if (ends('b-ct-surfaces-sec')) return { t: 'Any other countertop areas?', l: 'More surfaces', s: 'Bar tops, a separate vanity, an island — add them here, or just continue.' };
+    if (/^mq-q\d+-ct-surfaces-sec$/.test(id)) return { t: 'Need countertops too?', l: 'Countertops', s: 'Add each counter you’d like priced — or just continue if you don’t need any.' };
     if (ends('ct-surfaces-sec')) return { t: 'Tell us about your countertops', l: 'Countertops', s: 'Add each surface you need. You can add more than one.' };
     if (sec.classList.contains('mq-cc-sec')) {
       // Custom pricing category: the shop's own name and description.

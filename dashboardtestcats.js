@@ -5074,10 +5074,11 @@ window.logoutMember = async function () {
     // as checkbox options at all, same as the cabinet-only categories.
     if (cat === 'specialty') {
       const { countertopsOnly, cabinetsOnly } = mqComputeTabScope((window._mqShopRecord || {}).fields);
-      if (countertopsOnly) return allRooms.filter(r => r.forCountertops);
-      if (cabinetsOnly) return allRooms.filter(r => !r.forCountertops && !r.forQt);
+      if (countertopsOnly) return allRooms.filter(r => r.forCountertops || r.forQt);
+      if (cabinetsOnly) return allRooms.filter(r => !r.forCountertops);
+      return allRooms; // specialty items can go in any quote, the shop's own quote types too
     }
-    // Quote types' project types only ever use their own custom categories.
+    // Other categories never reach a quote type's project types.
     return allRooms.filter(r => !r.forQt);
   }
 
@@ -5098,9 +5099,12 @@ window.logoutMember = async function () {
       const parsed = shopFields && shopFields['Hidden widget tabs'] ? JSON.parse(shopFields['Hidden widget tabs']) : null;
       if (parsed && Array.isArray(parsed.hidden)) hidden = parsed.hidden;
     } catch(e) { /* keep defaults */ }
+    let qtCountertops = false;
+    try { const parsed = shopFields && shopFields['Hidden widget tabs'] ? JSON.parse(shopFields['Hidden widget tabs']) : null; qtCountertops = !!(parsed && Array.isArray(parsed.quoteTypes) && parsed.quoteTypes.some(q => q && q.countertops && q.on !== false)); } catch(e) {}
     return {
       countertopsOnly: hidden.includes('both') && hidden.includes('cabinets') && !hidden.includes('countertops'),
-      cabinetsOnly: hidden.includes('both') && hidden.includes('countertops') && !hidden.includes('cabinets'),
+      // A quote type with the Countertops step still needs countertop pricing.
+      cabinetsOnly: hidden.includes('both') && hidden.includes('countertops') && !hidden.includes('cabinets') && !qtCountertops,
     };
   }
 
@@ -5362,6 +5366,17 @@ window.logoutMember = async function () {
   // A default picture the original was only showing automatically is
   // written in, so the copy shows the same pictures wherever it goes.
   function mqRoomGroupOf(r) { return r.forQt ? r.forQt : (r.forCountertops === true ? 'ct' : 'cab'); }
+  // How a project type is named in lists outside the Project types page
+  // (My Products, Specialty items…): a quote type's project types carry the
+  // quote's name — "Kitchen (Refacing)" — so two "Kitchen"s can't be mixed up.
+  function mqRoomLabel(r) {
+    if (!r) return '';
+    if (!r.forQt) return r.name || '';
+    const q = mqQuoteTypesOf((window._mqShopRecord || {}).fields).find(x => x.id === r.forQt);
+    if (!q || (r.name || '').toLowerCase().includes(q.name.toLowerCase())) return r.name || '';
+    return `${r.name} (${q.name})`;
+  }
+  window.mqRoomLabel = mqRoomLabel;
   // The picker: every project type the shop has (grouped by section) plus
   // MidasQuote's defaults, each with its cover photo and description.
   window.mqCopyRoomPicker = function(target) {
@@ -6270,12 +6285,13 @@ window.logoutMember = async function () {
       document.querySelectorAll('.mq-rooms-qt-sec').forEach(n => n.remove());
       wrap.insertAdjacentHTML('beforebegin', qts.map(q => {
         const steps = cats.filter(c => c.qt === q.id);
-        const state = q.on === false ? 'Hidden (turned off on Shop Info)' : (q.proOnly ? 'MidasQuote Pro only' : (steps.length ? 'Showing on your widget' : 'Not showing yet — needs a step on the Pricing tab'));
+        const hasSomething = steps.length || q.countertops || mqQtHasSpecialty(q.id);
+        const state = q.on === false ? 'Hidden (turned off on Shop Info)' : (q.proOnly ? 'MidasQuote Pro only' : (hasSomething ? 'Showing on your widget' : 'Not showing yet — add a priced step, a specialty item or countertops'));
         return `<div class="mq-card mq-rooms-sec mq-rooms-qt-sec" id="mq-rooms-sec-qt-${q.id}" data-mq-rsec="qt:${q.id}" style="margin-top:1.25rem">
           <button type="button" class="mq-rooms-sec-hdr" onclick="mqRoomSecToggle('qt:${q.id}')" aria-expanded="false">
             <span class="mq-rooms-sec-chev">▶</span>
             <span style="width:30px;height:30px;border-radius:7px;background:#fbf3df;color:#8a6510;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">${mqQtIconSvg(q.icon, 18)}</span>
-            <span style="flex:1;min-width:0;text-align:left"><span class="mq-rooms-sec-title">${mqEscHtml(q.name)}</span><span class="mq-rooms-qt-badge" style="margin-left:10px!important">YOUR QUOTE TYPE</span><span style="display:block;font-size:12px;font-weight:400;color:${q.on === false || !steps.length ? '#b45309' : '#6b7280'};margin-top:2px">${state}</span></span>
+            <span style="flex:1;min-width:0;text-align:left"><span class="mq-rooms-sec-title">${mqEscHtml(q.name)}</span><span class="mq-rooms-qt-badge" style="margin-left:10px!important">YOUR QUOTE TYPE</span><span style="display:block;font-size:12px;font-weight:400;color:${q.on === false || !hasSomething ? '#b45309' : '#6b7280'};margin-top:2px">${state}</span></span>
             <span class="mq-rooms-sec-count">${n(qtEntries[q.id].length)}</span>
           </button>
           <div class="mq-rooms-sec-body">
@@ -6286,10 +6302,21 @@ window.logoutMember = async function () {
               <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin:10px 0 6px">Icon</label>
               <div style="display:flex;flex-wrap:wrap;gap:6px">${Object.keys(MQ_QT_ICONS).map(k => `<button type="button" title="${k}" aria-label="Icon: ${k}" onclick="mqQtUpdate('${q.id}', { icon: '${k}' }, '✓ Icon updated.')" style="width:38px;height:38px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;${(q.icon || 'grid') === k ? 'background:#1a1a1a;color:#fff;border:1.5px solid #1a1a1a' : 'background:#fff;color:#374151;border:1px solid #d1d5db'}">${mqQtIconSvg(k, 20)}</button>`).join('')}</div>
               <div style="font-size:12px;color:#6b7280;margin-top:10px;line-height:1.5">The card photo customers see in Focused layout is the cover image of the first project type below. Name, on/off and Pro only are on <a href="#" onclick="event.preventDefault();mqNav('shop', document.querySelector('.mq-nav-item[onclick*=&quot;mqNav(\'shop\'&quot;]'))" style="color:#1d4ed8">Shop info</a>.</div>
+              <div style="margin-top:10px;padding-top:10px;border-top:1px dashed #e5e7eb">
+                <div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:6px">Include</div>
+                <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;color:#111;cursor:pointer">
+                  <input type="checkbox" ${q.countertops ? 'checked' : ''} onchange="mqQtUpdate('${q.id}', { countertops: this.checked }, this.checked ? '✓ Countertops added to ${mqEscHtml(q.name).replace(/'/g, '&#39;')}.' : '✓ Countertops removed.')" style="width:16px;height:16px;margin-top:1px;flex-shrink:0;accent-color:#1a1a1a"/>
+                  <span><strong>Countertops</strong> <span style="color:#6b7280">— adds a "Need countertops too?" step: the same surfaces, materials, edges, cutouts and backsplash as your Countertops tab, priced with your countertop pricing.</span></span>
+                </label>
+              </div>
               <div style="font-size:12px;color:#374151;margin-top:10px;padding-top:10px;border-top:1px dashed #e5e7eb">
-                <strong>Steps:</strong> ${steps.length ? steps.map(c => mqEscHtml(c.name || 'Untitled')).join(' → ') : '<span style="color:#b45309">none yet</span>'}
+                <strong>Priced steps:</strong> ${steps.length ? steps.map(c => mqEscHtml(c.name || 'Untitled')).join(' → ') : '<span style="color:#6b7280">none yet</span>'}
                 <span style="color:#6b7280">— these come from the Pricing tab's custom pricing categories set to "${mqEscHtml(q.name)}".</span>
                 <a href="#" onclick="event.preventDefault();mqNav('pricing', document.querySelector('.mq-nav-item[onclick*=&quot;mqNav(\'pricing\'&quot;]'))" style="color:#1d4ed8;font-weight:600;white-space:nowrap">Go to Pricing →</a>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+                  <button type="button" class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqQtAddStep('${q.id}')">+ Add a priced step for ${mqEscHtml(q.name)}</button>
+                </div>
+                <div style="font-size:12px;color:#6b7280;margin-top:8px;line-height:1.5">Specialty items work here too: in <strong>Specialty items</strong>, tick this quote's project types (they're listed as e.g. "Kitchen (${mqEscHtml(q.name)})") on any item and it shows in this quote's Details &amp; Selections step.</div>
               </div>
             </div>
             <div id="mq-rooms-list-qt-${q.id}"></div>
@@ -8486,8 +8513,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // adding/changing a photo still happens on My Products.
     let savedPhotos = {};
     try { savedPhotos = shopRecord.fields['Photos'] ? JSON.parse(shopRecord.fields['Photos']) : {}; } catch(e) {}
-    const rooms = (window._mqRooms || defaultRoomTypes()).filter(r => !r.forQt); // quote types' project types never carry specialty items
-    const roomOptions = rooms.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
+    const rooms = window._mqRooms || defaultRoomTypes();
+    const roomOptions = rooms.map(r => `<option value="${r.id}">${mqEscHtml(mqRoomLabel(r))}</option>`).join('');
     container.innerHTML = `
       <div class="mq-spec-filter-toolbar" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;padding:10px 12px;background:#f9fafb;border-radius:8px">
         <div style="flex:1;min-width:160px">
@@ -10674,7 +10701,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       if (arrow) arrow.style.transform = opening ? 'rotate(90deg)' : 'rotate(0deg)';
     };
 
-    const specRoomOptions = (window._mqRooms || defaultRoomTypes()).filter(r => !r.forQt).map(r => `<option value="${r.id}">${r.name}</option>`).join('');
+    const specRoomOptions = (window._mqRooms || defaultRoomTypes()).map(r => `<option value="${r.id}">${mqEscHtml(mqRoomLabel(r))}</option>`).join('');
     const specSection = specItems.length ? `<div class="mq-card mq-product-category-card" style="padding:0;overflow:hidden">
       <div onclick="mqToggleProductCategory('specialty')" style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem;cursor:pointer">
         <div class="mq-card-title" style="margin:0">⭐ Specialty Items <span style="font-size:12px;font-weight:400;color:#9ca3af">(${specItems.length})</span></div>
@@ -11072,6 +11099,12 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     if (!rooms) { try { rooms = JSON.parse((window._mqShopRecord || {}).fields['Room types'] || '[]'); } catch(e) { rooms = []; } }
     return (rooms || []).filter(r => r && r.forQt === qtId);
   }
+  // Any specialty item ticked for one of this quote type's project types?
+  // (Uses the Specialty items list when it's been loaded.)
+  function mqQtHasSpecialty(qtId) {
+    const ids = mqQtRoomsOf(qtId).map(r => r.id);
+    return (window._mqSpecItemsList || []).some(it => { const raw = it.visibleRooms; let v = []; try { v = typeof raw === 'string' ? JSON.parse(raw || '[]') : (raw || []); } catch(e) { v = []; } return Array.isArray(v) && v.some(id => ids.includes(id)); });
+  }
   window.mqRenderQuoteTypes = function() {
     const list = el('mq-qt-list');
     const shopRec = window._mqShopRecord;
@@ -11083,9 +11116,10 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const nRooms = mqQtRoomsOf(q.id).length;
       const nSteps = cats.filter(c => c.qt === q.id).length;
       const on = q.on !== false;
-      const status = !nSteps
-        ? `<span style="color:#b45309">Not showing yet — give it a step on the Pricing tab</span>`
-        : `${nRooms} project type${nRooms === 1 ? '' : 's'} · ${nSteps} step${nSteps === 1 ? '' : 's'}`;
+      const extras = [q.countertops ? 'countertops' : '', mqQtHasSpecialty(q.id) ? 'specialty items' : ''].filter(Boolean);
+      const status = !nSteps && !extras.length
+        ? `<span style="color:#b45309">Not showing yet — give it a priced step, a specialty item or countertops</span>`
+        : `${nRooms} project type${nRooms === 1 ? '' : 's'}${nSteps ? ` · ${nSteps} priced step${nSteps === 1 ? '' : 's'}` : ''}${extras.length ? ' · ' + extras.join(' + ') : ''}`;
       const nameHtml = editing === q.id
         ? `<span style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><input type="text" id="mq-qt-rename-${q.id}" maxlength="40" value="${mqEscHtml(q.name)}" onkeydown="if(event.key==='Enter'){event.preventDefault();mqQtRenameSave('${q.id}');}if(event.key==='Escape'){mqQtRename('');}" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;width:180px"/><button type="button" class="mq-btn mq-btn-sm" onclick="mqQtRenameSave('${q.id}')">Save</button><button type="button" class="mq-btn mq-btn-sm" onclick="mqQtRename('')">Cancel</button></span>`
         : `<span style="font-size:13.5px;font-weight:600;color:#111">${mqEscHtml(q.name)}</span>${q.proOnly ? ' <span style="font-size:10px;font-weight:700;color:#fff;background:#1a1a1a;border-radius:4px;padding:2px 6px;vertical-align:1px">PRO</span>' : ''}`;
@@ -11195,6 +11229,18 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       mqRenderQuoteTypes();
       showMsg('mq-shop-msg', `✓ "${q.name}" deleted.`);
     } catch(e) { showMsg('mq-shop-msg', 'Error saving.', 'error'); }
+  };
+  // Pricing tab with the "New category" window already open for this quote.
+  window.mqQtAddStep = function(qtId) {
+    window._mqccNewCatQt = qtId;
+    const navEl = document.querySelector('.mq-nav-item[onclick*="mqNav(\'pricing\'"]');
+    mqNav('pricing', navEl);
+    let tries = 0;
+    const open = () => {
+      if (typeof window.mqccOpenCat === 'function' && document.getElementById('mqcc-cat-overlay')) { window.mqccOpenCat(null); return; }
+      if (++tries < 40) setTimeout(open, 150);
+    };
+    setTimeout(open, 300);
   };
   // Jumps to Project types with this quote type's section open.
   window.mqQtOpenInRooms = function(id) {
@@ -13558,14 +13604,17 @@ ${mqIsFreePlanShop() ? mqShowroomLockNoteHTML(true) : `      <label class="mq-bt
     // widgetpro.js/showroom.html, which now enforces the same rule for
     // what customers actually see.
     if (((window._mqCategoryRooms || {})[cat] || []).includes(r.id)) return false;
-    return cat === 'specialty' ? !r.forCountertops : true;
+    // Specialty: an item with no project types picked shows for every
+    // cabinet project type — never countertop ones or a quote type's (those
+    // are ticked one by one).
+    return cat === 'specialty' ? (!r.forCountertops && !r.forQt) : true;
   }
 
   function roomLinkSummaryText(visibleRooms, rooms, cat) {
     if (!visibleRooms || !visibleRooms.length) {
-      return cat === 'specialty' ? 'All cabinet types (not Countertops — check to add)' : 'All project types';
+      return cat === 'specialty' ? 'All cabinet types (not Countertops or your own quote types — tick to add)' : 'All project types';
     }
-    const names = visibleRooms.map(id => rooms.find(r => r.id === id)?.name).filter(Boolean);
+    const names = visibleRooms.map(id => mqRoomLabel(rooms.find(r => r.id === id))).filter(Boolean);
     // An empty visibleRooms list means "never configured, so visible for
     // every current project type" (handled above) -- this is a DIFFERENT
     // case: it WAS explicitly scoped to one or more specific project types,
@@ -13598,7 +13647,7 @@ ${mqIsFreePlanShop() ? mqShowroomLockNoteHTML(true) : `      <label class="mq-bt
       const isChecked = !catHidden && (visibleRooms.length ? visibleRooms.includes(r.id) : roomCheckedByDefault(r, 'specialty'));
       return `
       <label style="display:flex;align-items:center;gap:6px;font-size:12px;padding:3px 0;cursor:${catHidden?'not-allowed':'pointer'};opacity:${catHidden?'0.5':'1'}"${catHidden?` title="Hidden for this project type by the category setting above — enable it there first."`:''}>
-        <input type="checkbox" id="mq-spec-room-${itemId}-${r.id}" ${isChecked?'checked':''}${catHidden?' disabled':''} onchange="mqToggleSpecRoom('${itemId}')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> ${r.name}${catHidden?' <span style="font-size:11px;color:#92400e;font-weight:600;white-space:nowrap">🔒 hidden</span>':''}
+        <input type="checkbox" id="mq-spec-room-${itemId}-${r.id}" ${isChecked?'checked':''}${catHidden?' disabled':''} onchange="mqToggleSpecRoom('${itemId}')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> ${mqEscHtml(mqRoomLabel(r))}${catHidden?' <span style="font-size:11px;color:#92400e;font-weight:600;white-space:nowrap">🔒 hidden</span>':''}
       </label>`;
     }).join('');
     return `
@@ -14170,7 +14219,7 @@ ${mqIsFreePlanShop() ? mqShowroomLockNoteHTML(true) : `      <label class="mq-bt
       const isChecked = !catHidden && (visibleRooms.length ? visibleRooms.includes(r.id) : roomCheckedByDefault(r, cat));
       return `
       <label style="display:flex;align-items:center;gap:6px;font-size:12px;padding:3px 0;cursor:${catHidden?'not-allowed':'pointer'};opacity:${catHidden?'0.5':'1'}"${catHidden?` title="Hidden for this project type by the category setting above — enable it there first."`:''}>
-        <input type="checkbox" id="mq-li-room-${key}-${r.id}" ${isChecked?'checked':''}${catHidden?' disabled':''} onchange="mqToggleLineItemRoom('${key}','${idsAttr}','${cat||''}')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> ${r.name}${catHidden?' <span style="font-size:11px;color:#92400e;font-weight:600;white-space:nowrap">🔒 hidden</span>':''}
+        <input type="checkbox" id="mq-li-room-${key}-${r.id}" ${isChecked?'checked':''}${catHidden?' disabled':''} onchange="mqToggleLineItemRoom('${key}','${idsAttr}','${cat||''}')" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> ${mqEscHtml(mqRoomLabel(r))}${catHidden?' <span style="font-size:11px;color:#92400e;font-weight:600;white-space:nowrap">🔒 hidden</span>':''}
       </label>`;
     }).join('');
     return `
@@ -14258,7 +14307,7 @@ ${mqIsFreePlanShop() ? mqShowroomLockNoteHTML(true) : `      <label class="mq-bt
     const summary = categorySummaryText(hiddenIds, rooms);
     const checkboxes = rooms.map(r => `
       <label style="display:flex;align-items:center;gap:6px;font-size:12px;padding:3px 0;cursor:pointer">
-        <input type="checkbox" id="mq-cat-room-${cat}-${r.id}" ${!hiddenIds.includes(r.id)?'checked':''} onchange="mqToggleCategoryRoom('${cat}','${r.id}',this.checked)" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> ${r.name}
+        <input type="checkbox" id="mq-cat-room-${cat}-${r.id}" ${!hiddenIds.includes(r.id)?'checked':''} onchange="mqToggleCategoryRoom('${cat}','${r.id}',this.checked)" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> ${mqEscHtml(mqRoomLabel(r))}
       </label>`).join('');
     const linkedWarning = LINKED_CABINET_CATS.includes(cat) ? `
       <div style="font-size:11px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:8px 10px;margin-bottom:8px;line-height:1.4">
