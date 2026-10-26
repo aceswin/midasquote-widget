@@ -2027,6 +2027,7 @@ window.logoutMember = async function () {
               <div id="mq-rooms-list"></div>
               <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px;margin-bottom:1.25rem">
                 <button class="mq-btn mq-btn-sm" onclick="mqAddRoom()">+ Add room</button>
+                <select id="mq-copy-room-select-cab" class="mq-copy-room-select" data-target="cab" onchange="mqCopyRoomInto(this.value,'cab');this.value=''" style="font-size:13px;padding:7px 8px;border:1px solid #d1d5db;border-radius:6px"></select>
                 <select id="mq-restore-room-select" onchange="mqRestoreDefaultRoom(this.value)" style="font-size:13px;padding:7px 8px;border:1px solid #d1d5db;border-radius:6px;display:none">
                   <option value="">↩ Restore a default type…</option>
                 </select>
@@ -2046,6 +2047,7 @@ window.logoutMember = async function () {
               <div id="mq-rooms-list-ct-empty" style="display:none;font-size:12px;color:#9ca3af;padding:4px 0 12px">No countertop project types yet. Add one below if you'd like customers to pick something like "New countertop install" or "Countertop replacement" before they measure — totally optional.</div>
               <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px">
                 <button class="mq-btn mq-btn-sm" onclick="mqAddRoom(true)">+ Add countertop project type</button>
+                <select id="mq-copy-room-select-ct" class="mq-copy-room-select" data-target="ct" onchange="mqCopyRoomInto(this.value,'ct');this.value=''" style="font-size:13px;padding:7px 8px;border:1px solid #d1d5db;border-radius:6px"></select>
                 <select id="mq-restore-room-select-ct" onchange="mqRestoreDefaultRoom(this.value)" style="font-size:13px;padding:7px 8px;border:1px solid #d1d5db;border-radius:6px;display:none">
                   <option value="">↩ Restore a default type…</option>
                 </select>
@@ -2558,6 +2560,11 @@ window.logoutMember = async function () {
               <div class="mq-card-title">🏷️ Default project type descriptions</div>
               <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">These are the name and description every brand-new shop gets automatically for Refacing, Repainting, and Restaining — the note customers see on the widget when they pick that project type. Editing here only affects shops seeded from now on; it doesn't retroactively change any shop's existing project types.</p>
               <div id="mq-master-rooms-content"><div class="mq-loading">Loading...</div></div>
+            </div>
+            <div class="mq-card" style="margin-bottom:1.5rem">
+              <div class="mq-card-title">🖼️ Image library</div>
+              <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Photos every shop can pick from on its Project types page ("🖼️ Choose from library" for cover photos, "🖼️ Add from library" for measuring guides). MidasQuote's built-in photos and the images on the default project types above are always included — add more here (e.g. for new trades or quote types).</p>
+              <div id="mq-imglib-admin"><div class="mq-loading">Loading...</div></div>
             </div>
             <div id="mq-templates-content"><div class="mq-loading">Loading templates...</div></div>
             <button class="mq-btn" style="margin-top:8px" onclick="mqAddTemplateItem()">+ Add template item</button>
@@ -3363,6 +3370,7 @@ window.logoutMember = async function () {
       #midasquote-dashboard #mq-page-shop>.mq-card,
       #midasquote-dashboard #mq-rooms-cabinet-card,
       #midasquote-dashboard #mq-rooms-ct-card,
+      #midasquote-dashboard .mq-rooms-qt-sec,
       #midasquote-dashboard #mq-page-showroom .mq-sr-card,
       #midasquote-dashboard #mq-page-embed>.mq-card{max-width:1120px;margin-left:auto!important;margin-right:auto!important}
       #midasquote-dashboard #mq-page-shop>.mq-card{overflow:hidden;padding:0!important}
@@ -5346,6 +5354,238 @@ window.logoutMember = async function () {
     const key = mqDefaultCoverImageKeyFor(roomId, roomName);
     return key ? MQ_DEFAULT_COVER_IMAGE_MAP[key] : '';
   }
+  // ── Copy a project type (Oct 2026) ──
+  // Any section's "Copy an existing project type…" list: the shop's own
+  // project types (every section) plus MidasQuote's defaults. The copy keeps
+  // the description, cover photo, measuring text and pictures and display
+  // settings; price adjustments only carry over within the same section.
+  // A default picture the original was only showing automatically is
+  // written in, so the copy shows the same pictures wherever it goes.
+  function mqRoomGroupOf(r) { return r.forQt ? r.forQt : (r.forCountertops === true ? 'ct' : 'cab'); }
+  function mqFillCopyRoomSelects() {
+    const rooms = window._mqRooms || [];
+    const qts = mqQuoteTypesOf((window._mqShopRecord || {}).fields);
+    const esc = mqEscHtml;
+    const groups = [['cab', 'Cabinets'], ['ct', 'Countertops'], ...qts.map(q => [q.id, q.name])];
+    const own = groups.map(([k, label]) => {
+      const list = rooms.filter(r => r.name && mqRoomGroupOf(r) === k);
+      return list.length ? `<optgroup label="Your ${esc(label)} project types">${list.map(r => `<option value="own:${esc(r.id)}">${esc(r.name)}</option>`).join('')}</optgroup>` : '';
+    }).join('');
+    const defs = defaultRoomTypes().concat(defaultCountertopRoomTypes());
+    const defHtml = `<optgroup label="MidasQuote defaults">${defs.map(r => `<option value="def:${esc(r.id)}">${esc(r.name)}</option>`).join('')}</optgroup>`;
+    document.querySelectorAll('.mq-copy-room-select').forEach(sel => {
+      sel.innerHTML = `<option value="">⧉ Copy an existing project type…</option>${own}${defHtml}`;
+    });
+  }
+  window.mqCopyRoomInto = async function(val, target) {
+    if (!val) return;
+    const [kind, srcId] = [val.slice(0, 3), val.slice(4)];
+    if (window._mqRooms && window._mqRooms.length) await mqSaveRooms(); // keep any unsaved edits first
+    const pool = kind === 'own' ? (window._mqRooms || []) : defaultRoomTypes().concat(defaultCountertopRoomTypes());
+    const src = pool.find(r => r.id === srcId);
+    if (!src) return;
+    const sameGroup = kind === 'own' && mqRoomGroupOf(src) === target;
+    const copy = JSON.parse(JSON.stringify(src));
+    copy.id = (target === 'cab' ? 'room_' : (target === 'ct' ? 'ctroom_' : 'qtroom_')) + Date.now().toString(36);
+    const taken = new Set((window._mqRooms || []).filter(r => mqRoomGroupOf(r) === target).map(r => (r.name || '').toLowerCase()));
+    copy.name = taken.has((src.name || '').toLowerCase()) ? `${src.name} (copy)` : src.name;
+    delete copy.forCountertops; delete copy.forQt;
+    if (target === 'ct') copy.forCountertops = true;
+    else if (target !== 'cab') copy.forQt = target;
+    if (!sameGroup) {
+      ['materialAdjPct', 'upperMaterialAdjPct', 'islandMaterialAdjPct', 'installAdjPct', 'totalAdjPct', 'adjustment'].forEach(k => { if (k in copy) copy[k] = 0; });
+      if (target !== 'cab') { copy.showIslandButton = false; copy.islandAllowDoubleRow = false; }
+    }
+    if (!(copy.coverImage || '').trim()) copy.coverImage = mqDefaultCoverImageUrlFor(src.id, src.name) || '';
+    if (!(copy.measureImage || '').trim() && !(copy.measureImages || []).some(u => (u || '').trim())) {
+      const urls = mqDefaultMeasureImageUrlsFor(src.id, src.name, src.forCountertops);
+      if (urls.length) { copy.measureImage = urls[0]; copy.measureImages = urls.slice(1); }
+    }
+    copy.active = true;
+    if (!window._mqRooms) window._mqRooms = [];
+    window._mqRooms.push(copy);
+    _mqExpandedRoomIds.add(copy.id);
+    window._mqRoomSecOpen = window._mqRoomSecOpen || new Set();
+    window._mqRoomSecOpen.add(target === 'cab' ? 'cab' : (target === 'ct' ? 'ct' : 'qt:' + target));
+    renderRoomsList();
+    await mqSaveRooms();
+    showMsg('mq-rooms-msg', `✓ Copied "${src.name}" — change anything you like; the original isn't affected.`);
+  };
+
+  // ── Image library (Oct 2026) ──
+  // "🖼️ Choose from library" (cover photo) / "🖼️ Add from library"
+  // (measuring guide, pick several) on every project type. The library is
+  // MidasQuote's built-in photos + the images on the Templates page's
+  // default project types + any the admin adds on the Templates page
+  // (stored on the MASTER_TEMPLATE shop's Photos under '__imageLibrary',
+  // which every shop can already read — no new Airtable field).
+  function mqImgLibBuiltIn() {
+    const out = [];
+    const cap = k => k.charAt(0).toUpperCase() + k.slice(1);
+    const add = (url, label, kind) => { if (url && !out.some(x => x.url === url)) out.push({ url, label, kind, builtIn: true }); };
+    Object.entries(MQ_DEFAULT_COVER_IMAGE_MAP).forEach(([k, u]) => add(u, cap(k), 'cover'));
+    ['kitchen', 'bathroom', 'laundry', 'garage', 'commercial', 'other'].forEach(k => add(MQ_DEFAULT_COVER_IMAGE_BASE + 'countertop-' + k + '.jpg', cap(k) + ' counters', 'cover'));
+    Object.entries({ 'how-to-measure1.jpg': 'How to measure cabinets', 'how-to-measure.jpg': 'How to measure cabinets (2)', 'things-to-remember.jpg': 'Things to remember', 'island.jpg': 'Islands', 'corner-cabinets.jpg': 'Corner cabinets', 'bathroom11.jpg': 'Bathroom vanity', 'countertops.jpg': 'Countertops' })
+      .forEach(([f, l]) => add(MQ_DEFAULT_MEASURE_IMAGE_BASE + f, l, 'measure'));
+    Object.entries(MQ_DEFAULT_MASTER_MEASURE_IMAGE_MAP).forEach(([k, u]) => add(u, cap(k), 'measure'));
+    return out;
+  }
+  function mqImgLibAdded(masterShop) {
+    let photos = {};
+    try { photos = masterShop && masterShop.fields['Photos'] ? JSON.parse(masterShop.fields['Photos']) : {}; } catch(e) { photos = {}; }
+    let list = [];
+    try { list = photos.__imageLibrary ? JSON.parse(photos.__imageLibrary) : []; } catch(e) { list = []; }
+    return Array.isArray(list) ? list.filter(x => x && x.url) : [];
+  }
+  async function mqImgLibAll() {
+    const out = mqImgLibBuiltIn();
+    const add = (url, label, kind) => { url = String(url || '').trim(); if (url && /^https?:\/\//.test(url) && !out.some(x => x.url === url)) out.push({ url, label, kind }); };
+    try {
+      const master = await ensureMasterTemplateShop();
+      let mRooms = [];
+      try { mRooms = master.fields['Room types'] ? JSON.parse(master.fields['Room types']) : []; } catch(e) { mRooms = []; }
+      (mRooms || []).forEach(r => {
+        add(r.coverImage, r.name || 'Project', 'cover');
+        [r.measureImage, ...(r.measureImages || [])].forEach((u, i) => add(u, (r.name || 'Project') + (i ? ` (${i + 1})` : ''), 'measure'));
+      });
+      mqImgLibAdded(master).forEach(x => add(x.url, x.label || 'Photo', x.kind === 'measure' ? 'measure' : 'cover'));
+    } catch(e) { console.warn('Image library: could not load the template shop', e); }
+    return out;
+  }
+  window.mqImgLibOpen = async function(roomId, mode) {
+    const r = (window._mqRooms || []).find(x => x.id === roomId);
+    const idx = (window._mqRooms || []).indexOf(r);
+    if (idx >= 0 && !(el(`mq-room-name-${idx}`)?.value || '').trim()) { showMsg('mq-rooms-msg', 'Give this project type a name first.', 'error'); el(`mq-room-name-${idx}`)?.focus(); return; }
+    let ov = document.getElementById('mq-imglib-overlay');
+    if (!ov) {
+      ov = document.createElement('div');
+      ov.id = 'mq-imglib-overlay';
+      ov.style.cssText = 'position:fixed;inset:0;z-index:100000;background:rgba(17,24,39,.55);display:flex;align-items:center;justify-content:center;padding:20px';
+      ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
+      document.body.appendChild(ov);
+    }
+    ov.innerHTML = '<div style="background:#fff;border-radius:16px;padding:24px;font:14px system-ui,sans-serif;color:#6b7280">Loading library…</div>';
+    const all = await mqImgLibAll();
+    window._mqImgLib = { roomId, mode, tab: mode, picked: new Set(), all };
+    mqImgLibRender();
+  };
+  function mqImgLibRender() {
+    const st = window._mqImgLib, ov = document.getElementById('mq-imglib-overlay');
+    if (!st || !ov) return;
+    const esc = mqEscHtml;
+    const list = st.all.filter(x => st.tab === 'all' || x.kind === st.tab);
+    const tab = (k, l) => `<button type="button" onclick="mqImgLibTab('${k}')" style="padding:7px 14px;border-radius:99px;font:600 13px system-ui,sans-serif;cursor:pointer;${st.tab === k ? 'background:#1a1a1a;color:#fff;border:1px solid #1a1a1a' : 'background:#fff;color:#374151;border:1px solid #d1d5db'}">${l}</button>`;
+    const multi = st.mode === 'measure';
+    ov.innerHTML = `<div style="background:#fff;border-radius:16px;width:min(920px,100%);max-height:88vh;display:flex;flex-direction:column;font-family:system-ui,sans-serif;box-shadow:0 24px 60px rgba(0,0,0,.3)">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:18px 20px 12px;border-bottom:1px solid #eef0f3">
+        <div><div style="font-size:17px;font-weight:700;color:#111">${multi ? 'Add measuring guide pictures' : 'Choose a cover photo'}</div>
+          <div style="font-size:12.5px;color:#6b7280;margin-top:3px">${multi ? 'Pick one or more — they\'re added after any pictures this project type already has.' : 'Click a photo to use it.'} Any photo can be used for either.</div></div>
+        <button type="button" onclick="document.getElementById('mq-imglib-overlay').remove()" aria-label="Close" style="background:none;border:0;font-size:24px;line-height:1;cursor:pointer;color:#6b7280">×</button>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;padding:12px 20px">${tab('cover', 'Cover photos')}${tab('measure', 'Measuring guides')}${tab('all', 'All')}</div>
+      <div style="overflow-y:auto;padding:4px 20px 16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px">
+        ${list.map(x => { const i = st.all.indexOf(x); const on = st.picked.has(i); return `<button type="button" onclick="mqImgLibPick(${i})" title="${esc(x.label)}" style="position:relative;display:flex;flex-direction:column;gap:6px;padding:6px;border-radius:12px;cursor:pointer;text-align:left;background:${on ? '#fffbeb' : '#fff'};border:${on ? '2px solid #d7a42e' : '1px solid #e5e7eb'}">
+          <img src="${esc(x.url)}" alt="" loading="lazy" style="width:100%;height:104px;object-fit:cover;border-radius:8px;background:#f3f4f6" onerror="this.style.opacity=.2"/>
+          <span style="font:600 12px system-ui,sans-serif;color:#111;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(x.label)}</span>
+          ${on ? '<span style="position:absolute;top:10px;right:10px;width:24px;height:24px;border-radius:50%;background:#d7a42e;color:#fff;font:700 14px system-ui;display:flex;align-items:center;justify-content:center">✓</span>' : ''}
+        </button>`; }).join('') || '<div style="color:#9ca3af;font-size:13px">Nothing here yet.</div>'}
+      </div>
+      ${multi ? `<div style="display:flex;justify-content:flex-end;gap:8px;padding:12px 20px;border-top:1px solid #eef0f3">
+        <button type="button" class="mq-btn mq-btn-sm" onclick="document.getElementById('mq-imglib-overlay').remove()">Cancel</button>
+        <button type="button" class="mq-btn mq-btn-primary mq-btn-sm" ${st.picked.size ? '' : 'disabled'} onclick="mqImgLibApply()">Add ${st.picked.size || ''} picture${st.picked.size === 1 ? '' : 's'}</button>
+      </div>` : ''}
+    </div>`;
+  }
+  window.mqImgLibTab = function(k) { if (window._mqImgLib) { window._mqImgLib.tab = k; mqImgLibRender(); } };
+  window.mqImgLibPick = function(i) {
+    const st = window._mqImgLib;
+    if (!st) return;
+    if (st.mode === 'cover') { st.picked = new Set([i]); mqImgLibApply(); return; }
+    if (st.picked.has(i)) st.picked.delete(i); else st.picked.add(i);
+    mqImgLibRender();
+  };
+  window.mqImgLibApply = async function() {
+    const st = window._mqImgLib;
+    if (!st) return;
+    const urls = [...st.picked].map(i => st.all[i].url); // in the order they were picked
+    document.getElementById('mq-imglib-overlay')?.remove();
+    if (!urls.length) return;
+    await mqSaveRooms(); // keep any unsaved edits first
+    const r = (window._mqRooms || []).find(x => x.id === st.roomId);
+    if (!r) return;
+    if (st.mode === 'cover') r.coverImage = urls[0];
+    else {
+      const cur = [r.measureImage, ...(r.measureImages || [])].map(u => (u || '').trim()).filter(Boolean);
+      const all = [...cur, ...urls.filter(u => !cur.includes(u))];
+      r.measureImage = all[0] || '';
+      r.measureImages = all.slice(1);
+    }
+    _mqExpandedRoomIds.add(r.id);
+    renderRoomsList();
+    await mqSaveRooms();
+    showMsg('mq-rooms-msg', st.mode === 'cover' ? '✓ Cover photo set.' : `✓ ${urls.length} picture${urls.length === 1 ? '' : 's'} added to the measuring guide.`);
+  };
+
+  // Templates (Admin): the shop-wide library additions.
+  window.mqImgLibAdminRender = async function() {
+    const box = document.getElementById('mq-imglib-admin');
+    if (!box) return;
+    let master;
+    try { master = await ensureMasterTemplateShop(); } catch(e) { box.innerHTML = '<div style="color:#b91c1c;font-size:13px">Could not load the template shop.</div>'; return; }
+    const added = mqImgLibAdded(master);
+    const esc = mqEscHtml;
+    box.innerHTML = `
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin-bottom:14px">
+        ${added.map((x, i) => `<div style="border:1px solid #e5e7eb;border-radius:10px;padding:6px">
+          <img src="${esc(x.url)}" alt="" style="width:100%;height:96px;object-fit:cover;border-radius:7px;background:#f3f4f6" onerror="this.style.opacity=.2"/>
+          <div style="font-size:12px;font-weight:600;color:#111;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(x.label || 'Photo')}</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#6b7280">${x.kind === 'measure' ? 'Measuring guide' : 'Cover photo'}<button type="button" class="mq-btn mq-btn-danger mq-btn-sm" style="font-size:11px" onclick="mqImgLibAdminRemove(${i})">Remove</button></div>
+        </div>`).join('') || '<div style="font-size:12px;color:#9ca3af">No added photos yet — the built-in ones are always there.</div>'}
+      </div>
+      <div style="border-top:1px dashed #e5e7eb;padding-top:12px;display:grid;gap:8px;max-width:560px">
+        <input type="text" id="mq-imglib-label" maxlength="60" placeholder="Name (e.g. Closet measuring guide)" style="font-size:13px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px"/>
+        <select id="mq-imglib-kind" style="font-size:13px;padding:7px 8px;border:1px solid #d1d5db;border-radius:6px"><option value="cover">Cover photo</option><option value="measure">Measuring guide</option></select>
+        <input type="text" id="mq-imglib-url" placeholder="https://… image link — or upload" style="font-size:13px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px"/>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <label class="mq-btn mq-btn-sm" style="font-size:12px;cursor:pointer">📤 Upload<input type="file" id="mq-imglib-file" accept="image/*" style="display:none"/></label>
+          <span id="mq-imglib-status" style="font-size:11px"></span>
+          <button type="button" class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqImgLibAdminAdd()">Add to library</button>
+        </div>
+      </div>`;
+    mqWireUploadButton(null, 'mq-imglib-file', 'mq-imglib-status', 'mq-imglib-url', window._mqShopRecord?.fields?.['Shop token'] || 'library', 'products', () => {});
+  };
+  async function mqImgLibAdminSave(list) {
+    const master = await ensureMasterTemplateShop();
+    let photos = {};
+    try { photos = master.fields['Photos'] ? JSON.parse(master.fields['Photos']) : {}; } catch(e) { photos = {}; }
+    photos.__imageLibrary = JSON.stringify(list);
+    const json = JSON.stringify(photos);
+    await atUpdate(CONFIG.SHOPS_TABLE, master.id, { 'Photos': json });
+    master.fields['Photos'] = json;
+  }
+  window.mqImgLibAdminAdd = async function() {
+    const url = (el('mq-imglib-url')?.value || '').trim();
+    const label = (el('mq-imglib-label')?.value || '').trim();
+    if (!/^https?:\/\//.test(url)) { showMsg('mq-templates-msg', 'Add an image link or upload a photo first.', 'error'); return; }
+    try {
+      const master = await ensureMasterTemplateShop();
+      const list = mqImgLibAdded(master);
+      if (!list.some(x => x.url === url)) list.push({ url, label: label || 'Photo', kind: el('mq-imglib-kind')?.value === 'measure' ? 'measure' : 'cover' });
+      await mqImgLibAdminSave(list);
+      showMsg('mq-templates-msg', '✓ Added to the image library — every shop can pick it now.');
+      mqImgLibAdminRender();
+    } catch(e) { showMsg('mq-templates-msg', 'Error saving.', 'error'); }
+  };
+  window.mqImgLibAdminRemove = async function(i) {
+    try {
+      const master = await ensureMasterTemplateShop();
+      const list = mqImgLibAdded(master);
+      list.splice(i, 1);
+      await mqImgLibAdminSave(list);
+      mqImgLibAdminRender();
+    } catch(e) { showMsg('mq-templates-msg', 'Error saving.', 'error'); }
+  };
+
   // Clears the field rather than writing a concrete URL — leaving it blank
   // is what lets the widget's own fallback stay current forever without
   // ever needing this button pressed again, matching mqFillDefaultMeasureImage.
@@ -5796,6 +6036,7 @@ window.logoutMember = async function () {
                   📤 Upload
                   <input type="file" id="mq-room-cover-file-${idx}" accept="image/*" style="display:none"/>
                 </label>
+                <button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqImgLibOpen('${r.id}','cover')">🖼️ Choose from library</button>
                 ${mqDefaultCoverImageUrlFor(r.id, r.name) ? `<button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqUseDefaultCoverImage('${r.id}',${idx})">↺ Use default image</button>` : ''}
                 <span id="mq-room-cover-status-${idx}" style="font-size:11px;margin-left:6px"></span>
               </div>
@@ -5820,6 +6061,7 @@ window.logoutMember = async function () {
                   📤 Upload photo
                   <input type="file" id="mq-room-measure-img-file-${idx}" accept="image/*" style="display:none"/>
                 </label>
+                <button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqImgLibOpen('${r.id}','measure')">🖼️ Add from library</button>
                 <span style="font-size:11px;color:#9ca3af;margin-left:2px">or paste a YouTube/Vimeo/Loom/video link above instead</span><br/>
                 ${isQt && !mqDefaultMeasureImageUrlFor(r.id, r.name, false) ? '' : `<button type="button" class="mq-btn mq-btn-sm" style="font-size:11px;margin-top:4px" onclick="mqFillDefaultMeasureImage('mq-room-measure-img-${idx}','mq-room-measure-img-preview-${idx}','${r.id}',${idx})">↺ Use default image</button>`}
                 ${mqDefaultMeasureImageUrlsFor(r.id, r.name, r.forCountertops).length > 1 ? `<button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqUseAllDefaultMeasureImages('${r.id}',${idx})">↺ Use all ${mqDefaultMeasureImageUrlsFor(r.id, r.name).length} default images</button>` : ''}
@@ -5999,17 +6241,20 @@ window.logoutMember = async function () {
     if (el('mq-rooms-sec-ct-count')) el('mq-rooms-sec-ct-count').textContent = n(countertopEntries.length);
 
     // One section per quote type (Shop Info → Estimator tabs).
+    // Placed straight on the page (next to the Countertops section, not
+    // inside a wrapper) so they get exactly the same width and spacing.
     const wrap = el('mq-rooms-qt-cards');
     if (wrap) {
       const cats = mqCustomCatsOf(window._mqShopRecord);
-      wrap.innerHTML = qts.map(q => {
+      document.querySelectorAll('.mq-rooms-qt-sec').forEach(n => n.remove());
+      wrap.insertAdjacentHTML('beforebegin', qts.map(q => {
         const steps = cats.filter(c => c.qt === q.id);
         const state = q.on === false ? 'Hidden (turned off on Shop Info)' : (q.proOnly ? 'MidasQuote Pro only' : (steps.length ? 'Showing on your widget' : 'Not showing yet — needs a step on the Pricing tab'));
-        return `<div class="mq-card mq-rooms-sec" id="mq-rooms-sec-qt-${q.id}" data-mq-rsec="qt:${q.id}" style="margin-top:1.25rem">
+        return `<div class="mq-card mq-rooms-sec mq-rooms-qt-sec" id="mq-rooms-sec-qt-${q.id}" data-mq-rsec="qt:${q.id}" style="margin-top:1.25rem">
           <button type="button" class="mq-rooms-sec-hdr" onclick="mqRoomSecToggle('qt:${q.id}')" aria-expanded="false">
             <span class="mq-rooms-sec-chev">▶</span>
             <span style="width:30px;height:30px;border-radius:7px;background:#fbf3df;color:#8a6510;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">${mqQtIconSvg(q.icon, 18)}</span>
-            <span style="flex:1;min-width:0;text-align:left"><span class="mq-rooms-sec-title">${mqEscHtml(q.name)}</span><span class="mq-rooms-qt-badge">YOUR QUOTE TYPE</span><span style="display:block;font-size:12px;font-weight:400;color:${q.on === false || !steps.length ? '#b45309' : '#6b7280'};margin-top:2px">${state}</span></span>
+            <span style="flex:1;min-width:0;text-align:left"><span class="mq-rooms-sec-title">${mqEscHtml(q.name)}</span><span class="mq-rooms-qt-badge" style="margin-left:10px!important">YOUR QUOTE TYPE</span><span style="display:block;font-size:12px;font-weight:400;color:${q.on === false || !steps.length ? '#b45309' : '#6b7280'};margin-top:2px">${state}</span></span>
             <span class="mq-rooms-sec-count">${n(qtEntries[q.id].length)}</span>
           </button>
           <div class="mq-rooms-sec-body">
@@ -6028,14 +6273,18 @@ window.logoutMember = async function () {
             </div>
             <div id="mq-rooms-list-qt-${q.id}"></div>
             <div style="font-size:12px;color:#9ca3af;padding:4px 0 8px;display:${qtEntries[q.id].length ? 'none' : 'block'}">No project types yet. Add at least one so customers have something to pick.</div>
-            <button class="mq-btn mq-btn-sm" onclick="mqAddRoom('${q.id}')" style="margin-top:4px">+ Add project type</button>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:4px">
+              <button class="mq-btn mq-btn-sm" onclick="mqAddRoom('${q.id}')">+ Add project type</button>
+              <select class="mq-copy-room-select" data-target="${q.id}" onchange="mqCopyRoomInto(this.value,'${q.id}');this.value=''" style="font-size:13px;padding:7px 8px;border:1px solid #d1d5db;border-radius:6px"></select>
+            </div>
           </div>
         </div>`;
-      }).join('');
+      }).join(''));
       qts.forEach(q => mqWireRoomSection('mq-rooms-list-qt-' + q.id, qtEntries[q.id], isDemo, q.id));
     }
     mqRoomSecApply();
     mqRefreshRestoreDropdown();
+    mqFillCopyRoomSelects();
   }
 
   // Project types page sections — collapsible, all closed to start (the
@@ -6052,7 +6301,7 @@ window.logoutMember = async function () {
     };
     set(el('mq-rooms-cabinet-card'), 'cab');
     set(el('mq-rooms-ct-card'), 'ct');
-    document.querySelectorAll('#mq-rooms-qt-cards .mq-rooms-sec').forEach(secEl => set(secEl, secEl.getAttribute('data-mq-rsec')));
+    document.querySelectorAll('.mq-rooms-qt-sec').forEach(secEl => set(secEl, secEl.getAttribute('data-mq-rsec')));
     // The first section is named after whichever built-in tabs are on.
     const { hidden } = mqTabsCfgOf((window._mqShopRecord || {}).fields);
     const bothOn = !hidden.includes('both'), cabOn = !hidden.includes('cabinets'), ctOn = !hidden.includes('countertops');
@@ -17430,13 +17679,14 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
         masterRoomsContent.innerHTML = '<div class="mq-loading">Loading...</div>';
         renderMasterRoomDefs();
       }
+      if (window.mqImgLibAdminRender) window.mqImgLibAdminRender();
     }
     if (page === 'pricing') {
       const helperContainer = document.getElementById('mq-pricing-helper-v2');
       if (helperContainer && !helperContainer.dataset.loaded) {
         helperContainer.dataset.loaded = 'true';
         const script = document.createElement('script');
-        script.src = 'https://widget.midasquote.com/pricing-helper-v2-test.js';
+        script.src = 'https://widget.midasquote.com/pricing-helper-v2.js';
         script.onload = function() {
           window.mqph2Init(window._mqShopRecord, window._mqPricingRecord);
         };
