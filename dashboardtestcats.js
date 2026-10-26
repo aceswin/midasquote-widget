@@ -11149,6 +11149,15 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     };
   }
   window.mqBizOf = mqBizOf;
+  // Quote types that belong to a trade: made from its "+ Add a … quote"
+  // button (trade: id), or -- for ones made before that was saved -- named
+  // like it (e.g. "Painting").
+  function mqQtsOfTrade(t, qts) {
+    const own = qts.filter(q => q.trade === t.id);
+    if (own.length || !t.qtName) return own;
+    const n = t.qtName.toLowerCase();
+    return qts.filter(q => !q.trade && (q.name.toLowerCase().includes(n) || n.includes(q.name.toLowerCase())));
+  }
   // Keeps the three Estimator tab switches in step with a saved hidden list.
   function mqSyncTabToggles(hidden) {
     ['both','cabinets','countertops'].forEach(id => { const t = el('mq-tab-' + id + '-toggle'); if (t) t.classList.toggle('on', !hidden.includes(id)); });
@@ -11166,7 +11175,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     }).join('');
     if (!tradesEl) return;
     const rows = MQ_BIZ_TRADES.filter(t => !t.builtIn && isOn(t)).map(t => {
-      const match = t.qtName ? qts.find(q => q.name.toLowerCase().includes(t.qtName.toLowerCase()) || t.qtName.toLowerCase().includes(q.name.toLowerCase())) : null;
+      const match = mqQtsOfTrade(t, qts)[0] || null;
       const right = match
         ? `<span style="color:#15803d;font-weight:600">✓ "${mqEscHtml(match.name)}" quote set up</span> <a href="#" onclick="event.preventDefault();mqQtOpenInRooms('${match.id}')" style="color:#1d4ed8;font-weight:600;text-decoration:none;margin-left:6px">Project types →</a>`
         : (t.qtName
@@ -11187,8 +11196,33 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const cfg = mqTabsCfgOf(shopRec.fields);
     const biz = mqBizOf(shopRec.fields);
     if (id !== 'cabinetry' && id !== 'countertops') {
-      const trades = biz.trades.includes(id) ? biz.trades.filter(t => t !== id) : [...biz.trades, id];
-      try { await mqSaveTabsCfg({ business: { trades, off: biz.off } }); mqRenderBizTypes(); }
+      const t = MQ_BIZ_TRADES.find(x => x.id === id);
+      const unticking = biz.trades.includes(id);
+      const trades = unticking ? biz.trades.filter(x => x !== id) : [...biz.trades, id];
+      // Its quote types go with it: unticking hides them from the widget and
+      // Pro (marked offByTrade so re-ticking brings back just those).
+      const mine = new Set(mqQtsOfTrade(t, cfg.quoteTypes).map(q => q.id));
+      const quoteTypes = cfg.quoteTypes.map(q => {
+        if (!mine.has(q.id)) return q;
+        const nq = Object.assign({}, q, { trade: id });
+        if (unticking && q.on !== false) { nq.on = false; nq.offByTrade = true; }
+        if (!unticking && q.offByTrade) { nq.on = true; delete nq.offByTrade; }
+        return nq;
+      });
+      const builtOn = 3 - cfg.hidden.length;
+      if (unticking && !builtOn && !quoteTypes.some(q => q.on !== false && !q.proOnly)) {
+        showMsg('mq-shop-msg', `Your widget needs at least one quote to show, and ${t.label} is the only one left. Tick or add another first.`, 'error');
+        return;
+      }
+      const changed = cfg.quoteTypes.filter(q => mine.has(q.id) && (unticking ? q.on !== false : q.offByTrade));
+      try {
+        await mqSaveTabsCfg({ business: { trades, off: biz.off }, quoteTypes });
+        mqRenderQuoteTypes();
+        if (window._mqRooms) renderRoomsList();
+        if (changed.length) showMsg('mq-shop-msg', unticking
+          ? `✓ ${t.label} unticked. ${changed.map(q => '"' + q.name + '"').join(', ')} hidden from your widget and Pro. Tick it again to bring ${changed.length === 1 ? 'it' : 'them'} back.`
+          : `✓ ${changed.map(q => '"' + q.name + '"').join(', ')} back on your widget.`);
+      }
       catch(e) { showMsg('mq-shop-msg', 'Error saving.', 'error'); }
       return;
     }
@@ -11245,8 +11279,10 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     el('mq-qt-add-name').value = t.qtName;
     el('mq-qt-add-pro').checked = false;
     window._mqQtAddIcon = t.icon;
+    window._mqQtAddTrade = t.id;
     await mqQtAdd();
     window._mqQtAddIcon = '';
+    window._mqQtAddTrade = '';
   };
 
   // ── Shop Info: "Your own quote types" list ──
@@ -11259,7 +11295,17 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // (Uses the Specialty items list when it's been loaded.)
   function mqQtHasSpecialty(qtId) {
     const ids = mqQtRoomsOf(qtId).map(r => r.id);
-    return (window._mqSpecItemsList || []).some(it => { const raw = it.visibleRooms; let v = []; try { v = typeof raw === 'string' ? JSON.parse(raw || '[]') : (raw || []); } catch(e) { v = []; } return Array.isArray(v) && v.some(id => ids.includes(id)); });
+    // Not loaded yet (Business info opened before My Products / Specialty
+    // items): fetch the shop's active specialty items once, then redraw.
+    if (!window._mqSpecItemsList && !window._mqSpecItemsLoading && window._mqShopRecord) {
+      window._mqSpecItemsLoading = true;
+      atGet(CONFIG.SPECIALTY_TABLE, `AND(FIND("${window._mqShopRecord.fields['Shop token']}", ARRAYJOIN({Shop token (lookup)})), {Active})`)
+        .then(recs => { if (!window._mqSpecItemsList) window._mqSpecItemsList = recs.map(r => ({ id: r.id, ids: [r.id], visibleRooms: r.fields['Visible rooms'] })); if (window.mqRenderQuoteTypes) window.mqRenderQuoteTypes(); if (window._mqRooms) renderRoomsList(); })
+        .catch(() => {});
+    }
+    // The Specialty items page's own list is the freshest when it's loaded.
+    const list = window._mqSpecRecords ? window._mqSpecRecords.filter(r => r.fields && r.fields['Active'] !== false).map(r => ({ visibleRooms: r.fields['Visible rooms'] })) : (window._mqSpecItemsList || []);
+    return list.some(it => { const raw = it.visibleRooms; let v = []; try { v = typeof raw === 'string' ? JSON.parse(raw || '[]') : (raw || []); } catch(e) { v = []; } return Array.isArray(v) && v.some(id => ids.includes(id)); });
   }
   window.mqRenderQuoteTypes = function() {
     const list = el('mq-qt-list');
@@ -11273,7 +11319,10 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const nSteps = cats.filter(c => c.qt === q.id).length;
       const on = q.on !== false;
       const extras = [q.countertops ? 'countertops' : '', mqQtHasSpecialty(q.id) ? 'specialty items' : ''].filter(Boolean);
-      const status = !nSteps && !extras.length
+      const offTrade = !on && q.offByTrade && q.trade ? MQ_BIZ_TRADES.find(t => t.id === q.trade) : null;
+      const status = offTrade
+        ? `<span style="color:#6b7280">Hidden — ${mqEscHtml(offTrade.label)} is unticked under "What does your business do?"</span>`
+        : !nSteps && !extras.length
         ? `<span style="color:#b45309">Not showing yet — give it a priced step, a specialty item or countertops</span>`
         : `${nRooms} project type${nRooms === 1 ? '' : 's'}${nSteps ? ` · ${nSteps} priced step${nSteps === 1 ? '' : 's'}` : ''}${extras.length ? ' · ' + extras.join(' + ') : ''}`;
       const nameHtml = editing === q.id
@@ -11314,6 +11363,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     if (qts.some(q => q.name.toLowerCase() === name.toLowerCase()) || builtIn.includes(name.toLowerCase())) { showMsg('mq-shop-msg', `You already have a quote called "${name}".`, 'error'); return; }
     const id = 'qt_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
     const q = { id, name, on: true, proOnly: el('mq-qt-add-pro').checked, sub: '', icon: window._mqQtAddIcon || 'grid' };
+    if (window._mqQtAddTrade) q.trade = window._mqQtAddTrade;
     try {
       await mqSaveTabsCfg({ quoteTypes: [...qts, q] });
       let rooms = window._mqRooms;
@@ -11351,7 +11401,15 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const otherOn = cfg.quoteTypes.filter(x => x.id !== id && x.on !== false && !x.proOnly).length;
       if (!builtOn && !otherOn) { showMsg('mq-shop-msg', 'At least one estimator tab has to stay visible.', 'error'); return; }
     }
-    mqQtUpdate(id, { on: !turningOff }, turningOff ? `✓ "${q.name}" hidden from your widget.` : `✓ "${q.name}" is showing on your widget.`);
+    // Switching on a quote type whose trade was unticked ticks the trade again.
+    if (!turningOff && q.trade && !cfg.business.trades.includes(q.trade) && MQ_BIZ_TRADES.some(t => t.id === q.trade)) {
+      const qts = cfg.quoteTypes.map(x => { if (x.id !== id) return x; const nx = Object.assign({}, x, { on: true }); delete nx.offByTrade; return nx; });
+      mqSaveTabsCfg({ quoteTypes: qts, business: { trades: [...cfg.business.trades, q.trade], off: cfg.business.off } })
+        .then(() => { mqRenderQuoteTypes(); if (window._mqRooms) renderRoomsList(); showMsg('mq-shop-msg', `✓ "${q.name}" is showing on your widget.`); })
+        .catch(() => { showMsg('mq-shop-msg', 'Error saving.', 'error'); mqRenderQuoteTypes(); });
+      return;
+    }
+    mqQtUpdate(id, turningOff ? { on: false } : { on: true, offByTrade: undefined }, turningOff ? `✓ "${q.name}" hidden from your widget.` : `✓ "${q.name}" is showing on your widget.`);
   };
   window.mqQtSetPro = function(id, checked) {
     const q = mqQuoteTypesOf(window._mqShopRecord.fields).find(x => x.id === id);
@@ -17912,7 +17970,7 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
       if (helperContainer && !helperContainer.dataset.loaded) {
         helperContainer.dataset.loaded = 'true';
         const script = document.createElement('script');
-        script.src = 'https://widget.midasquote.com/pricing-helper-v2-test.js';
+        script.src = 'https://widget.midasquote.com/pricing-helper-v2.js';
         script.onload = function() {
           window.mqph2Init(window._mqShopRecord, window._mqPricingRecord);
         };
