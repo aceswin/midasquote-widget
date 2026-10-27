@@ -11091,11 +11091,13 @@
         #mq-fx-chooser .mq-fx-cards{grid-template-columns:repeat(3,1fr);max-width:820px;gap:18px}
         #mq-fx-chooser .mq-fx-cards-2{grid-template-columns:repeat(2,1fr);max-width:560px}
         #mq-fx-chooser .mq-fx-cards-1{grid-template-columns:1fr;max-width:380px}
-        #mq-fx-chooser .mq-fx-slider{display:flex;align-items:center;gap:12px;max-width:940px;margin:0 auto}
+        #mq-fx-chooser .mq-fx-slider{display:flex;align-items:center;gap:12px;max-width:1080px;margin:0 auto}
         #mq-fx-chooser .mq-fx-slide-arrow{display:inline-flex}
-        #mq-fx-chooser .mq-fx-cards.mq-fx-cards-many{display:flex;flex:1;min-width:0;max-width:none;margin:0;gap:18px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;scrollbar-width:none;padding:6px 4px 12px;align-items:stretch}
+        #mq-fx-chooser .mq-fx-cards.mq-fx-cards-many{display:flex;flex:1;min-width:0;max-width:none;margin:0;gap:18px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding:0 4px;scroll-behavior:smooth;scrollbar-width:none;padding:6px 4px 12px;align-items:stretch}
         #mq-fx-chooser .mq-fx-cards-many::-webkit-scrollbar{display:none}
-        #mq-fx-chooser .mq-fx-cards-many > .mq-fx-cardwrap{flex:0 0 calc((100% - 36px) / 3);min-width:0;scroll-snap-align:start}
+        /* 4+ cards: wider, with the 3rd card cut off at the edge so
+           customers can see there's more (Jordan, Oct 2026). */
+        #mq-fx-chooser .mq-fx-cards-many > .mq-fx-cardwrap{flex:0 0 calc((100% - 36px) / 2.7);min-width:0;scroll-snap-align:start}
         #mq-fx-chooser .mq-fx-card-photo{height:168px}
         #mq-fx-chooser .mq-fx-card-icon svg{width:54px;height:54px}
         #mq-fx-chooser .mq-fx-card-body{padding:16px 18px 18px}
@@ -11492,6 +11494,11 @@
         window.addEventListener('resize', upd);
         if (window.ResizeObserver) new ResizeObserver(upd).observe(track);
         setTimeout(upd, 80);
+        // Same one-time "there's more" nudge as the How to measure pictures
+        // (desktop slider only -- on phones the cards are a list, no overflow).
+        // Waits for the first-visit tips popup to be closed, so it's seen.
+        const waitTips = () => { if (document.getElementById('mq-tips-popup')) return setTimeout(waitTips, 400); mqBindCarouselNudge(track); };
+        setTimeout(waitTips, 600);
       }
       // Cards are white with a gradient BORDER of the shop's own Brand colour
       // (brand -> a lighter shade of it); the icon tile is a soft tint of the

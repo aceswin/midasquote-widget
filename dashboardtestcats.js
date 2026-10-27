@@ -2575,6 +2575,11 @@ window.logoutMember = async function () {
               <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Photos every shop can pick from on its Project types page ("🖼️ Choose from library" for cover photos, "🖼️ Add from library" for measuring guides). MidasQuote's built-in photos and the images on the default project types above are always included — add more here (e.g. for new trades or quote types).</p>
               <div id="mq-imglib-admin"><div class="mq-loading">Loading...</div></div>
             </div>
+            <div class="mq-card" style="margin-bottom:1.5rem">
+              <div class="mq-card-title">🧭 Business types &amp; starter packs</div>
+              <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">The trades shops can tick under Business info → "What does your business do?". Add new ones (drywall, mechanics — anything), rename or hide the defaults, and give any of them a starter pack: a quote type you've built in this shop, copied to a shop in one click with its project types, priced steps, options, specialty items and photos.</p>
+              <div id="mq-trades-admin"><div class="mq-loading">Loading...</div></div>
+            </div>
             <div id="mq-templates-content"><div class="mq-loading">Loading templates...</div></div>
             <button class="mq-btn" style="margin-top:8px" onclick="mqAddTemplateItem()">+ Add template item</button>
             <!-- No bulk "push to all shops" here on purpose: a template item
@@ -11129,15 +11134,34 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // only or Full project tab is on; Countertops = the Countertops only or
   // Full project tab is on, or a quote type includes the Countertops step.
   // Other trades are stored as 'Hidden widget tabs'.business.trades.
-  const MQ_BIZ_TRADES = [
+  // The trade list itself is admin-managed (Templates (Admin) → 🧭 Business
+  // types): these are the defaults, and the MASTER_TEMPLATE shop's catalog
+  // (mqTradeCatalog) can rename/hide them, add new ones and give any of them
+  // a ready-made starter pack. Cabinetry / Countertops are always first.
+  const MQ_BIZ_FIXED = [
     { id: 'cabinetry', label: 'Cabinetry', builtIn: true },
     { id: 'countertops', label: 'Countertops', builtIn: true },
+  ];
+  const MQ_TRADE_DEFAULTS = [
     { id: 'painting', label: 'Painting', icon: 'brush', qtName: 'Painting' },
     { id: 'flooring', label: 'Flooring', icon: 'grid', qtName: 'Flooring' },
     { id: 'closets', label: 'Closets & storage', icon: 'closet', qtName: 'Closets' },
     { id: 'contracting', label: 'Renovations / contracting', icon: 'home', qtName: 'Renovations' },
     { id: 'other', label: 'Something else', icon: 'sparkle', qtName: '' },
   ];
+  // Every trade (hidden ones included), defaults merged with the catalog.
+  function mqTradeEntries() {
+    const raw = window._mqTradeCatalog || [];
+    const byId = {}; raw.forEach(r => { if (r && r.id) byId[r.id] = r; });
+    const defs = MQ_TRADE_DEFAULTS.map(d => Object.assign({}, d, byId[d.id] || {}, { isDefault: true }));
+    const added = raw.filter(r => r && r.id && !MQ_TRADE_DEFAULTS.some(d => d.id === r.id));
+    return [...defs.filter(d => d.id !== 'other'), ...added, ...defs.filter(d => d.id === 'other')];
+  }
+  // What a shop sees: fixed two + every trade that isn't hidden (or that the
+  // shop already ticked).
+  function mqBizTradeList(ticked) {
+    return [...MQ_BIZ_FIXED, ...mqTradeEntries().filter(t => !t.hidden || (ticked || []).includes(t.id))];
+  }
   function mqBizOf(fields) {
     const cfg = mqTabsCfgOf(fields);
     const h = cfg.hidden;
@@ -11166,19 +11190,22 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const chips = el('mq-biz-chips'), tradesEl = el('mq-biz-trades');
     const shopRec = window._mqShopRecord;
     if (!chips || !shopRec) return;
+    if (!window._mqTradeCatalogLoaded) { mqLoadTradeCatalog().then(() => window.mqRenderBizTypes()); }
     const biz = mqBizOf(shopRec.fields);
     const qts = mqQuoteTypesOf(shopRec.fields);
     const isOn = t => t.id === 'cabinetry' ? biz.cab : (t.id === 'countertops' ? biz.ct : biz.trades.includes(t.id));
-    chips.innerHTML = MQ_BIZ_TRADES.map(t => {
+    chips.innerHTML = mqBizTradeList(biz.trades).map(t => {
       const on = isOn(t);
       return `<button type="button" class="mq-biz-chip" data-mq-biz="${t.id}" aria-pressed="${on}" onclick="mqBizToggle('${t.id}')" style="display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:600;font-family:inherit;padding:8px 13px;border-radius:999px;cursor:pointer;${on ? 'background:#1a1a1a;color:#fff;border:1.5px solid #1a1a1a' : 'background:#fff;color:#374151;border:1.5px solid #d1d5db'}"><span style="width:15px;height:15px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;line-height:1;${on ? 'background:#d7a42e;color:#1a1a1a' : 'border:1.5px solid #9ca3af'}">${on ? '✓' : ''}</span>${mqEscHtml(t.label)}</button>`;
     }).join('');
     if (!tradesEl) return;
-    const rows = MQ_BIZ_TRADES.filter(t => !t.builtIn && isOn(t)).map(t => {
+    const rows = mqBizTradeList(biz.trades).filter(t => !t.builtIn && isOn(t)).map(t => {
       const match = mqQtsOfTrade(t, qts)[0] || null;
       const right = match
         ? `<span style="color:#15803d;font-weight:600">✓ "${mqEscHtml(match.name)}" quote set up</span> <a href="#" onclick="event.preventDefault();mqQtOpenInRooms('${match.id}')" style="color:#1d4ed8;font-weight:600;text-decoration:none;margin-left:6px">Project types →</a>`
-        : (t.qtName
+        : (t.qtName && t.pack
+          ? `<span style="display:inline-flex;flex-direction:column;align-items:flex-end;gap:3px"><button type="button" class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqBizAddQt('${t.id}')">+ Add a ${mqEscHtml(t.qtName)} quote</button><span style="font-size:11px;color:#6b7280">Comes set up: ${mqEscHtml(mqTradePackSummary(t.pack))}</span></span>`
+          : t.qtName
           ? `<button type="button" class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqBizAddQt('${t.id}')">+ Add a ${mqEscHtml(t.qtName)} quote</button>`
           : `<button type="button" class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqBizAddQt('${t.id}')">+ Add a quote type</button>`);
       return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;border:1px solid #e5e7eb;border-radius:10px;padding:9px 12px;margin-bottom:8px;font-size:13px">
@@ -11196,7 +11223,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const cfg = mqTabsCfgOf(shopRec.fields);
     const biz = mqBizOf(shopRec.fields);
     if (id !== 'cabinetry' && id !== 'countertops') {
-      const t = MQ_BIZ_TRADES.find(x => x.id === id);
+      const t = [...MQ_BIZ_FIXED, ...mqTradeEntries()].find(x => x.id === id);
       const unticking = biz.trades.includes(id);
       const trades = unticking ? biz.trades.filter(x => x !== id) : [...biz.trades, id];
       // Its quote types go with it: unticking hides them from the widget and
@@ -11265,10 +11292,266 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       mqApplyEstimatorTabScopeToSpecialty();
     } catch(e) { showMsg('mq-shop-msg', 'Error saving.', 'error'); }
   };
+
+  // ── Trades catalog + starter packs (Oct 2026) ──
+  // Lives on the MASTER_TEMPLATE shop's 'Custom categories' field (unused on
+  // that record otherwise) as {"trades":[…]} -- every shop can already read
+  // that record through the Worker, and only admins can write it. Each
+  // trade: {id, label, icon, qtName, hidden?, pack?, packAt?}. A pack is a
+  // snapshot of one of the admin's own quote types: its project types,
+  // priced steps (custom categories) with their options, specialty items
+  // ticked for its project types, and their photos.
+  const MQ_TRADE_STORE_LIMIT = 95000;
+  function mqTradeCatalogOf(master) {
+    let o = null;
+    try { o = master && master.fields['Custom categories'] ? JSON.parse(master.fields['Custom categories']) : null; } catch(e) { o = null; }
+    return (o && !Array.isArray(o) && Array.isArray(o.trades)) ? o.trades.filter(t => t && t.id) : [];
+  }
+  async function mqLoadTradeCatalog(force) {
+    if (window._mqTradeCatalogLoaded && !force) return window._mqTradeCatalog;
+    try {
+      if (force) window._mqMasterTemplateShop = null;
+      const master = await ensureMasterTemplateShop();
+      window._mqTradeCatalog = mqTradeCatalogOf(master);
+    } catch(e) { window._mqTradeCatalog = window._mqTradeCatalog || []; }
+    window._mqTradeCatalogLoaded = true;
+    return window._mqTradeCatalog;
+  }
+  window.mqLoadTradeCatalog = mqLoadTradeCatalog;
+  async function mqSaveTradeCatalog(list) {
+    const json = JSON.stringify({ trades: list });
+    if (json.length > MQ_TRADE_STORE_LIMIT) throw new Error('full');
+    const master = await ensureMasterTemplateShop();
+    await atUpdate(CONFIG.SHOPS_TABLE, master.id, { 'Custom categories': json });
+    master.fields['Custom categories'] = json;
+    window._mqTradeCatalog = list;
+  }
+  function mqTradePackSummary(pack) {
+    if (!pack) return '';
+    const n = (a, one, many) => `${a} ${a === 1 ? one : many}`;
+    const parts = [n((pack.rooms || []).length, 'project type', 'project types'), n((pack.cats || []).length, 'priced step', 'priced steps'), n((pack.items || []).length, 'option', 'options')];
+    if ((pack.specs || []).length) parts.push(n(pack.specs.length, 'specialty item', 'specialty items'));
+    if (pack.qt && pack.qt.countertops) parts.push('countertops');
+    return parts.join(' · ');
+  }
+  window.mqTradePackSummary = mqTradePackSummary;
+  const MQ_LI_COPY_FIELDS = ['Name', 'Description', 'Rate', 'Active', 'Sort order', 'Custom pricing', 'Visible rooms', 'Group name', 'Group description', 'Group sort order'];
+  const MQ_SPEC_COPY_FIELDS = ['Item name', 'Special Items', 'Description', 'Price', 'Per linear foot', 'Per square foot', 'Custom unit', 'Offers install choice', 'Install price', 'Install mode', 'Install per linear foot', 'Install per square foot', 'Install quantity label', 'Install custom unit', 'Category', 'Pro only', 'Active', 'Sort order', 'Visible rooms', 'Variants'];
+  const mqPick = (f, keys) => { const o = {}; keys.forEach(k => { if (f[k] !== undefined && f[k] !== null && f[k] !== '') o[k] = f[k]; }); return o; };
+  const mqJsonObj = (v, dflt) => { try { const o = typeof v === 'string' ? JSON.parse(v || '') : v; return o && typeof o === 'object' ? o : dflt; } catch(e) { return dflt; } };
+  const mqRoomIdsOf = v => { const a = mqJsonObj(v, []); return Array.isArray(a) ? a : []; };
+
+  // Admin: snapshot one of this shop's quote types into a trade's pack.
+  async function mqTradeSnapshot(qtId) {
+    const shopRec = window._mqShopRecord;
+    const f = shopRec.fields;
+    const q = mqQuoteTypesOf(f).find(x => x.id === qtId);
+    if (!q) throw new Error('no quote type');
+    const allRooms = mqJsonObj(f['Room types'], []);
+    const rooms = (Array.isArray(allRooms) ? allRooms : []).filter(r => r && r.forQt === qtId).map(r => { const c = Object.assign({}, r); delete c.forQt; return c; });
+    const roomIds = new Set(rooms.map(r => r.id));
+    const rawCats = mqJsonObj(f['Custom categories'], []);
+    const cats = (Array.isArray(rawCats) ? rawCats : []).filter(c => c && c.qt === qtId).map(c => { const x = Object.assign({}, c); delete x.qt; return x; });
+    const catIds = new Set(cats.map(c => c.id));
+    const tok = f['Shop token'];
+    const li = await atGet(CONFIG.LINE_ITEMS_TABLE, `FIND("${tok}", ARRAYJOIN({Shop token (lookup)}))`);
+    const items = li.filter(r => catIds.has(r.fields['Category'])).map(r => ({ id: r.id, fields: Object.assign(mqPick(r.fields, MQ_LI_COPY_FIELDS), { Category: r.fields['Category'] }) }));
+    const sp = await atGet(CONFIG.SPECIALTY_TABLE, `FIND("${tok}", ARRAYJOIN({Shop token (lookup)}))`);
+    const specs = sp.filter(r => mqRoomIdsOf(r.fields['Visible rooms']).some(id => roomIds.has(id))).map(r => ({ id: r.id, fields: mqPick(r.fields, MQ_SPEC_COPY_FIELDS) }));
+    const keyOk = k => [...catIds].some(c => k.startsWith('li_' + c + '_')) || specs.some(sx => k === 'spec_' + sx.id || k.startsWith('spec_' + sx.id + '_v'));
+    const subset = field => { const m = mqJsonObj(f[field], {}); const o = {}; Object.keys(m).forEach(k => { if (keyOk(k)) o[k] = m[k]; }); return o; };
+    const sub2 = field => { const m = mqJsonObj(f[field], {}); const o = {}; Object.keys(m).forEach(k => { if (catIds.has(k)) o[k] = m[k]; }); return o; };
+    return {
+      qt: { name: q.name, sub: q.sub || '', icon: q.icon || 'grid', countertops: !!q.countertops },
+      rooms, cats, items, specs,
+      catRooms: sub2('Category rooms'), pickerLabels: sub2('Category picker labels'),
+      photos: subset('Photos'), hidden: subset('Hidden'), featured: subset('Featured items'),
+    };
+  }
+
+  // Shop: adds the trade's quote type from its starter pack -- everything
+  // gets new ids, and every link between them is pointed at the new ones.
+  async function mqApplyTradePack(t) {
+    const shopRec = window._mqShopRecord;
+    if (!shopRec || !t || !t.pack) return;
+    const pack = t.pack;
+    if (!confirm(`Add the "${pack.qt.name || t.qtName}" quote, already set up by MidasQuote?\n\n${mqTradePackSummary(pack)}.\n\nPrices are starting points — change anything after on Project types, Pricing and Specialty items.`)) return;
+    showMsg('mq-shop-msg', `Setting up "${pack.qt.name || t.qtName}"… this takes a few seconds.`);
+    const rid = p => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+    const f = shopRec.fields;
+    const cfg = mqTabsCfgOf(f);
+    let name = pack.qt.name || t.qtName || t.label, n = 2;
+    while (cfg.quoteTypes.some(q => q.name.toLowerCase() === name.toLowerCase())) name = `${pack.qt.name || t.qtName} ${n++}`;
+    const qtId = rid('qt_');
+    const roomMap = {}, catMap = {}, itemMap = {}, specMap = {};
+    (pack.rooms || []).forEach(r => { roomMap[r.id] = rid('qtroom_'); });
+    (pack.cats || []).forEach(c => { catMap[c.id] = rid('cc_'); });
+    const mapRooms = v => JSON.stringify(mqRoomIdsOf(v).map(id => roomMap[id]).filter(Boolean));
+    try {
+      // Options (line items)
+      const created = [];
+      for (const it of (pack.items || [])) {
+        const fields = Object.assign({}, it.fields, { shop: [shopRec.id], Category: catMap[it.fields.Category] });
+        if (!fields.Category) continue;
+        if (fields['Visible rooms'] !== undefined) fields['Visible rooms'] = mapRooms(fields['Visible rooms']);
+        const c = mqJsonObj(fields['Custom pricing'], null);
+        if (c && c.pctCc && catMap[c.pctCc]) { c.pctCc = catMap[c.pctCc]; fields['Custom pricing'] = JSON.stringify(c); }
+        const rec = await atCreate(CONFIG.LINE_ITEMS_TABLE, fields);
+        if (rec && rec.id) { itemMap[it.id] = rec.id; created.push({ id: rec.id, fields }); }
+      }
+      // "Show only if" / "price from" links between options
+      for (const r of created) {
+        const c = mqJsonObj(r.fields['Custom pricing'], null);
+        if (!c) continue;
+        let changed = false;
+        if (c.showIf && itemMap[c.showIf]) { c.showIf = itemMap[c.showIf]; changed = true; }
+        if (c.src && itemMap[c.src]) { c.src = itemMap[c.src]; changed = true; }
+        if (changed) await atUpdate(CONFIG.LINE_ITEMS_TABLE, r.id, { 'Custom pricing': JSON.stringify(c) });
+      }
+      // Specialty items
+      for (const sx of (pack.specs || [])) {
+        const fields = Object.assign({}, sx.fields, { Shop: [shopRec.id], 'Visible rooms': mapRooms(sx.fields['Visible rooms']) });
+        const rec = await atCreate(CONFIG.SPECIALTY_TABLE, fields);
+        if (rec && rec.id) specMap[sx.id] = rec.id;
+      }
+      // Shop fields: project types, steps, their settings, photos
+      const newKey = k => {
+        for (const old in catMap) if (k.startsWith('li_' + old + '_')) return 'li_' + catMap[old] + '_' + k.slice(('li_' + old + '_').length);
+        for (const old in specMap) { if (k === 'spec_' + old) return 'spec_' + specMap[old]; if (k.startsWith('spec_' + old + '_v')) return 'spec_' + specMap[old] + k.slice(('spec_' + old).length); }
+        return null;
+      };
+      const merge = (field, src) => { const m = mqJsonObj(f[field], {}); let ch = false; Object.keys(src || {}).forEach(k => { const nk = newKey(k); if (nk) { m[nk] = src[k]; ch = true; } }); return ch ? JSON.stringify(m) : null; };
+      const mergeCat = (field, src) => { const m = mqJsonObj(f[field], {}); let ch = false; Object.keys(src || {}).forEach(k => { if (catMap[k]) { const v = src[k]; m[catMap[k]] = Array.isArray(v) ? v.map(id => roomMap[id]).filter(Boolean) : v; ch = true; } }); return ch ? JSON.stringify(m) : null; };
+      let rooms = window._mqRooms;
+      if (!rooms) { rooms = mqJsonObj(f['Room types'], []); if (!Array.isArray(rooms) || !rooms.length) rooms = defaultRoomTypes(); }
+      rooms = [...rooms, ...(pack.rooms || []).map(r => Object.assign({}, r, { id: roomMap[r.id], forQt: qtId }))];
+      let cats = mqJsonObj(f['Custom categories'], []); if (!Array.isArray(cats)) cats = [];
+      cats = [...cats, ...(pack.cats || []).map(c => {
+        const nc = Object.assign({}, c, { id: catMap[c.id], qt: qtId });
+        if (typeof c.after === 'string' && c.after.startsWith('cc:')) nc.after = catMap[c.after.slice(3)] ? 'cc:' + catMap[c.after.slice(3)] : '';
+        if (c.showIf) nc.showIf = itemMap[c.showIf] || '';
+        return nc;
+      })];
+      const upd = { 'Room types': JSON.stringify(rooms), 'Custom categories': JSON.stringify(cats) };
+      [['Photos', pack.photos], ['Hidden', pack.hidden], ['Featured items', pack.featured]].forEach(([k, src]) => { const v = merge(k, src); if (v) upd[k] = v; });
+      [['Category rooms', pack.catRooms], ['Category picker labels', pack.pickerLabels]].forEach(([k, src]) => { const v = mergeCat(k, src); if (v) upd[k] = v; });
+      await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, upd);
+      Object.assign(shopRec.fields, upd);
+      const ctOk = mqBizOf(shopRec.fields).ct;
+      const q = { id: qtId, name, on: true, proOnly: false, sub: pack.qt.sub || '', icon: pack.qt.icon || t.icon || 'grid', trade: t.id };
+      if (pack.qt.countertops && ctOk) q.countertops = true;
+      await mqSaveTabsCfg({ quoteTypes: [...mqQuoteTypesOf(shopRec.fields), q] });
+      if (window._mqRooms) { window._mqRooms = rooms; renderRoomsList(); }
+      window._mqSpecItemsList = null; window._mqSpecRecords = null;
+      if (window._mqLastFetchTimes) Object.keys(window._mqLastFetchTimes).forEach(k => { window._mqLastFetchTimes[k] = 0; });
+      mqRenderQuoteTypes();
+      showMsg('mq-shop-msg', `✓ "${name}" added and set up: ${mqTradePackSummary(pack)}. Check the prices on the Pricing tab — they're starting points.`);
+    } catch(e) {
+      console.error('Starter pack failed', e);
+      showMsg('mq-shop-msg', 'Something went wrong setting that up. Refresh and check Project types / Pricing before trying again.', 'error');
+    }
+  }
+  window.mqApplyTradePack = mqApplyTradePack;
+
+  // ── Admin card: Templates (Admin) → 🧭 Business types & starter packs ──
+  window.mqTradeAdminRender = async function() {
+    const box = document.getElementById('mq-trades-admin');
+    if (!box) return;
+    await mqLoadTradeCatalog(true);
+    const esc = mqEscHtml;
+    const myQts = mqQuoteTypesOf((window._mqShopRecord || {}).fields || {});
+    const editing = window._mqTradeEditing || '';
+    const used = JSON.stringify({ trades: window._mqTradeCatalog || [] }).length;
+    const iconRow = (sel, onclickFn) => `<div style="display:flex;flex-wrap:wrap;gap:5px">${Object.keys(MQ_QT_ICONS).map(k => `<button type="button" title="${k}" data-icon="${k}" onclick="${onclickFn}" style="width:34px;height:34px;border-radius:7px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;${sel === k ? 'background:#1a1a1a;color:#fff;border:1.5px solid #1a1a1a' : 'background:#fff;color:#374151;border:1px solid #d1d5db'}">${mqQtIconSvg(k, 18)}</button>`).join('')}</div>`;
+    const inp = 'font-size:13px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit';
+    box.innerHTML = mqTradeEntries().map(t => {
+      const isEdit = editing === t.id;
+      return `<div style="border:1px solid #e5e7eb;border-radius:10px;padding:10px 12px;margin-bottom:10px;${t.hidden ? 'opacity:.6' : ''}">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <span style="width:34px;height:34px;border-radius:8px;background:#fbf3df;color:#8a6510;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">${mqQtIconSvg(t.icon, 19)}</span>
+          <div style="flex:1;min-width:180px">
+            <div style="font-size:13.5px;font-weight:700;color:#111">${esc(t.label)}${t.hidden ? ' <span style="font-size:11px;font-weight:600;color:#6b7280">(hidden from shops)</span>' : ''}</div>
+            <div style="font-size:12px;color:#6b7280">${t.qtName ? `Quote: "${esc(t.qtName)}"` : 'Opens the "Add a quote type" box'} · ${t.pack ? `<span style="color:#15803d;font-weight:600">Starter pack: ${esc(mqTradePackSummary(t.pack))}</span>${t.packFrom ? ` (from "${esc(t.packFrom)}")` : ''}` : 'No starter pack — shops get an empty quote'}</div>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button type="button" class="mq-btn mq-btn-sm" onclick="mqTradeEdit('${t.id}')">${isEdit ? 'Close' : 'Edit'}</button>
+            ${t.isDefault ? `<button type="button" class="mq-btn mq-btn-sm" onclick="mqTradeSet('${t.id}', { hidden: ${t.hidden ? 'false' : 'true'} })">${t.hidden ? 'Show' : 'Hide'}</button>` : `<button type="button" class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqTradeDelete('${t.id}')">Delete</button>`}
+          </div>
+        </div>
+        ${isEdit ? `<div style="border-top:1px dashed #e5e7eb;margin-top:10px;padding-top:10px;display:grid;gap:8px">
+          <label style="font-size:12px;font-weight:600;color:#374151">Name shops see<br><input id="mq-trade-e-label" maxlength="40" value="${esc(t.label)}" style="${inp};width:100%;max-width:320px;margin-top:3px"/></label>
+          ${t.id === 'other' ? '' : `<label style="font-size:12px;font-weight:600;color:#374151">Quote name it makes<br><input id="mq-trade-e-qt" maxlength="40" value="${esc(t.qtName || '')}" style="${inp};width:100%;max-width:320px;margin-top:3px"/></label>`}
+          <div style="font-size:12px;font-weight:600;color:#374151">Icon</div>
+          ${iconRow(t.icon, `document.querySelectorAll('#mq-trade-e-icons button').forEach(b=>{b.style.background='#fff';b.style.color='#374151'});this.style.background='#1a1a1a';this.style.color='#fff';window._mqTradeIcon=this.dataset.icon`).replace('<div ', '<div id="mq-trade-e-icons" ')}
+          <div><button type="button" class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqTradeSaveEdit('${t.id}')">Save</button></div>
+          ${t.id === 'other' ? '' : `<div style="border-top:1px dashed #e5e7eb;padding-top:10px">
+            <div style="font-size:12px;font-weight:700;color:#111;margin-bottom:4px">Starter pack</div>
+            <div style="font-size:12px;color:#6b7280;line-height:1.5;margin-bottom:8px">Build the quote in your own shop first (Business info → quote types, then its project types, Pricing steps and Specialty items), then save it here. Shops that tick ${esc(t.label)} get a copy with one click. Saving again replaces the pack; shops that already used it keep their copy.</div>
+            ${myQts.length ? `<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><select id="mq-trade-e-src" style="${inp};width:auto!important;min-width:200px;max-width:320px!important">${myQts.map(q => `<option value="${q.id}">${esc(q.name)}</option>`).join('')}</select><button type="button" class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqTradeSavePack('${t.id}')">${t.pack ? 'Replace starter pack' : 'Save as starter pack'}</button>${t.pack ? `<button type="button" class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqTradeSet('${t.id}', { pack: null, packFrom: '' }, 'Starter pack removed.')">Remove pack</button>` : ''}</div>` : '<div style="font-size:12px;color:#b45309">Add a quote type in this shop first (Business info → Estimator tabs).</div>'}
+          </div>`}
+        </div>` : ''}
+      </div>`;
+    }).join('') + `
+      <div style="border-top:1px dashed #e5e7eb;padding-top:12px;margin-top:4px;display:grid;gap:8px;max-width:560px">
+        <div style="font-size:13px;font-weight:700;color:#111">+ Add a business type</div>
+        <input id="mq-trade-new-label" maxlength="40" placeholder="Name shops see (e.g. Drywall)" style="${inp}"/>
+        <input id="mq-trade-new-qt" maxlength="40" placeholder="Quote name it makes (e.g. Drywall) — blank = same" style="${inp}"/>
+        ${iconRow(window._mqTradeNewIcon || 'grid', `window._mqTradeNewIcon=this.dataset.icon;document.querySelectorAll('#mq-trade-new-icons button').forEach(b=>{const on=b===this;b.style.background=on?'#1a1a1a':'#fff';b.style.color=on?'#fff':'#374151'})`).replace('<div ', '<div id="mq-trade-new-icons" ')}
+        <div><button type="button" class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqTradeAdd()">Add business type</button></div>
+      </div>
+      <div style="font-size:11px;color:#9ca3af;margin-top:10px">Storage used: ${Math.round(used / 1000)} KB of ${Math.round(MQ_TRADE_STORE_LIMIT / 1000)} KB</div>`;
+  };
+  async function mqTradeUpsert(id, change) {
+    const list = (window._mqTradeCatalog || []).slice();
+    const i = list.findIndex(x => x.id === id);
+    const base = i >= 0 ? list[i] : Object.assign({}, MQ_TRADE_DEFAULTS.find(d => d.id === id) || { id });
+    const next = Object.assign({}, base, change);
+    if (next.pack === null) delete next.pack;
+    if (i >= 0) list[i] = next; else list.push(next);
+    await mqSaveTradeCatalog(list);
+  }
+  const mqTradeErr = e => showMsg('mq-templates-msg', e && e.message === 'full' ? 'Not enough room left to save that. Make the pack smaller or remove another one.' : 'Error saving.', 'error');
+  window.mqTradeEdit = function(id) { window._mqTradeEditing = window._mqTradeEditing === id ? '' : id; window._mqTradeIcon = ''; mqTradeAdminRender(); };
+  window.mqTradeSet = async function(id, change, okMsg) {
+    try { await mqTradeUpsert(id, change); showMsg('mq-templates-msg', '✓ ' + (okMsg || 'Saved.')); mqTradeAdminRender(); } catch(e) { mqTradeErr(e); }
+  };
+  window.mqTradeSaveEdit = async function(id) {
+    const label = (el('mq-trade-e-label')?.value || '').trim();
+    if (!label) return;
+    const change = { label };
+    const qtIn = el('mq-trade-e-qt'); if (qtIn) change.qtName = qtIn.value.trim() || label;
+    if (window._mqTradeIcon) change.icon = window._mqTradeIcon;
+    window._mqTradeEditing = '';
+    await mqTradeSet(id, change, `"${label}" saved.`);
+  };
+  window.mqTradeAdd = async function() {
+    const label = (el('mq-trade-new-label')?.value || '').trim();
+    if (!label) { el('mq-trade-new-label')?.focus(); return; }
+    if (mqTradeEntries().some(t => t.label.toLowerCase() === label.toLowerCase())) { showMsg('mq-templates-msg', `"${label}" is already there.`, 'error'); return; }
+    const t = { id: 'tr_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), label, qtName: (el('mq-trade-new-qt')?.value || '').trim() || label, icon: window._mqTradeNewIcon || 'grid' };
+    try { await mqSaveTradeCatalog([...(window._mqTradeCatalog || []), t]); window._mqTradeNewIcon = ''; window._mqTradeEditing = t.id; showMsg('mq-templates-msg', `✓ "${label}" added — shops can tick it now. Give it a starter pack below if you like.`); mqTradeAdminRender(); } catch(e) { mqTradeErr(e); }
+  };
+  window.mqTradeDelete = async function(id) {
+    const t = mqTradeEntries().find(x => x.id === id);
+    if (!t || !confirm(`Delete "${t.label}"?\n\nShops that ticked it keep their quote types; it just disappears from the list.`)) return;
+    try { await mqSaveTradeCatalog((window._mqTradeCatalog || []).filter(x => x.id !== id)); showMsg('mq-templates-msg', `✓ "${t.label}" deleted.`); mqTradeAdminRender(); } catch(e) { mqTradeErr(e); }
+  };
+  window.mqTradeSavePack = async function(id) {
+    const src = el('mq-trade-e-src')?.value;
+    if (!src) return;
+    showMsg('mq-templates-msg', 'Saving starter pack…');
+    try {
+      const pack = await mqTradeSnapshot(src);
+      if (!(pack.cats.length || pack.specs.length || pack.qt.countertops)) { showMsg('mq-templates-msg', `"${pack.qt.name}" has nothing priced yet — give it a Pricing step or specialty item first.`, 'error'); return; }
+      await mqTradeUpsert(id, { pack, packFrom: pack.qt.name, packAt: new Date().toISOString().slice(0, 10) });
+      showMsg('mq-templates-msg', `✓ Starter pack saved from "${pack.qt.name}": ${mqTradePackSummary(pack)}.`);
+      mqTradeAdminRender();
+    } catch(e) { mqTradeErr(e); }
+  };
   // "+ Add a Painting quote" -- same as the Estimator tabs "+ Add a quote
   // type" (one starter project type with the same name), with the trade's icon.
   window.mqBizAddQt = async function(tradeId) {
-    const t = MQ_BIZ_TRADES.find(x => x.id === tradeId);
+    const t = [...MQ_BIZ_FIXED, ...mqTradeEntries()].find(x => x.id === tradeId);
     if (!t) return;
     if (!t.qtName) {
       mqOpenShopSection('tabs');
@@ -11276,6 +11559,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const box = el('mq-qt-add-open'); if (box) box.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
+    if (t.pack) { await mqApplyTradePack(t); return; }
     el('mq-qt-add-name').value = t.qtName;
     el('mq-qt-add-pro').checked = false;
     window._mqQtAddIcon = t.icon;
@@ -11319,7 +11603,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const nSteps = cats.filter(c => c.qt === q.id).length;
       const on = q.on !== false;
       const extras = [q.countertops ? 'countertops' : '', mqQtHasSpecialty(q.id) ? 'specialty items' : ''].filter(Boolean);
-      const offTrade = !on && q.offByTrade && q.trade ? MQ_BIZ_TRADES.find(t => t.id === q.trade) : null;
+      const offTrade = !on && q.offByTrade && q.trade ? [...MQ_BIZ_FIXED, ...mqTradeEntries()].find(t => t.id === q.trade) : null;
       const status = offTrade
         ? `<span style="color:#6b7280">Hidden — ${mqEscHtml(offTrade.label)} is unticked under "What does your business do?"</span>`
         : !nSteps && !extras.length
@@ -11402,7 +11686,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       if (!builtOn && !otherOn) { showMsg('mq-shop-msg', 'At least one estimator tab has to stay visible.', 'error'); return; }
     }
     // Switching on a quote type whose trade was unticked ticks the trade again.
-    if (!turningOff && q.trade && !cfg.business.trades.includes(q.trade) && MQ_BIZ_TRADES.some(t => t.id === q.trade)) {
+    if (!turningOff && q.trade && !cfg.business.trades.includes(q.trade) && [...MQ_BIZ_FIXED, ...mqTradeEntries()].some(t => t.id === q.trade)) {
       const qts = cfg.quoteTypes.map(x => { if (x.id !== id) return x; const nx = Object.assign({}, x, { on: true }); delete nx.offByTrade; return nx; });
       mqSaveTabsCfg({ quoteTypes: qts, business: { trades: [...cfg.business.trades, q.trade], off: cfg.business.off } })
         .then(() => { mqRenderQuoteTypes(); if (window._mqRooms) renderRoomsList(); showMsg('mq-shop-msg', `✓ "${q.name}" is showing on your widget.`); })
@@ -17964,13 +18248,14 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
         renderMasterRoomDefs();
       }
       if (window.mqImgLibAdminRender) window.mqImgLibAdminRender();
+      if (window.mqTradeAdminRender) window.mqTradeAdminRender();
     }
     if (page === 'pricing') {
       const helperContainer = document.getElementById('mq-pricing-helper-v2');
       if (helperContainer && !helperContainer.dataset.loaded) {
         helperContainer.dataset.loaded = 'true';
         const script = document.createElement('script');
-        script.src = 'https://widget.midasquote.com/pricing-helper-v2.js';
+        script.src = 'https://widget.midasquote.com/pricing-helper-v2-test.js';
         script.onload = function() {
           window.mqph2Init(window._mqShopRecord, window._mqPricingRecord);
         };
