@@ -6338,6 +6338,13 @@ window.mqphGoToWizard = function() {
       const parsed = shopRecord && shopRecord.fields && shopRecord.fields['Hidden widget tabs'] ? JSON.parse(shopRecord.fields['Hidden widget tabs']) : null;
       if (parsed && Array.isArray(parsed.hidden)) hidden = parsed.hidden;
     } catch(e) { /* keep defaults */ }
+    // Ticks saved on Business info win (mirrors dashboard.js mqComputeTabScope).
+    let bz = null;
+    try { const o = JSON.parse(mqccShopFields()['Hidden widget tabs'] || '{}'); bz = o && o.business ? o.business : null; } catch(e) { bz = null; }
+    if (bz) {
+      const off = Array.isArray(bz.off) ? bz.off : [];
+      return { countertopsOnly: off.includes('cabinetry') || (hidden.includes('both') && hidden.includes('cabinets')), cabinetsOnly: off.includes('countertops') };
+    }
     return {
       // Business type (Oct 2026): true whenever no built-in cabinet quote is
       // on -- including a business that only uses its own quote types.
@@ -6737,7 +6744,7 @@ window.mqphGoToWizard = function() {
           <div class="mqph-modal-body"><div class="mqcc-modal-grid"><div>
             <div class="mqph-field" id="mqcc-cat-qt-wrap"><label>Which quote is this step in?</label>
               <select id="mqcc-cat-qt" onchange="mqccCatQtChanged()"></select>
-              <div style="font-size:11px;color:#6b7280;margin-top:4px;line-height:1.45">Your own quote types are added on Shop info → Estimator tabs.</div>
+              <div style="font-size:11px;color:#6b7280;margin-top:4px;line-height:1.45">Your own quote types are added on Business info. Which of its project types show this step is set in <strong>My Products</strong> (this category's 🗂️ project types, or each option's own).</div>
             </div>
             <div class="mqph-field"><label>Category name</label><input type="text" id="mqcc-cat-name" maxlength="60" placeholder="Finishing &amp; extras"/></div>
             <div class="mqph-field"><label>Short description for customers (optional)</label><input type="text" id="mqcc-cat-desc" maxlength="200" placeholder="A few finishing details that make the install look built-in."/></div>
