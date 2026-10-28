@@ -3388,6 +3388,8 @@ window.logoutMember = async function () {
       #midasquote-dashboard #mq-page-showroom .mq-sr-card,
       #midasquote-dashboard #mq-page-embed>.mq-card{max-width:1120px;margin-left:auto!important;margin-right:auto!important}
       #midasquote-dashboard #mq-page-shop>.mq-card{overflow:hidden;padding:0!important}
+      /* Project type thumbnails: click to zoom (Oct 27) */
+      #midasquote-dashboard #mq-page-rooms [id*="-preview-"] img,#midasquote-dashboard #mq-page-templates [id*="-preview-"] img{cursor:zoom-in}
       /* Project type editor: headed groups (Oct 27) */
       #midasquote-dashboard .mq-room-grp{background:#fff;border:1px solid #e9edf3;border-radius:12px;padding:14px 16px 10px;margin:0 0 12px}
       #midasquote-dashboard .mq-room-grp-h{font-size:13.5px;font-weight:700;color:#111;margin:0 0 2px;letter-spacing:.01em}
@@ -5748,6 +5750,57 @@ window.logoutMember = async function () {
   // Renders the little 56x56 preview box's inner content for a measure-guide
   // image/video field: the 📏 placeholder when empty, a 🎥 badge for a
   // recognized video link, or the actual photo otherwise.
+  // ── Zoom: click any cover / measuring-guide thumbnail on Project types (or
+  // the admin Templates page) to see it full size. Arrows step through the
+  // other pictures of the same project type. One delegated listener, so
+  // thumbnails redrawn after an upload keep working.
+  function mqZoomOpen(list, i) {
+    let ov = document.getElementById('mq-zoom-ov');
+    if (!ov) {
+      ov = document.createElement('div');
+      ov.id = 'mq-zoom-ov';
+      ov.style.cssText = 'position:fixed;inset:0;z-index:100000;background:rgba(10,12,16,.88);display:flex;align-items:center;justify-content:center;padding:56px 64px;box-sizing:border-box';
+      ov.innerHTML = `<img id="mq-zoom-img" alt="" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,.5);background:#fff"/>
+        <button type="button" id="mq-zoom-x" aria-label="Close" style="position:absolute;top:14px;right:16px;width:40px;height:40px;border-radius:50%;border:0;background:#fff;color:#111;font-size:22px;line-height:1;cursor:pointer">×</button>
+        <button type="button" id="mq-zoom-prev" aria-label="Previous" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;border:0;background:#fff;color:#111;font-size:26px;line-height:1;cursor:pointer;padding-bottom:3px">‹</button>
+        <button type="button" id="mq-zoom-next" aria-label="Next" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;border:0;background:#fff;color:#111;font-size:26px;line-height:1;cursor:pointer;padding-bottom:3px">›</button>
+        <div id="mq-zoom-count" style="position:absolute;bottom:16px;left:0;right:0;text-align:center;color:#e5e7eb;font-size:13px;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif"></div>`;
+      document.body.appendChild(ov);
+      ov.addEventListener('click', e => { if (e.target === ov) mqZoomClose(); });
+      ov.querySelector('#mq-zoom-x').onclick = mqZoomClose;
+      ov.querySelector('#mq-zoom-prev').onclick = () => mqZoomStep(-1);
+      ov.querySelector('#mq-zoom-next').onclick = () => mqZoomStep(1);
+      document.addEventListener('keydown', e => {
+        if (!document.getElementById('mq-zoom-ov') || document.getElementById('mq-zoom-ov').style.display === 'none') return;
+        if (e.key === 'Escape') mqZoomClose(); else if (e.key === 'ArrowLeft') mqZoomStep(-1); else if (e.key === 'ArrowRight') mqZoomStep(1);
+      });
+    }
+    window._mqZoom = { list, i };
+    ov.style.display = 'flex';
+    mqZoomStep(0);
+  }
+  function mqZoomStep(d) {
+    const z = window._mqZoom; if (!z || !z.list.length) return;
+    z.i = (z.i + d + z.list.length) % z.list.length;
+    document.getElementById('mq-zoom-img').src = z.list[z.i];
+    const many = z.list.length > 1;
+    document.getElementById('mq-zoom-prev').style.display = many ? '' : 'none';
+    document.getElementById('mq-zoom-next').style.display = many ? '' : 'none';
+    document.getElementById('mq-zoom-count').textContent = many ? `${z.i + 1} of ${z.list.length}` : '';
+  }
+  function mqZoomClose() { const ov = document.getElementById('mq-zoom-ov'); if (ov) ov.style.display = 'none'; }
+  document.addEventListener('click', e => {
+    const img = e.target && e.target.closest ? e.target.closest('img') : null;
+    if (!img) return;
+    const box = img.closest('[id*="-preview-"]');
+    if (!box || !img.closest('#mq-page-rooms, #mq-page-templates')) return;
+    const scope = img.closest('.mq-room-row') || box.parentElement || document;
+    const imgs = [...scope.querySelectorAll('[id*="-preview-"] img')].filter(x => x.getAttribute('src') && x.style.display !== 'none');
+    const list = imgs.map(x => x.getAttribute('src'));
+    e.preventDefault(); e.stopPropagation();
+    mqZoomOpen(list, Math.max(0, imgs.indexOf(img)));
+  }, true);
+
   function mqMeasureImgPreviewHTML(url) {
     const u = (url || '').trim();
     if (!u) return '<span style="font-size:20px">📏</span>';
@@ -6149,12 +6202,17 @@ window.logoutMember = async function () {
             <div class="mq-room-grp-h">④ Cabinet questions</div><div class="mq-room-grp-sub">What the Cabinets / Full project quotes ask for this project type.</div>
           <label style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;color:#6b7280;font-weight:600;margin-bottom:8px">
             📐 Ask for cabinet measurements (upper / base lin ft)
-            <select id="mq-room-askmeasure-${idx}" onchange="mqSaveRooms()" style="font-size:12px;padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;width:auto">
-              <option value="" ${!r.askMeasure ? 'selected' : ''}>Automatic — when a box material is ticked for it</option>
-              <option value="yes" ${r.askMeasure === 'yes' ? 'selected' : ''}>Yes, always</option>
-              <option value="no" ${r.askMeasure === 'no' ? 'selected' : ''}>No</option>
+            <select id="mq-room-askmeasure-${idx}" onchange="mqSaveRooms()" style="font-size:12px;padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;width:auto;max-width:100%">
+              <option value="" ${!r.askMeasure ? 'selected' : ''}>Automatic — leave this if you use our built-in cabinet pricing</option>
+              <option value="yes" ${r.askMeasure === 'yes' ? 'selected' : ''}>Yes, always — your own custom pricing uses upper / base lin ft</option>
+              <option value="no" ${r.askMeasure === 'no' ? 'selected' : ''}>No — nothing for this project type is priced by cabinet lin ft</option>
             </select>
           </label>
+          <div style="font-size:11.5px;color:#6b7280;line-height:1.5;margin:-4px 0 10px">${{
+            '': '<strong>Automatic:</strong> asks for upper and base cabinet lin ft only when at least one box material is ticked for this project type in My Products — exactly how it has always worked.',
+            yes: '<strong>Yes, always:</strong> always asks, even with no box materials ticked — for when you built your own cabinet pricing (Pricing → Custom pricing categories) priced per upper / base / total cabinet lin ft.',
+            no: '<strong>No:</strong> never asks for cabinet lin ft (and hides the material / door step) — for project types priced another way, e.g. refacing by square foot or a flat price.',
+          }[r.askMeasure || ''] || ''}</div>
           <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#6b7280;font-weight:600;margin-bottom:8px;cursor:pointer">
             <input type="checkbox" id="mq-room-addisland-${idx}" ${r.showIslandButton?'checked':''} onchange="mqSaveRooms()" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
             🏝️ Add "Add Island" button <span style="font-weight:400;color:#9ca3af">(lets customers measure island cabinets separately from base cabinets — only makes sense for kitchen-style project types)</span>
