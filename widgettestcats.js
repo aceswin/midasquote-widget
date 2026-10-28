@@ -10450,7 +10450,33 @@
     // browser per shop, same as before. No longer tied to the "Show showroom"
     // setting since it's not about the showroom anymore — it's general
     // orientation for using the widget itself.
-    if (shop['Shop token']) {
+    // Dashboard "👁 Preview on my widget" links: ?mqtab=<cabinets|both|
+    // countertops|qt_…>&mqroom=<project type id> opens that quote with that
+    // project type already picked (no tips popup). Ignored without them.
+    let mqDeep = null;
+    try { const sp = new URLSearchParams(window.location.search); if (sp.get('mqtab') || sp.get('mqroom')) mqDeep = { tab: sp.get('mqtab') || '', room: sp.get('mqroom') || '' }; } catch(e) {}
+    if (mqDeep) setTimeout(() => {
+      try {
+        const hidden = window._mqHiddenTabs || [];
+        let p = null;
+        if (/^qt_/.test(mqDeep.tab)) { const q = (window._mqQuoteTypes || []).find(x => x.id === mqDeep.tab); p = q ? q.prefix : null; }
+        else if (mqDeep.tab === 'countertops') p = hidden.includes('countertops') ? 'b' : 'ct';
+        else if (mqDeep.tab === 'both') p = 'b';
+        else if (mqDeep.tab === 'cabinets') p = hidden.includes('cabinets') ? 'b' : 'c';
+        if (!p) return;
+        const tabId = p === 'c' ? 'cabinets' : (p === 'b' ? 'both' : (p === 'ct' ? 'countertops' : p));
+        if (window._mqFxOn && typeof window.mqFxStart === 'function') window.mqFxStart(tabId);
+        else { const btn = document.querySelector(`.mq-tab[onclick^="mqSwitchTab('${tabId}'"]`); if (btn) btn.click(); }
+        const sel = document.getElementById(`mq-${p}-room`);
+        if (sel && mqDeep.room && [...sel.options].some(o => o.value === mqDeep.room)) {
+          window._mqPrevRoomId = Object.assign(window._mqPrevRoomId || {}, { [p]: sel.value });
+          sel.value = mqDeep.room;
+          sel.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        if (!window._mqFxOn) { const t = document.getElementById(`mq-tab-${tabId}`) || document.getElementById('midasquote-widget'); if (t) t.scrollIntoView({ block: 'start' }); }
+      } catch(e) { /* preview link only */ }
+    }, 400);
+    if (shop['Shop token'] && !mqDeep) {
       try {
         const storageKey = `mq_tips_seen_${shop['Shop token']}`;
         if (!localStorage.getItem(storageKey)) {

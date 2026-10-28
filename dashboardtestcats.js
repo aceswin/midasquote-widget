@@ -6139,6 +6139,11 @@ window.logoutMember = async function () {
           <button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqRemoveRoom(${idx})" title="Delete room">✕</button>
         </div>
         <div id="mq-room-body-${idx}" style="padding-left:34px;display:${isOpen?'block':'none'}">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 10px">
+            ${r.active === false || r.proOnly
+              ? `<span style="font-size:12px;color:#9ca3af">👁 Preview on my widget — ${r.active === false ? 'switch it to Live first' : 'Pro-only project types don\'t show on the widget'}</span>`
+              : `<a href="https://widget.midasquote.com/?shop=${encodeURIComponent((window._mqShopRecord && window._mqShopRecord.fields['Shop token']) || '')}&mqtab=${encodeURIComponent(isQt ? r.forQt : (isCountertop ? 'countertops' : 'cabinets'))}&mqroom=${encodeURIComponent(r.id)}" target="_blank" rel="noopener" class="mq-btn mq-btn-sm" style="font-size:12px;text-decoration:none">👁 Preview on my widget ↗</a><span style="font-size:11.5px;color:#9ca3af">Opens your real widget on this project type. Saved changes show after a refresh.</span>`}
+          </div>
           <div class="mq-room-grp" style="--grp:#2563eb;--grpbg:#eff6ff">
             <div class="mq-room-grp-top" onclick="mqRoomGrpToggle(this, '${r.id}:1')"><span class="mq-room-grp-chev" style="transform:rotate(${(window._mqRoomGrpOpen||new Set()).has('${r.id}:1') ? 90 : 0}deg)">▶</span><div style="flex:1;min-width:0"><div class="mq-room-grp-h">① Status &amp; visibility</div><div class="mq-room-grp-sum">${r.active!==false ? 'Live on widget' : 'Draft (hidden)'} · ${r.proOnly ? 'MidasQuote Pro only' : (r.hideFromPro ? 'Widget only' : 'Widget + Pro')} · ${r.showRange === false ? 'One price' : 'Price range'}</div></div></div>
             <div class="mq-room-grp-b" style="display:${(window._mqRoomGrpOpen||new Set()).has('${r.id}:1') ? 'block' : 'none'}"><div class="mq-room-grp-sub">Whether customers can pick it, and where.</div>
