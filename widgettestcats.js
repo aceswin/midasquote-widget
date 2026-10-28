@@ -511,7 +511,7 @@
     // Custom pricing categories — see mqCcBuild. Pro-only ones are left out here.
     window._mqCustomCats = mqCcBuild(shop, sorted, shopPhotos, shopFeatured, false);
     // The shop's own quote types (Shop Info) — see mqQtBuild.
-    window._mqQuoteTypes = mqQtBuild(shop, false, specs, roomTypes);
+    window._mqQuoteTypes = mqQtBuild(shop, false, specs, roomTypes, li.countertopItems);
     if (window._mqHiddenTabsAll) {
       window._mqHiddenTabsAll = false;
       if (!window._mqQuoteTypes.length) window._mqHiddenTabs = [];
@@ -1204,6 +1204,19 @@
     return Object.values(CT_MAT).some(m => (m.removalRate||0) > 0);
   }
 
+  // Countertop materials: same project-type rules as always for cabinet and
+  // countertop project types; a quote type's project types (its "Need
+  // countertops too?" step) only when ticked for the material in My Products.
+  function mqCtVisibleRooms(item) {
+    const explicit = parseVisibleRooms(item) || [];
+    let eff = effectiveVisibleRooms(explicit, 'countertop');
+    const all = window._mqRoomTypes || [];
+    const qtIds = all.filter(r => r.forQt).map(r => r.id);
+    if (!qtIds.length) return eff;
+    if (!eff.length) return all.filter(r => !r.forQt).map(r => r.id).concat(['__ct__']);
+    if (!explicit.length) eff = eff.filter(id => !qtIds.includes(id));
+    return eff.length ? eff : ['__none__'];
+  }
   function buildCTMAT(data) {
     const { li, pricing, shopPhotos, shopFeatured } = data;
     CT_MAT = {};
@@ -1256,7 +1269,7 @@
             addonOptions: Array.isArray(addonOptions) ? addonOptions : [],
             photoUrl:    (shopPhotos||{})[photoKeyFor('countertop', item['Name'])] || '',
             featured:    (shopFeatured||{})[photoKeyFor('countertop', item['Name'])] || false,
-            visibleRooms: effectiveVisibleRooms(parseVisibleRooms(item), 'countertop'),
+            visibleRooms: mqCtVisibleRooms(item),
             groupName:   (item['Group name']||'').trim(),
             groupOrder:  item['Group sort order']||0,
             groupDesc:   item['Group description']||'',
@@ -3973,7 +3986,19 @@
           </div></div>
         </div>`;
   }
-  function mqQtBuild(shop, allowPro, specs, rooms) {
+  // Project types of a quote type ticked on any active countertop material
+  // (My Products → Countertops) — none while the business doesn't offer
+  // countertops (Business info tick off).
+  function mqQtCtRoomIds(qtId, rooms, ctItems, cfg) {
+    const off = cfg && cfg.business && Array.isArray(cfg.business.off) ? cfg.business.off : [];
+    if (off.includes('countertops')) return [];
+    const hiddenCat = (window._mqCategoryRooms || {})['countertop'] || [];
+    const mine = (rooms || []).filter(r => r.forQt === qtId).map(r => r.id);
+    const ticked = new Set();
+    (ctItems || []).filter(it => it && it['Active'] !== false).forEach(it => (parseVisibleRooms(it) || []).forEach(id => { if (!hiddenCat.includes(id)) ticked.add(id); }));
+    return mine.filter(id => ticked.has(id));
+  }
+  function mqQtBuild(shop, allowPro, specs, rooms, ctItems) {
     let cfg = null;
     try { cfg = shop['Hidden widget tabs'] ? JSON.parse(shop['Hidden widget tabs']) : null; } catch(e) { cfg = null; }
     const list = (cfg && Array.isArray(cfg.quoteTypes)) ? cfg.quoteTypes : [];
@@ -3988,7 +4013,7 @@
         proOnly: !!q.proOnly,
         // Building blocks the shop ticked on Project types: the countertop
         // step (same surfaces builder as the Countertops tab).
-        countertops: !!q.countertops,
+        countertops: mqQtCtRoomIds(q.id, rooms, ctItems, cfg).length > 0,
         // Phase 4: its own Measurements step (e.g. "Wall area", "Rooms").
         measures: mqQtMeasClean(q.measures),
       }))
@@ -5753,7 +5778,7 @@
               try { rooms = JSON.parse(chip.getAttribute('data-rooms')||'[]'); } catch(e) { rooms=[]; }
               // A quote type's countertop step offers every countertop material
               // (those are set up for countertop project types, not this one's).
-              const roomOk = !rooms.length || rooms.includes(roomId) || (mqIsQt(prefix) && rowSelectId.startsWith('mqs'));
+              const roomOk = !rooms.length || rooms.includes(roomId);
               const chipGroup = chip.getAttribute('data-group');
               const groupOk = !groupFilter || chipGroup === groupFilter || chipGroup === '__always__';
               // "None" stays available regardless of door — it's an opt-out,
@@ -6217,6 +6242,9 @@
         const guide = document.getElementById(`mq-${prefix}-measure-guide`);
         const ms = document.getElementById(`mq-${prefix}-measuring-sec`);
         if (ms) ms.style.display = ((room && room.hideMeasureGuide) || !guide || guide.dataset.empty === '1') ? 'none' : '';
+        // "Need countertops too?" only for project types ticked on a material.
+        const ctSec = document.getElementById(`mq-${prefix}-ct-surfaces-sec`);
+        if (ctSec) ctSec.style.display = (room && Object.values(CT_MAT).some(m => (m.visibleRooms || []).includes(room.id))) ? '' : 'none';
         if (window.mqCcSync) window.mqCcSync(prefix);
         mqRenumberSteps(prefix);
         window.mqUpdateStepFocus(prefix);
@@ -8377,7 +8405,8 @@
       // Countertop step: the same countertop pricing as the Countertops tab
       // (before any discount — that comes off the whole quote below).
       let ctTotal = 0;
-      if (document.getElementById(`mq-${prefix}-ct-surfaces`)) {
+      const ctSecQ = document.getElementById(`mq-${prefix}-ct-surfaces-sec`);
+      if (document.getElementById(`mq-${prefix}-ct-surfaces`) && !(ctSecQ && ctSecQ.style.display === 'none')) {
         const ctR = calcCountertop(prefix);
         ctTotal = ctR.discount ? ctR.discount.preTotal : (ctR.total || 0);
         lines.push(...(ctR.lines || []).filter(l => !l.bold));
@@ -10455,7 +10484,10 @@
     // project type already picked (no tips popup). Ignored without them.
     let mqDeep = null;
     try { const sp = new URLSearchParams(window.location.search); if (sp.get('mqtab') || sp.get('mqroom')) mqDeep = { tab: sp.get('mqtab') || '', room: sp.get('mqroom') || '' }; } catch(e) {}
-    if (mqDeep) setTimeout(() => {
+    // Applied, then re-checked a few times: on a slow page the Focused
+    // layout can finish setting itself up (back on its start screen) after
+    // the first try.
+    const mqDeepApply = () => {
       try {
         const hidden = window._mqHiddenTabs || [];
         let p = null;
@@ -10474,8 +10506,17 @@
           sel.dispatchEvent(new Event('change', { bubbles: true }));
         }
         if (!window._mqFxOn) { const t = document.getElementById(`mq-tab-${tabId}`) || document.getElementById('midasquote-widget'); if (t) t.scrollIntoView({ block: 'start' }); }
+        window._mqDeepDone = { p, room: mqDeep.room };
       } catch(e) { /* preview link only */ }
-    }, 400);
+    };
+    const mqDeepOk = () => {
+      const d = window._mqDeepDone; if (!d) return false;
+      if (window._mqActiveTabPrefix !== d.p) return false;
+      if (window._mqFxOn && !window._mqFxFull) return false;
+      const sel = document.getElementById(`mq-${d.p}-room`);
+      return !d.room || !sel || ![...sel.options].some(o => o.value === d.room) || sel.value === d.room;
+    };
+    if (mqDeep) [400, 1200, 2500, 4500].forEach(ms => setTimeout(() => { if (ms === 400 || !mqDeepOk()) mqDeepApply(); }, ms));
     if (shop['Shop token'] && !mqDeep) {
       try {
         const storageKey = `mq_tips_seen_${shop['Shop token']}`;
