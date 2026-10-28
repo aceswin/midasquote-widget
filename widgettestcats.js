@@ -293,6 +293,7 @@
     // MidasQuote Pro too" checkbox travels with it (widgetpro.js only
     // honors `.hidden` when `.applyToPro` is true — see its own
     // loadShopData for that half).
+    MQ_BOFF = mqParseBuiltinOff(shop);
     let hiddenTabsRaw = [];
     try {
       const parsedHiddenTabs = shop['Hidden widget tabs'] ? JSON.parse(shop['Hidden widget tabs']) : null;
@@ -354,6 +355,11 @@
       trimItems:       byCategory('trim'),
       tallCabItems:    byCategory('tall_cabinet'),
     };
+    // Built-in steps switched off on the Pricing tab: no items = no step.
+    if (MQ_BOFF.has('drawers')) li.drawers = [];
+    if (MQ_BOFF.has('hinges')) li.hinges = [];
+    if (MQ_BOFF.has('trim')) li.trimItems = [];
+    if (MQ_BOFF.has('tallcabs')) li.tallCabItems = [];
 
     // Match photos uploaded via the dashboard's "My Products" tab (see the
     // module-level photoKeyFor helper above for the key format).
@@ -1270,6 +1276,46 @@
       CT_MAT['marble']    = {label:'Marble',                  ps:pricing['Marble supply']||110, pi:30, supplyUnit:'sqft', installUnit:'sqft', bsOptions:legacyBs, cutoutOptions:legacyCutouts};
       CT_MAT['butcher']   = {label:'Butcher block',           ps:pricing['Butcher supply']||42, pi:18, supplyUnit:'sqft', installUnit:'sqft', bsOptions:legacyBs, cutoutOptions:legacyCutouts};
     }
+  }
+
+  // ── Built-in cabinet steps a shop switched off (Phase 3, Oct 2026) ──
+  // 'Hidden widget tabs'.builtinOff = ['materials','doors','hinges','drawers',
+  // 'tallcabs','trim','removal','island','install'] (Pricing tab switches).
+  // Off = that step isn't shown and adds $0; the shop prices it its own way
+  // with custom pricing steps instead. Empty for every shop that never
+  // touched it -- no change at all.
+  let MQ_BOFF = new Set();
+  function mqParseBuiltinOff(shop) {
+    try {
+      const c = shop && shop['Hidden widget tabs'] ? JSON.parse(shop['Hidden widget tabs']) : null;
+      return new Set((c && Array.isArray(c.builtinOff)) ? c.builtinOff.filter(x => typeof x === 'string') : []);
+    } catch(e) { return new Set(); }
+  }
+  window.mqBuiltinOff = () => MQ_BOFF;
+  // Hides the pieces of the Cabinets / Full project steps that are off.
+  function mqApplyBuiltinOffUI(p) {
+    if (!MQ_BOFF.size) return;
+    const fieldOf = id => { const e = document.getElementById(id); return e ? e.closest('.mq-field') : null; };
+    const hideF = ids => ids.forEach(id => { const f = fieldOf(id); if (f) f.style.display = 'none'; });
+    const matOff = MQ_BOFF.has('materials'), doorOff = MQ_BOFF.has('doors');
+    if (matOff) hideF([`mq-${p}-mat`, `mq-${p}-u-mat`, `mq-${p}-b-mat`]);
+    if (doorOff) hideF([`mq-${p}-door`, `mq-${p}-u-door`, `mq-${p}-b-door`]);
+    if (MQ_BOFF.has('removal')) hideF([`mq-${p}-removal`]);
+    const hasHinge = !!document.getElementById(`mq-${p}-hinge`);
+    const selSec = document.getElementById(`mq-${p}-cabinet-selections-sec`);
+    const doorSec = document.getElementById(`mq-${p}-cabinet-doors-sec`);
+    // "Different styles for uppers and lowers" only matters with a picker left.
+    if (matOff && (doorSec || (doorOff && !hasHinge))) {
+      const tog = document.getElementById(`mq-${p}-diff-tog`);
+      const row = tog && tog.closest('.mq-tog-row');
+      if (row) row.style.display = 'none';
+    }
+    if (selSec && (doorSec ? matOff : (matOff && doorOff && !hasHinge))) selSec.style.display = 'none';
+    if (doorSec && doorOff && !hasHinge) doorSec.style.display = 'none';
+    // Supply step with nothing left to ask (supply only + no removal).
+    const siSel = document.getElementById(`mq-${p}-si`);
+    const siField = document.getElementById(`mq-${p}-si-field`);
+    if (siField && MQ_BOFF.has('removal') && siSel && siSel.options.length <= 1) siField.style.display = 'none';
   }
 
   let TRIM = {};
@@ -2781,7 +2827,7 @@
     // delete whichever they don't offer ("Supply-only shop? Delete all.").
     // If a shop skips that step, those $0 stubs would otherwise still count
     // as "has install" below — so require at least one to actually be priced.
-    const hasInstall = !hasDynamic || li.installItems.some(i => (i['Rate']||0) > 0);
+    const hasInstall = MQ_BOFF.has('install') ? (mqCcCatsFor(prefix).some(c => (c.items || []).some(i => i.inst)) || (specs || []).some(s => s.offersInstallChoice)) : (!hasDynamic || li.installItems.some(i => (i['Rate']||0) > 0));
     const drawerConfigNames = [...new Set(li.drawers.map(d => d['Name'].replace(/\s*—\s*(some|mostly) drawers\s*$/i, '').trim()))];
     const drawerConfigOpts = drawerConfigNames.map((n,i) => `<option value="${i}">${n}</option>`).join('');
     const drawerConfigItems = sortBadgeAndGroupItems(drawerConfigNames.map((n,i)=>{
@@ -4607,6 +4653,11 @@
       // leaving blMatKey null, same defensive fallback getBaselineRates()
       // itself uses in pricing-helper-v2.js.
       if (!blMatKey) blMatKey = Object.keys(mat)[0];
+      // Built-in steps switched off price at $0.
+      if (MQ_BOFF.has('materials')) Object.values(mat).forEach(m => { m.rateU = 0; m.rateB = 0; });
+      if (MQ_BOFF.has('doors')) Object.values(door).forEach(d => { d.rate = 0; });
+      if (MQ_BOFF.has('install')) { installUWithDoors = installUNoDoors = installBWithDoors = installBNoDoors = installBSome = installBMostly = 0; }
+      if (MQ_BOFF.has('removal')) removalRate = 0;
       return { mat, door, drawer, hinge, blMatKey, installUWithDoors, installUNoDoors, installBWithDoors, installBNoDoors, installBSome, installBMostly, removalRate };
     }
 
@@ -6158,13 +6209,21 @@
         });
         return found;
       }
-      const cabActive = rowHasReal(`mq-${prefix}-mat`);
+      // Still decided by which project types the box materials are ticked for,
+      // even while built-in pricing is switched off (they're only hidden) --
+      // so Refacing/Repainting etc. keep skipping it, same as always.
+      const selActive = rowHasReal(`mq-${prefix}-mat`);
+      // Project types → "Ask for cabinet measurements": Yes / No overrides;
+      // Automatic (blank, every existing project type) = as always.
+      const roomForCab = (window._mqRoomTypes||[]).find(r=>r.id===roomId);
+      const askM = roomForCab && roomForCab.askMeasure;
+      const cabActive = askM === 'yes' ? true : (askM === 'no' ? false : selActive);
       const cabSec = document.getElementById(`mq-${prefix}-cabinet-measurements-sec`);
       if (cabSec) cabSec.style.display = cabActive ? '' : 'none';
       const cabSelSec = document.getElementById(`mq-${prefix}-cabinet-selections-sec`);
-      if (cabSelSec) cabSelSec.style.display = cabActive ? '' : 'none';
+      if (cabSelSec) cabSelSec.style.display = (cabActive && selActive) ? '' : 'none';
       const cabDoorSec = document.getElementById(`mq-${prefix}-cabinet-doors-sec`); // Focused layout only (split off the selections step)
-      if (cabDoorSec) cabDoorSec.style.display = cabActive ? '' : 'none';
+      if (cabDoorSec) cabDoorSec.style.display = (cabActive && selActive) ? '' : 'none';
       // Measuring shows for most project types — each one can have its own
       // tailored guide (set in the dashboard) — but a shop owner can flag a
       // specific project type (e.g. a flat-rate-only "Odd jobs" type) to
@@ -6180,7 +6239,7 @@
       // type can't silently keep charging after the switch (same guard
       // calcCabinet below relies on, same pattern cabSectionActive already
       // uses for Upper/Base).
-      const islandAllowed = cabActive && !!(roomObjForMeasuring && roomObjForMeasuring.showIslandButton);
+      const islandAllowed = !MQ_BOFF.has('island') && cabActive && !!(roomObjForMeasuring && roomObjForMeasuring.showIslandButton);
       const islandBtnWrap = document.getElementById(`mq-${prefix}-island-btn-wrap`);
       const islandFieldsWrap = document.getElementById(`mq-${prefix}-island-fields-wrap`);
       if (!islandAllowed) {
@@ -6224,6 +6283,7 @@
       // Project type/Measuring visible.
       const siField = document.getElementById(`mq-${prefix}-si-field`);
       if (siField) siField.style.display = cabActive ? '' : 'none';
+      mqApplyBuiltinOffUI(prefix);
 
       const drawSec = document.getElementById(`mq-${prefix}-drawers-sec`);
       if (drawSec) drawSec.style.display = rowHasReal(`mq-${prefix}-drawer-config`) ? '' : 'none';
@@ -7704,6 +7764,9 @@
         uDoorKey=bDoorKey=gv(`mq-${prefix}-door`);
         uHingeKey=bHingeKey=gv(`mq-${prefix}-hinge`)||'';
       }
+      // Doors switched off: never "No doors" (install stays the with-doors
+      // rate and hinges still count), and no door price or name.
+      if (MQ_BOFF.has('doors')) { uDoorKey = bDoorKey = '__off'; }
 
       const drawerTier       = gv(`mq-${prefix}-drawer-tier`) || 'none';
       const drawerConfigIdx  = parseInt(gv(`mq-${prefix}-drawer-config`) || '0');
@@ -7941,9 +8004,11 @@
       const lines=[];
       const uDoorLabel=uDoorKey==='none'?'No doors':(door[uDoorKey]?.label||'');
       const bDoorLabel=bDoorKey==='none'?'No doors':(door[bDoorKey]?.label||'');
-      if(uFt>0) lines.push({label:`Upper cabinets — ${uMat.label} / ${uDoorLabel} (${uFt} lin ft)`,cost:Math.round(uMatCost)});
+      const mqCabName = (m, d) => [MQ_BOFF.has('materials') ? '' : m, MQ_BOFF.has('doors') ? '' : d].filter(Boolean).join(' / ');
+      const mqCabSkip = c => MQ_BOFF.has('materials') && MQ_BOFF.has('doors') && Math.round(c) === 0;
+      if(uFt>0 && !mqCabSkip(uMatCost)) lines.push({label:`Upper cabinets${mqCabName(uMat.label, uDoorLabel) ? ' — ' + mqCabName(uMat.label, uDoorLabel) : ''} (${uFt} lin ft)`,cost:Math.round(uMatCost)});
       if(uFt>0&&uInstallCost>0) lines.push({label:`Upper cabinet install (${uFt} lin ft)`,cost:Math.round(uInstallCost)});
-      if(bFt>0) lines.push({label:`Base cabinets — ${bMat.label} / ${bDoorLabel} (${bFt} lin ft)`,cost:Math.round(bMatCost-(drawerRate*bFt))});
+      if(bFt>0 && !mqCabSkip(bMatCost-(drawerRate*bFt))) lines.push({label:`Base cabinets${mqCabName(bMat.label, bDoorLabel) ? ' — ' + mqCabName(bMat.label, bDoorLabel) : ''} (${bFt} lin ft)`,cost:Math.round(bMatCost-(drawerRate*bFt))});
       if(bFt>0&&bInstallCost>0) lines.push({label:`Base cabinet install (${bFt} lin ft)`,cost:Math.round(bInstallCost)});
       if(islandFt>0) lines.push({label:`Island cabinets — ${islandDouble?'double-row':'single-row'}, ${islandPanel==='decorative'?'decorative':'regular'} panels (${islandFt} lin ft${islandDw?`, back row ${islandBackFt} lin ft w/ dishwasher`:''})`,cost:Math.round(islandCost)});
       if(drawerRate>0&&(bFt>0||drawerAdjCost!==0)) lines.push({label:`Drawers — ${drawerConfigName} / ${drawerTier} (${bFt>0?`${bFt} lin ft bases`:'island'}${drawerAdjCost!==0?`; ${drawerCountUsed} drawers, est. ${drawerModel.est}`:''})`,cost:Math.round(drawerRate*bFt+drawerAdjCost)});
@@ -11327,6 +11392,8 @@
         wrapped._mqFxDoors = true;
         window.mqTogDiff = wrapped;
       }
+      // Built-in steps switched off (Pricing tab): re-check now the door step exists.
+      mqApplyBuiltinOffUI(p);
     });
   }
 

@@ -5162,6 +5162,8 @@ window.logoutMember = async function () {
         off: Array.isArray(parsed.business.off) ? parsed.business.off.filter(t => t === 'cabinetry' || t === 'countertops') : [],
       };
       if (parsed && parsed.applyToPro) cfg.applyToPro = true;
+      // Built-in cabinet steps switched off on the Pricing tab (Phase 3).
+      if (parsed && Array.isArray(parsed.builtinOff)) cfg.builtinOff = parsed.builtinOff.filter(x => typeof x === 'string');
       if (parsed && Array.isArray(parsed.quoteTypes)) cfg.quoteTypes = parsed.quoteTypes.filter(q => q && /^qt_[a-z0-9]+$/i.test(String(q.id || '')));
     } catch(e) { /* keep defaults */ }
     return cfg;
@@ -5175,6 +5177,7 @@ window.logoutMember = async function () {
     if (!shopRec) throw new Error('no shop');
     const cfg = Object.assign(mqTabsCfgOf(shopRec.fields), changes || {});
     const out = { hidden: cfg.hidden, applyToPro: !!cfg.applyToPro, quoteTypes: cfg.quoteTypes };
+    if (cfg.builtinOff && cfg.builtinOff.length) out.builtinOff = cfg.builtinOff;
     // Business type (Business info): the extra trades, plus which of
     // Cabinetry / Countertops the business said it doesn't do (the ticks
     // themselves are read straight off the built-in tabs).
@@ -5217,6 +5220,10 @@ window.logoutMember = async function () {
     });
     const ctCard = document.querySelector('#mq-products-content .mq-card[data-mq-cat="countertop"]');
     if (ctCard) ctCard.style.display = cabinetsOnly ? 'none' : '';
+    // Built-in cabinet steps switched off on the Pricing tab: their product cards go too.
+    const boff = new Set(mqTabsCfgOf((window._mqShopRecord || {}).fields).builtinOff || []);
+    const boffCats = { materials: ['material'], doors: ['door'], hinges: ['hinge'], drawers: ['drawer'], tallcabs: ['tall_cabinet'], trim: ['trim', 'trim_crown', 'trim_valance'] };
+    Object.entries(boffCats).forEach(([k, catsOff]) => { if (!boff.has(k)) return; catsOff.forEach(cat => { const card = document.querySelector(`#mq-products-content .mq-card[data-mq-cat="${cat}"]`); if (card) card.style.display = 'none'; }); });
     // Custom pricing categories are cabinet-side only — except ones that
     // belong to one of the shop's own quote types, which always show.
     const qtCats = new Set(mqCustomCatsOf(window._mqShopRecord).filter(c => c.qt).map(c => c.id));
@@ -6062,6 +6069,14 @@ window.logoutMember = async function () {
             💵 Show price as a range <span style="font-weight:400;color:#9ca3af">(uncheck for one clean number instead — e.g. "${CUR()}2,600" instead of "${CUR()}2,375 – ${CUR()}3,000")</span>
           </label>
           ${!isCountertop && !isQt ? `
+          <label style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;color:#6b7280;font-weight:600;margin-bottom:8px">
+            📐 Ask for cabinet measurements (upper / base lin ft)
+            <select id="mq-room-askmeasure-${idx}" onchange="mqSaveRooms()" style="font-size:12px;padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;width:auto">
+              <option value="" ${!r.askMeasure ? 'selected' : ''}>Automatic — when a box material is ticked for it</option>
+              <option value="yes" ${r.askMeasure === 'yes' ? 'selected' : ''}>Yes, always</option>
+              <option value="no" ${r.askMeasure === 'no' ? 'selected' : ''}>No</option>
+            </select>
+          </label>
           <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#6b7280;font-weight:600;margin-bottom:8px;cursor:pointer">
             <input type="checkbox" id="mq-room-addisland-${idx}" ${r.showIslandButton?'checked':''} onchange="mqSaveRooms()" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
             🏝️ Add "Add Island" button <span style="font-weight:400;color:#9ca3af">(lets customers measure island cabinets separately from base cabinets — only makes sense for kitchen-style project types)</span>
@@ -6259,6 +6274,7 @@ window.logoutMember = async function () {
             proOnly: document.getElementById(`mq-room-visibility-${oldIdx}`)?.value === 'proOnly',
             hideFromPro: document.getElementById(`mq-room-visibility-${oldIdx}`)?.value === 'hideFromPro',
             hideMeasureGuide: document.getElementById(`mq-room-hidemeasure-${oldIdx}`)?.checked === true,
+            askMeasure: (document.getElementById(`mq-room-askmeasure-${oldIdx}`) ? document.getElementById(`mq-room-askmeasure-${oldIdx}`).value : (orig.askMeasure || '')) || undefined,
             showRange: document.getElementById(`mq-room-showrange-${oldIdx}`)?.checked !== false,
             showIslandButton: document.getElementById(`mq-room-addisland-${oldIdx}`)?.checked === true,
             islandAllowDoubleRow: document.getElementById(`mq-room-islanddouble-${oldIdx}`)?.checked === true,
@@ -6494,6 +6510,7 @@ window.logoutMember = async function () {
         proOnly: el(`mq-room-visibility-${idx}`)?.value === 'proOnly',
         hideFromPro: el(`mq-room-visibility-${idx}`)?.value === 'hideFromPro',
         hideMeasureGuide: el(`mq-room-hidemeasure-${idx}`)?.checked === true,
+        askMeasure: (el(`mq-room-askmeasure-${idx}`) ? el(`mq-room-askmeasure-${idx}`).value : (r.askMeasure || '')) || undefined,
         showRange: el(`mq-room-showrange-${idx}`)?.checked !== false,
         showIslandButton: el(`mq-room-addisland-${idx}`)?.checked === true,
         islandAllowDoubleRow: el(`mq-room-islanddouble-${idx}`)?.checked === true,
@@ -18263,7 +18280,6 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
       }
     }
   };
-
 
   init();
 

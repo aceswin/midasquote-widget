@@ -2205,6 +2205,7 @@ window.mqphGoToWizard = function() {
           <button class="mqph-btn mqph-btn-primary" onclick="mqphStartItemSetup()">Set up shop items →</button>
         </div>` : `
 
+        ${mqphBoffCardHTML()}
         ${['material','door','drawer','hinge','zone','install'].map(cat => [cat, groups[cat]||[]]).concat(Object.entries(groups).filter(([cat]) => !['material','door','drawer','hinge','zone','install','other','tax'].includes(cat))).map(([cat,recs]) => `
           <div class="mqph-cat-block" data-mq-cat="${cat}">
             <div class="mqph-cat-header" onclick="mqphToggleCategory('${cat}')" style="cursor:pointer">
@@ -6252,6 +6253,82 @@ window.mqphGoToWizard = function() {
   // is quoted in cabinet-specific terms; see CAT_LABELS['install']).
   const CABINET_ONLY_PRICING_CATS = ['material', 'door', 'drawer', 'hinge', 'install'];
 
+
+  // ── Built-in cabinet steps on/off (Phase 3, Oct 2026) ──
+  // Jordan: shops should be able to remake how kitchens are priced. Any of
+  // these can be switched off: hidden on the widget + Pro, priced at $0,
+  // and its pricing section here is tucked away (nothing is deleted). The
+  // shop then prices it its own way with custom pricing categories (e.g. a
+  // "Box material" step priced per cabinet lin ft, placed after cabinet
+  // measurements). Stored as 'Hidden widget tabs'.builtinOff.
+  const MQ_BOFF_STEPS = [
+    ['materials', 'Box material', 'Material choice + its price per lin ft'],
+    ['doors', 'Door style', 'Door choice + its price per lin ft'],
+    ['hinges', 'Hinges', 'Hinge choice'],
+    ['drawers', 'Drawers', 'Drawer amount / type step'],
+    ['tallcabs', 'Tall cabinets', 'Pantry, oven units…'],
+    ['trim', 'Crown moulding / valance', 'Trim step'],
+    ['install', 'Cabinet installation', 'Built-in install rates (Supply + install question stays if one of your own options offers install)'],
+    ['removal', 'Cabinet removal', '"Remove existing cabinets?" question'],
+    ['island', 'Islands', '"+ Add island" and island panel pricing'],
+  ];
+  function mqphBoff() {
+    try { const o = JSON.parse(mqccShopFields()['Hidden widget tabs'] || '{}'); return new Set((o && Array.isArray(o.builtinOff)) ? o.builtinOff : []); } catch(e) { return new Set(); }
+  }
+  window.mqphBoff = mqphBoff;
+  // Three switches (Jordan, Oct 27): the core cabinet pricing pieces price
+  // off each other (install follows doors and drawers; islands and tall
+  // cabinets use the box, door, hinge and install rates), so they're ONE
+  // group. Crown/valance (own prices, footage from the measurements) and
+  // removal (rate x measured lin ft) stand alone.
+  const MQ_BOFF_GROUP = ['materials', 'doors', 'hinges', 'drawers', 'install', 'tallcabs', 'island'];
+  const MQ_BOFF_SWITCHES = [
+    { id: 'core', keys: MQ_BOFF_GROUP, title: 'Built-in cabinet pricing', on: 'Box material, doors, hinges, drawers, installation, tall cabinets and islands — priced from the sections below.', off: 'Off — hidden on your widget and in MidasQuote Pro ($0), pricing tucked away (nothing deleted). Customers still enter cabinet measurements (set per project type on Project types), so your own ✨ Custom pricing steps can be priced per base / upper / total cabinet lin ft.' },
+    { id: 'trim', keys: ['trim'], title: 'Crown moulding / valance', on: 'Footage comes from the upper cabinet measurements.', off: 'Off — hidden on your widget and in Pro.' },
+    { id: 'removal', keys: ['removal'], title: 'Cabinet removal', on: '"Remove existing cabinets?" — priced per measured cabinet lin ft.', off: 'Off — question hidden on your widget and in Pro.' },
+  ];
+  function mqphBoffCardHTML() {
+    const off = mqphBoff();
+    return `<div class="mqph-cat-block" id="mqph-scope-boff" style="padding:14px 16px !important">
+      <div style="font-size:14px;font-weight:700;color:#111;margin-bottom:2px">🧩 Built-in cabinet pricing</div>
+      <div style="font-size:12px;color:#6b7280;line-height:1.5;margin-bottom:6px">Most shops leave these on. Switch one off only to price it your own way with ✨ Custom pricing categories.</div>
+      ${MQ_BOFF_SWITCHES.map(sw => {
+        const isOff = sw.keys.some(k => off.has(k));
+        return `<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:9px 0;border-top:1px solid #f1f5f9">
+          <div style="min-width:0"><div style="font-size:13px;font-weight:600;color:${isOff ? '#9ca3af' : '#111'}">${sw.title} <span style="font-size:11px;font-weight:700;color:${isOff ? '#b45309' : '#15803d'}">${isOff ? 'OFF' : 'ON'}</span></div>
+          <div style="font-size:12px;color:#6b7280;line-height:1.5;margin-top:2px">${isOff ? sw.off : sw.on}</div></div>
+          <div class="mqph-toggle ${isOff ? '' : 'on'}" id="mqph-boff-${sw.id}" onclick="mqphBoffToggle('${sw.id}')" style="flex-shrink:0;margin-top:2px"></div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }
+  window.mqphBoffToggle = async function(swId) {
+    const sw = MQ_BOFF_SWITCHES.find(x => x.id === swId) || MQ_BOFF_SWITCHES[0];
+    const f = mqccShopFields();
+    let o = {};
+    try { o = JSON.parse(f['Hidden widget tabs'] || '{}') || {}; } catch(e) { o = {}; }
+    if (!Array.isArray(o.hidden)) o.hidden = [];
+    const off = new Set(Array.isArray(o.builtinOff) ? o.builtinOff : []);
+    const turningOff = !sw.keys.some(k => off.has(k));
+    if (turningOff && sw.id === 'core' && !confirm("Switch off the built-in cabinet pricing?\n\nBox material, doors, hinges, drawers, installation, tall cabinets and islands will be hidden on your widget and in Pro, and your cabinet quotes will use your own custom pricing steps instead.\n\nNothing is deleted — switch it back on any time.")) return;
+    sw.keys.forEach(k => { if (turningOff) off.add(k); else off.delete(k); });
+    o.builtinOff = MQ_BOFF_STEPS.map(([k]) => k).filter(k => off.has(k));
+    if (!o.builtinOff.length) delete o.builtinOff;
+    const json = JSON.stringify(o);
+    try {
+      await atUpdate(SHOPS_TABLE, shopRecord.id, { 'Hidden widget tabs': json });
+      shopRecord.fields['Hidden widget tabs'] = json;
+      if (window._mqShopRecord && window._mqShopRecord.fields) window._mqShopRecord.fields['Hidden widget tabs'] = json;
+      mqphRerenderPricingPage();
+      mqphApplyEstimatorTabScope();
+      if (window._mqLastFetchTimes) window._mqLastFetchTimes['products'] = 0;
+      if (typeof mqccMsg === 'function') mqccMsg(`✓ ${sw.title} ${turningOff ? 'switched off.' : 'is back on.'}`);
+    } catch(e) { alert('Could not save: ' + e.message); }
+  };
+  // Which built-in step a custom "priced on" method / link / place depends on.
+  const MQ_BOFF_HOW = { crown_lf: 'trim', valance_lf: 'trim', drawers: 'drawers', tallcabs: 'tallcabs', island_lf: 'island' };
+  const MQ_BOFF_TIE = { door: 'doors', material: 'materials', drawer: 'drawers', hinge: 'hinges', crown: 'trim', valance: 'trim' };
+  const MQ_BOFF_PLACE = { drawers: ['drawers'], tallcabs: ['tallcabs'], trim: ['trim'], selections: ['materials', 'doors', 'hinges'] };
   // Mirrors dashboard.js's mqComputeTabScope -- same 'Hidden widget tabs'
   // field, same {hidden, applyToPro} shape, just re-implemented here since
   // this file is loaded as its own separate script, not a shared module.
@@ -6301,6 +6378,18 @@ window.mqphGoToWizard = function() {
     if (hwNote) hwNote.style.display = countertopsOnly ? 'none' : '';
     const cabGroup = document.querySelector('#mqph-scope-custom [data-mqcc-group=""]');
     if (cabGroup) cabGroup.style.display = countertopsOnly ? 'none' : '';
+    // Built-in steps switched off: their pricing sections are tucked away.
+    const boffCard = document.getElementById('mqph-scope-boff');
+    if (boffCard) boffCard.style.display = countertopsOnly ? 'none' : '';
+    const off = mqphBoff();
+    if (off.size) {
+      const hide = el => { if (el) el.style.display = 'none'; };
+      [['materials', 'material'], ['doors', 'door'], ['hinges', 'hinge'], ['drawers', 'drawer']].forEach(([k, cat]) => { if (off.has(k)) hide(document.querySelector(`.mqph-cat-block[data-mq-cat="${cat}"]`)); });
+      if (off.has('install') && off.has('removal')) hide(document.querySelector('.mqph-cat-block[data-mq-cat="install"]'));
+      if (off.has('tallcabs')) hide(document.getElementById('mqph-scope-tallcab'));
+      if (off.has('trim')) hide(document.getElementById('mqph-scope-trim'));
+      if (off.has('island')) hide(document.getElementById('mqph-scope-islandpanel'));
+    }
   }
   window.mqphApplyEstimatorTabScope = mqphApplyEstimatorTabScope;
 
@@ -6378,7 +6467,8 @@ window.mqphGoToWizard = function() {
       walk('specialty', 1);
       return out;
     }
-    MQCC_PLACES.forEach(([v, l]) => { out.push([v, l]); walk(v, 1); });
+    const boffP = mqphBoff();
+    MQCC_PLACES.forEach(([v, l]) => { const offP = MQ_BOFF_PLACE[v] && MQ_BOFF_PLACE[v].every(k => boffP.has(k)); out.push([v, offP ? l + ' (switched off — goes in its spot)' : l]); walk(v, 1); });
     return out;
   }
   // A quote type's step only knows "at the start" or "after another step".
@@ -6477,7 +6567,7 @@ window.mqphGoToWizard = function() {
     return `<div class="mqph-field"><label>Link to another pick (optional — like crown &amp; door styles)</label>
       <select id="mqcc-${pfx}-tiecat" onchange="mqccTieRender('${pfx}', [])">
         <option value="">Not linked</option>
-        ${MQCC_TIE_CATS.map(([v, l]) => `<option value="${v}">Link to a ${l.toLowerCase()}</option>`).join('')}
+        ${MQCC_TIE_CATS.filter(([v]) => !(MQ_BOFF_TIE[v] && mqphBoff().has(MQ_BOFF_TIE[v]))).map(([v, l]) => `<option value="${v}">Link to a ${l.toLowerCase()}</option>`).join('')}
       </select>
       <div id="mqcc-${pfx}-tienames" style="display:none;max-height:170px;overflow-y:auto;border:1px solid #e5e7eb;border-radius:8px;padding:6px 10px;margin-top:6px"></div>
     </div>`;
@@ -6599,7 +6689,8 @@ window.mqphGoToWizard = function() {
       : cats.map(blockOf).join('');
 
     const howGroups = [...new Set(Object.values(MQCC_HOW).map(o => o.group))];
-    const howOpts = howGroups.map(g => `<optgroup label="${g}">${Object.entries(MQCC_HOW).filter(([, o]) => o.group === g).map(([v, o]) => `<option value="${v}">${o.label}</option>`).join('')}</optgroup>`).join('');
+    const boffNow = mqphBoff();
+    const howOpts = howGroups.map(g => `<optgroup label="${g}">${Object.entries(MQCC_HOW).filter(([, o]) => o.group === g).map(([v, o]) => { const offK = MQ_BOFF_HOW[v] && boffNow.has(MQ_BOFF_HOW[v]); return `<option value="${v}"${offK ? ' disabled' : ''}>${o.label}${offK ? ' — step switched off' : ''}</option>`; }).join('')}</optgroup>`).join('');
     return `
       <style>@media(max-width:760px){#mqph-scope-custom .mqcc-pv-grid{grid-template-columns:1fr !important}}
         #mqcc-cat-tienames label,#mqcc-item-tienames label{display:flex !important;align-items:center !important;gap:8px !important;text-transform:none !important;letter-spacing:0 !important;font-weight:400 !important;font-size:13px !important;color:#111 !important;margin:0 !important;padding:3px 0 !important;cursor:pointer}
