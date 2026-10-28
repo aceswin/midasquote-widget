@@ -6094,6 +6094,14 @@ window.logoutMember = async function () {
   // Countertop project types are purely descriptive (welcome note +
   // measuring guide) per Jordan's call — they never adjust pricing, so
   // the price-adjustments block below is skipped for them.
+  // Shared coloured, collapsible box (project types + quote type settings).
+  function mqGrpBox(key, col, bg, title, sum, sub, inner) {
+    const isOpen = (window._mqRoomGrpOpen || new Set()).has(key);
+    return `<div class="mq-room-grp" style="--grp:${col};--grpbg:${bg}">
+      <div class="mq-room-grp-top" onclick="mqRoomGrpToggle(this, '${key}')"><span class="mq-room-grp-chev" style="transform:rotate(${isOpen ? 90 : 0}deg)">▶</span><div style="flex:1;min-width:0"><div class="mq-room-grp-h">${title}</div><div class="mq-room-grp-sum">${sum}</div></div></div>
+      <div class="mq-room-grp-b" style="display:${isOpen ? 'block' : 'none'}">${sub ? `<div class="mq-room-grp-sub">${sub}</div>` : ''}${inner}</div>
+    </div>`;
+  }
   // Collapsed project type groups show a one-line summary of what's set.
   function mqRoomAdjSummary(r) {
     const f = v => (v > 0 ? '+' : '') + v + '%';
@@ -6452,23 +6460,21 @@ window.logoutMember = async function () {
             <span class="mq-rooms-sec-count">${n(qtEntries[q.id].length)}</span>
           </button>
           <div class="mq-rooms-sec-body">
-            <div style="background:#fafbfc;border:1px solid #eef0f3;border-radius:10px;padding:12px 14px;margin-bottom:14px">
-              <div style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#6b7280;margin-bottom:8px">How this quote shows to customers</div>
+            <div style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#6b7280;margin:14px 0 8px">Quote settings</div>
+            ${mqGrpBox(q.id + ':card', '#2563eb', '#eff6ff', '① Card &amp; icon', (q.sub ? '“' + mqEscHtml(q.sub) + '”' : 'No line under the name yet') + ' · ' + mqEscHtml(q.icon || 'grid') + ' icon', 'How this quote shows on its tab or card.', `
               <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:4px">Line under the name (on its card or tab)</label>
               <input type="text" id="mq-qt-sub-${q.id}" maxlength="70" value="${mqEscHtml(q.sub || '')}" placeholder="e.g. New doors and fronts on your existing boxes" onchange="mqQtUpdate('${q.id}', { sub: this.value.trim() }, '✓ Saved.')" style="width:100%;max-width:420px;font-size:13px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit"/>
               <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin:10px 0 6px">Icon</label>
               <div style="display:flex;flex-wrap:wrap;gap:6px">${Object.keys(MQ_QT_ICONS).map(k => `<button type="button" title="${k}" aria-label="Icon: ${k}" onclick="mqQtUpdate('${q.id}', { icon: '${k}' }, '✓ Icon updated.')" style="width:38px;height:38px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;${(q.icon || 'grid') === k ? 'background:#1a1a1a;color:#fff;border:1.5px solid #1a1a1a' : 'background:#fff;color:#374151;border:1px solid #d1d5db'}">${mqQtIconSvg(k, 20)}</button>`).join('')}</div>
               <div style="font-size:12px;color:#6b7280;margin-top:10px;line-height:1.5">The card photo customers see in Focused layout is the cover image of the first project type below. Name, on/off and Pro only are on <a href="#" onclick="event.preventDefault();mqNav('shop', document.querySelector('.mq-nav-item[onclick*=&quot;mqNav(\'shop\'&quot;]'))" style="color:#1d4ed8">Business info</a>.</div>
-              <div style="margin-top:10px;padding-top:10px;border-top:1px dashed #e5e7eb;${mqBizOf(window._mqShopRecord.fields).ct ? '' : 'display:none'}">
-                <div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:6px">Include</div>
+`)}
+            ${mqBizOf(window._mqShopRecord.fields).ct ? mqGrpBox(q.id + ':ct', '#7c3aed', '#f5f3ff', '② Countertops', q.countertops ? 'Included — a “Need countertops too?” step at the end' : 'Not included', 'Add your Countertops tab as a last step of this quote.', `
                 <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;color:#111;cursor:pointer">
                   <input type="checkbox" ${q.countertops ? 'checked' : ''} onchange="mqQtUpdate('${q.id}', { countertops: this.checked }, this.checked ? '✓ Countertops added to ${mqEscHtml(q.name).replace(/'/g, '&#39;')}.' : '✓ Countertops removed.')" style="width:16px;height:16px;margin-top:1px;flex-shrink:0;accent-color:#1a1a1a"/>
                   <span><strong>Countertops</strong> <span style="color:#6b7280">— adds a "Need countertops too?" step: the same surfaces, materials, edges, cutouts and backsplash as your Countertops tab, priced with your countertop pricing.</span></span>
                 </label>
-              </div>
-              <div style="margin-top:10px;padding-top:10px;border-top:1px dashed #e5e7eb">
-                <div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:2px">📐 Measurements</div>
-                <div style="font-size:12px;color:#6b7280;line-height:1.5;margin-bottom:8px">Numbers customers enter once — like "Wall area" or "Number of rooms". Any option on the Pricing tab can then be priced on one (pick "One of this quote's measurements").</div>
+`) : ''}
+            ${mqGrpBox(q.id + ':meas', '#0d9488', '#f0fdfa', (mqBizOf(window._mqShopRecord.fields).ct ? '③' : '②') + ' Measurements', (q.measures || []).length ? (q.measures || []).map(m => mqEscHtml(m.label || 'Untitled')).join(' · ') : 'None yet', 'Numbers customers enter once — like “Wall area” or “Number of rooms”. Any option on the Pricing tab can then be priced on one (pick “One of this quote’s measurements”).', `
                 ${(q.measures || []).map((m, mi) => `<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
                   <input type="text" maxlength="40" value="${mqEscHtml(m.label || '')}" placeholder="e.g. Wall area" onchange="mqQtMeasSet('${q.id}', ${mi}, 'label', this.value)" style="font-size:13px;padding:6px 9px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;width:180px"/>
                   <select onchange="mqQtMeasSet('${q.id}', ${mi}, 'type', this.value)" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;width:auto">
@@ -6480,8 +6486,9 @@ window.logoutMember = async function () {
                   <button type="button" class="mq-btn mq-btn-sm" title="Remove" onclick="mqQtMeasDel('${q.id}', ${mi})" style="color:#b91c1c">✕</button>
                 </div>`).join('')}
                 <button type="button" class="mq-btn mq-btn-sm" onclick="mqQtMeasAdd('${q.id}')">+ Add a measurement</button>
-              </div>
-              <div style="font-size:12px;color:#374151;margin-top:10px;padding-top:10px;border-top:1px dashed #e5e7eb">
+`)}
+            ${mqGrpBox(q.id + ':steps', '#16a34a', '#f0fdf4', (mqBizOf(window._mqShopRecord.fields).ct ? '④' : '③') + ' Priced steps', steps.length ? steps.map(c => mqEscHtml(c.name || 'Untitled')).join(' → ') : 'None yet — add one so this quote can price something', 'The steps customers go through — made on the Pricing tab.', `
+              <div style="font-size:12px;color:#374151">
                 <strong>Priced steps:</strong> ${steps.length ? steps.map(c => mqEscHtml(c.name || 'Untitled')).join(' → ') : '<span style="color:#6b7280">none yet</span>'}
                 <span style="color:#6b7280">— these come from the Pricing tab's custom pricing categories set to "${mqEscHtml(q.name)}".</span>
                 <a href="#" onclick="event.preventDefault();mqNav('pricing', document.querySelector('.mq-nav-item[onclick*=&quot;mqNav(\'pricing\'&quot;]'))" style="color:#1d4ed8;font-weight:600;white-space:nowrap">Go to Pricing →</a>
@@ -6489,8 +6496,8 @@ window.logoutMember = async function () {
                   <button type="button" class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqQtAddStep('${q.id}')">+ Add a priced step for ${mqEscHtml(q.name)}</button>
                 </div>
                 <div style="font-size:12px;color:#6b7280;margin-top:8px;line-height:1.5">Specialty items work here too: in <strong>Specialty items</strong>, tick this quote's project types (they're listed as e.g. "Kitchen (${mqEscHtml(q.name)})") on any item and it shows in this quote's Details &amp; Selections step.</div>
-              </div>
-            </div>
+              </div>`)}
+            <div style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#6b7280;margin:18px 0 8px">Project types in this quote</div>
             <div id="mq-rooms-list-qt-${q.id}"></div>
             <div style="font-size:12px;color:#9ca3af;padding:4px 0 8px;display:${qtEntries[q.id].length ? 'none' : 'block'}">No project types yet. Add at least one so customers have something to pick.</div>
             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:4px">
