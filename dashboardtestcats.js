@@ -6456,7 +6456,7 @@ window.logoutMember = async function () {
       wrap.insertAdjacentHTML('beforebegin', qts.map(q => {
         const steps = cats.filter(c => c.qt === q.id);
         const hasSomething = steps.length || q.countertops || mqQtHasSpecialty(q.id);
-        const state = q.on === false ? 'Hidden (turned off on Business info)' : (q.proOnly ? 'MidasQuote Pro only' : (hasSomething ? 'Showing on your widget' : 'Not showing yet — add a priced step, a specialty item or countertops'));
+        const state = q.on === false ? 'Hidden (turned off on Business info)' : (q.proOnly ? 'MidasQuote Pro only' : (hasSomething ? 'Showing on your widget' : ('Not showing yet — add a priced step' + (mqBizOf(window._mqShopRecord.fields).ct ? ', a specialty item or countertops' : ' or a specialty item'))));
         return `<div class="mq-card mq-rooms-sec mq-rooms-qt-sec" id="mq-rooms-sec-qt-${q.id}" data-mq-rsec="qt:${q.id}" style="margin-top:1.25rem">
           <button type="button" class="mq-rooms-sec-hdr" onclick="mqRoomSecToggle('qt:${q.id}')" aria-expanded="false">
             <span class="mq-rooms-sec-chev">▶</span>
@@ -11260,9 +11260,10 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         renderRoomsList();
       }
 
+      const ctLeftInQts = !willBeOn && hidden.includes('both') && hidden.includes('countertops') ? mqQuoteTypesOf(shopRec.fields).filter(q => q.countertops) : [];
       showMsg('mq-shop-msg', willBeOn
         ? `✓ "${tabId}" tab shown on widget.` + (seededCountertopDefaults ? ' Default countertop project types added.' : '')
-        : `✓ "${tabId}" tab hidden from widget.`);
+        : `✓ "${tabId}" tab hidden from widget.` + (ctLeftInQts.length ? ` ${ctLeftInQts.map(q => '"' + q.name + '"').join(', ')} still ${ctLeftInQts.length === 1 ? 'has' : 'have'} a Countertops step — untick Countertops under "What does your business do?" to remove countertops everywhere.` : ''));
       mqApplyEstimatorTabScopeToRoomsPage();
       mqApplyEstimatorTabScopeToPricing();
       mqApplyEstimatorTabScopeToSpecialty();
@@ -11367,7 +11368,9 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       </div>`;
     });
     const nothing = !biz.cab && !biz.ct && !qts.some(q => q.on !== false && !q.proOnly);
-    tradesEl.innerHTML = rows.join('') + (nothing ? `<div style="font-size:12.5px;color:#b45309;margin-top:4px">Your widget has no quotes to show yet. Add a quote type for your trade.</div>` : '')
+    const hTabs = mqTabsCfgOf(shopRec.fields).hidden;
+    const ctOnlyViaQt = biz.ct && hTabs.includes('both') && hTabs.includes('countertops') ? qts.filter(q => q.countertops) : [];
+    tradesEl.innerHTML = rows.join('') + (ctOnlyViaQt.length ? `<div style="font-size:12.5px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:8px 10px;margin:4px 0 6px;line-height:1.5">Countertops is still ticked because ${ctOnlyViaQt.map(q => '“' + mqEscHtml(q.name) + '”').join(', ')} ${ctOnlyViaQt.length === 1 ? 'includes' : 'include'} a Countertops step (your Countertops tabs are off). Untick <strong>Countertops</strong> above to remove it everywhere.</div>` : '') + (nothing ? `<div style="font-size:12.5px;color:#b45309;margin-top:4px">Your widget has no quotes to show yet. Add a quote type for your trade.</div>` : '')
       + ((!biz.cab || !biz.ct) ? `<div style="font-size:12px;color:#6b7280;margin-top:6px;line-height:1.5">${!biz.cab && !biz.ct ? 'Built-in cabinet and countertop pricing is hidden' : (!biz.cab ? 'Built-in cabinet pricing is hidden' : 'Built-in countertop pricing is hidden')} on the Pricing, My products and Project types tabs, and the matching built-in quote is hidden in MidasQuote Pro too. Nothing is deleted. Tick it again any time to bring it back.</div>` : '');
   };
   window.mqBizToggle = async function(id) {
@@ -11761,7 +11764,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const status = offTrade
         ? `<span style="color:#6b7280">Hidden — ${mqEscHtml(offTrade.label)} is unticked under "What does your business do?"</span>`
         : !nSteps && !extras.length
-        ? `<span style="color:#b45309">Not showing yet — give it a priced step, a specialty item or countertops</span>`
+        ? `<span style="color:#b45309">Not showing yet — give it a priced step${mqBizOf(shopRec.fields).ct ? ', a specialty item or countertops' : ' or a specialty item'}</span>`
         : `${nRooms} project type${nRooms === 1 ? '' : 's'}${nSteps ? ` · ${nSteps} priced step${nSteps === 1 ? '' : 's'}` : ''}${extras.length ? ' · ' + extras.join(' + ') : ''}`;
       const nameHtml = editing === q.id
         ? `<span style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><input type="text" id="mq-qt-rename-${q.id}" maxlength="40" value="${mqEscHtml(q.name)}" onkeydown="if(event.key==='Enter'){event.preventDefault();mqQtRenameSave('${q.id}');}if(event.key==='Escape'){mqQtRename('');}" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;width:180px"/><button type="button" class="mq-btn mq-btn-sm" onclick="mqQtRenameSave('${q.id}')">Save</button><button type="button" class="mq-btn mq-btn-sm" onclick="mqQtRename('')">Cancel</button></span>`
