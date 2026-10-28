@@ -3388,6 +3388,10 @@ window.logoutMember = async function () {
       #midasquote-dashboard #mq-page-showroom .mq-sr-card,
       #midasquote-dashboard #mq-page-embed>.mq-card{max-width:1120px;margin-left:auto!important;margin-right:auto!important}
       #midasquote-dashboard #mq-page-shop>.mq-card{overflow:hidden;padding:0!important}
+      /* Project type editor: headed groups (Oct 27) */
+      #midasquote-dashboard .mq-room-grp{background:#fff;border:1px solid #e9edf3;border-radius:12px;padding:14px 16px 10px;margin:0 0 12px}
+      #midasquote-dashboard .mq-room-grp-h{font-size:13.5px;font-weight:700;color:#111;margin:0 0 2px;letter-spacing:.01em}
+      #midasquote-dashboard .mq-room-grp-sub{font-size:12px;color:#6b7280;margin:0 0 12px;line-height:1.45}
       #midasquote-dashboard #mq-page-shop>.mq-card>.mq-card-title{padding:20px 24px!important;border-bottom:1px solid #eef2f7;background:linear-gradient(180deg,#fff 0%,#fbfcfd 100%)}
       #midasquote-dashboard #mq-page-shop>[id$='-msg'],#midasquote-dashboard #mq-page-rooms>#mq-rooms-msg{max-width:1120px;margin-left:auto;margin-right:auto}
       #midasquote-dashboard #mq-page-shop [id^='mq-shopsec-'][id$='-body']{padding:22px 24px 24px}
@@ -6048,6 +6052,8 @@ window.logoutMember = async function () {
           <button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqRemoveRoom(${idx})" title="Delete room">✕</button>
         </div>
         <div id="mq-room-body-${idx}" style="padding-left:34px;display:${isOpen?'block':'none'}">
+          <div class="mq-room-grp">
+            <div class="mq-room-grp-h">① Status &amp; visibility</div><div class="mq-room-grp-sub">Whether customers can pick it, and where.</div>
           <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:${r.active===false?'#92400e':'#166534'};font-weight:600;margin-bottom:8px;cursor:pointer">
             <input type="checkbox" id="mq-room-active-${idx}" ${r.active!==false?'checked':''} onchange="mqSaveRooms()" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
             ${r.active!==false ? '✓ Live on widget' : '🚧 Draft — hidden from widget while you set it up'}
@@ -6061,51 +6067,14 @@ window.logoutMember = async function () {
             </select>
           </div>
           <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#6b7280;font-weight:600;margin-bottom:8px;cursor:pointer">
-            <input type="checkbox" id="mq-room-hidemeasure-${idx}" ${r.hideMeasureGuide?'checked':''} onchange="mqSaveRooms()" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
-            📏 Hide "How to measure" section <span style="font-weight:400;color:#9ca3af">(for project types that are flat-rate only, with nothing to measure)</span>
-          </label>
-          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#6b7280;font-weight:600;margin-bottom:8px;cursor:pointer">
             <input type="checkbox" id="mq-room-showrange-${idx}" ${r.showRange === false ? '' : 'checked'} onchange="mqSaveRooms()" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
             💵 Show price as a range <span style="font-weight:400;color:#9ca3af">(uncheck for one clean number instead — e.g. "${CUR()}2,600" instead of "${CUR()}2,375 – ${CUR()}3,000")</span>
           </label>
-          ${!isCountertop && !isQt ? `
-          <label style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;color:#6b7280;font-weight:600;margin-bottom:8px">
-            📐 Ask for cabinet measurements (upper / base lin ft)
-            <select id="mq-room-askmeasure-${idx}" onchange="mqSaveRooms()" style="font-size:12px;padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;width:auto">
-              <option value="" ${!r.askMeasure ? 'selected' : ''}>Automatic — when a box material is ticked for it</option>
-              <option value="yes" ${r.askMeasure === 'yes' ? 'selected' : ''}>Yes, always</option>
-              <option value="no" ${r.askMeasure === 'no' ? 'selected' : ''}>No</option>
-            </select>
-          </label>
-          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#6b7280;font-weight:600;margin-bottom:8px;cursor:pointer">
-            <input type="checkbox" id="mq-room-addisland-${idx}" ${r.showIslandButton?'checked':''} onchange="mqSaveRooms()" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
-            🏝️ Add "Add Island" button <span style="font-weight:400;color:#9ca3af">(lets customers measure island cabinets separately from base cabinets — only makes sense for kitchen-style project types)</span>
-          </label>
-          <div id="mq-room-island-settings-${idx}" style="display:${r.showIslandButton?'block':'none'};margin:0 0 10px 24px;padding:10px 12px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px">
-            <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#374151;cursor:pointer">
-              <input type="checkbox" id="mq-room-islanddouble-${idx}" ${r.islandAllowDoubleRow?'checked':''} onchange="mqSaveRooms()" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
-              Allow double-row (back-to-back) islands
-            </label>
-            <div style="font-size:11px;color:#9ca3af;line-height:1.5">Island panel pricing is set once, shop-wide, in the <strong>Pricing</strong> tab — not per project type. Look for "🏝️ Island panel pricing" there.</div>
-          </div>` : ''}
-          ${isQt ? `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin-bottom:10px">
-            <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:8px">💰 Price adjustments for this project type</label>
-            ${mqRoomAdjRow('mat', idx, r.materialAdjPct || 0, 'Items', 'applies to options you\'ve set to "use project type % adjustments" on the Pricing tab')}
-            ${mqRoomAdjRow('install', idx, r.installAdjPct || 0, 'Installation', 'the installation part of those same options')}
-            ${mqRoomAdjRow('total', idx, r.totalAdjPct || 0, 'Total ballpark', 'raise or lower this project type\'s whole price')}
-          </div>` : isCountertop ? `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin-bottom:10px">
-            <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:8px">💰 Price adjustments for this project type</label>
-            ${mqRoomAdjRow('install', idx, r.installAdjPct || 0, 'Installation', 'use if this project type\'s install should run higher or lower than typical — only affects the installation cost')}
-            ${mqRoomAdjRow('total', idx, r.totalAdjPct || 0, 'Total ballpark', 'use if this project type\'s overall ballpark price should be inflated or deflated')}
-          </div>` : `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin-bottom:10px">
-            <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:8px">💰 Price adjustments for this project type</label>
-            ${mqRoomAdjRow('mat', idx, r.materialAdjPct !== undefined ? r.materialAdjPct : (r.adjustment || 0), 'Base cabinets', 'e.g. bathroom vanities run smaller than kitchen cabinets, or commercial jobs may always be pilaster cabinets')}
-            ${mqRoomAdjRow('upper-mat', idx, r.upperMaterialAdjPct || 0, 'Upper cabinets', 'e.g. commercial jobs may always use a specific upper cabinet style')}
-            ${r.showIslandButton ? mqRoomAdjRow('island-mat', idx, r.islandMaterialAdjPct || 0, 'Islands', 'independent from the Base/Upper cabinets % above') : ''}
-            ${mqRoomAdjRow('install', idx, r.installAdjPct || 0, 'Installation', 'use if this project type\'s install should run higher or lower than typical — only affects the installation cost')}
-            ${mqRoomAdjRow('total', idx, r.totalAdjPct || 0, 'Total ballpark', 'use if this project type\'s overall ballpark price should be inflated or deflated')}
-          </div>`}
-          <textarea id="mq-room-desc-${idx}" placeholder="Optional note shown to customers when they pick this project type — e.g. &quot;For door refacing, skip the box materials below — just add your square footage under Specialty Items instead.&quot;" rows="2" style="width:100%;font-size:12px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;resize:vertical;margin-bottom:8px">${(r.description||'').replace(/</g,'&lt;')}</textarea>
+          </div>
+          <div class="mq-room-grp">
+            <div class="mq-room-grp-h">② What customers see when they pick it</div><div class="mq-room-grp-sub">A short welcome note and a cover photo.</div>
+            <label style="display:block;font-size:12px;color:#6b7280;font-weight:600;margin-bottom:2px" for="mq-room-desc-${idx}">Note to customers (optional)</label>
+          <textarea id="mq-room-desc-${idx}" placeholder="Optional note shown to customers when they pick this project type — e.g. &quot;For door refacing, skip the box materials below — just add your square footage under Specialty Items instead.&quot;" rows="2" style="width:100%;font-size:12px;padding:7px 10px;margin-top:2px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;resize:vertical;margin-bottom:8px">${(r.description||'').replace(/</g,'&lt;')}</textarea>
           <div style="margin-bottom:10px">
             ${isDemo ? mqDemoImageLockedHTML('cover images') : `
             <div style="display:flex;gap:8px;align-items:flex-start">
@@ -6125,8 +6094,13 @@ window.logoutMember = async function () {
               </div>
             </div>`}
           </div>
-          <div style="border-top:1px dashed #e5e7eb;padding-top:10px">
-            <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:6px">📏 How to measure your space (this project type)</label>
+          </div>
+          <div class="mq-room-grp">
+            <div class="mq-room-grp-h">③ How to measure</div><div class="mq-room-grp-sub">Tips and pictures in the widget's "How to measure" step.</div>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#6b7280;font-weight:600;margin-bottom:8px;cursor:pointer">
+            <input type="checkbox" id="mq-room-hidemeasure-${idx}" ${r.hideMeasureGuide?'checked':''} onchange="mqSaveRooms()" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
+            📏 Hide "How to measure" section <span style="font-weight:400;color:#9ca3af">(for project types that are flat-rate only, with nothing to measure)</span>
+          </label>
             <textarea id="mq-room-measure-text-${idx}" placeholder="${isQt ? 'Your own measuring instructions for this project type. Leave blank (and no images) to skip the How to measure step.' : 'Leave blank to use the standard measuring guide. Fill in to show your own instructions for this project type instead — e.g. how to measure for refacing vs. a full kitchen.'}" rows="3" style="width:100%;font-size:12px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;resize:vertical;margin-bottom:6px">${(r.measureText||'').replace(/</g,'&lt;')}</textarea>
             <div style="margin-bottom:8px">
               ${isQt ? '' : `<button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqFillDefaultGuide('mq-room-measure-text-${idx}','${r.id}',${!!r.forCountertops})">↺ Use default guide</button>`}
@@ -6169,6 +6143,47 @@ window.logoutMember = async function () {
               </div>
             `).join('')}
             <button type="button" class="mq-btn mq-btn-sm" style="font-size:11px;margin-top:8px" onclick="mqAddRoomMeasureImage(${idx})">+ Add another image <span style="font-weight:400;color:#9ca3af">(optional — turns into a swipeable carousel once you have more than one)</span></button>`}
+          
+          </div>
+          ${!isCountertop && !isQt ? `          <div class="mq-room-grp">
+            <div class="mq-room-grp-h">④ Cabinet questions</div><div class="mq-room-grp-sub">What the Cabinets / Full project quotes ask for this project type.</div>
+          <label style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;color:#6b7280;font-weight:600;margin-bottom:8px">
+            📐 Ask for cabinet measurements (upper / base lin ft)
+            <select id="mq-room-askmeasure-${idx}" onchange="mqSaveRooms()" style="font-size:12px;padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;width:auto">
+              <option value="" ${!r.askMeasure ? 'selected' : ''}>Automatic — when a box material is ticked for it</option>
+              <option value="yes" ${r.askMeasure === 'yes' ? 'selected' : ''}>Yes, always</option>
+              <option value="no" ${r.askMeasure === 'no' ? 'selected' : ''}>No</option>
+            </select>
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#6b7280;font-weight:600;margin-bottom:8px;cursor:pointer">
+            <input type="checkbox" id="mq-room-addisland-${idx}" ${r.showIslandButton?'checked':''} onchange="mqSaveRooms()" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
+            🏝️ Add "Add Island" button <span style="font-weight:400;color:#9ca3af">(lets customers measure island cabinets separately from base cabinets — only makes sense for kitchen-style project types)</span>
+          </label>
+          <div id="mq-room-island-settings-${idx}" style="display:${r.showIslandButton?'block':'none'};margin:0 0 10px 24px;padding:10px 12px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px">
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#374151;cursor:pointer">
+              <input type="checkbox" id="mq-room-islanddouble-${idx}" ${r.islandAllowDoubleRow?'checked':''} onchange="mqSaveRooms()" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
+              Allow double-row (back-to-back) islands
+            </label>
+            <div style="font-size:11px;color:#9ca3af;line-height:1.5">Island panel pricing is set once, shop-wide, in the <strong>Pricing</strong> tab — not per project type. Look for "🏝️ Island panel pricing" there.</div>
+          </div>
+          </div>
+` : ''}
+          <div class="mq-room-grp">
+            <div class="mq-room-grp-h">${!isCountertop && !isQt ? '⑤' : '④'} Price adjustments</div><div class="mq-room-grp-sub">Make this project type cost more or less than your normal pricing. Leave at 0 for no change.</div>
+          ${isQt ? `<div style="margin-bottom:2px">
+            ${mqRoomAdjRow('mat', idx, r.materialAdjPct || 0, 'Items', 'applies to options you\'ve set to "use project type % adjustments" on the Pricing tab')}
+            ${mqRoomAdjRow('install', idx, r.installAdjPct || 0, 'Installation', 'the installation part of those same options')}
+            ${mqRoomAdjRow('total', idx, r.totalAdjPct || 0, 'Total ballpark', 'raise or lower this project type\'s whole price')}
+          </div>` : isCountertop ? `<div style="margin-bottom:2px">
+            ${mqRoomAdjRow('install', idx, r.installAdjPct || 0, 'Installation', 'use if this project type\'s install should run higher or lower than typical — only affects the installation cost')}
+            ${mqRoomAdjRow('total', idx, r.totalAdjPct || 0, 'Total ballpark', 'use if this project type\'s overall ballpark price should be inflated or deflated')}
+          </div>` : `<div style="margin-bottom:2px">
+            ${mqRoomAdjRow('mat', idx, r.materialAdjPct !== undefined ? r.materialAdjPct : (r.adjustment || 0), 'Base cabinets', 'e.g. bathroom vanities run smaller than kitchen cabinets, or commercial jobs may always be pilaster cabinets')}
+            ${mqRoomAdjRow('upper-mat', idx, r.upperMaterialAdjPct || 0, 'Upper cabinets', 'e.g. commercial jobs may always use a specific upper cabinet style')}
+            ${r.showIslandButton ? mqRoomAdjRow('island-mat', idx, r.islandMaterialAdjPct || 0, 'Islands', 'independent from the Base/Upper cabinets % above') : ''}
+            ${mqRoomAdjRow('install', idx, r.installAdjPct || 0, 'Installation', 'use if this project type\'s install should run higher or lower than typical — only affects the installation cost')}
+            ${mqRoomAdjRow('total', idx, r.totalAdjPct || 0, 'Total ballpark', 'use if this project type\'s overall ballpark price should be inflated or deflated')}
+          </div>`}
           </div>
         </div>
       </div>`;
