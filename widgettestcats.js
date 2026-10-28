@@ -3159,7 +3159,7 @@
   // automatically the moment one of them is chosen (Oct 25 — option level
   // only, per Jordan). A category's `after` says which built-in step it
   // follows (see MQ_CC_ANCHORS).
-  const MQ_CC_HOWS = ['flat','each','sqft','lft','opt','base_lf','upper_lf','all_lf','island_lf','crown_lf','valance_lf','drawers','tallcabs','pct','pct_all','pct_cc'];
+  const MQ_CC_HOWS = ['flat','each','sqft','lft','opt','meas','base_lf','upper_lf','all_lf','island_lf','crown_lf','valance_lf','drawers','tallcabs','pct','pct_all','pct_cc'];
   const MQ_CC_PCT = ['pct','pct_all','pct_cc'];
   const MQ_CC_ANCHORS = ['measuring','si','selections','measurements','drawers','tallcabs','trim','specialty','countertops'];
   function mqCcTieClean(t) {
@@ -3196,6 +3196,7 @@
               how: MQ_CC_HOWS.includes(cfg.how) ? (cfg.how === 'sqft' || cfg.how === 'lft' ? 'each' : cfg.how) : 'flat',
               entry: cfg.how === 'sqft' ? 'sqft' : (cfg.how === 'lft' ? 'linear' : ''),
               src: typeof cfg.src === 'string' ? cfg.src : '',
+              meas: typeof cfg.meas === 'string' ? cfg.meas : '',
               pctCc: typeof cfg.pctCc === 'string' ? cfg.pctCc : '',
               tie: mqCcTieClean(cfg.tie),
               unit: cfg.how === 'sqft' ? 'sq ft' : (cfg.how === 'lft' ? 'lin ft' : String(cfg.unit || '').trim()),
@@ -3777,6 +3778,7 @@
         return (tier && tier.value && tier.value !== 'none' && !(sec && sec.style.display === 'none')) ? mqCcNum(`mq-${p}-drawer-count`) : 0;
       }
       case 'tallcabs': return ctx.tallCount || 0;
+      case 'meas': return mqCcNum(`mq-${p}-meas-${it.meas}`);
       case 'opt': {
         const hit = mqCcFind(it.src);
         if (!hit || (depth || 0) > 6 || !mqCcPickedLive(p, it.src, room, 0)) return 0;
@@ -3792,7 +3794,8 @@
       case 'base_lf': case 'upper_lf': case 'all_lf': case 'island_lf': case 'crown_lf': case 'valance_lf': return `${q} lin ft`;
       case 'drawers': return `${q} drawer${qty === 1 ? '' : 's'}`;
       case 'tallcabs': return `${q} tall cabinet${qty === 1 ? '' : 's'}`;
-      case 'opt': { const hit = mqCcFind(it.src); return `${q}${hit && hit.it.unit ? ' ' + hit.it.unit : ''}`; }
+      case 'opt': { const hit = mqCcFind(it.src); if (hit && hit.it.how === 'meas') return mqCcQtyLabel(hit.it, qty); return `${q}${hit && hit.it.unit ? ' ' + hit.it.unit : ''}`; }
+      case 'meas': { const m = (window._mqQuoteTypes || []).reduce((f, qq) => f || (qq.measures || []).find(x => x.id === it.meas), null); return `${q}${m ? ' ' + m.unit : ''}`; }
       default: return '';
     }
   }
@@ -3949,6 +3952,27 @@
 
   // Built once in loadShopData, after the custom categories (a quote type
   // with no priced steps yet isn't shown). allowPro = MidasQuote Pro.
+  // A quote type's measurements: [{id:'m_…', label, type:'sqft'|'lft'|'count', unit}].
+  function mqQtMeasClean(list) {
+    return (Array.isArray(list) ? list : []).filter(m => m && /^m_[a-z0-9]+$/i.test(String(m.id || '')) && String(m.label || '').trim()).map(m => ({
+      id: String(m.id), label: String(m.label).trim(), type: ['sqft', 'lft'].includes(m.type) ? m.type : 'count',
+      unit: m.type === 'sqft' ? 'sq ft' : (m.type === 'lft' ? 'lin ft' : (String(m.unit || '').trim() || 'units')),
+    }));
+  }
+  function mqQtMeasFind(p, measId) { const q = mqQtOfPrefix(p); return q && (q.measures || []).find(m => m.id === measId) || null; }
+  function mqQtMeasHTML(q) {
+    const p = q.prefix, ms = q.measures || [];
+    if (!ms.length) return '';
+    return `<div class="mq-sec" id="mq-${p}-meas-sec" onclick="mqOpenIfClosed('${p}-meas')">
+          ${collapsibleHeader(`${p}-meas`, 'Measurements')}
+          <div style="font-size:13px;color:#4b5563;margin-bottom:10px;line-height:1.5">📐 Enter your measurements — your estimate is worked out from these.</div>
+          <div id="mq-${p}-meas-body" style="display:none"><div class="mq-grid3">
+            ${ms.map(m => `<div class="mq-field"><label class="mq-label" style="display:block;margin-bottom:8px">${mqCcEsc(m.label)}${m.label.toLowerCase().includes(m.unit.toLowerCase()) ? '' : ` (${mqCcEsc(m.unit)})`}</label>
+              <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap"><div style="position:relative;display:inline-block"><input type="number" class="mq-linft-input" id="mq-${p}-meas-${m.id}" value="0" min="0" step="any" onclick="this.select()" style="text-align:center;width:130px;padding-right:${m.type === 'count' ? '8' : '40'}px"/>${m.type === 'count' ? '' : `<span style="position:absolute;right:6px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:13px;font-weight:600;pointer-events:none">${m.type === 'sqft' ? 'sq ft' : 'ft'}</span>`}</div>${m.type === 'count' ? '' : calcBtn(`mq-${p}-meas-${m.id}`, m.type === 'sqft' ? 'sqft' : 'linear', m.label)}</div>
+            </div>`).join('')}
+          </div></div>
+        </div>`;
+  }
   function mqQtBuild(shop, allowPro, specs, rooms) {
     let cfg = null;
     try { cfg = shop['Hidden widget tabs'] ? JSON.parse(shop['Hidden widget tabs']) : null; } catch(e) { cfg = null; }
@@ -3965,6 +3989,8 @@
         // Building blocks the shop ticked on Project types: the countertop
         // step (same surfaces builder as the Countertops tab).
         countertops: !!q.countertops,
+        // Phase 4: its own Measurements step (e.g. "Wall area", "Rooms").
+        measures: mqQtMeasClean(q.measures),
       }))
       // Shown once it has something to price: a custom pricing step of its
       // own, or a specialty item picked for one of its project types.
@@ -4037,6 +4063,7 @@
             <div id="mq-${p}-measure-guide" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px 16px;font-size:13px;color:#374151;line-height:1.7"></div>
           </div>
         </div>
+        ${mqQtMeasHTML(q)}
         ${hasInst ? `<div class="mq-sec" id="mq-${p}-si-field" onclick="mqOpenIfClosed('${p}-si')">
           ${collapsibleHeader(`${p}-si`, 'Supply + install')}
           <div id="mq-${p}-si-body" style="display:none">
@@ -6546,6 +6573,8 @@
     // Supply + install question.
     function mqResetQtForm(prefix) {
       if (window.mqCcReset) window.mqCcReset(prefix);
+      // Measurements step: back to 0 for the next project type.
+      document.querySelectorAll(`[id^="mq-${prefix}-meas-m_"]`).forEach(e => { e.value = 0; });
       mqResetSpecItems(prefix);
       // Countertop step (if the quote type has one): back to one blank surface.
       const surfC = document.getElementById(`mq-${prefix}-ct-surfaces`);
@@ -10534,6 +10563,7 @@
         ? { t: 'Pick your doors & hinges', l: 'Doors', s: 'Choose a door style and the hinges you want. This is what your cabinets will look like.' }
         : { t: 'Pick your doors', l: 'Doors', s: 'Choose a door style. This is what your cabinets will look like.' };
     }
+    if (/^mq-q\d+-meas-sec$/.test(id)) return { t: 'Let’s get your measurements', l: 'Measurements', s: 'Enter your numbers below — a rough measurement is fine for a ballpark.' };
     if (ends('-cabinet-measurements-sec')) return { t: 'How much cabinetry do you need?', l: 'Size', s: 'Enter your linear feet. A rough measurement is fine for a ballpark.' };
     if (ends('-drawers-sec')) return { t: 'How about drawers?', l: 'Drawers', s: 'Tell us roughly how drawer-heavy you want your cabinets to be.' };
     if (ends('-tallcabs-sec')) return { t: 'Need any tall cabinets?', l: 'Tall cabinets', s: 'Pantries, linen towers, oven cabinets — add as many as you need, or just continue.' };

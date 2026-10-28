@@ -6423,6 +6423,7 @@ window.mqphGoToWizard = function() {
     sqft:       { label: 'Per sq ft — customer enters the square feet', short: 'per sq ft', group: 'Simple', per: 'sq ft', word: 'sq ft' },
     lft:        { label: 'Per linear ft — customer enters the linear feet', short: 'per lin ft', group: 'Simple', per: 'lin ft', word: 'lin ft' },
     opt:        { label: 'Another option’s number', short: '', group: 'From the quote' },
+    meas:       { label: 'One of this quote’s measurements (e.g. wall area)', short: '', group: 'From the quote' },
     base_lf:    { label: 'Base cabinet lin ft', short: 'per base lin ft', group: 'From the quote', per: 'lin ft', word: 'ft of base cabinets' },
     upper_lf:   { label: 'Upper cabinet lin ft', short: 'per upper lin ft', group: 'From the quote', per: 'lin ft', word: 'ft of upper cabinets' },
     all_lf:     { label: 'Total cabinet lin ft (uppers + bases)', short: 'per cabinet lin ft', group: 'From the quote', per: 'lin ft', word: 'ft of cabinets' },
@@ -6437,7 +6438,7 @@ window.mqphGoToWizard = function() {
   };
   const MQCC_PCT = ['pct', 'pct_all', 'pct_cc'];
   // Hows that give a count another option can be priced on.
-  const MQCC_COUNTS = ['each', 'sqft', 'lft', 'opt', 'base_lf', 'upper_lf', 'all_lf', 'island_lf', 'crown_lf', 'valance_lf', 'drawers', 'tallcabs'];
+  const MQCC_COUNTS = ['each', 'sqft', 'lft', 'opt', 'meas', 'base_lf', 'upper_lf', 'all_lf', 'island_lf', 'crown_lf', 'valance_lf', 'drawers', 'tallcabs'];
   const MQCC_PLACES = [
     ['measuring', 'After “How to measure”'], ['si', 'After “Supply + install”'], ['selections', 'After cabinet materials & doors'],
     ['measurements', 'After cabinet measurements'], ['drawers', 'After drawers'], ['tallcabs', 'After tall cabinets'],
@@ -6522,10 +6523,16 @@ window.mqphGoToWizard = function() {
     return lineItems.filter(r => r.fields && r.fields['Category'] === cid)
       .sort((a, b) => (a.fields['Sort order'] || 0) - (b.fields['Sort order'] || 0));
   }
+  // Phase 4: a quote type's own measurements (Project types → Measurements):
+  // [{id:'m_…', label, type:'sqft'|'lft'|'count', unit}] on the quote type.
+  function mqccMeasOf(qtId) { const q = mqccQts().find(x => x.id === qtId); return (q && Array.isArray(q.measures)) ? q.measures.filter(m => m && m.id && m.label) : []; }
+  function mqccMeasUnit(m) { return !m ? 'unit' : (m.type === 'sqft' ? 'sq ft' : (m.type === 'lft' ? 'lin ft' : (m.unit || 'units'))); }
+  function mqccMeasFind(measId) { for (const q of mqccQts()) { const m = (q.measures || []).find(x => x && x.id === measId); if (m) return m; } return null; }
   function mqccSrcUnit(srcId) {
     const r = lineItems.find(x => x.id === srcId);
     if (!r) return 'unit';
     const c = mqccCfg(r);
+    if (c.how === 'meas') return mqccMeasUnit(mqccMeasFind(c.meas));
     if (c.how === 'each') return c.unit || r.fields['Name'] || 'unit';
     if (c.how === 'opt') return mqccSrcUnit(c.src);
     return (MQCC_HOW[c.how] && MQCC_HOW[c.how].per) || 'unit';
@@ -6543,6 +6550,7 @@ window.mqphGoToWizard = function() {
     }
     if (how === 'flat') return mqccMoney(rate);
     if (how === 'each') return `${mqccMoney(rate)} each (${mqccEsc(c.unit || 'unit')})`;
+    if (how === 'meas') { const m = mqccMeasFind(c.meas); return `${mqccMoney(rate)} per ${mqccEsc(mqccMeasUnit(m).replace(/s$/, ''))} <span style="font-weight:400;color:#6b7280">(from ${mqccEsc(m ? m.label : 'a removed measurement')})</span>`; }
     if (how === 'opt') return `${mqccMoney(rate)} per ${mqccEsc(mqccSrcUnit(c.src))} <span style="font-weight:400;color:#6b7280">(from ${mqccEsc((lineItems.find(x => x.id === c.src) || { fields: {} }).fields['Name'] || 'a removed option')})</span>`;
     return `${mqccMoney(rate)} ${MQCC_HOW[how].short}`;
   }
@@ -6774,6 +6782,7 @@ window.mqphGoToWizard = function() {
             <div class="mqph-field"><label>Description for customers (optional)</label><input type="text" id="mqcc-item-desc" maxlength="200"/></div>
             <div class="mqph-field"><label>What it's priced on</label><select id="mqcc-item-how" onchange="mqccItemHowChanged()">${howOpts}</select></div>
             <div class="mqph-field" id="mqcc-item-src-wrap"><label>Which option’s number?</label><select id="mqcc-item-src" onchange="mqccItemHowChanged()"></select></div>
+            <div class="mqph-field" id="mqcc-item-meas-wrap"><label>Which measurement?</label><select id="mqcc-item-meas" onchange="mqccItemHowChanged()"></select><div style="font-size:11.5px;color:#6b7280;margin-top:4px">The customer enters it once in the quote's Measurements step. Add or change measurements on Project types → this quote → Measurements.</div></div>
             <div class="mqph-field" id="mqcc-item-pctcc-wrap"><label>Which category?</label><select id="mqcc-item-pctcc" onchange="mqccItemHowChanged()"></select></div>
             <div class="mqph-field" id="mqcc-item-unit-wrap"><label>What are you counting?</label><input type="text" id="mqcc-item-unit" maxlength="30" placeholder="panels, hours, trips…" oninput="mqccItemHowChanged()"/></div>
             <div class="mqph-field"><label id="mqcc-item-rate-label">Price</label>
@@ -7025,9 +7034,14 @@ window.mqphGoToWizard = function() {
     // A quote type has no cabinets: nothing to price off cabinet footage,
     // drawers or doors, and nothing to link to.
     const inQt = !!c.qt;
+    const measList = inQt ? mqccMeasOf(c.qt) : [];
+    const measSel = document.getElementById('mqcc-item-meas');
+    measSel.innerHTML = measList.length ? measList.map(m => `<option value="${m.id}">${mqccEsc(m.label)} (${mqccEsc(mqccMeasUnit(m))})</option>`).join('') : '<option value="">No measurements yet — add them on Project types → this quote → Measurements</option>';
+    if (cfg.meas && measSel.querySelector(`option[value="${cfg.meas}"]`)) measSel.value = cfg.meas;
     const CAB_HOWS = ['base_lf', 'upper_lf', 'all_lf', 'island_lf', 'crown_lf', 'valance_lf', 'drawers', 'tallcabs', 'pct'];
     const howSel = document.getElementById('mqcc-item-how');
-    [...howSel.querySelectorAll('option')].forEach(o => { const off = inQt && CAB_HOWS.includes(o.value); o.hidden = off; o.disabled = off; });
+    [...howSel.querySelectorAll('option')].forEach(o => { const off = (inQt && CAB_HOWS.includes(o.value)) || (!inQt && o.value === 'meas'); o.hidden = off; o.disabled = off; });
+    if (!inQt && howSel.value === 'meas') howSel.value = 'flat';
     [...howSel.querySelectorAll('optgroup')].forEach(g => { g.hidden = [...g.children].every(o => o.hidden); });
     const pctAllOpt = howSel.querySelector('option[value="pct_all"]');
     if (pctAllOpt) pctAllOpt.textContent = inQt ? '% of everything else in this quote' : MQCC_HOW.pct_all.label;
@@ -7065,6 +7079,7 @@ window.mqphGoToWizard = function() {
   function mqccPerWord(how) {
     if (how === 'each') return document.getElementById('mqcc-item-unit').value.trim() || 'unit';
     if (how === 'opt') return mqccSrcUnit(document.getElementById('mqcc-item-src').value);
+    if (how === 'meas') return mqccMeasUnit(mqccMeasFind(document.getElementById('mqcc-item-meas').value)).replace(/s$/, '');
     return (MQCC_HOW[how] && MQCC_HOW[how].per) || 'unit';
   }
   window.mqccItemHowChanged = function() {
@@ -7072,6 +7087,7 @@ window.mqphGoToWizard = function() {
     const isPct = MQCC_PCT.includes(how);
     mqccShow('mqcc-item-unit-wrap', how === 'each');
     mqccShow('mqcc-item-src-wrap', how === 'opt');
+    mqccShow('mqcc-item-meas-wrap', how === 'meas');
     mqccShow('mqcc-item-pctcc-wrap', how === 'pct_cc');
     mqccShow('mqcc-item-min-wrap', how !== 'flat');
     const catNow = mqccEditItem ? mqccCats().find(x => x.id === mqccEditItem.cid) : null;
@@ -7088,7 +7104,7 @@ window.mqphGoToWizard = function() {
     mqccShow('mqcc-calc-wrap', how !== 'flat');
     let words;
     if (isPct) words = ['On a', how === 'pct' ? 'cabinet job, this added' : (how === 'pct_all' ? 'job (cabinets + extras), this added' : 'total for that category, this added'), ''];
-    else if (how === 'each' || how === 'opt') words = ['A job with', per, 'cost'];
+    else if (how === 'each' || how === 'opt' || how === 'meas') words = ['A job with', per, 'cost'];
     else words = ['A job with', (MQCC_HOW[how] && MQCC_HOW[how].word) || 'units', 'cost'];
     document.getElementById('mqcc-calc-a-pre').textContent = words[0] + (isPct ? ' ' + CUR() : '');
     document.getElementById('mqcc-calc-a-post').textContent = words[1];
@@ -7129,6 +7145,8 @@ window.mqphGoToWizard = function() {
     if (how === 'each' && !unit) { alert('Say what the customer is counting (e.g. panels, hours).'); return; }
     const src = document.getElementById('mqcc-item-src').value;
     if (how === 'opt' && !src) { alert('Pick which option’s number this is priced on.'); return; }
+    const measPick = document.getElementById('mqcc-item-meas').value;
+    if (how === 'meas' && !measPick) { alert('Pick which measurement this is priced on (add measurements on Project types → this quote first).'); return; }
     const min = parseFloat(document.getElementById('mqcc-item-min').value);
     const cfg = {
       how,
@@ -7138,6 +7156,7 @@ window.mqphGoToWizard = function() {
       proOnly: document.getElementById('mqcc-item-pro').checked,
     };
     if (how === 'opt') cfg.src = src;
+    if (how === 'meas') cfg.meas = measPick;
     if (how === 'pct_cc') cfg.pctCc = document.getElementById('mqcc-item-pctcc').value;
     if (instOn) {
       const imin = parseFloat(document.getElementById('mqcc-item-inst-min').value);
@@ -7703,7 +7722,7 @@ window.mqphGoToWizard = function() {
       how: (how === 'sqft' || how === 'lft') ? 'each' : how, unit: how === 'sqft' ? 'sq ft' : (how === 'lft' ? 'lin ft' : document.getElementById('mqcc-item-unit').value.trim()), min: parseFloat(document.getElementById('mqcc-item-min').value) || 0,
       showIf: c.answer === 'any' ? (document.getElementById('mqcc-item-showif').value || '') : '',
       proOnly: document.getElementById('mqcc-item-pro').checked,
-      src: how === 'opt' ? document.getElementById('mqcc-item-src').value : '', pctCc: how === 'pct_cc' ? document.getElementById('mqcc-item-pctcc').value : '',
+      src: how === 'opt' ? document.getElementById('mqcc-item-src').value : '', meas: how === 'meas' ? document.getElementById('mqcc-item-meas').value : '', pctCc: how === 'pct_cc' ? document.getElementById('mqcc-item-pctcc').value : '',
       tie: mqccTieRead('item'), groupName: '', groupOrder: 0,
     };
     {
@@ -7776,9 +7795,9 @@ window.mqphGoToWizard = function() {
       const [cost, note] = withMin(base * rate / 100);
       text = `On ${what} → ${cost < 0 ? 'takes off' : 'adds'} <strong>${mqccPvMoney(Math.abs(cost))}</strong>${note}`;
     } else {
-      const sample = { each: 3, sqft: 30, lft: 12, opt: 3, base_lf: mqccPv.base, upper_lf: mqccPv.upper, all_lf: mqccPv.base + mqccPv.upper, island_lf: mqccPv.island, crown_lf: mqccPv.crown, valance_lf: mqccPv.valance, drawers: mqccPv.drawers, tallcabs: mqccPv.tall }[how] || 0;
+      const sample = { each: 3, sqft: 30, lft: 12, opt: 3, meas: (() => { const m = mqccMeasFind(document.getElementById('mqcc-item-meas').value); return m && m.type === 'sqft' ? 300 : (m && m.type === 'lft' ? 40 : 3); })(), base_lf: mqccPv.base, upper_lf: mqccPv.upper, all_lf: mqccPv.base + mqccPv.upper, island_lf: mqccPv.island, crown_lf: mqccPv.crown, valance_lf: mqccPv.valance, drawers: mqccPv.drawers, tallcabs: mqccPv.tall }[how] || 0;
       const [cost, note] = withMin(rate * sample);
-      const what = (how === 'each' || how === 'opt') ? `${sample} ${mqccEsc(mqccPerWord(how))}` : `${sample} ${(MQCC_HOW[how] && MQCC_HOW[how].word) || ''}`;
+      const what = (how === 'each' || how === 'opt' || how === 'meas') ? `${sample} ${mqccEsc(mqccPerWord(how))}` : `${sample} ${(MQCC_HOW[how] && MQCC_HOW[how].word) || ''}`;
       text = `${['each', 'sqft', 'lft'].includes(how) ? 'A customer who enters' : 'On a job with'} ${what} → <strong>${mqccPvMoney(cost)}</strong>${note}`;
     }
     el.innerHTML = '🧮 ' + text;

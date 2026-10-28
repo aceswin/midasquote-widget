@@ -6357,6 +6357,21 @@ window.logoutMember = async function () {
                   <span><strong>Countertops</strong> <span style="color:#6b7280">— adds a "Need countertops too?" step: the same surfaces, materials, edges, cutouts and backsplash as your Countertops tab, priced with your countertop pricing.</span></span>
                 </label>
               </div>
+              <div style="margin-top:10px;padding-top:10px;border-top:1px dashed #e5e7eb">
+                <div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:2px">📐 Measurements</div>
+                <div style="font-size:12px;color:#6b7280;line-height:1.5;margin-bottom:8px">Numbers customers enter once — like "Wall area" or "Number of rooms". Any option on the Pricing tab can then be priced on one (pick "One of this quote's measurements").</div>
+                ${(q.measures || []).map((m, mi) => `<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
+                  <input type="text" maxlength="40" value="${mqEscHtml(m.label || '')}" placeholder="e.g. Wall area" onchange="mqQtMeasSet('${q.id}', ${mi}, 'label', this.value)" style="font-size:13px;padding:6px 9px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;width:180px"/>
+                  <select onchange="mqQtMeasSet('${q.id}', ${mi}, 'type', this.value)" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;width:auto">
+                    <option value="sqft" ${m.type === 'sqft' ? 'selected' : ''}>Square feet</option>
+                    <option value="lft" ${m.type === 'lft' ? 'selected' : ''}>Linear feet</option>
+                    <option value="count" ${m.type !== 'sqft' && m.type !== 'lft' ? 'selected' : ''}>A count…</option>
+                  </select>
+                  ${m.type !== 'sqft' && m.type !== 'lft' ? `<input type="text" maxlength="24" value="${mqEscHtml(m.unit || '')}" placeholder="what's counted, e.g. rooms" onchange="mqQtMeasSet('${q.id}', ${mi}, 'unit', this.value)" style="font-size:13px;padding:6px 9px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;width:170px"/>` : ''}
+                  <button type="button" class="mq-btn mq-btn-sm" title="Remove" onclick="mqQtMeasDel('${q.id}', ${mi})" style="color:#b91c1c">✕</button>
+                </div>`).join('')}
+                <button type="button" class="mq-btn mq-btn-sm" onclick="mqQtMeasAdd('${q.id}')">+ Add a measurement</button>
+              </div>
               <div style="font-size:12px;color:#374151;margin-top:10px;padding-top:10px;border-top:1px dashed #e5e7eb">
                 <strong>Priced steps:</strong> ${steps.length ? steps.map(c => mqEscHtml(c.name || 'Untitled')).join(' → ') : '<span style="color:#6b7280">none yet</span>'}
                 <span style="color:#6b7280">— these come from the Pricing tab's custom pricing categories set to "${mqEscHtml(q.name)}".</span>
@@ -11379,7 +11394,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const subset = field => { const m = mqJsonObj(f[field], {}); const o = {}; Object.keys(m).forEach(k => { if (keyOk(k)) o[k] = m[k]; }); return o; };
     const sub2 = field => { const m = mqJsonObj(f[field], {}); const o = {}; Object.keys(m).forEach(k => { if (catIds.has(k)) o[k] = m[k]; }); return o; };
     return {
-      qt: { name: q.name, sub: q.sub || '', icon: q.icon || 'grid', countertops: !!q.countertops },
+      qt: { name: q.name, sub: q.sub || '', icon: q.icon || 'grid', countertops: !!q.countertops, measures: Array.isArray(q.measures) ? q.measures : [] },
       rooms, cats, items, specs,
       catRooms: sub2('Category rooms'), pickerLabels: sub2('Category picker labels'),
       photos: subset('Photos'), hidden: subset('Hidden'), featured: subset('Featured items'),
@@ -11457,6 +11472,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const ctOk = mqBizOf(shopRec.fields).ct;
       const q = { id: qtId, name, on: true, proOnly: false, sub: pack.qt.sub || '', icon: pack.qt.icon || t.icon || 'grid', trade: t.id };
       if (pack.qt.countertops && ctOk) q.countertops = true;
+      if (Array.isArray(pack.qt.measures) && pack.qt.measures.length) q.measures = pack.qt.measures;
       await mqSaveTabsCfg({ quoteTypes: [...mqQuoteTypesOf(shopRec.fields), q] });
       if (window._mqRooms) { window._mqRooms = rooms; renderRoomsList(); }
       window._mqSpecItemsList = null; window._mqSpecRecords = null;
@@ -11691,6 +11707,26 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     } catch(e) { showMsg('mq-shop-msg', 'Error saving.', 'error'); mqRenderQuoteTypes(); }
   }
   window.mqQtUpdate = mqQtUpdate;
+  // Phase 4: a quote type's Measurements (saved on the quote type).
+  function mqQtMeasList(id) { const q = mqQuoteTypesOf(window._mqShopRecord.fields).find(x => x.id === id); return (q && Array.isArray(q.measures)) ? q.measures.map(m => Object.assign({}, m)) : []; }
+  window.mqQtMeasAdd = function(id) {
+    const list = mqQtMeasList(id);
+    list.push({ id: 'm_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), label: list.length ? '' : 'Area', type: 'sqft', unit: '' });
+    mqQtUpdate(id, { measures: list }, '✓ Measurement added — name it, then price options on it from the Pricing tab.');
+  };
+  window.mqQtMeasSet = function(id, i, key, val) {
+    const list = mqQtMeasList(id);
+    if (!list[i]) return;
+    list[i][key] = String(val || '').trim();
+    mqQtUpdate(id, { measures: list }, '✓ Saved.');
+  };
+  window.mqQtMeasDel = function(id, i) {
+    const list = mqQtMeasList(id);
+    if (!list[i]) return;
+    if (!confirm(`Remove the "${list[i].label || 'measurement'}" measurement?\n\nOptions priced on it will count 0 until you change them.`)) return;
+    list.splice(i, 1);
+    mqQtUpdate(id, { measures: list }, '✓ Measurement removed.');
+  };
   window.mqQtToggle = function(id) {
     const shopRec = window._mqShopRecord;
     const cfg = mqTabsCfgOf(shopRec.fields);
