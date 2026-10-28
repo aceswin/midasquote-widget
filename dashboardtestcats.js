@@ -1890,7 +1890,7 @@ window.logoutMember = async function () {
               </div>
               <div class="mq-toggle-row" style="margin-bottom:0">
                 <div>
-                  <div style="font-size:13px;font-weight:500;color:#111">Show "View our products" link on widget</div>
+                  <div style="font-size:13px;font-weight:500;color:#111">Show "See our showroom" link on widget</div>
                   <div style="font-size:12px;color:#6b7280;margin-top:2px">Customers can browse your showroom before getting a quote</div>
                 </div>
                 <div class="mq-toggle on" id="mq-showroom-toggle" onclick="mqToggleShowroom()"></div>
@@ -2407,7 +2407,7 @@ window.logoutMember = async function () {
             <div class="mq-card" style="margin-top:1rem">
               <div class="mq-card-title">🔗 Your showroom link</div>
               <p style="font-size:13px;color:#6b7280;margin-bottom:0.75rem">Share this with customers so they can browse your products before getting a quote.</p>
-              <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 12px;margin-bottom:1rem;font-size:12px;color:#1e40af">💡 If <strong>"Show View our products link"</strong> is turned on in your Business info tab, this link is automatically included in your widget — no extra setup needed.</div>
+              <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 12px;margin-bottom:1rem;font-size:12px;color:#1e40af">💡 If <strong>"Show See our showroom link"</strong> is turned on in your Business info tab, this link is automatically included in your widget — no extra setup needed.</div>
               <div class="mq-embed-box"><span id="mq-showroom-link-text"></span><button class="mq-copy-btn" id="mq-showroom-copy-btn">Copy</button></div>
               <button class="mq-btn" style="margin-top:10px" id="mq-showroom-open-btn">Open showroom ↗</button>
             </div>
@@ -5104,6 +5104,9 @@ window.logoutMember = async function () {
       if (cabinetsOnly) return allRooms.filter(r => !r.forCountertops);
       return allRooms; // specialty items can go in any quote, the shop's own quote types too
     }
+    // Countertops: a quote type's project types too (for its "Need
+    // countertops too?" step) while the business offers countertops.
+    if (cat === 'countertop' && window._mqShopRecord && mqBizOf(window._mqShopRecord.fields).ct) return allRooms;
     // Other categories never reach a quote type's project types.
     return allRooms.filter(r => !r.forQt);
   }
@@ -5127,6 +5130,17 @@ window.logoutMember = async function () {
     } catch(e) { /* keep defaults */ }
     let qtCountertops = false;
     try { const parsed = shopFields && shopFields['Hidden widget tabs'] ? JSON.parse(shopFields['Hidden widget tabs']) : null; qtCountertops = !!(parsed && Array.isArray(parsed.quoteTypes) && parsed.quoteTypes.some(q => q && q.countertops && q.on !== false)); } catch(e) {}
+    // Ticks saved (Business info): a ticked side keeps its pricing etc. even
+    // with its tabs off (countertops can still be offered inside quote
+    // types); an unticked side is hidden everywhere.
+    const bzT = mqTabsCfgOf(shopFields || {}).business;
+    if (bzT.set) {
+      const cabOff = bzT.off.includes('cabinetry'), ctOff = bzT.off.includes('countertops');
+      return {
+        countertopsOnly: cabOff || (hidden.includes('both') && hidden.includes('cabinets')),
+        cabinetsOnly: ctOff,
+      };
+    }
     // Business type (Oct 2026): "countertopsOnly" now means "no built-in
     // cabinet quote reaches customers" and "cabinetsOnly" means "no countertop
     // quote does" -- so a business that only uses its own quote types (a
@@ -5166,6 +5180,7 @@ window.logoutMember = async function () {
       const parsed = fields && fields['Hidden widget tabs'] ? JSON.parse(fields['Hidden widget tabs']) : null;
       if (parsed && Array.isArray(parsed.hidden)) cfg.hidden = parsed.hidden;
       if (parsed && parsed.business) cfg.business = {
+        set: true,
         trades: Array.isArray(parsed.business.trades) ? parsed.business.trades.filter(t => typeof t === 'string') : [],
         // 'cabinetry' / 'countertops' unticked on Business info -- MidasQuote
         // Pro hides those built-in tabs too (the Estimator tab switches alone
@@ -5192,8 +5207,10 @@ window.logoutMember = async function () {
     // Business type (Business info): the extra trades, plus which of
     // Cabinetry / Countertops the business said it doesn't do (the ticks
     // themselves are read straight off the built-in tabs).
+    // Once a shop has touched the ticks (or a tab switch), the ticks are
+    // saved for good (`business` present) and become the source of truth.
     const bz = cfg.business || {};
-    if ((bz.trades && bz.trades.length) || (bz.off && bz.off.length)) out.business = { trades: bz.trades || [], off: bz.off || [] };
+    if ((changes && changes.business) || bz.set || (bz.trades && bz.trades.length) || (bz.off && bz.off.length)) out.business = { trades: bz.trades || [], off: bz.off || [] };
     const payload = JSON.stringify(out);
     await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Hidden widget tabs': payload });
     shopRec.fields['Hidden widget tabs'] = payload;
@@ -6455,7 +6472,7 @@ window.logoutMember = async function () {
       document.querySelectorAll('.mq-rooms-qt-sec').forEach(n => n.remove());
       wrap.insertAdjacentHTML('beforebegin', qts.map(q => {
         const steps = cats.filter(c => c.qt === q.id);
-        const hasSomething = steps.length || q.countertops || mqQtHasSpecialty(q.id);
+        const hasSomething = steps.length || mqQtHasCountertops(q.id) || mqQtHasSpecialty(q.id);
         const state = q.on === false ? 'Hidden (turned off on Business info)' : (q.proOnly ? 'MidasQuote Pro only' : (hasSomething ? 'Showing on your widget' : ('Not showing yet — add a priced step' + (mqBizOf(window._mqShopRecord.fields).ct ? ', a specialty item or countertops' : ' or a specialty item'))));
         return `<div class="mq-card mq-rooms-sec mq-rooms-qt-sec" id="mq-rooms-sec-qt-${q.id}" data-mq-rsec="qt:${q.id}" style="margin-top:1.25rem">
           <button type="button" class="mq-rooms-sec-hdr" onclick="mqRoomSecToggle('qt:${q.id}')" aria-expanded="false">
@@ -6473,13 +6490,7 @@ window.logoutMember = async function () {
               <div style="display:flex;flex-wrap:wrap;gap:6px">${Object.keys(MQ_QT_ICONS).map(k => `<button type="button" title="${k}" aria-label="Icon: ${k}" onclick="mqQtUpdate('${q.id}', { icon: '${k}' }, '✓ Icon updated.')" style="width:38px;height:38px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;${(q.icon || 'grid') === k ? 'background:#1a1a1a;color:#fff;border:1.5px solid #1a1a1a' : 'background:#fff;color:#374151;border:1px solid #d1d5db'}">${mqQtIconSvg(k, 20)}</button>`).join('')}</div>
               <div style="font-size:12px;color:#6b7280;margin-top:10px;line-height:1.5">The card photo customers see in Focused layout is the cover image of the first project type below. Name, on/off and Pro only are on <a href="#" onclick="event.preventDefault();mqNav('shop', document.querySelector('.mq-nav-item[onclick*=&quot;mqNav(\'shop\'&quot;]'))" style="color:#1d4ed8">Business info</a>.</div>
 `)}
-            ${mqBizOf(window._mqShopRecord.fields).ct ? mqGrpBox(q.id + ':ct', '#7c3aed', '#f5f3ff', '② Countertops', q.countertops ? 'Included — a “Need countertops too?” step at the end' : 'Not included', 'Add your Countertops tab as a last step of this quote.', `
-                <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;color:#111;cursor:pointer">
-                  <input type="checkbox" ${q.countertops ? 'checked' : ''} onchange="mqQtUpdate('${q.id}', { countertops: this.checked }, this.checked ? '✓ Countertops added to ${mqEscHtml(q.name).replace(/'/g, '&#39;')}.' : '✓ Countertops removed.')" style="width:16px;height:16px;margin-top:1px;flex-shrink:0;accent-color:#1a1a1a"/>
-                  <span><strong>Countertops</strong> <span style="color:#6b7280">— adds a "Need countertops too?" step: the same surfaces, materials, edges, cutouts and backsplash as your Countertops tab, priced with your countertop pricing.</span></span>
-                </label>
-`) : ''}
-            ${mqGrpBox(q.id + ':meas', '#0d9488', '#f0fdfa', (mqBizOf(window._mqShopRecord.fields).ct ? '③' : '②') + ' Measurements', (q.measures || []).length ? (q.measures || []).map(m => mqEscHtml(m.label || 'Untitled')).join(' · ') : 'None yet', 'Numbers customers enter once — like “Wall area” or “Number of rooms”. Any option on the Pricing tab can then be priced on one (pick “One of this quote’s measurements”).', `
+            ${mqGrpBox(q.id + ':meas', '#0d9488', '#f0fdfa', '② Measurements', (q.measures || []).length ? (q.measures || []).map(m => mqEscHtml(m.label || 'Untitled')).join(' · ') : 'None yet', 'Numbers customers enter once — like “Wall area” or “Number of rooms”. Any option on the Pricing tab can then be priced on one (pick “One of this quote’s measurements”).', `
                 ${(q.measures || []).map((m, mi) => `<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
                   <input type="text" maxlength="40" value="${mqEscHtml(m.label || '')}" placeholder="e.g. Wall area" onchange="mqQtMeasSet('${q.id}', ${mi}, 'label', this.value)" style="font-size:13px;padding:6px 9px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;width:180px"/>
                   <select onchange="mqQtMeasSet('${q.id}', ${mi}, 'type', this.value)" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;width:auto">
@@ -6492,7 +6503,7 @@ window.logoutMember = async function () {
                 </div>`).join('')}
                 <button type="button" class="mq-btn mq-btn-sm" onclick="mqQtMeasAdd('${q.id}')">+ Add a measurement</button>
 `)}
-            ${mqGrpBox(q.id + ':steps', '#16a34a', '#f0fdf4', (mqBizOf(window._mqShopRecord.fields).ct ? '④' : '③') + ' Priced steps', steps.length ? steps.map(c => mqEscHtml(c.name || 'Untitled')).join(' → ') : 'None yet — add one so this quote can price something', 'The steps customers go through — made on the Pricing tab.', `
+            ${mqGrpBox(q.id + ':steps', '#16a34a', '#f0fdf4', '③ Priced steps', steps.length ? steps.map(c => mqEscHtml(c.name || 'Untitled')).join(' → ') : 'None yet — add one so this quote can price something', 'The steps customers go through — made on the Pricing tab.' + (mqBizOf(window._mqShopRecord.fields).ct ? ' Want a “Need countertops too?” step? In <strong>My Products → Countertops</strong>, tick this quote’s project types on the materials it should offer.' : ''), `
               <div style="font-size:12px;color:#374151">
                 <strong>Priced steps:</strong> ${steps.length ? steps.map(c => mqEscHtml(c.name || 'Untitled')).join(' → ') : '<span style="color:#6b7280">none yet</span>'}
                 <span style="color:#6b7280">— these come from the Pricing tab's custom pricing categories set to "${mqEscHtml(q.name)}".</span>
@@ -11238,11 +11249,14 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         return;
       }
     }
+    const mqBizOfBefore = mqBizOf(shopRec.fields);
     toggle.classList.toggle('on', willBeOn);
     const hidden = ALL_TAB_IDS.filter(id => !(el('mq-tab-' + id + '-toggle')?.classList.contains('on')));
     const applyToPro = !!(el('mq-tabs-applypro-toggle')?.checked);
-    const bzNow = mqTabsCfgOf(shopRec.fields).business;
-    const bzOff = bzNow.off.filter(o => hidden.includes('both') && hidden.includes(o === 'cabinetry' ? 'cabinets' : 'countertops'));
+    // The ticks stay as they were (switching a tab off doesn't mean the
+    // business stopped offering it) -- saved now if they never were.
+    const bzNow = mqBizOfBefore || mqBizOf(shopRec.fields);
+    const bzOff = [!bzNow.cab ? 'cabinetry' : '', !bzNow.ct ? 'countertops' : ''].filter(Boolean);
     try {
       await mqSaveTabsCfg({ hidden, applyToPro, business: { trades: bzNow.trades, off: bzOff } });
 
@@ -11260,10 +11274,9 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         renderRoomsList();
       }
 
-      const ctLeftInQts = !willBeOn && hidden.includes('both') && hidden.includes('countertops') ? mqQuoteTypesOf(shopRec.fields).filter(q => q.countertops) : [];
       showMsg('mq-shop-msg', willBeOn
         ? `✓ "${tabId}" tab shown on widget.` + (seededCountertopDefaults ? ' Default countertop project types added.' : '')
-        : `✓ "${tabId}" tab hidden from widget.` + (ctLeftInQts.length ? ` ${ctLeftInQts.map(q => '"' + q.name + '"').join(', ')} still ${ctLeftInQts.length === 1 ? 'has' : 'have'} a Countertops step — untick Countertops under "What does your business do?" to remove countertops everywhere.` : ''));
+        : `✓ "${tabId}" tab hidden from widget.`);
       mqApplyEstimatorTabScopeToRoomsPage();
       mqApplyEstimatorTabScopeToPricing();
       mqApplyEstimatorTabScopeToSpecialty();
@@ -11316,12 +11329,90 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   function mqBizTradeList(ticked) {
     return [...MQ_BIZ_FIXED, ...mqTradeEntries().filter(t => !t.hidden || (ticked || []).includes(t.id))];
   }
+  // ── Countertops inside quote types (Oct 27): which of a quote type's
+  // project types get the "Need countertops too?" step is set in My Products
+  // → Countertops, by ticking those project types on a material (never on
+  // by default). The shop's countertop items, loaded once for this.
+  async function mqCtItemsLoad(force) {
+    if (window._mqCtItemsLoading && !force) return window._mqCtItems;
+    window._mqCtItemsLoading = true;
+    try {
+      const tok = window._mqShopRecord.fields['Shop token'];
+      window._mqCtItems = await atGet(CONFIG.LINE_ITEMS_TABLE, `AND(FIND("${tok}", ARRAYJOIN({Shop token (lookup)})), {Category} = "countertop")`);
+    } catch(e) { window._mqCtItems = window._mqCtItems || []; }
+    return window._mqCtItems;
+  }
+  const mqVisRooms = r => { try { const v = JSON.parse((r.fields && r.fields['Visible rooms']) || '[]'); return Array.isArray(v) ? v : []; } catch(e) { return []; } };
+  function mqQtHasCountertops(qtId) {
+    const shopRec = window._mqShopRecord;
+    if (!shopRec || !mqBizOf(shopRec.fields).ct) return false;
+    if (!Array.isArray(window._mqCtItems)) {
+      if (!window._mqCtItemsLoading) mqCtItemsLoad().then(() => { if (window.mqRenderQuoteTypes) window.mqRenderQuoteTypes(); if (window._mqRooms) renderRoomsList(); });
+      return false;
+    }
+    const ids = mqQtRoomsOf(qtId).map(r => r.id);
+    return window._mqCtItems.some(r => r.fields && r.fields['Active'] !== false && mqVisRooms(r).some(id => ids.includes(id)));
+  }
+  window.mqQtHasCountertops = mqQtHasCountertops;
+  // Ticks project types on every countertop material (keeps each material's
+  // own existing project types; a material with none picked gets its
+  // default ones written in first, so nothing else changes).
+  async function mqCtTickRooms(roomIds) {
+    const items = await mqCtItemsLoad(true);
+    const catHidden = (window._mqCategoryRooms || {})['countertop'] || [];
+    const defaults = roomsForCategory('countertop').filter(r => !r.forQt && !catHidden.includes(r.id)).map(r => r.id);
+    for (const r of items || []) {
+      if (!r.fields || r.fields['Active'] === false) continue;
+      const cur = mqVisRooms(r);
+      const base = cur.length ? cur : defaults;
+      const next = [...new Set([...base, ...roomIds])];
+      if (next.length === base.length && cur.length) continue;
+      const json = JSON.stringify(next);
+      await atUpdate(CONFIG.LINE_ITEMS_TABLE, r.id, { 'Visible rooms': json });
+      r.fields['Visible rooms'] = json;
+    }
+    if (window._mqLastFetchTimes) window._mqLastFetchTimes['products'] = 0;
+  }
+  window.mqCtTickRooms = mqCtTickRooms;
+  // One-time move of the old per-quote "Include Countertops" box to My
+  // Products: its project types get ticked on the countertop materials.
+  async function mqCtMigrateQtFlags() {
+    const shopRec = window._mqShopRecord;
+    if (!shopRec || window._mqCtMigrating) return;
+    const qts = mqQuoteTypesOf(shopRec.fields);
+    if (!qts.some(q => q.countertops)) return;
+    window._mqCtMigrating = true;
+    try {
+      if (mqBizOf(shopRec.fields).ct) {
+        const ids = qts.filter(q => q.countertops).flatMap(q => mqQtRoomsOf(q.id).map(r => r.id));
+        if (ids.length) await mqCtTickRooms(ids);
+      }
+      await mqSaveTabsCfg({ quoteTypes: mqQuoteTypesOf(shopRec.fields).map(q => { if (!q.countertops) return q; const n = Object.assign({}, q); delete n.countertops; return n; }) });
+      await mqCtItemsLoad(true);
+      if (window.mqRenderQuoteTypes) window.mqRenderQuoteTypes();
+      if (window._mqRooms) renderRoomsList();
+    } catch(e) { console.warn('countertop move failed', e); }
+    window._mqCtMigrating = false;
+  }
+  // Estimator tab switches only for what the business offers.
+  function mqSyncTabRowsToBiz(biz) {
+    const row = id => { const t = el('mq-tab-' + id + '-toggle'); return t ? t.closest('.mq-toggle-row') : null; };
+    const show = (id, on) => { const r = row(id); if (r) r.style.display = on ? '' : 'none'; };
+    show('cabinets', biz.cab); show('countertops', biz.ct); show('both', biz.cab && biz.ct);
+  }
   function mqBizOf(fields) {
     const cfg = mqTabsCfgOf(fields);
     const h = cfg.hidden;
+    // Oct 27 (Jordan): the ticks are what the business OFFERS; the tab
+    // switches only decide which built-in quotes show. So once the ticks
+    // have been saved, they're read as-is (a shop can switch the Countertops
+    // only tab off and still offer counters inside its quote types). Shops
+    // that never touched them: worked out from the tabs, as before.
+    const set = !!cfg.business.set;
     return {
-      cab: !(h.includes('both') && h.includes('cabinets')),
-      ct: !(h.includes('both') && h.includes('countertops')) || cfg.quoteTypes.some(q => q && q.countertops),
+      cab: set ? !cfg.business.off.includes('cabinetry') : !(h.includes('both') && h.includes('cabinets')),
+      ct: set ? !cfg.business.off.includes('countertops') : (!(h.includes('both') && h.includes('countertops')) || cfg.quoteTypes.some(q => q && q.countertops)),
+      set,
       trades: cfg.business.trades,
       off: cfg.business.off,
     };
@@ -11346,6 +11437,9 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     if (!chips || !shopRec) return;
     if (!window._mqTradeCatalogLoaded) { mqLoadTradeCatalog().then(() => window.mqRenderBizTypes()); }
     const biz = mqBizOf(shopRec.fields);
+    mqSyncTabRowsToBiz(biz);
+    if (biz.ct && !Array.isArray(window._mqCtItems) && !window._mqCtItemsLoading) mqCtItemsLoad().then(() => window.mqRenderBizTypes());
+    if (mqQuoteTypesOf(shopRec.fields).some(q => q.countertops)) mqCtMigrateQtFlags();
     const qts = mqQuoteTypesOf(shopRec.fields);
     const isOn = t => t.id === 'cabinetry' ? biz.cab : (t.id === 'countertops' ? biz.ct : biz.trades.includes(t.id));
     chips.innerHTML = mqBizTradeList(biz.trades).map(t => {
@@ -11368,9 +11462,9 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       </div>`;
     });
     const nothing = !biz.cab && !biz.ct && !qts.some(q => q.on !== false && !q.proOnly);
-    const hTabs = mqTabsCfgOf(shopRec.fields).hidden;
-    const ctOnlyViaQt = biz.ct && hTabs.includes('both') && hTabs.includes('countertops') ? qts.filter(q => q.countertops) : [];
-    tradesEl.innerHTML = rows.join('') + (ctOnlyViaQt.length ? `<div style="font-size:12.5px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:8px 10px;margin:4px 0 6px;line-height:1.5">Countertops is still ticked because ${ctOnlyViaQt.map(q => '“' + mqEscHtml(q.name) + '”').join(', ')} ${ctOnlyViaQt.length === 1 ? 'includes' : 'include'} a Countertops step (your Countertops tabs are off). Untick <strong>Countertops</strong> above to remove it everywhere.</div>` : '') + (nothing ? `<div style="font-size:12.5px;color:#b45309;margin-top:4px">Your widget has no quotes to show yet. Add a quote type for your trade.</div>` : '')
+    // Countertops ticked but nothing priced yet -> say so.
+    const ctNoPricing = biz.ct && Array.isArray(window._mqCtItems) && !window._mqCtItems.some(r => r.fields && r.fields['Active'] !== false);
+    tradesEl.innerHTML = rows.join('') + (ctNoPricing ? `<div style="font-size:12.5px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:8px 10px;margin:4px 0 6px;line-height:1.5">Countertops is ticked, but you have no countertop pricing yet — <a href="#" onclick="event.preventDefault();mqNav('pricing', document.querySelector('.mq-nav-item[onclick*=&quot;mqNav(\'pricing\'&quot;]'))" style="color:#1d4ed8;font-weight:600">set it up on the Pricing tab →</a></div>` : '') + (nothing ? `<div style="font-size:12.5px;color:#b45309;margin-top:4px">Your widget has no quotes to show yet. Add a quote type for your trade.</div>` : '')
       + ((!biz.cab || !biz.ct) ? `<div style="font-size:12px;color:#6b7280;margin-top:6px;line-height:1.5">${!biz.cab && !biz.ct ? 'Built-in cabinet and countertop pricing is hidden' : (!biz.cab ? 'Built-in cabinet pricing is hidden' : 'Built-in countertop pricing is hidden')} on the Pricing, My products and Project types tabs, and the matching built-in quote is hidden in MidasQuote Pro too. Nothing is deleted. Tick it again any time to bring it back.</div>` : '');
   };
   window.mqBizToggle = async function(id) {
@@ -11500,6 +11594,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // Admin: snapshot one of this shop's quote types into a trade's pack.
   async function mqTradeSnapshot(qtId) {
     const shopRec = window._mqShopRecord;
+    try { await mqCtItemsLoad(true); } catch(e) {}
     const f = shopRec.fields;
     const q = mqQuoteTypesOf(f).find(x => x.id === qtId);
     if (!q) throw new Error('no quote type');
@@ -11518,7 +11613,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const subset = field => { const m = mqJsonObj(f[field], {}); const o = {}; Object.keys(m).forEach(k => { if (keyOk(k)) o[k] = m[k]; }); return o; };
     const sub2 = field => { const m = mqJsonObj(f[field], {}); const o = {}; Object.keys(m).forEach(k => { if (catIds.has(k)) o[k] = m[k]; }); return o; };
     return {
-      qt: { name: q.name, sub: q.sub || '', icon: q.icon || 'grid', countertops: !!q.countertops, measures: Array.isArray(q.measures) ? q.measures : [] },
+      qt: { name: q.name, sub: q.sub || '', icon: q.icon || 'grid', countertops: !!q.countertops || mqQtHasCountertops(qtId), measures: Array.isArray(q.measures) ? q.measures : [] },
       rooms, cats, items, specs,
       catRooms: sub2('Category rooms'), pickerLabels: sub2('Category picker labels'),
       photos: subset('Photos'), hidden: subset('Hidden'), featured: subset('Featured items'),
@@ -11595,7 +11690,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       Object.assign(shopRec.fields, upd);
       const ctOk = mqBizOf(shopRec.fields).ct;
       const q = { id: qtId, name, on: true, proOnly: false, sub: pack.qt.sub || '', icon: pack.qt.icon || t.icon || 'grid', trade: t.id };
-      if (pack.qt.countertops && ctOk) q.countertops = true;
+      if (pack.qt.countertops && ctOk) { try { await mqCtTickRooms(Object.values(roomMap)); } catch(e) {} }
       if (Array.isArray(pack.qt.measures) && pack.qt.measures.length) q.measures = pack.qt.measures;
       await mqSaveTabsCfg({ quoteTypes: [...mqQuoteTypesOf(shopRec.fields), q] });
       if (window._mqRooms) { window._mqRooms = rooms; renderRoomsList(); }
@@ -11759,7 +11854,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const nRooms = mqQtRoomsOf(q.id).length;
       const nSteps = cats.filter(c => c.qt === q.id).length;
       const on = q.on !== false;
-      const extras = [q.countertops ? 'countertops' : '', mqQtHasSpecialty(q.id) ? 'specialty items' : ''].filter(Boolean);
+      const extras = [mqQtHasCountertops(q.id) ? 'countertops' : '', mqQtHasSpecialty(q.id) ? 'specialty items' : ''].filter(Boolean);
       const offTrade = !on && q.offByTrade && q.trade ? [...MQ_BIZ_FIXED, ...mqTradeEntries()].find(t => t.id === q.trade) : null;
       const status = offTrade
         ? `<span style="color:#6b7280">Hidden — ${mqEscHtml(offTrade.label)} is unticked under "What does your business do?"</span>`
@@ -14283,6 +14378,8 @@ ${mqIsFreePlanShop() ? mqShowroomLockNoteHTML(true) : `      <label class="mq-bt
     // Specialty: an item with no project types picked shows for every
     // cabinet project type — never countertop ones or a quote type's (those
     // are ticked one by one).
+    // A quote type's project types are never ticked by default (anything).
+    if (r.forQt) return false;
     return cat === 'specialty' ? (!r.forCountertops && !r.forQt) : true;
   }
 
