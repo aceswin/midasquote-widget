@@ -6743,7 +6743,7 @@ window.mqphGoToWizard = function() {
           <div class="mqph-modal-body"><div class="mqcc-modal-grid"><div>
             <div class="mqph-field" id="mqcc-cat-qt-wrap"><label>Which quote is this step in?</label>
               <select id="mqcc-cat-qt" onchange="mqccCatQtChanged()"></select>
-              <div style="font-size:11px;color:#6b7280;margin-top:4px;line-height:1.45">Your own quote types are added on Business info. Which of its project types show this step is set in <strong>My Products</strong> (this category's 🗂️ project types, or each option's own).</div>
+              <div style="font-size:11px;color:#6b7280;margin-top:4px;line-height:1.45">Choose which quote type this step appears in. You can then pick exactly which of its project types show this step in <strong>My Products</strong>.</div>
             </div>
             <div class="mqph-field"><label>Category name</label><input type="text" id="mqcc-cat-name" maxlength="60" placeholder="Finishing &amp; extras"/></div>
             <div class="mqph-field"><label>Short description for customers (optional)</label><input type="text" id="mqcc-cat-desc" maxlength="200" placeholder="A few finishing details that make the install look built-in."/></div>
@@ -6759,8 +6759,9 @@ window.mqphGoToWizard = function() {
             <div class="mqph-field"><label>Where it goes on your widget</label>
               <select id="mqcc-cat-after"></select>
             </div>
-            <div class="mqph-field"><label>Show this step</label>
+            <div class="mqph-field" id="mqcc-cat-showif-wrap"><label>Only show this step if…</label>
               <select id="mqcc-cat-showif"></select>
+              <div style="font-size:11px;color:#6b7280;margin-top:4px;line-height:1.45">Optional — show this step only after a certain earlier choice, e.g. “Ceiling finish” only if “Ceilings” was picked. Which project types it shows for is set in My Products.</div>
             </div>
 
             <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin:4px 0 0;cursor:pointer">
@@ -6868,8 +6869,8 @@ window.mqphGoToWizard = function() {
     mqphRerenderPricingPage();
     mqphApplyEstimatorTabScope();
   }
-  function mqccShowIfOptions(selectEl, list, current, alwaysLabel) {
-    selectEl.innerHTML = `<option value="">${alwaysLabel}</option>` + list.map(o => `<option value="${o.id}">Only if “${mqccEsc(o.label)}” is picked</option>`).join('');
+  function mqccShowIfOptions(selectEl, list, current, alwaysLabel, pickedWord) {
+    selectEl.innerHTML = `<option value="">${alwaysLabel}</option>` + list.map(o => pickedWord ? `<option value="${o.id}">The customer picked “${mqccEsc(o.label)}”</option>` : `<option value="${o.id}">Only if “${mqccEsc(o.label)}” is picked</option>`).join('');
     selectEl.value = list.some(o => o.id === current) ? current : '';
   }
 
@@ -6907,7 +6908,11 @@ window.mqphGoToWizard = function() {
     const cid = mqccEditCat;
     const qt = document.getElementById('mqcc-cat-qt').value || '';
     const sameQuote = mqccAllOptions(cid, null).filter(o => { const r = lineItems.find(x => x.id === o.id); const oc = r && mqccCats().find(x => x.id === r.fields['Category']); return oc && (oc.qt || '') === qt; });
-    mqccShowIfOptions(document.getElementById('mqcc-cat-showif'), sameQuote, c ? c.showIf : document.getElementById('mqcc-cat-showif').value, 'Always (for the project types set in My Products)');
+    const curRule = c ? c.showIf : document.getElementById('mqcc-cat-showif').value;
+    mqccShowIfOptions(document.getElementById('mqcc-cat-showif'), sameQuote, curRule, 'No condition — always show it', true);
+    // Nothing earlier in this quote to depend on → no point showing the field.
+    const ruleWrap = document.getElementById('mqcc-cat-showif-wrap');
+    if (ruleWrap) ruleWrap.style.setProperty('display', (sameQuote.length || curRule) ? '' : 'none', 'important');
     const afterSel = document.getElementById('mqcc-cat-after');
     const places = mqccPlaceList(cid, qt);
     afterSel.innerHTML = places.map(([v, l]) => `<option value="${v}">${mqccEsc(l)}</option>`).join('');
