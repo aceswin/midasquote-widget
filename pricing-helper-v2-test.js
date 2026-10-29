@@ -2205,7 +2205,6 @@ window.mqphGoToWizard = function() {
           <button class="mqph-btn mqph-btn-primary" onclick="mqphStartItemSetup()">Set up shop items →</button>
         </div>` : `
 
-        ${mqphBoffCardHTML()}
         ${['material','door','drawer','hinge','zone','install'].map(cat => [cat, groups[cat]||[]]).concat(Object.entries(groups).filter(([cat]) => !['material','door','drawer','hinge','zone','install','other','tax'].includes(cat))).map(([cat,recs]) => `
           <div class="mqph-cat-block" data-mq-cat="${cat}">
             <div class="mqph-cat-header" onclick="mqphToggleCategory('${cat}')" style="cursor:pointer">
