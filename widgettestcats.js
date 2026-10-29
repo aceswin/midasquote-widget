@@ -6268,11 +6268,10 @@
       // even while built-in pricing is switched off (they're only hidden) --
       // so Refacing/Repainting etc. keep skipping it, same as always.
       const selActive = rowHasReal(`mq-${prefix}-mat`);
-      // Project types → "Ask for cabinet measurements": Yes / No overrides;
-      // Automatic (blank, every existing project type) = as always.
-      const roomForCab = (window._mqRoomTypes||[]).find(r=>r.id===roomId);
-      const askM = roomForCab && roomForCab.askMeasure;
-      const cabActive = askM === 'yes' ? true : (askM === 'no' ? false : selActive);
+      // Cabinet measurements show when a box material is ticked for this
+      // project type (My Products) — as always. (The Oct 27 "Ask for cabinet
+      // measurements" override was removed Oct 28.)
+      const cabActive = selActive;
       const cabSec = document.getElementById(`mq-${prefix}-cabinet-measurements-sec`);
       if (cabSec) cabSec.style.display = cabActive ? '' : 'none';
       const cabSelSec = document.getElementById(`mq-${prefix}-cabinet-selections-sec`);
@@ -6339,6 +6338,21 @@
       const siField = document.getElementById(`mq-${prefix}-si-field`);
       if (siField) siField.style.display = cabActive ? '' : 'none';
       mqApplyBuiltinOffUI(prefix);
+      // Measurements asked ("Yes, always") but no box material for this
+      // project type: no built-in install/removal, so the removal question
+      // goes, and "Supply + install?" only stays if one of the shop's own
+      // options offers installation.
+      if (cabActive && !selActive) {
+        const remField = document.getElementById(`mq-${prefix}-removal`);
+        const remF = remField && remField.closest('.mq-field');
+        if (remF) remF.style.display = 'none';
+        const ccInst = mqCcCatsFor(prefix).some(c => (c.items || []).some(i => i.inst));
+        if (siField && !ccInst) siField.style.display = 'none';
+      } else {
+        const remField = document.getElementById(`mq-${prefix}-removal`);
+        const remF = remField && remField.closest('.mq-field');
+        if (remF && !MQ_BOFF.has('removal')) remF.style.display = '';
+      }
 
       const drawSec = document.getElementById(`mq-${prefix}-drawers-sec`);
       if (drawSec) drawSec.style.display = rowHasReal(`mq-${prefix}-drawer-config`) ? '' : 'none';
@@ -7824,18 +7838,34 @@
       // Doors switched off: never "No doors" (install stays the with-doors
       // rate and hinges still count), and no door price or name.
       if (MQ_BOFF.has('doors')) { uDoorKey = bDoorKey = '__off'; }
+      // Measurements asked for (Project types → "Yes, always") but no box
+      // material ticked for this project type, so no material / door step:
+      // nothing from those is priced (only what the shop set up itself).
+      let noSelections = false;
+      {
+        const rid = gv(`mq-${prefix}-room`);
+        const rObj = (window._mqRoomTypes||[]).find(r=>r.id===rid);
+        const row = document.getElementById(`mq-vprow-mq-${prefix}-mat`);
+        if (false && cabSectionActive && rObj && row) { // (only reachable with the removed "Yes, always" setting)
+          noSelections = ![...row.querySelectorAll('.mq-vpicker-chip')].some(ch => {
+            if (ch.getAttribute('data-value') === 'none') return false;
+            let rs = []; try { rs = JSON.parse(ch.getAttribute('data-rooms') || '[]'); } catch(e) { rs = []; }
+            return !rs.length || rs.includes(rid);
+          });
+        }
+      }
 
       const drawerTier       = gv(`mq-${prefix}-drawer-tier`) || 'none';
       const drawerConfigIdx  = parseInt(gv(`mq-${prefix}-drawer-config`) || '0');
       const drawerConfigName = drawerConfigNames[drawerConfigIdx] || '';
       const drawerRate       = drawerTier === 'none' ? 0 : (drawer[drawerConfigName]?.[drawerTier] || 0);
 
-      const uMat      = getMaterialRates(uMatKey,mat);
-      const bMat      = getMaterialRates(bMatKey,mat);
-      const uDoorRate = uDoorKey==='none'?0:(door[uDoorKey]?.rate||0);
-      const bDoorRate = bDoorKey==='none'?0:(door[bDoorKey]?.rate||0);
-      const uHingeRate= uDoorKey==='none'?0:(hinge[uHingeKey]?.rate||0);
-      const bHingeRate= bDoorKey==='none'?0:(hinge[bHingeKey]?.rate||0);
+      const uMat      = noSelections ? { label: '', rateU: 0, rateB: 0 } : getMaterialRates(uMatKey,mat);
+      const bMat      = noSelections ? { label: '', rateU: 0, rateB: 0 } : getMaterialRates(bMatKey,mat);
+      const uDoorRate = (noSelections || uDoorKey==='none')?0:(door[uDoorKey]?.rate||0);
+      const bDoorRate = (noSelections || bDoorKey==='none')?0:(door[bDoorKey]?.rate||0);
+      const uHingeRate= (noSelections || uDoorKey==='none')?0:(hinge[uHingeKey]?.rate||0);
+      const bHingeRate= (noSelections || bDoorKey==='none')?0:(hinge[bHingeKey]?.rate||0);
 
       // Cabinets in some rooms (like bathroom vanities) run smaller than
       // kitchen cabinets at the same linear footage — and now a project type
@@ -7874,8 +7904,12 @@
       const islandVanityMult = (100 + islandMaterialAdjPct) / 100;
       const installMult = (100 + installAdjPct) / 100;
 
-      const uInstall = (si==='install'?(uDoorKey==='none'?installUNoDoors:installUWithDoors):0) * installMult;
-      const bInstall = (si==='install'?(
+      // No box material for this project type (measurements asked via
+      // "Yes, always"): the built-in cabinet install and removal rates don't
+      // apply either — same as before that setting, when no material meant
+      // no cabinet measurements at all.
+      const uInstall = (!noSelections && si==='install'?(uDoorKey==='none'?installUNoDoors:installUWithDoors):0) * installMult;
+      const bInstall = (!noSelections && si==='install'?(
         drawerTier==='some'   ? installBSome   :
         drawerTier==='mostly' ? installBMostly :
         (bDoorKey==='none'?installBNoDoors:installBWithDoors)
@@ -8061,8 +8095,8 @@
       const lines=[];
       const uDoorLabel=uDoorKey==='none'?'No doors':(door[uDoorKey]?.label||'');
       const bDoorLabel=bDoorKey==='none'?'No doors':(door[bDoorKey]?.label||'');
-      const mqCabName = (m, d) => [MQ_BOFF.has('materials') ? '' : m, MQ_BOFF.has('doors') ? '' : d].filter(Boolean).join(' / ');
-      const mqCabSkip = c => MQ_BOFF.has('materials') && MQ_BOFF.has('doors') && Math.round(c) === 0;
+      const mqCabName = (m, d) => noSelections ? '' : [MQ_BOFF.has('materials') ? '' : m, MQ_BOFF.has('doors') ? '' : d].filter(Boolean).join(' / ');
+      const mqCabSkip = c => ((MQ_BOFF.has('materials') && MQ_BOFF.has('doors')) || noSelections) && Math.round(c) === 0;
       if(uFt>0 && !mqCabSkip(uMatCost)) lines.push({label:`Upper cabinets${mqCabName(uMat.label, uDoorLabel) ? ' — ' + mqCabName(uMat.label, uDoorLabel) : ''} (${uFt} lin ft)`,cost:Math.round(uMatCost)});
       if(uFt>0&&uInstallCost>0) lines.push({label:`Upper cabinet install (${uFt} lin ft)`,cost:Math.round(uInstallCost)});
       if(bFt>0 && !mqCabSkip(bMatCost-(drawerRate*bFt))) lines.push({label:`Base cabinets${mqCabName(bMat.label, bDoorLabel) ? ' — ' + mqCabName(bMat.label, bDoorLabel) : ''} (${bFt} lin ft)`,cost:Math.round(bMatCost-(drawerRate*bFt))});
@@ -8158,7 +8192,7 @@
       lines.push(...ccRes.lines);
 
       const remEl=document.getElementById(`mq-${prefix}-removal`);
-      const remCost=remEl&&remEl.value==='yes'?(uFt+bFt)*removalRate:0;
+      const remCost=!noSelections&&remEl&&remEl.value==='yes'?(uFt+bFt)*removalRate:0;
       if(remCost>0) lines.push({label:'Cabinet removal',cost:Math.round(remCost)});
 
       const sub=uCost+bCost+islandCost+drawerAdjCost+specTotal+tallCabTotal+remCost+trimCost+ccRes.total;

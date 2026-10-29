@@ -6261,21 +6261,8 @@ window.logoutMember = async function () {
                     </div>
           </div>
           ${!isCountertop && !isQt ? `          <div class="mq-room-grp" style="--grp:#d97706;--grpbg:#fffbeb">
-            <div class="mq-room-grp-top" onclick="mqRoomGrpToggle(this, '${r.id}:4')"><span class="mq-room-grp-chev" style="transform:rotate(${(window._mqRoomGrpOpen||new Set()).has('${r.id}:4') ? 90 : 0}deg)">▶</span><div style="flex:1;min-width:0"><div class="mq-room-grp-h">④ Cabinet questions</div><div class="mq-room-grp-sum">Cabinet measurements: ${r.askMeasure === 'yes' ? 'always' : (r.askMeasure === 'no' ? 'never' : 'automatic')} · Island ${r.showIslandButton ? 'on' : 'off'}</div></div></div>
+            <div class="mq-room-grp-top" onclick="mqRoomGrpToggle(this, '${r.id}:4')"><span class="mq-room-grp-chev" style="transform:rotate(${(window._mqRoomGrpOpen||new Set()).has('${r.id}:4') ? 90 : 0}deg)">▶</span><div style="flex:1;min-width:0"><div class="mq-room-grp-h">④ Cabinet questions</div><div class="mq-room-grp-sum">Island button ${r.showIslandButton ? 'on' + (r.islandAllowDoubleRow ? ' (double-row allowed)' : '') : 'off'}</div></div></div>
             <div class="mq-room-grp-b" style="display:${(window._mqRoomGrpOpen||new Set()).has('${r.id}:4') ? 'block' : 'none'}"><div class="mq-room-grp-sub">What the Cabinets / Full project quotes ask for this project type.</div>
-          <label style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;color:#6b7280;font-weight:600;margin-bottom:8px">
-            📐 Ask for cabinet measurements (upper / base lin ft)
-            <select id="mq-room-askmeasure-${idx}" onchange="mqSaveRooms()" style="font-size:12px;padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;width:auto;max-width:100%">
-              <option value="" ${!r.askMeasure ? 'selected' : ''}>Automatic — leave this if you use our built-in cabinet pricing</option>
-              <option value="yes" ${r.askMeasure === 'yes' ? 'selected' : ''}>Yes, always — your own custom pricing uses upper / base lin ft</option>
-              <option value="no" ${r.askMeasure === 'no' ? 'selected' : ''}>No — nothing for this project type is priced by cabinet lin ft</option>
-            </select>
-          </label>
-          <div style="font-size:11.5px;color:#6b7280;line-height:1.5;margin:-4px 0 10px">${{
-            '': '<strong>Automatic:</strong> asks for upper and base cabinet lin ft only when at least one box material is ticked for this project type in My Products — exactly how it has always worked.',
-            yes: '<strong>Yes, always:</strong> always asks, even with no box materials ticked — for when you built your own cabinet pricing (Pricing → Custom pricing categories) priced per upper / base / total cabinet lin ft.',
-            no: '<strong>No:</strong> never asks for cabinet lin ft (and hides the material / door step) — for project types priced another way, e.g. refacing by square foot or a flat price.',
-          }[r.askMeasure || ''] || ''}</div>
           <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#6b7280;font-weight:600;margin-bottom:8px;cursor:pointer">
             <input type="checkbox" id="mq-room-addisland-${idx}" ${r.showIslandButton?'checked':''} onchange="mqSaveRooms()" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
             🏝️ Add "Add Island" button <span style="font-weight:400;color:#9ca3af">(lets customers measure island cabinets separately from base cabinets — only makes sense for kitchen-style project types)</span>
@@ -6413,7 +6400,6 @@ window.logoutMember = async function () {
             proOnly: document.getElementById(`mq-room-visibility-${oldIdx}`)?.value === 'proOnly',
             hideFromPro: document.getElementById(`mq-room-visibility-${oldIdx}`)?.value === 'hideFromPro',
             hideMeasureGuide: document.getElementById(`mq-room-hidemeasure-${oldIdx}`)?.checked === true,
-            askMeasure: (document.getElementById(`mq-room-askmeasure-${oldIdx}`) ? document.getElementById(`mq-room-askmeasure-${oldIdx}`).value : (orig.askMeasure || '')) || undefined,
             showRange: document.getElementById(`mq-room-showrange-${oldIdx}`)?.checked !== false,
             showIslandButton: document.getElementById(`mq-room-addisland-${oldIdx}`)?.checked === true,
             islandAllowDoubleRow: document.getElementById(`mq-room-islanddouble-${oldIdx}`)?.checked === true,
@@ -6657,7 +6643,6 @@ window.logoutMember = async function () {
         proOnly: el(`mq-room-visibility-${idx}`)?.value === 'proOnly',
         hideFromPro: el(`mq-room-visibility-${idx}`)?.value === 'hideFromPro',
         hideMeasureGuide: el(`mq-room-hidemeasure-${idx}`)?.checked === true,
-        askMeasure: (el(`mq-room-askmeasure-${idx}`) ? el(`mq-room-askmeasure-${idx}`).value : (r.askMeasure || '')) || undefined,
         showRange: el(`mq-room-showrange-${idx}`)?.checked !== false,
         showIslandButton: el(`mq-room-addisland-${idx}`)?.checked === true,
         islandAllowDoubleRow: el(`mq-room-islanddouble-${idx}`)?.checked === true,
@@ -11881,6 +11866,13 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     }).join('');
     if (editing) { const inp = el('mq-qt-rename-' + editing); if (inp) { inp.focus(); inp.select(); } }
     if (window.mqRenderBizTypes) window.mqRenderBizTypes();
+    // The Pricing tab's "Built-in cabinet pricing" switches were removed
+    // (Oct 28 — My Products controls what shows): clear any left switched
+    // off so nothing stays hidden with no way to turn it back on.
+    if ((mqTabsCfgOf(shopRec.fields).builtinOff || []).length && !window._mqBoffClearing) {
+      window._mqBoffClearing = true;
+      mqSaveTabsCfg({ builtinOff: [] }).catch(() => {}).finally(() => { window._mqBoffClearing = false; });
+    }
   };
   window.mqQtShowAdd = function(open) {
     el('mq-qt-add-open').style.display = open ? 'block' : 'none';
