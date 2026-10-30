@@ -2580,6 +2580,11 @@ window.logoutMember = async function () {
               <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">The trades shops can tick under Business info → "What does your business do?". Add new ones (drywall, mechanics — anything), rename or hide the defaults, and give any of them a starter pack: a quote type you've built in this shop, copied to a shop in one click with its project types, priced steps, options, specialty items and photos.</p>
               <div id="mq-trades-admin"><div class="mq-loading">Loading...</div></div>
             </div>
+            <div class="mq-card" style="margin-bottom:1.5rem">
+              <div class="mq-card-title">🧩 Premade steps</div>
+              <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Ready-made priced steps (like “Paint finish” or “Number of coats”) that any shop can drop into one of its quotes from <strong>Pricing → 🧩 Premade steps</strong>. Build the step in this shop on the Pricing tab, then save it here. Saving again updates it; shops that already added it keep their copy.</p>
+              <div id="mq-steplib-admin"><div class="mq-loading">Loading...</div></div>
+            </div>
             <div id="mq-templates-content"><div class="mq-loading">Loading templates...</div></div>
             <button class="mq-btn" style="margin-top:8px" onclick="mqAddTemplateItem()">+ Add template item</button>
             <!-- No bulk "push to all shops" here on purpose: a template item
@@ -11536,8 +11541,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const match = mqQtsOfTrade(t, qts)[0] || null;
       const right = match
         ? `<span style="color:#15803d;font-weight:600">✓ "${mqEscHtml(match.name)}" quote set up</span> <a href="#" onclick="event.preventDefault();mqQtOpenInRooms('${match.id}')" style="color:#1d4ed8;font-weight:600;text-decoration:none;margin-left:6px">Project types →</a>`
-        : (t.qtName && t.pack
-          ? `<span style="display:inline-flex;flex-direction:column;align-items:flex-end;gap:3px"><button type="button" class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqBizAddQt('${t.id}')">+ Add a ${mqEscHtml(t.qtName)} quote</button><span style="font-size:11px;color:#6b7280">Comes set up: ${mqEscHtml(mqTradePackSummary(t.pack))}</span></span>`
+        : (t.qtName && mqTradeHasPack(t)
+          ? `<span style="display:inline-flex;flex-direction:column;align-items:flex-end;gap:3px"><button type="button" class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqBizAddQt('${t.id}')">+ Add a ${mqEscHtml(t.qtName)} quote</button><span style="font-size:11px;color:#6b7280">Comes set up: ${mqEscHtml(mqTradePackSummary(mqTradePackInfo(t)))}</span></span>`
           : t.qtName
           ? `<button type="button" class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqBizAddQt('${t.id}')">+ Add a ${mqEscHtml(t.qtName)} quote</button>`
           : `<button type="button" class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqBizAddQt('${t.id}')">+ Add a quote type</button>`);
@@ -11656,6 +11661,44 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // priced steps (custom categories) with their options, specialty items
   // ticked for its project types, and their photos.
   const MQ_TRADE_STORE_LIMIT = 95000;
+  // ── Template library rows (Oct 29) ──
+  // Starter packs and premade steps each get their own row in the Proposal
+  // templates table, linked to the MASTER_TEMPLATE shop and named
+  // "MQLIB:pack:<trade>" / "MQLIB:step:<id>", with the JSON in Body. Every
+  // shop can read just those rows (Worker rule); only admins write them.
+  // Room for ~95 KB per pack/step instead of one shared 95 KB field.
+  const MQ_LIB_ROW_LIMIT = 95000;
+  async function mqLibRows(kind) {
+    const rows = await atGet(CONFIG.PROPOSAL_TEMPLATES_TABLE, `AND(ARRAYJOIN({Shop}) = "${MASTER_TEMPLATE_SHOP_NAME}", FIND("MQLIB:${kind}:", {Template name}) = 1)`);
+    return (rows || []).map(r => { let body = null; try { body = JSON.parse(r.fields['Body'] || 'null'); } catch(e) { body = null; } return body ? { id: r.id, key: String(r.fields['Template name'] || '').slice(('MQLIB:' + kind + ':').length), body } : null; }).filter(Boolean);
+  }
+  window.mqLibRows = mqLibRows;
+  async function mqLibRow(recId) {
+    if (!/^rec[A-Za-z0-9]{14}$/.test(String(recId || ''))) return null;
+    const rows = await atGet(CONFIG.PROPOSAL_TEMPLATES_TABLE, `AND(ARRAYJOIN({Shop}) = "${MASTER_TEMPLATE_SHOP_NAME}", RECORD_ID() = "${recId}")`);
+    try { return rows && rows[0] ? JSON.parse(rows[0].fields['Body'] || 'null') : null; } catch(e) { return null; }
+  }
+  async function mqLibSave(kind, key, body, recId) {
+    const json = JSON.stringify(body);
+    if (json.length > MQ_LIB_ROW_LIMIT) throw new Error('full');
+    if (recId) {
+      try { await atUpdate(CONFIG.PROPOSAL_TEMPLATES_TABLE, recId, { 'Body': json }); return recId; }
+      catch(e) { /* row gone -- make a new one */ }
+    }
+    const master = await ensureMasterTemplateShop();
+    const rec = await atCreate(CONFIG.PROPOSAL_TEMPLATES_TABLE, { 'Shop': [master.id], 'Template name': `MQLIB:${kind}:${key}`, 'Body': json });
+    if (!rec || !rec.id) throw new Error('save failed');
+    return rec.id;
+  }
+  async function mqLibDelete(recId) { if (recId) { try { await atDelete(CONFIG.PROPOSAL_TEMPLATES_TABLE, recId); } catch(e) {} } }
+  function mqTradeHasPack(t) { return !!(t && (t.pack || t.packRec)); }
+  function mqTradePackInfo(t) { return t ? (t.pack || t.packSum || null) : null; }
+  async function mqTradePackLoad(t) {
+    if (!t) return null;
+    if (t.pack) return t.pack;
+    if (t.packRec) return await mqLibRow(t.packRec);
+    return null;
+  }
   function mqTradeCatalogOf(master) {
     let o = null;
     try { o = master && master.fields['Custom categories'] ? JSON.parse(master.fields['Custom categories']) : null; } catch(e) { o = null; }
@@ -11683,8 +11726,9 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   function mqTradePackSummary(pack) {
     if (!pack) return '';
     const n = (a, one, many) => `${a} ${a === 1 ? one : many}`;
-    const parts = [n((pack.rooms || []).length, 'project type', 'project types'), n((pack.cats || []).length, 'priced step', 'priced steps'), n((pack.items || []).length, 'option', 'options')];
-    if ((pack.specs || []).length) parts.push(n(pack.specs.length, 'specialty item', 'specialty items'));
+    const cnt = x => Array.isArray(x) ? x.length : (Number(x) || 0);
+    const parts = [n(cnt(pack.rooms), 'project type', 'project types'), n(cnt(pack.cats), 'priced step', 'priced steps'), n(cnt(pack.items), 'option', 'options')];
+    if (cnt(pack.specs)) parts.push(n(cnt(pack.specs), 'specialty item', 'specialty items'));
     if (pack.qt && pack.qt.countertops) parts.push('countertops');
     return parts.join(' · ');
   }
@@ -11717,7 +11761,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const subset = field => { const m = mqJsonObj(f[field], {}); const o = {}; Object.keys(m).forEach(k => { if (keyOk(k)) o[k] = m[k]; }); return o; };
     const sub2 = field => { const m = mqJsonObj(f[field], {}); const o = {}; Object.keys(m).forEach(k => { if (catIds.has(k)) o[k] = m[k]; }); return o; };
     return {
-      qt: { name: q.name, sub: q.sub || '', icon: q.icon || 'grid', countertops: !!q.countertops || mqQtHasCountertops(qtId), measures: Array.isArray(q.measures) ? q.measures : [] },
+      qt: { name: (q.packEdit && q.packName) || q.name, sub: q.sub || '', icon: q.icon || 'grid', countertops: !!q.countertops || mqQtHasCountertops(qtId), measures: Array.isArray(q.measures) ? q.measures : [] },
       rooms, cats, items, specs,
       catRooms: sub2('Category rooms'), pickerLabels: sub2('Category picker labels'),
       photos: subset('Photos'), hidden: subset('Hidden'), featured: subset('Featured items'),
@@ -11726,12 +11770,17 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
 
   // Shop: adds the trade's quote type from its starter pack -- everything
   // gets new ids, and every link between them is pointed at the new ones.
-  async function mqApplyTradePack(t) {
+  async function mqApplyTradePack(t, opts) {
+    opts = opts || {};
+    const msgId = opts.edit ? 'mq-templates-msg' : 'mq-shop-msg';
     const shopRec = window._mqShopRecord;
-    if (!shopRec || !t || !t.pack) return;
-    const pack = t.pack;
-    if (!confirm(`Add the "${pack.qt.name || t.qtName}" quote, already set up by MidasQuote?\n\n${mqTradePackSummary(pack)}.\n\nPrices are starting points — change anything after on Project types, Pricing and Specialty items.`)) return;
-    showMsg('mq-shop-msg', `Setting up "${pack.qt.name || t.qtName}"… this takes a few seconds.`);
+    if (!shopRec || !mqTradeHasPack(t)) return;
+    const info = mqTradePackInfo(t);
+    if (!opts.edit && !confirm(`Add the "${(info && info.qt && info.qt.name) || t.qtName}" quote, already set up by MidasQuote?\n\n${mqTradePackSummary(info)}.\n\nPrices are starting points — change anything after on Project types, Pricing and Specialty items.`)) return;
+    showMsg(msgId, `Setting up "${t.qtName || t.label}"… this takes a few seconds.`);
+    let pack = null;
+    try { pack = await mqTradePackLoad(t); } catch(e) { pack = null; }
+    if (!pack || !pack.qt) { showMsg(msgId, 'Couldn’t load that starter pack right now. Refresh and try again.', 'error'); return; }
     const rid = p => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
     const f = shopRec.fields;
     const cfg = mqTabsCfgOf(f);
@@ -11793,7 +11842,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, upd);
       Object.assign(shopRec.fields, upd);
       const ctOk = mqBizOf(shopRec.fields).ct;
-      const q = { id: qtId, name, on: true, proOnly: false, sub: pack.qt.sub || '', icon: pack.qt.icon || t.icon || 'grid', trade: t.id };
+      const q = { id: qtId, name, on: !opts.edit, proOnly: false, sub: pack.qt.sub || '', icon: pack.qt.icon || t.icon || 'grid', trade: t.id };
+      if (opts.edit) { q.packEdit = true; q.packName = pack.qt.name || name; }
       if (pack.qt.countertops && ctOk) { try { await mqCtTickRooms(Object.values(roomMap)); } catch(e) {} }
       if (Array.isArray(pack.qt.measures) && pack.qt.measures.length) q.measures = pack.qt.measures;
       await mqSaveTabsCfg({ quoteTypes: [...mqQuoteTypesOf(shopRec.fields), q] });
@@ -11801,10 +11851,11 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       window._mqSpecItemsList = null; window._mqSpecRecords = null;
       if (window._mqLastFetchTimes) Object.keys(window._mqLastFetchTimes).forEach(k => { window._mqLastFetchTimes[k] = 0; });
       mqRenderQuoteTypes();
-      showMsg('mq-shop-msg', `✓ "${name}" added and set up: ${mqTradePackSummary(pack)}. Check the prices on the Pricing tab — they're starting points.`);
+      if (opts.edit) { showMsg(msgId, `✓ "${name}" is open in your shop to edit — switched off on your widget, so customers never see it.`); if (window.mqTradeAdminRender) window.mqTradeAdminRender(); }
+      else showMsg(msgId, `✓ "${name}" added and set up: ${mqTradePackSummary(pack)}. Check the prices on the Pricing tab — they're starting points.`);
     } catch(e) {
       console.error('Starter pack failed', e);
-      showMsg('mq-shop-msg', 'Something went wrong setting that up. Refresh and check Project types / Pricing before trying again.', 'error');
+      showMsg(msgId, 'Something went wrong setting that up. Refresh and check Project types / Pricing before trying again.', 'error');
     }
   }
   window.mqApplyTradePack = mqApplyTradePack;
@@ -11814,6 +11865,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const box = document.getElementById('mq-trades-admin');
     if (!box) return;
     await mqLoadTradeCatalog(true);
+    if ((window._mqTradeCatalog || []).some(t => t && t.pack)) await mqTradeMovePacks();
     const esc = mqEscHtml;
     const myQts = mqQuoteTypesOf((window._mqShopRecord || {}).fields || {});
     const editing = window._mqTradeEditing || '';
@@ -11827,7 +11879,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           <span style="width:34px;height:34px;border-radius:8px;background:#fbf3df;color:#8a6510;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">${mqQtIconSvg(t.icon, 19)}</span>
           <div style="flex:1;min-width:180px">
             <div style="font-size:13.5px;font-weight:700;color:#111">${esc(t.label)}${t.hidden ? ' <span style="font-size:11px;font-weight:600;color:#6b7280">(hidden from shops)</span>' : ''}</div>
-            <div style="font-size:12px;color:#6b7280">${t.qtName ? `Quote: "${esc(t.qtName)}"` : 'Opens the "Add a quote type" box'} · ${t.pack ? `<span style="color:#15803d;font-weight:600">Starter pack: ${esc(mqTradePackSummary(t.pack))}</span>${t.packFrom ? ` (from "${esc(t.packFrom)}")` : ''}` : 'No starter pack — shops get an empty quote'}</div>
+            <div style="font-size:12px;color:#6b7280">${t.qtName ? `Quote: "${esc(t.qtName)}"` : 'Opens the "Add a quote type" box'} · ${mqTradeHasPack(t) ? `<span style="color:#15803d;font-weight:600">Starter pack: ${esc(mqTradePackSummary(mqTradePackInfo(t)))}</span>${t.packAt ? ` · saved ${esc(t.packAt)}` : ''}` : 'No starter pack — shops get an empty quote'}${myQts.some(q => q.packEdit && q.trade === t.id) ? ' · <span style="color:#1d4ed8;font-weight:600">✏️ open in your shop</span>' : ''}</div>
           </div>
           <div style="display:flex;gap:6px;flex-wrap:wrap">
             <button type="button" class="mq-btn mq-btn-sm" onclick="mqTradeEdit('${t.id}')">${isEdit ? 'Close' : 'Edit'}</button>
@@ -11842,8 +11894,21 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           <div><button type="button" class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqTradeSaveEdit('${t.id}')">Save</button></div>
           ${t.id === 'other' ? '' : `<div style="border-top:1px dashed #e5e7eb;padding-top:10px">
             <div style="font-size:12px;font-weight:700;color:#111;margin-bottom:4px">Starter pack</div>
-            <div style="font-size:12px;color:#6b7280;line-height:1.5;margin-bottom:8px">Build the quote in your own shop first (Business info → quote types, then its project types, Pricing steps and Specialty items), then save it here. Shops that tick ${esc(t.label)} get a copy with one click. Saving again replaces the pack; shops that already used it keep their copy.</div>
-            ${myQts.length ? `<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><select id="mq-trade-e-src" style="${inp};width:auto!important;min-width:200px;max-width:320px!important">${myQts.map(q => `<option value="${q.id}">${esc(q.name)}</option>`).join('')}</select><button type="button" class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqTradeSavePack('${t.id}')">${t.pack ? 'Replace starter pack' : 'Save as starter pack'}</button>${t.pack ? `<button type="button" class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqTradeSet('${t.id}', { pack: null, packFrom: '' }, 'Starter pack removed.')">Remove pack</button>` : ''}</div>` : '<div style="font-size:12px;color:#b45309">Add a quote type in this shop first (Business info → Estimator tabs).</div>'}
+            ${(() => {
+              const work = myQts.find(q => q.packEdit && q.trade === t.id);
+              const has = mqTradeHasPack(t);
+              if (work) return `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:9px;padding:10px 12px;font-size:12.5px;color:#14532d;line-height:1.5">
+                ✏️ Open in your shop as <strong>"${esc(work.name)}"</strong> — switched off on your widget, so customers never see it. Change it on <a href="#" onclick="event.preventDefault();mqQtOpenInRooms('${work.id}')" style="color:#1d4ed8;font-weight:600">Project types</a>, <a href="#" onclick="event.preventDefault();mqNav('pricing', document.querySelector('.mq-nav-item[onclick*=&quot;mqNav(\'pricing\'&quot;]'))" style="color:#1d4ed8;font-weight:600">Pricing</a> and Specialty items, then come back here.
+                <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
+                  <button type="button" class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqTradeSavePack('${t.id}','${work.id}',true)">Save to pack &amp; remove from my shop</button>
+                  <button type="button" class="mq-btn mq-btn-sm" onclick="mqTradeSavePack('${t.id}','${work.id}',false)">Save to pack, keep editing</button>
+                  <button type="button" class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqTradeDiscardWork('${t.id}','${work.id}')">Discard changes</button>
+                </div></div>`;
+              const others = myQts.filter(q => !q.packEdit);
+              return `<div style="font-size:12px;color:#6b7280;line-height:1.5;margin-bottom:8px">${has ? `Shops that tick ${esc(t.label)} get a copy of this pack with one click. To change it, open it in your shop, edit, and save it back. Shops that already used it keep their copy.` : `Build the quote in your own shop (Business info → quote types, then its project types, Pricing steps and Specialty items), then save it here. Shops that tick ${esc(t.label)} get a copy with one click.`}</div>
+                ${has ? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px"><button type="button" class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqTradeOpenPack('${t.id}')">✏️ Open in my shop to edit</button><button type="button" class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqTradeRemovePack('${t.id}')">Remove pack</button></div>` : ''}
+                ${others.length ? `<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><span style="font-size:12px;color:#374151">${has ? 'Or replace it with:' : 'Save from:'}</span><select id="mq-trade-e-src" style="${inp};width:auto!important;min-width:200px;max-width:320px!important">${others.map(q => `<option value="${q.id}">${esc(q.name)}</option>`).join('')}</select><button type="button" class="mq-btn ${has ? '' : 'mq-btn-primary '}mq-btn-sm" onclick="mqTradeSavePack('${t.id}')">${has ? 'Replace starter pack' : 'Save as starter pack'}</button></div>` : (has ? '' : '<div style="font-size:12px;color:#b45309">Add a quote type in this shop first (Business info → Estimator tabs).</div>')}`;
+            })()}
           </div>`}
         </div>` : ''}
       </div>`;
@@ -11862,7 +11927,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const i = list.findIndex(x => x.id === id);
     const base = i >= 0 ? list[i] : Object.assign({}, MQ_TRADE_DEFAULTS.find(d => d.id === id) || { id });
     const next = Object.assign({}, base, change);
-    if (next.pack === null) delete next.pack;
+    Object.keys(next).forEach(k => { if (next[k] === null) delete next[k]; });
     if (i >= 0) list[i] = next; else list.push(next);
     await mqSaveTradeCatalog(list);
   }
@@ -11890,20 +11955,195 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   window.mqTradeDelete = async function(id) {
     const t = mqTradeEntries().find(x => x.id === id);
     if (!t || !confirm(`Delete "${t.label}"?\n\nShops that ticked it keep their quote types; it just disappears from the list.`)) return;
-    try { await mqSaveTradeCatalog((window._mqTradeCatalog || []).filter(x => x.id !== id)); showMsg('mq-templates-msg', `✓ "${t.label}" deleted.`); mqTradeAdminRender(); } catch(e) { mqTradeErr(e); }
+    try { await mqSaveTradeCatalog((window._mqTradeCatalog || []).filter(x => x.id !== id)); await mqLibDelete(t.packRec); showMsg('mq-templates-msg', `✓ "${t.label}" deleted.`); mqTradeAdminRender(); } catch(e) { mqTradeErr(e); }
   };
-  window.mqTradeSavePack = async function(id) {
-    const src = el('mq-trade-e-src')?.value;
+  // Saves a quote type from this shop as the trade's starter pack (its own
+  // row). From an edit copy: optionally removes the copy afterwards.
+  window.mqTradeSavePack = async function(id, srcId, removeAfter) {
+    const src = srcId || el('mq-trade-e-src')?.value;
     if (!src) return;
+    const t = mqTradeEntries().find(x => x.id === id);
+    if (!t) return;
+    if (!srcId && mqTradeHasPack(t) && !confirm(`Replace ${t.label}'s starter pack with this quote?\n\nShops that already used the old one keep their copy.`)) return;
     showMsg('mq-templates-msg', 'Saving starter pack…');
     try {
       const pack = await mqTradeSnapshot(src);
       if (!(pack.cats.length || pack.specs.length || pack.qt.countertops)) { showMsg('mq-templates-msg', `"${pack.qt.name}" has nothing priced yet — give it a Pricing step or specialty item first.`, 'error'); return; }
-      await mqTradeUpsert(id, { pack, packFrom: pack.qt.name, packAt: new Date().toISOString().slice(0, 10) });
-      showMsg('mq-templates-msg', `✓ Starter pack saved from "${pack.qt.name}": ${mqTradePackSummary(pack)}.`);
+      const packRec = await mqLibSave('pack', id, pack, t.packRec);
+      const packSum = { rooms: pack.rooms.length, cats: pack.cats.length, items: pack.items.length, specs: pack.specs.length, qt: { name: pack.qt.name } };
+      await mqTradeUpsert(id, { pack: null, packRec, packSum, packFrom: pack.qt.name, packAt: new Date().toISOString().slice(0, 10) });
+      if (removeAfter) await mqQtPurge(src);
+      showMsg('mq-templates-msg', `✓ Starter pack saved: ${mqTradePackSummary(pack)}.${removeAfter ? ' The copy was removed from your shop.' : ''}`);
       mqTradeAdminRender();
     } catch(e) { mqTradeErr(e); }
   };
+  window.mqTradeOpenPack = async function(id) {
+    const t = mqTradeEntries().find(x => x.id === id);
+    if (!t) return;
+    await mqApplyTradePack(t, { edit: true });
+  };
+  window.mqTradeDiscardWork = async function(id, qtId) {
+    if (!confirm('Remove the copy from your shop without saving? The starter pack stays as it was.')) return;
+    try { await mqQtPurge(qtId); showMsg('mq-templates-msg', '✓ Copy removed. The starter pack is unchanged.'); mqTradeAdminRender(); }
+    catch(e) { showMsg('mq-templates-msg', 'Error removing it.', 'error'); }
+  };
+  window.mqTradeRemovePack = async function(id) {
+    const t = mqTradeEntries().find(x => x.id === id);
+    if (!t || !confirm(`Remove ${t.label}'s starter pack?\n\nShops that tick it will get an empty quote instead. Shops that already used it keep their copy.`)) return;
+    try { await mqLibDelete(t.packRec); await mqTradeUpsert(id, { pack: null, packRec: null, packSum: null, packFrom: null, packAt: null }); showMsg('mq-templates-msg', '✓ Starter pack removed.'); mqTradeAdminRender(); }
+    catch(e) { mqTradeErr(e); }
+  };
+  // Older packs saved inside the catalog itself move to their own rows the
+  // first time the admin opens Templates (frees the shared field).
+  async function mqTradeMovePacks() {
+    if (window._mqTradePacksMoved) return;
+    window._mqTradePacksMoved = true;
+    const list = (window._mqTradeCatalog || []).filter(t => t && t.pack);
+    for (const t of list) {
+      try {
+        const packRec = await mqLibSave('pack', t.id, t.pack, t.packRec);
+        const p = t.pack;
+        await mqTradeUpsert(t.id, { pack: null, packRec, packSum: { rooms: (p.rooms || []).length, cats: (p.cats || []).length, items: (p.items || []).length, specs: (p.specs || []).length, qt: { name: (p.qt && p.qt.name) || '' } } });
+      } catch(e) { console.warn('pack move failed', t.id, e); window._mqTradePacksMoved = false; }
+    }
+  }
+  // Removes one of this shop's quote types completely: its project types,
+  // its steps and their options, specialty items only used by it, and their
+  // saved photos/settings. (Admin: clearing a starter-pack edit copy.)
+  async function mqQtPurge(qtId) {
+    const shopRec = window._mqShopRecord;
+    if (!shopRec) return;
+    const f = shopRec.fields;
+    const roomIds = new Set(mqJsonObj(f['Room types'], []).filter(r => r && r.forQt === qtId).map(r => r.id));
+    const cats = mqJsonObj(f['Custom categories'], []);
+    const catIds = new Set((Array.isArray(cats) ? cats : []).filter(c => c && c.qt === qtId).map(c => c.id));
+    const tok = f['Shop token'];
+    const li = await atGet(CONFIG.LINE_ITEMS_TABLE, `FIND("${tok}", ARRAYJOIN({Shop token (lookup)}))`);
+    for (const r of li.filter(r => catIds.has(r.fields['Category']))) await atDelete(CONFIG.LINE_ITEMS_TABLE, r.id);
+    const specGone = new Set();
+    if (roomIds.size) {
+      const sp = await atGet(CONFIG.SPECIALTY_TABLE, `FIND("${tok}", ARRAYJOIN({Shop token (lookup)}))`);
+      for (const r of sp) {
+        const ids = mqRoomIdsOf(r.fields['Visible rooms']);
+        if (!ids.some(id => roomIds.has(id))) continue;
+        const rest = ids.filter(id => !roomIds.has(id));
+        if (rest.length) await atUpdate(CONFIG.SPECIALTY_TABLE, r.id, { 'Visible rooms': JSON.stringify(rest) });
+        else { await atDelete(CONFIG.SPECIALTY_TABLE, r.id); specGone.add(r.id); }
+      }
+    }
+    const gone = k => [...catIds].some(c => k.startsWith('li_' + c + '_')) || [...specGone].some(sid => k === 'spec_' + sid || k.startsWith('spec_' + sid + '_v'));
+    const upd = {};
+    ['Photos', 'Hidden', 'Featured items'].forEach(k => { const m = mqJsonObj(f[k], {}); let ch = false; Object.keys(m).forEach(x => { if (gone(x)) { delete m[x]; ch = true; } }); if (ch) upd[k] = JSON.stringify(m); });
+    ['Category rooms', 'Category picker labels'].forEach(k => { const m = mqJsonObj(f[k], {}); let ch = false; [...catIds].forEach(c => { if (c in m) { delete m[c]; ch = true; } }); if (ch) upd[k] = JSON.stringify(m); });
+    upd['Custom categories'] = JSON.stringify((Array.isArray(cats) ? cats : []).filter(c => !(c && catIds.has(c.id))));
+    let rooms = window._mqRooms || mqJsonObj(f['Room types'], []);
+    rooms = (rooms || []).filter(r => !(r && roomIds.has(r.id)));
+    upd['Room types'] = JSON.stringify(rooms);
+    await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, upd);
+    Object.assign(f, upd);
+    await mqSaveTabsCfg({ quoteTypes: mqQuoteTypesOf(f).filter(q => q.id !== qtId) });
+    if (window._mqRooms) { window._mqRooms = rooms; try { renderRoomsList(); } catch(e) {} }
+    window._mqSpecItemsList = null; window._mqSpecRecords = null;
+    if (window._mqLastFetchTimes) Object.keys(window._mqLastFetchTimes).forEach(k => { window._mqLastFetchTimes[k] = 0; });
+    mqRenderQuoteTypes();
+  }
+  // ── Premade steps (Oct 29) ──
+  // A step = one custom pricing category with its options, photos and
+  // settings, saved from the admin's shop. Shops add a copy into any of
+  // their quotes from Pricing (pricing-helper-v2.js: mqccStepLibOpen).
+  const MQ_STEP_ITEM_FIELDS = ['Name', 'Description', 'Rate', 'Active', 'Sort order', 'Custom pricing', 'Group name', 'Group description', 'Group sort order'];
+  async function mqStepSnapshot(cid) {
+    const f = window._mqShopRecord.fields;
+    const cats = mqJsonObj(f['Custom categories'], []);
+    const c = (Array.isArray(cats) ? cats : []).find(x => x && x.id === cid);
+    if (!c) throw new Error('no step');
+    const tok = f['Shop token'];
+    const li = await atGet(CONFIG.LINE_ITEMS_TABLE, `FIND("${tok}", ARRAYJOIN({Shop token (lookup)}))`);
+    const items = li.filter(r => r.fields['Category'] === cid).map(r => ({ id: r.id, fields: mqPick(r.fields, MQ_STEP_ITEM_FIELDS) }));
+    const sub = k => { const m = mqJsonObj(f[k], {}); const o = {}; Object.keys(m).forEach(x => { if (x.startsWith('li_' + cid + '_')) o[x] = m[x]; }); return o; };
+    const q = c.qt ? mqQuoteTypesOf(f).find(x => x.id === c.qt) : null;
+    const usedMeas = new Set(items.map(it => mqJsonObj(it.fields['Custom pricing'], {})).filter(x => x.how === 'meas' && x.meas).map(x => x.meas));
+    const measures = (q && Array.isArray(q.measures) ? q.measures : []).filter(m => usedMeas.has(m.id));
+    return {
+      cid, cat: { name: c.name, description: c.description || '', answer: c.answer === 'one' ? 'one' : 'any', required: !!c.required, proOnly: !!c.proOnly },
+      items, photos: sub('Photos'), hidden: sub('Hidden'), featured: sub('Featured items'),
+      pickerLabel: mqJsonObj(f['Category picker labels'], {})[cid] || '', measures,
+    };
+  }
+  window.mqStepLibAdminRender = async function() {
+    const box = document.getElementById('mq-steplib-admin');
+    if (!box) return;
+    const esc = mqEscHtml;
+    let rows = [];
+    try { rows = await mqLibRows('step'); } catch(e) { box.innerHTML = '<div style="color:#b91c1c;font-size:13px">Could not load premade steps.</div>'; return; }
+    window._mqStepLibAdmin = rows;
+    const f = (window._mqShopRecord || {}).fields || {};
+    const cats = (mqJsonObj(f['Custom categories'], []) || []).filter(c => c && c.id);
+    const qts = mqQuoteTypesOf(f);
+    const qtName = id => { const q = qts.find(x => x.id === id); return q ? q.name : (id ? 'a deleted quote' : 'Cabinets'); };
+    const trades = [...MQ_BIZ_FIXED, ...mqTradeEntries().filter(t => t.id !== 'other')];
+    const tradeOpts = sel => `<option value="">Any business</option>` + trades.map(t => `<option value="${t.id}"${sel === t.id ? ' selected' : ''}>${esc(t.label)}</option>`).join('');
+    const inp = 'font-size:13px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit';
+    rows.sort((a, b) => String(a.body.name || '').localeCompare(String(b.body.name || '')));
+    box.innerHTML = (rows.length ? rows.map(r => {
+      const b = r.body, st = b.step || {};
+      const srcOk = cats.some(c => c.id === st.cid);
+      const names = (st.items || []).map(it => it.fields && it.fields.Name).filter(Boolean);
+      return `<div style="border:1px solid #e5e7eb;border-radius:10px;padding:10px 12px;margin-bottom:8px">
+        <div style="display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap">
+          <div style="flex:1;min-width:200px">
+            <div style="font-size:13.5px;font-weight:700;color:#111">${esc(b.name || 'Step')} <span style="font-size:11.5px;font-weight:600;color:#8a6510;background:#fbf3df;border-radius:999px;padding:2px 8px;margin-left:4px">${esc(b.tradeLabel || 'Any business')}</span></div>
+            <div style="font-size:12px;color:#6b7280;margin-top:2px">${names.length} option${names.length === 1 ? '' : 's'}${names.length ? ': ' + esc(names.slice(0, 5).join(', ')) + (names.length > 5 ? '…' : '') : ''}${(st.measures || []).length ? ' · uses ' + esc(st.measures.map(m => m.label).join(', ')) : ''}</div>
+            <div style="font-size:11.5px;color:#9ca3af;margin-top:2px">Saved ${esc(b.at || '')}${srcOk ? ` from your step “${esc((cats.find(c => c.id === st.cid) || {}).name || '')}”` : ' (its original step is no longer in your shop)'}</div>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+            <select onchange="mqStepLibSetTrade('${r.id}', this.value)" style="${inp};font-size:12px;padding:5px 8px" title="Shown first to shops that tick this">${tradeOpts(b.trade || '')}</select>
+            ${srcOk ? `<button type="button" class="mq-btn mq-btn-sm" onclick="mqStepLibSave('${st.cid}','${r.id}')">Update from my shop</button>` : ''}
+            <button type="button" class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqStepLibRemove('${r.id}')">Remove</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('') : '<div style="font-size:12.5px;color:#9ca3af;margin-bottom:10px">No premade steps yet.</div>') + `
+      <div style="border-top:1px dashed #e5e7eb;padding-top:12px;margin-top:6px;display:grid;gap:8px;max-width:620px">
+        <div style="font-size:13px;font-weight:700;color:#111">+ Save a step from this shop</div>
+        ${cats.length ? `<select id="mq-steplib-src" style="${inp}">${cats.map(c => `<option value="${c.id}">${esc(c.name)} — ${esc(qtName(c.qt))}</option>`).join('')}</select>
+        <label style="font-size:12px;font-weight:600;color:#374151">Best for (shown first to shops that do this)<br><select id="mq-steplib-trade" style="${inp};margin-top:3px">${tradeOpts('')}</select></label>
+        <div><button type="button" class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqStepLibSave(document.getElementById('mq-steplib-src').value)">Save as premade step</button></div>`
+        : '<div style="font-size:12px;color:#b45309">Make a custom pricing category on the Pricing tab first.</div>'}
+      </div>`;
+  };
+  window.mqStepLibSave = async function(cid, recId) {
+    if (!cid) return;
+    const existing = recId ? (window._mqStepLibAdmin || []).find(r => r.id === recId) : (window._mqStepLibAdmin || []).find(r => r.body && r.body.step && r.body.step.cid === cid);
+    if (!recId && existing && !confirm(`“${existing.body.name}” is already saved from this step. Update it?`)) return;
+    showMsg('mq-templates-msg', 'Saving premade step…');
+    try {
+      const step = await mqStepSnapshot(cid);
+      if (!step.items.length) { showMsg('mq-templates-msg', `“${step.cat.name}” has no options yet — add some on the Pricing tab first.`, 'error'); return; }
+      const tradeId = existing ? (existing.body.trade || '') : (el('mq-steplib-trade')?.value || '');
+      const tr = [...MQ_BIZ_FIXED, ...mqTradeEntries()].find(t => t.id === tradeId);
+      const key = existing ? existing.key : 'st_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+      const body = { name: step.cat.name, desc: step.cat.description, trade: tradeId, tradeLabel: tr ? tr.label : '', at: new Date().toISOString().slice(0, 10), step };
+      await mqLibSave('step', key, body, existing && existing.id);
+      showMsg('mq-templates-msg', `✓ “${step.cat.name}” saved with ${step.items.length} option${step.items.length === 1 ? '' : 's'}. Shops can add it from Pricing → 🧩 Premade steps.`);
+      mqStepLibAdminRender();
+    } catch(e) { showMsg('mq-templates-msg', e && e.message === 'full' ? 'That step is too big to save (too many options or photos).' : 'Error saving.', 'error'); }
+  };
+  window.mqStepLibSetTrade = async function(recId, tradeId) {
+    const r = (window._mqStepLibAdmin || []).find(x => x.id === recId);
+    if (!r) return;
+    const tr = [...MQ_BIZ_FIXED, ...mqTradeEntries()].find(t => t.id === tradeId);
+    try { await mqLibSave('step', r.key, Object.assign({}, r.body, { trade: tradeId, tradeLabel: tr ? tr.label : '' }), r.id); showMsg('mq-templates-msg', '✓ Saved.'); mqStepLibAdminRender(); }
+    catch(e) { showMsg('mq-templates-msg', 'Error saving.', 'error'); }
+  };
+  window.mqStepLibRemove = async function(recId) {
+    const r = (window._mqStepLibAdmin || []).find(x => x.id === recId);
+    if (!r || !confirm(`Remove “${r.body.name}” from premade steps?\n\nShops that already added it keep their copy.`)) return;
+    try { await mqLibDelete(recId); showMsg('mq-templates-msg', '✓ Removed.'); mqStepLibAdminRender(); }
+    catch(e) { showMsg('mq-templates-msg', 'Error removing it.', 'error'); }
+  };
+  // Pricing tab uses these to sort steps for this shop.
+  window.mqBizSnapshot = function() { const f = (window._mqShopRecord || {}).fields; return f ? mqBizOf(f) : null; };
   // "+ Add a Painting quote" -- same as the Estimator tabs "+ Add a quote
   // type" (one starter project type with the same name), with the trade's icon.
   window.mqBizAddQt = async function(tradeId) {
@@ -11915,7 +12155,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const box = el('mq-qt-add-open'); if (box) box.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
-    if (t.pack) { await mqApplyTradePack(t); return; }
+    if (mqTradeHasPack(t)) { await mqApplyTradePack(t); return; }
     el('mq-qt-add-name').value = t.qtName;
     el('mq-qt-add-pro').checked = false;
     window._mqQtAddIcon = t.icon;
@@ -18700,6 +18940,7 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
       }
       if (window.mqImgLibAdminRender) window.mqImgLibAdminRender();
       if (window.mqTradeAdminRender) window.mqTradeAdminRender();
+      if (window.mqStepLibAdminRender) window.mqStepLibAdminRender();
     }
     if (page === 'pricing') {
       const helperContainer = document.getElementById('mq-pricing-helper-v2');

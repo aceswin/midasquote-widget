@@ -6729,7 +6729,7 @@ window.mqphGoToWizard = function() {
             <div class="mqph-cat-title">✨ Custom pricing categories</div>
             <div style="font-size:12px;color:#6b7280;margin-top:6px;line-height:1.55">${mqphComputeTabScope().countertopsOnly ? 'Make your own priced steps — prep work, site access, delivery, hourly work. Each category is its own step in one of your quote types' : `Make your own priced steps for anything not covered above — finished ends, site access, delivery, hourly work. Each category is its own step on your widget (Cabinets and Both tabs)${mqccQts().length ? ', or in one of your own quote types' : ''}`}. Photos, groups and which project types each option shows for are set in <strong>My Products</strong>, same as everything else.</div>
           </div>
-          <button class="mqph-btn mqph-btn-primary mqph-btn-sm" onclick="mqccOpenCat(null)">+ New category</button>
+          <span style="display:inline-flex;gap:8px;flex-wrap:wrap"><span id="mqcc-steplib-btn">${mqccStepLibBtn()}</span><button class="mqph-btn mqph-btn-primary mqph-btn-sm" onclick="mqccOpenCat(null)">+ New category</button></span>
         </div>
         ${catBlocks}
         <div id="mqcc-msg" class="mqph-msg" style="margin-top:10px"></div>
@@ -7378,6 +7378,172 @@ window.mqphGoToWizard = function() {
       mqccRerender(newId);
       mqccMsg(`✓ Duplicated as "${name}" with ${items.length} option${items.length === 1 ? '' : 's'}.`);
     } catch(e) { alert('Could not duplicate: ' + e.message); }
+  };
+  // ── Premade steps (Oct 29): MidasQuote's ready-made steps (saved on the
+  // admin Templates page) -- a shop copies one into any of its quotes.
+  function mqccStepLibBtn() {
+    if (!Array.isArray(window._mqStepLib)) {
+      if (!window._mqStepLibLoading && typeof window.mqLibRows === 'function') {
+        window._mqStepLibLoading = true;
+        window.mqLibRows('step').then(rows => { window._mqStepLib = rows || []; }).catch(() => { window._mqStepLib = []; }).then(() => {
+          window._mqStepLibLoading = false;
+          const w = document.getElementById('mqcc-steplib-btn'); if (w) w.innerHTML = mqccStepLibBtn();
+        });
+      }
+      return '';
+    }
+    return window._mqStepLib.length ? `<button class="mqph-btn mqph-btn-sm" onclick="mqccStepLibOpen()">🧩 Premade steps</button>` : '';
+  }
+  function mqccStepTargets() {
+    const out = [];
+    if (!mqphComputeTabScope().countertopsOnly) out.push({ id: '', name: 'Cabinets (Cabinets only + Cabinets & countertops)' });
+    mqccQts().forEach(q => out.push({ id: q.id, name: q.name + (q.on === false ? ' (turned off)' : '') }));
+    return out;
+  }
+  function mqccStepSorted() {
+    const biz = typeof window.mqBizSnapshot === 'function' ? window.mqBizSnapshot() : null;
+    const mine = new Set([...(biz && biz.trades) || [], biz && biz.cab ? 'cabinetry' : '', biz && biz.ct ? 'countertops' : ''].filter(Boolean));
+    return (window._mqStepLib || []).slice().sort((a, b) => {
+      const ra = a.body.trade ? (mine.has(a.body.trade) ? 0 : 2) : 1, rb = b.body.trade ? (mine.has(b.body.trade) ? 0 : 2) : 1;
+      return ra - rb || String(a.body.name || '').localeCompare(String(b.body.name || ''));
+    });
+  }
+  window.mqccStepLibOpen = function(qt) {
+    let ov = document.getElementById('mqcc-steplib-overlay');
+    if (!ov) {
+      ov = document.createElement('div');
+      ov.id = 'mqcc-steplib-overlay';
+      ov.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(17,17,17,.55);z-index:99999;align-items:flex-start;justify-content:center;padding:4vh 14px;overflow-y:auto';
+      ov.addEventListener('click', e => { if (e.target === ov) ov.style.display = 'none'; });
+      document.body.appendChild(ov);
+    }
+    const targets = mqccStepTargets();
+    if (!targets.length) { alert('Add a quote type first (Business info).'); return; }
+    const sel = qt !== undefined && targets.some(t => t.id === qt) ? qt : (window._mqccStepTarget !== undefined && targets.some(t => t.id === window._mqccStepTarget) ? window._mqccStepTarget : targets[0].id);
+    window._mqccStepTarget = sel;
+    const steps = mqccStepSorted();
+    const card = r => {
+      const b = r.body, st = b.step || {};
+      const needsMeas = (st.measures || []).length > 0;
+      const blocked = needsMeas && !sel;
+      const opts = (st.items || []).slice().sort((x, y) => (x.fields['Sort order'] || 0) - (y.fields['Sort order'] || 0)).slice(0, 6).map(it => `<span style="display:inline-block;font-size:11.5px;background:#f3f4f6;border-radius:999px;padding:3px 9px;margin:0 4px 4px 0;color:#374151">${mqccEsc(it.fields.Name || '')}${' · ' + String(mqccPriceText({ fields: it.fields })).replace(/<span[^>]*>.*?<\/span>/g, '').replace(/ of a removed category$/, '').trim()}</span>`).join('');
+      return `<div style="border:1px solid #e5e7eb;border-radius:12px;padding:12px 14px;margin-bottom:10px;background:#fff">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap">
+          <div style="min-width:0;flex:1">
+            <div style="font-size:14px;font-weight:700;color:#111">${mqccEsc(b.name || 'Step')}${b.tradeLabel ? ` <span style="font-size:11px;font-weight:600;color:#8a6510;background:#fbf3df;border-radius:999px;padding:2px 8px;margin-left:4px">${mqccEsc(b.tradeLabel)}</span>` : ''}</div>
+            ${b.desc ? `<div style="font-size:12.5px;color:#6b7280;margin-top:3px;line-height:1.45">${mqccEsc(b.desc)}</div>` : ''}
+            <div style="margin-top:8px">${opts}${(st.items || []).length > 6 ? `<span style="font-size:11.5px;color:#6b7280">+${st.items.length - 6} more</span>` : ''}</div>
+            ${needsMeas ? `<div style="font-size:11.5px;color:#6b7280;margin-top:2px">Priced from the measurement${st.measures.length === 1 ? '' : 's'} ${mqccEsc(st.measures.map(m => '“' + m.label + '”').join(', '))} — added to the quote for you if it doesn't have ${st.measures.length === 1 ? 'it' : 'them'}.</div>` : ''}
+          </div>
+          <button class="mqph-btn mqph-btn-primary mqph-btn-sm" ${blocked ? 'disabled title="Needs one of your own quote types (it uses measurements)"' : ''} onclick="mqccStepAdd('${r.id}')">${blocked ? 'Quote types only' : '+ Add'}</button>
+        </div>
+      </div>`;
+    };
+    ov.innerHTML = `<div style="background:#f9fafb;border-radius:16px;width:100%;max-width:720px;box-shadow:0 20px 60px rgba(0,0,0,.25);overflow:hidden">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:#fff;border-bottom:1px solid #e5e7eb">
+        <div style="font-size:16px;font-weight:800;color:#111">🧩 Premade steps</div>
+        <button onclick="document.getElementById('mqcc-steplib-overlay').style.display='none'" style="background:none;border:0;font-size:22px;line-height:1;color:#6b7280;cursor:pointer" aria-label="Close">×</button>
+      </div>
+      <div style="padding:14px 18px">
+        <div style="font-size:12.5px;color:#4b5563;line-height:1.5;margin-bottom:10px">Ready-made steps from MidasQuote, already priced. Adding one copies it into your quote — then change the names and prices to match yours, like any step you made yourself.</div>
+        <label style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;font-weight:700;color:#111;margin-bottom:12px">Add to:
+          <select id="mqcc-steplib-target" onchange="mqccStepLibOpen(this.value)" style="font-size:13px;padding:7px 10px;border:1px solid #d1d5db;border-radius:8px;font-family:inherit;min-width:240px">${targets.map(t => `<option value="${mqccEsc(t.id)}"${t.id === sel ? ' selected' : ''}>${mqccEsc(t.name)}</option>`).join('')}</select>
+        </label>
+        <div id="mqcc-steplib-msg" style="font-size:12.5px;margin-bottom:8px"></div>
+        ${steps.length ? steps.map(card).join('') : '<div style="font-size:13px;color:#6b7280">No premade steps yet.</div>'}
+      </div>
+    </div>`;
+    ov.style.display = 'flex';
+  };
+  window.mqccStepAdd = async function(recId) {
+    const r = (window._mqStepLib || []).find(x => x.id === recId);
+    if (!r) return;
+    const st = r.body.step || {};
+    const qt = window._mqccStepTarget || '';
+    const msg = (t, err) => { const m = document.getElementById('mqcc-steplib-msg'); if (m) { m.style.color = err ? '#b91c1c' : '#15803d'; m.textContent = t; } };
+    if (!qt && (st.measures || []).length) { msg('That step uses measurements, so it can only go in one of your own quote types.', true); return; }
+    msg('Adding…');
+    const rid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    const newCid = 'cc_' + rid();
+    try {
+      // Measurements: reuse the quote's own when the label + kind match,
+      // otherwise add them to the quote type.
+      const measMap = {};
+      if (qt && (st.measures || []).length) {
+        const f = mqccShopFields();
+        let cfgAll = {}; try { cfgAll = JSON.parse(f['Hidden widget tabs'] || '{}') || {}; } catch(e) { cfgAll = {}; }
+        const q = (cfgAll.quoteTypes || []).find(x => x && x.id === qt);
+        if (q) {
+          q.measures = Array.isArray(q.measures) ? q.measures : [];
+          let changed = false;
+          st.measures.forEach(m => {
+            const same = q.measures.find(x => x && String(x.label || '').trim().toLowerCase() === String(m.label || '').trim().toLowerCase() && x.type === m.type);
+            if (same) measMap[m.id] = same.id;
+            else { const nm = Object.assign({}, m, { id: 'm_' + rid() }); q.measures.push(nm); measMap[m.id] = nm.id; changed = true; }
+          });
+          if (changed) {
+            const json = JSON.stringify(cfgAll);
+            await atUpdate(SHOPS_TABLE, shopRecord.id, { 'Hidden widget tabs': json });
+            shopRecord.fields['Hidden widget tabs'] = json;
+            if (window._mqShopRecord && window._mqShopRecord.fields) window._mqShopRecord.fields['Hidden widget tabs'] = json;
+          }
+        }
+      }
+      // Options (new records), then links between them.
+      const idMap = {}, made = [];
+      for (const it of (st.items || [])) {
+        const fields = Object.assign({}, it.fields, { shop: [shopRecord._recordId], Category: newCid });
+        delete fields['Visible rooms'];
+        const rec = await atCreate(LINE_ITEMS_TABLE, fields);
+        if (rec && rec.id) { idMap[it.id] = rec.id; const row = { id: rec.id, fields: { ...(rec.fields || {}), ...fields } }; lineItems.push(row); made.push(row); }
+      }
+      for (const row of made) {
+        const cfg = mqccCfg(row);
+        let ch = false;
+        if (cfg.showIf) { cfg.showIf = idMap[cfg.showIf] || ''; if (!cfg.showIf) delete cfg.showIf; ch = true; }
+        if (cfg.src) { if (idMap[cfg.src]) cfg.src = idMap[cfg.src]; else delete cfg.src; ch = true; }
+        if (cfg.pctCc) { if (cfg.pctCc === st.cid) cfg.pctCc = newCid; else delete cfg.pctCc; ch = true; }
+        if (cfg.meas) { cfg.meas = measMap[cfg.meas] || cfg.meas; ch = true; }
+        if (qt && cfg.tie) { delete cfg.tie; ch = true; }
+        if (ch) { const json = JSON.stringify(cfg); await atUpdate(LINE_ITEMS_TABLE, row.id, { 'Custom pricing': json }); row.fields['Custom pricing'] = json; }
+      }
+      // The step itself, at the end of that quote's steps.
+      const cats = mqccCats();
+      const names = new Set(cats.filter(c => (c.qt || '') === qt).map(c => (c.name || '').trim().toLowerCase()));
+      let name = st.cat && st.cat.name || r.body.name || 'Step', n = 2;
+      const base = name;
+      while (names.has(name.toLowerCase())) name = `${base} ${n++}`;
+      const places = mqccPlaceList(null, qt);
+      const start = qt ? 'si' : 'specialty';
+      let after = start;
+      for (let k = places.findIndex(x => x[0] === start) + 1; k > 0 && k < places.length && /^cc:/.test(places[k][0]); k++) after = places[k][0];
+      const cat = Object.assign({ id: newCid }, st.cat || {}, { name, after });
+      if (qt) cat.qt = qt;
+      const j = cats.findIndex(c => (c.after || 'specialty') === after && (c.qt || '') === qt);
+      if (j >= 0) cats.splice(j, 0, cat); else cats.push(cat);
+      await mqccSaveCats(cats);
+      // Photos / hidden / featured + "Pick a collection" label.
+      const f = mqccShopFields();
+      const upd = {};
+      const pre = 'li_' + st.cid + '_';
+      [['Photos', st.photos], ['Hidden', st.hidden], ['Featured items', st.featured]].forEach(([k, src]) => {
+        const keys = Object.keys(src || {}).filter(x => x.startsWith(pre));
+        if (!keys.length) return;
+        let m = {}; try { m = JSON.parse(f[k] || '{}') || {}; } catch(e) { m = {}; }
+        keys.forEach(x => { m['li_' + newCid + '_' + x.slice(pre.length)] = src[x]; });
+        upd[k] = JSON.stringify(m);
+      });
+      if (st.pickerLabel) { let m = {}; try { m = JSON.parse(f['Category picker labels'] || '{}') || {}; } catch(e) { m = {}; } m[newCid] = st.pickerLabel; upd['Category picker labels'] = JSON.stringify(m); }
+      if (Object.keys(upd).length) {
+        await atUpdate(SHOPS_TABLE, shopRecord.id, upd);
+        Object.entries(upd).forEach(([k, v]) => { shopRecord.fields[k] = v; if (window._mqShopRecord && window._mqShopRecord.fields) window._mqShopRecord.fields[k] = v; });
+      }
+      if (window._mqLastFetchTimes) window._mqLastFetchTimes['products'] = 0;
+      document.getElementById('mqcc-steplib-overlay').style.display = 'none';
+      mqccRerender(newCid);
+      const where = qt ? mqccQtName(qt) : 'your Cabinets quotes';
+      mqccMsg(`✓ “${name}” added to ${where} with ${made.length} option${made.length === 1 ? '' : 's'}. Check the prices — they're starting points. Pick its project types in My Products.`);
+    } catch(e) { msg('Could not add it: ' + e.message, true); }
   };
   window.mqccDeleteItem = async function(id) {
     const r = lineItems.find(x => x.id === id);
