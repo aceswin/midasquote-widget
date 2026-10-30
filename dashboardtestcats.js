@@ -1672,7 +1672,7 @@ window.logoutMember = async function () {
             <div class="mq-card" id="mq-biz-card">
               <div class="mq-card-title" style="cursor:default">🧭 What does your business do?</div>
               <div id="mq-shopsec-biz-body">
-              <div class="mq-hint" style="display:block;margin-bottom:12px">Tick everything you quote. Cabinetry and Countertops turn our built-in quotes (and their pricing sections) on or off. For any other trade, you set up its own quote type.</div>
+              <div class="mq-hint" style="display:block;margin-bottom:12px">Pick your industry, then tick everything you quote. Cabinetry and Countertops turn our built-in quotes (and their pricing sections) on or off. For any other trade, you set up its own quote type.</div>
               <div id="mq-biz-chips" style="display:flex;flex-wrap:wrap;gap:8px"></div>
               <div id="mq-biz-trades" style="margin-top:12px"></div>
               </div>
@@ -3716,7 +3716,7 @@ window.logoutMember = async function () {
                       <p class="mq-studio-tip">Your shop name and marketing link are automatically added. Upload a project photo for the most effective result.</p>
                     </div>
                   </div>
-                  <div class="mq-studio-preview-wrap"><div class="mq-studio-format-bar" role="group" aria-label="Design canvas size"><label for="mq-studio-quick-size">Canvas format</label><select id="mq-studio-quick-size"><option value="square">Square post · 1080 × 1080</option><option value="portrait">Portrait feed · 1080 × 1350</option><option value="story">Story / Reel · 1080 × 1920</option><option value="poster">Poster · 1080 × 1620</option><option value="landscape">Yard sign · 1620 × 1080</option></select><span id="mq-studio-format-dimensions">1080 × 1080 px</span><button type="button" id="mq-studio-quick-download" class="mq-btn mq-btn-primary" style="padding:12px 20px!important;min-height:44px!important;background:#211d23!important;color:#fff!important;border-radius:10px!important;font-weight:700!important;white-space:nowrap">↓ Download PNG</button></div><div class="mq-studio-quick-colors" aria-label="Design colours"><span>DESIGN COLOURS</span><label>Background <input type="color" id="mq-studio-quick-brand" value="#56314b" title="Main design colour"></label><label>Photo frame <input type="color" id="mq-studio-quick-surface" value="#e9d9c8" title="Secondary panels and photo framing"></label><label>Accent <input type="color" id="mq-studio-quick-accent" value="#d9be97" title="Accent detail"></label><button type="button" id="mq-studio-reset-colors" class="mq-studio-muted-btn" title="Restore the shop's starting colours">Reset colours</button></div><div class="mq-studio-preview-toolbar"><button type="button" id="mq-studio-photo-quick" class="mq-studio-muted-btn">📷 Add / replace project photo</button><button type="button" id="mq-studio-photo-remove-quick" class="mq-studio-muted-btn" title="Remove the template project photo">✕ Remove project photo</button><button type="button" id="mq-studio-direct-image-btn" class="mq-studio-muted-btn">＋ Add movable image</button><button type="button" id="mq-studio-delete-selected" class="mq-studio-muted-btn" title="Delete selected text, button, shape, or image">✕ Delete selected</button><input id="mq-studio-direct-image-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none"><input id="mq-studio-auto-photo-target" type="file" accept="image/png,image/jpeg,image/webp,image/gif" style="display:none"></div><div class="mq-studio-preview-tip">Starter photos are examples from MidasQuote project types. Click an image and choose Replace to use your own work. Drag items or use corner handles to resize.</div><div id="mq-studio-hoverbar" class="mq-studio-hoverbar"><button type="button" data-action="edit">✎ Edit</button><button type="button" data-action="duplicate">⧉ Duplicate</button><button type="button" data-action="replace">▧ Replace</button><button type="button" data-action="delete">✕ Delete</button></div><canvas id="mq-studio-canvas" width="1080" height="1080" aria-label="Live marketing graphic preview"></canvas><div class="mq-history-toolbar" role="group" aria-label="Design history and saved draft"><button type="button" id="mq-studio-undo" disabled title="Undo (Ctrl+Z)">↶ Undo</button><button type="button" id="mq-studio-redo" disabled title="Redo (Ctrl+Y / Ctrl+Shift+Z)">↷ Redo</button><button type="button" id="mq-studio-quick-save" title="Save this design in this browser">Save draft</button><button type="button" id="mq-studio-quick-load" title="Load the saved design for this template">Load draft</button><span class="mq-history-status" id="mq-studio-history-status" aria-live="polite">Ready</span></div><p>Live preview · The downloaded image exports at full resolution</p></div>
+                  <div class="mq-studio-preview-wrap"><div class="mq-studio-format-bar" role="group" aria-label="Design canvas size"><label for="mq-studio-quick-size">Canvas format</label><select id="mq-studio-quick-size"><option value="square">Square post · 1080 × 1080</option><option value="portrait">Portrait feed · 1080 × 1350</option><option value="story">Story / Reel · 1080 × 1920</option><option value="poster">Poster · 1080 × 1620</option><option value="landscape">Yard sign · 1620 × 1080</option></select><span id="mq-studio-format-dimensions">1080 × 1080 px</span><button type="button" id="mq-studio-quick-download" class="mq-btn mq-btn-primary" style="padding:12px 20px!important;min-height:44px!important;background:#211d23!important;color:#fff!important;border-radius:10px!important;font-weight:700!important;white-space:nowrap">↓ Download PNG</button></div><div class="mq-studio-quick-colors" aria-label="Design colours"><span>DESIGN COLOURS</span><label>Background <input type="color" id="mq-studio-quick-brand" value="#56314b" title="Main design colour"></label><label>Photo frame <input type="color" id="mq-studio-quick-surface" value="#e9d9c8" title="Secondary panels and photo framing"></label><label>Accent <input type="color" id="mq-studio-quick-accent" value="#d9be97" title="Accent detail"></label><button type="button" id="mq-studio-reset-colors" class="mq-studio-muted-btn" title="Restore the shop's starting colours">Reset colours</button></div><div class="mq-studio-preview-toolbar"><button type="button" id="mq-studio-photo-quick" class="mq-studio-muted-btn">📷 Add / replace project photo</button><button type="button" id="mq-studio-photo-remove-quick" class="mq-studio-muted-btn" title="Remove the template project photo">✕ Remove project photo</button><button type="button" id="mq-studio-direct-image-btn" class="mq-studio-muted-btn">＋ Add movable image</button><button type="button" id="mq-studio-delete-selected" class="mq-studio-muted-btn" title="Delete selected text, button, shape, or image">✕ Delete selected</button><input id="mq-studio-direct-image-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none"><input id="mq-studio-auto-photo-target" type="file" accept="image/png,image/jpeg,image/webp,image/gif" style="display:none"></div><div class="mq-studio-preview-tip" data-mq-gen="Photos come from your own project types. Use &lt;strong&gt;Add / replace project photo&lt;/strong&gt; to show your own work. Drag items or use corner handles to resize.">Starter photos are examples from MidasQuote project types. Click an image and choose Replace to use your own work. Drag items or use corner handles to resize.</div><div id="mq-studio-hoverbar" class="mq-studio-hoverbar"><button type="button" data-action="edit">✎ Edit</button><button type="button" data-action="duplicate">⧉ Duplicate</button><button type="button" data-action="replace">▧ Replace</button><button type="button" data-action="delete">✕ Delete</button></div><canvas id="mq-studio-canvas" width="1080" height="1080" aria-label="Live marketing graphic preview"></canvas><div class="mq-history-toolbar" role="group" aria-label="Design history and saved draft"><button type="button" id="mq-studio-undo" disabled title="Undo (Ctrl+Z)">↶ Undo</button><button type="button" id="mq-studio-redo" disabled title="Redo (Ctrl+Y / Ctrl+Shift+Z)">↷ Redo</button><button type="button" id="mq-studio-quick-save" title="Save this design in this browser">Save draft</button><button type="button" id="mq-studio-quick-load" title="Load the saved design for this template">Load draft</button><span class="mq-history-status" id="mq-studio-history-status" aria-live="polite">Ready</span></div><p>Live preview · The downloaded image exports at full resolution</p></div>
                 </div>
               </div>
               <details class="mq-studio-legacy"><summary>Original marketing tools & specialty designers <span>⌄</span></summary><p>All your original marketing tools are still available below, including advanced poster controls, standalone QR codes, social captions, and printable materials.</p></details>
@@ -5169,6 +5169,20 @@ window.logoutMember = async function () {
     home: '<path d="M3.5 11L12 4l8.5 7"/><path d="M5.5 9.5V20h13V9.5"/><path d="M10 20v-5h4v5"/>',
     shelf: '<path d="M4 4v16M20 4v16"/><path d="M4 8.5h16M4 14h16M4 19.5h16"/>',
     sparkle: '<path d="M12 3l1.8 4.7 4.7 1.8-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/>',
+    bolt: '<path d="M13 2L4.5 13.5H12L11 22l8.5-11.5H12z"/>',
+    drop: '<path d="M12 3s6 6.4 6 11a6 6 0 0 1-12 0c0-4.6 6-11 6-11z"/>',
+    fan: '<circle cx="12" cy="12" r="1.6"/><path d="M12 10.4C12 6 13.5 3.5 16 3.5c2 0 2.5 2.5.5 4.5-1.5 1.5-3 2.2-4.5 2.4"/><path d="M13.6 12c4.4 0 6.9 1.5 6.9 4 0 2-2.5 2.5-4.5.5-1.5-1.5-2.2-3-2.4-4.5"/><path d="M12 13.6c0 4.4-1.5 6.9-4 6.9-2 0-2.5-2.5-.5-4.5 1.5-1.5 3-2.2 4.5-2.4"/><path d="M10.4 12C6 12 3.5 10.5 3.5 8c0-2 2.5-2.5 4.5-.5 1.5 1.5 2.2 3 2.4 4.5"/>',
+    flame: '<path d="M12 21c-3.9 0-6.5-2.6-6.5-6.2 0-3.4 2.4-5.4 3.6-8.3.5 1.8 1.4 2.9 2.6 3.4.3-2.7 1.5-5 3.3-6.9.4 3.2 3.5 6 3.5 10.6 0 4-2.6 7.4-6.5 7.4z"/>',
+    roof: '<path d="M2 14l10-9 10 9"/><path d="M5.6 10.8h12.8M8.9 7.9h6.2"/><path d="M5 13.5V20h14v-6.5"/>',
+    siding: '<path d="M3 5h18v15H3z"/><path d="M3 9h18M3 13h18M3 16.5h18"/>',
+    window: '<rect x="4.5" y="3.5" width="15" height="17" rx="1"/><path d="M12 3.5v17M4.5 12h15"/>',
+    fence: '<path d="M5 21V6l2-2.5L9 6v15M15 21V6l2-2.5L19 6v15"/><path d="M3 10h18M3 16h18"/>',
+    garage: '<path d="M3 10l9-6 9 6v11H3z"/><path d="M7 21v-8h10v8M7 16h10M7 18.5h10"/>',
+    leaf: '<path d="M5 19c0-8 5-14 15-15-.5 10-6.5 15-14 15z"/><path d="M5 19l8-8"/>',
+    bricks: '<rect x="3" y="4" width="18" height="16" rx="1"/><path d="M3 9.3h18M3 14.7h18M9 4v5.3M15 9.3v5.4M9 14.7V20"/>',
+    layers: '<path d="M12 3l9 5-9 5-9-5z"/><path d="M3 12.5l9 5 9-5"/><path d="M3 16.5l9 5 9-5"/>',
+    stairs: '<path d="M3 20h5v-5h5v-5h5V5h3"/><path d="M3 20h18"/>',
+    sofa: '<path d="M5 11V8a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v3"/><path d="M3 13a2 2 0 0 1 4 0v2h10v-2a2 2 0 0 1 4 0v4H3z"/><path d="M5 17v2M19 17v2"/>',
   };
   function mqQtIconSvg(key, size) {
     const s = size || 22;
@@ -5186,6 +5200,7 @@ window.logoutMember = async function () {
         // Pro hides those built-in tabs too (the Estimator tab switches alone
         // only hide them in Pro when "Apply to Pro" is ticked).
         off: Array.isArray(parsed.business.off) ? parsed.business.off.filter(t => t === 'cabinetry' || t === 'countertops') : [],
+        industry: typeof parsed.business.industry === 'string' ? parsed.business.industry : '',
       };
       if (parsed && parsed.applyToPro) cfg.applyToPro = true;
       // Built-in cabinet steps switched off on the Pricing tab (Phase 3).
@@ -5201,6 +5216,7 @@ window.logoutMember = async function () {
   async function mqSaveTabsCfg(changes) {
     const shopRec = window._mqShopRecord;
     if (!shopRec) throw new Error('no shop');
+    const prevIndustry = mqTabsCfgOf(shopRec.fields).business.industry || '';
     const cfg = Object.assign(mqTabsCfgOf(shopRec.fields), changes || {});
     const out = { hidden: cfg.hidden, applyToPro: !!cfg.applyToPro, quoteTypes: cfg.quoteTypes };
     if (cfg.builtinOff && cfg.builtinOff.length) out.builtinOff = cfg.builtinOff;
@@ -5210,7 +5226,7 @@ window.logoutMember = async function () {
     // Once a shop has touched the ticks (or a tab switch), the ticks are
     // saved for good (`business` present) and become the source of truth.
     const bz = cfg.business || {};
-    if ((changes && changes.business) || bz.set || (bz.trades && bz.trades.length) || (bz.off && bz.off.length)) out.business = { trades: bz.trades || [], off: bz.off || [] };
+    if ((changes && changes.business) || bz.set || (bz.trades && bz.trades.length) || (bz.off && bz.off.length)) { out.business = { trades: bz.trades || [], off: bz.off || [] }; const ind = bz.industry || prevIndustry; if (ind) out.business.industry = ind; }
     const payload = JSON.stringify(out);
     await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Hidden widget tabs': payload });
     shopRec.fields['Hidden widget tabs'] = payload;
@@ -11294,13 +11310,53 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     { id: 'cabinetry', label: 'Cabinetry', builtIn: true },
     { id: 'countertops', label: 'Countertops', builtIn: true },
   ];
+  // Oct 29 (Jordan): pick an industry first, then its trades in groups.
+  // Construction & building is the only industry for now; more get added
+  // here (each with its own groups) and a shop picks one on Business info.
+  const MQ_INDUSTRIES = [
+    { id: 'construction', label: 'Construction & building', groups: [
+      { id: 'interior', label: 'Kitchens & interiors' },
+      { id: 'build', label: 'Renovations & building' },
+      { id: 'systems', label: 'Plumbing, electrical & heating' },
+      { id: 'exterior', label: 'Exteriors & outdoor' },
+    ] },
+  ];
+  const MQ_BIZ_FIXED_GROUP = 'interior';
   const MQ_TRADE_DEFAULTS = [
-    { id: 'painting', label: 'Painting', icon: 'brush', qtName: 'Painting' },
-    { id: 'flooring', label: 'Flooring', icon: 'grid', qtName: 'Flooring' },
-    { id: 'closets', label: 'Closets & storage', icon: 'closet', qtName: 'Closets' },
-    { id: 'contracting', label: 'Renovations / contracting', icon: 'home', qtName: 'Renovations' },
+    // Kitchens & interiors (Cabinetry + Countertops are added first)
+    { id: 'closets', label: 'Closets & storage', icon: 'closet', qtName: 'Closets', group: 'interior' },
+    { id: 'millwork', label: 'Millwork & finish carpentry', icon: 'shelf', qtName: 'Finish carpentry', group: 'interior' },
+    { id: 'painting', label: 'Painting', icon: 'brush', qtName: 'Painting', group: 'interior' },
+    { id: 'flooring', label: 'Flooring', icon: 'grid', qtName: 'Flooring', group: 'interior' },
+    { id: 'tile', label: 'Tile & backsplash', icon: 'bricks', qtName: 'Tile', group: 'interior' },
+    { id: 'drywall', label: 'Drywall & taping', icon: 'layers', qtName: 'Drywall', group: 'interior' },
+    { id: 'insulation', label: 'Insulation', icon: 'layers', qtName: 'Insulation', group: 'interior' },
+    { id: 'interiordesign', label: 'Interior design', icon: 'sofa', qtName: 'Interior design', group: 'interior' },
+    { id: 'stairs', label: 'Stairs & railings', icon: 'stairs', qtName: 'Stairs & railings', group: 'interior' },
+    // Renovations & building
+    { id: 'contracting', label: 'Renovations / contracting', icon: 'home', qtName: 'Renovations', group: 'build' },
+    { id: 'homebuild', label: 'Home building', icon: 'home', qtName: 'New home', group: 'build' },
+    { id: 'basement', label: 'Basement development', icon: 'stairs', qtName: 'Basement development', group: 'build' },
+    { id: 'framing', label: 'Framing & additions', icon: 'tools', qtName: 'Framing', group: 'build' },
+    { id: 'concrete', label: 'Concrete & foundations', icon: 'bricks', qtName: 'Concrete', group: 'build' },
+    { id: 'demolition', label: 'Demolition', icon: 'tools', qtName: 'Demolition', group: 'build' },
+    // Plumbing, electrical & heating
+    { id: 'plumbing', label: 'Plumbing', icon: 'drop', qtName: 'Plumbing', group: 'systems' },
+    { id: 'electrical', label: 'Electrical', icon: 'bolt', qtName: 'Electrical', group: 'systems' },
+    { id: 'hvac', label: 'Heating & cooling', icon: 'fan', qtName: 'Heating & cooling', group: 'systems' },
+    { id: 'fireplaces', label: 'Fireplaces', icon: 'flame', qtName: 'Fireplace', group: 'systems' },
+    // Exteriors & outdoor
+    { id: 'siding', label: 'Siding', icon: 'siding', qtName: 'Siding', group: 'exterior' },
+    { id: 'roofing', label: 'Roofing', icon: 'roof', qtName: 'Roofing', group: 'exterior' },
+    { id: 'windows', label: 'Windows & exterior doors', icon: 'window', qtName: 'Windows', group: 'exterior' },
+    { id: 'gutters', label: 'Eavestroughs & soffit', icon: 'roof', qtName: 'Eavestroughs', group: 'exterior' },
+    { id: 'decks', label: 'Decks & fences', icon: 'fence', qtName: 'Decks & fences', group: 'exterior' },
+    { id: 'garagedoors', label: 'Garage doors', icon: 'garage', qtName: 'Garage doors', group: 'exterior' },
+    { id: 'landscaping', label: 'Landscaping', icon: 'leaf', qtName: 'Landscaping', group: 'exterior' },
+    { id: 'paving', label: 'Driveways & paving', icon: 'bricks', qtName: 'Paving', group: 'exterior' },
     { id: 'other', label: 'Something else', icon: 'sparkle', qtName: '' },
   ];
+  function mqIndustryOf(biz) { return MQ_INDUSTRIES.find(i => i.id === (biz && biz.industry)) || MQ_INDUSTRIES[0]; }
   // Every trade (hidden ones included), defaults merged with the catalog.
   function mqTradeEntries() {
     const raw = window._mqTradeCatalog || [];
@@ -11416,6 +11472,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       set,
       trades: cfg.business.trades,
       off: cfg.business.off,
+      industry: cfg.business.industry || '',
     };
   }
   window.mqBizOf = mqBizOf;
@@ -11444,10 +11501,36 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     if (mqQuoteTypesOf(shopRec.fields).some(q => q.countertops)) mqCtMigrateQtFlags();
     const qts = mqQuoteTypesOf(shopRec.fields);
     const isOn = t => t.id === 'cabinetry' ? biz.cab : (t.id === 'countertops' ? biz.ct : biz.trades.includes(t.id));
-    chips.innerHTML = mqBizTradeList(biz.trades).map(t => {
+    const chip = t => {
       const on = isOn(t);
       return `<button type="button" class="mq-biz-chip" data-mq-biz="${t.id}" aria-pressed="${on}" onclick="mqBizToggle('${t.id}')" style="display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:600;font-family:inherit;padding:8px 13px;border-radius:999px;cursor:pointer;${on ? 'background:#1a1a1a;color:#fff;border:1.5px solid #1a1a1a' : 'background:#fff;color:#374151;border:1.5px solid #d1d5db'}"><span style="width:15px;height:15px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;line-height:1;${on ? 'background:#d7a42e;color:#1a1a1a' : 'border:1.5px solid #9ca3af'}">${on ? '✓' : ''}</span>${mqEscHtml(t.label)}</button>`;
+    };
+    // Industry first, then its trades in groups (groups with nothing ticked
+    // start folded once anything is ticked, so the list stays short).
+    const ind = mqIndustryOf(biz);
+    const all = mqBizTradeList(biz.trades);
+    const groups = ind.groups.map(g => ({ id: g.id, label: g.label, list: all.filter(t => (t.builtIn ? MQ_BIZ_FIXED_GROUP : t.group) === g.id) }));
+    const more = all.filter(t => t.id !== 'other' && !groups.some(g => g.list.includes(t)));
+    if (more.length) groups.push({ id: 'more', label: 'More trades', list: more });
+    const otherT = all.find(t => t.id === 'other');
+    const anyOn = all.some(isOn);
+    window._mqBizGrpOpen = window._mqBizGrpOpen || {};
+    const grpHtml = groups.filter(g => g.list.length).map(g => {
+      const n = g.list.filter(isOn).length;
+      const open = window._mqBizGrpOpen[g.id] !== undefined ? window._mqBizGrpOpen[g.id] : (!anyOn || n > 0);
+      return `<div class="mq-biz-grp" data-mq-bizgrp="${g.id}" style="border:1px solid #e5e7eb;border-radius:10px;margin-bottom:8px;background:#fff">
+        <button type="button" onclick="mqBizGrpToggle('${g.id}')" aria-expanded="${open}" style="display:flex;width:100%;align-items:center;justify-content:space-between;gap:10px;background:none;border:0;padding:10px 12px;font-family:inherit;font-size:13px;font-weight:700;color:#111;cursor:pointer;text-align:left">
+          <span>${mqEscHtml(g.label)}${n ? ` <span style="font-weight:600;color:#15803d;font-size:12px;margin-left:4px">${n} ticked</span>` : ''}</span>
+          <span style="display:inline-block;color:#6b7280;transition:transform .15s;transform:rotate(${open ? 180 : 0}deg)">▾</span>
+        </button>
+        <div style="display:${open ? 'flex' : 'none'};flex-wrap:wrap;gap:8px;padding:0 12px 12px">${g.list.map(chip).join('')}</div>
+      </div>`;
     }).join('');
+    chips.style.display = 'block';
+    chips.innerHTML = `<div style="font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#6b7280;margin-bottom:6px">Your industry</div>
+      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:14px">${MQ_INDUSTRIES.map(x => { const on = x.id === ind.id; return `<button type="button" onclick="mqBizIndustry('${x.id}')" aria-pressed="${on}" style="font-size:13px;font-weight:600;font-family:inherit;padding:8px 13px;border-radius:999px;cursor:pointer;${on ? 'background:#fbf3df;color:#8a6510;border:1.5px solid #d7a42e' : 'background:#fff;color:#374151;border:1.5px solid #d1d5db'}">${on ? '✓ ' : ''}${mqEscHtml(x.label)}</button>`; }).join('')}<span style="font-size:12px;color:#9ca3af">More industries coming soon</span></div>
+      <div style="font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#6b7280;margin-bottom:6px">What you quote</div>
+      ${grpHtml}${otherT ? `<div style="margin-top:4px">${chip(otherT)}</div>` : ''}`;
     if (!tradesEl) return;
     const rows = mqBizTradeList(biz.trades).filter(t => !t.builtIn && isOn(t)).map(t => {
       const match = mqQtsOfTrade(t, qts)[0] || null;
@@ -11468,6 +11551,25 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const ctNoPricing = biz.ct && Array.isArray(window._mqCtItems) && !window._mqCtItems.some(r => r.fields && r.fields['Active'] !== false);
     tradesEl.innerHTML = rows.join('') + (ctNoPricing ? `<div style="font-size:12.5px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:8px 10px;margin:4px 0 6px;line-height:1.5">Countertops is ticked, but you have no countertop pricing yet — <a href="#" onclick="event.preventDefault();mqNav('pricing', document.querySelector('.mq-nav-item[onclick*=&quot;mqNav(\'pricing\'&quot;]'))" style="color:#1d4ed8;font-weight:600">set it up on the Pricing tab →</a></div>` : '') + (nothing ? `<div style="font-size:12.5px;color:#b45309;margin-top:4px">Your widget has no quotes to show yet. Add a quote type for your trade.</div>` : '')
       + ((!biz.cab || !biz.ct) ? `<div style="font-size:12px;color:#6b7280;margin-top:6px;line-height:1.5">${!biz.cab && !biz.ct ? 'Built-in cabinet and countertop pricing is hidden' : (!biz.cab ? 'Built-in cabinet pricing is hidden' : 'Built-in countertop pricing is hidden')} on the Pricing, My products and Project types tabs, and the matching built-in quote is hidden in MidasQuote Pro too. Nothing is deleted. Tick it again any time to bring it back.</div>` : '');
+  };
+  window.mqBizGrpToggle = function(id) {
+    const box = document.querySelector(`[data-mq-bizgrp="${id}"]`);
+    if (!box) return;
+    const body = box.children[1], btn = box.children[0];
+    const open = body.style.display === 'none';
+    body.style.display = open ? 'flex' : 'none';
+    btn.setAttribute('aria-expanded', open);
+    btn.lastElementChild.style.transform = `rotate(${open ? 180 : 0}deg)`;
+    window._mqBizGrpOpen = window._mqBizGrpOpen || {};
+    window._mqBizGrpOpen[id] = open;
+  };
+  window.mqBizIndustry = async function(id) {
+    const shopRec = window._mqShopRecord;
+    if (!shopRec || !MQ_INDUSTRIES.some(x => x.id === id)) return;
+    const biz = mqBizOf(shopRec.fields);
+    if ((biz.industry || MQ_INDUSTRIES[0].id) === id && biz.industry) return;
+    try { await mqSaveTabsCfg({ business: { trades: biz.trades, off: biz.off, industry: id } }); window.mqRenderBizTypes(); }
+    catch(e) { showMsg('mq-shop-msg', 'Error saving.', 'error'); }
   };
   window.mqBizToggle = async function(id) {
     const shopRec = window._mqShopRecord;
@@ -15517,6 +15619,62 @@ ${mqIsFreePlanShop() ? mqShowroomLockNoteHTML(true) : `      <label class="mq-bt
     {id:'scan',title:'Scan & Estimate',category:'qr',tag:'QR promotion',headline:'SCAN. PLAN. GET INSPIRED.',sub:'Scan the code to explore your next cabinet project.',cta:'INSTANT BALLPARK ESTIMATE',mode:'qr'},
     {id:'simple',title:'The Minimalist',category:'qr',tag:'QR / counter card',headline:'YOUR NEW KITCHEN IS CLOSER THAN YOU THINK',sub:'Scan to get a quick estimate from our team.',cta:'SCAN TO START',mode:'minimal'},
   ];
+  // Oct 29 (Jordan): shops that don't do cabinetry get general copy that
+  // names their own trades ("Painting & Flooring"); cabinet shops keep the
+  // originals exactly. Rebuilt each time the gallery is drawn, so changing
+  // the Business info ticks shows up straight away.
+  const MQ_STUDIO_TEMPLATES_CAB = MQ_STUDIO_TEMPLATES.map(t => Object.assign({}, t));
+  function mqStudioTradeWords() {
+    const f = window._mqShopRecord && window._mqShopRecord.fields;
+    if (!f) return [];
+    const biz = mqBizOf(f);
+    const all = [...MQ_BIZ_FIXED, ...mqTradeEntries()];
+    const ids = [biz.ct ? 'countertops' : '', ...biz.trades.filter(x => x !== 'other')].filter(Boolean);
+    return ids.map(id => all.find(t => t.id === id)).filter(Boolean).map(t => t.label);
+  }
+  function mqStudioTradeLine() {
+    const w = mqStudioTradeWords();
+    if (!w.length) return '';
+    if (w.length === 1) return w[0];
+    if (w.length === 2) return w.some(x => x.includes('&')) ? `${w[0]}, ${w[1]}` : `${w[0]} & ${w[1]}`;
+    return `${w[0]}, ${w[1]} & more`;
+  }
+  function mqStudioTemplatesFor() {
+    const base = MQ_STUDIO_TEMPLATES_CAB.map(t => Object.assign({}, t));
+    if (mqCabShop()) return base;
+    const L = mqStudioTradeLine(), low = L.toLowerCase();
+    const G = {
+      launch: { headline: 'YOUR NEXT PROJECT STARTS HERE' },
+      quote: { sub: 'Explore your project with an instant online estimate.' },
+      premium: { headline: 'BEAUTIFUL RESULTS. CLEARER PRICING.', sub: 'Your next project starts with a simple estimate.' },
+      before: { sub: L ? `${L}, done right for your home.` : 'Quality work, done right for your home.' },
+      poster: { title: 'Your Next Project', sub: 'Explore your next project with a fast ballpark estimate.' },
+      yard: { sub: L ? `${L}.` : 'Quality work you can see.' },
+      yardbooking: { sub: L ? `Reserve your spot for ${low}.` : 'Reserve your spot for your next project.' },
+      'ys-curved': { sub: L || 'Quality work, done right' },
+      'ys-diamond': { sub: L ? `${L}, built to last` : 'Built to last' },
+      'ys-ornate': { sub: L ? `Quality ${low}` : 'Quality work for your home' },
+      'ys-modern': { sub: L || 'Quality work, done right' },
+      'ys-premium': { sub: L ? `Quality ${low} for you` : 'Quality work made for you' },
+      'ys-estate': { sub: L || 'Quality work, done right' },
+      'ys-cta': { headline: 'YOUR NEXT PROJECT STARTS HERE', sub: L || 'Quality work, done right' },
+      'ys-ribbon': { sub: L || 'Quality work, done right' },
+      'ys-band': { headline: L ? L.toUpperCase() : 'QUALITY WORK, DONE RIGHT' },
+      scan: { sub: 'Scan the code to explore your next project.' },
+      simple: { headline: 'YOUR NEXT PROJECT IS CLOSER THAN YOU THINK' },
+    };
+    return base.map(t => Object.assign(t, G[t.id] || {}));
+  }
+  function mqStudioRefreshTemplates() {
+    const next = mqStudioTemplatesFor();
+    MQ_STUDIO_TEMPLATES.splice(0, MQ_STUDIO_TEMPLATES.length, ...next);
+  }
+  // Starter photos: our cover photos are all cabinets and counters, so a
+  // shop that doesn't do cabinetry gets its own quote types' project type
+  // cover photos instead (or none -- they add their own).
+  function mqStudioOwnCovers() {
+    return [...new Set((window._mqRooms || []).filter(r => r && r.forQt && r.active !== false && r.coverImage).map(r => r.coverImage))];
+  }
   let mqStudioPhoto=null, mqStudioLogo=null, mqStudioSelected=null;
   const mqStudioIsYard=t=>!!t && t.category==='yard';
   const mqStudioNeedsQr=t=>!!t && (t.category==='qr' || ['yardscan','yardshowroom'].includes(t.id));
@@ -15525,7 +15683,8 @@ ${mqIsFreePlanShop() ? mqShowroomLockNoteHTML(true) : `      <label class="mq-bt
   function mqInitMarketingStudio(shopRecord){
     const root=document.getElementById('mq-studio');
     if(!root)return;
-    const shopName=shopRecord.fields['Shop name']||'YOUR CABINET SHOP';
+    const shopName=shopRecord.fields['Shop name']||(mqCabShop()?'YOUR CABINET SHOP':'YOUR BUSINESS');
+    mqStudioRefreshTemplates();
     const color=shopRecord.fields['Brand colour']||'#56314b';
     const quoteLink=()=>(_mqCustomPostLink||shopRecord.fields['Marketing link']||`https://widget.midasquote.com/?shop=${shopRecord.fields['Shop token']||''}`);
     // Starter images from the SAME project-type cover asset directory used by the widget.
@@ -15535,6 +15694,14 @@ ${mqIsFreePlanShop() ? mqShowroomLockNoteHTML(true) : `      <label class="mq-bt
     const studioCoverUrls=Object.fromEntries(studioCoverNames.map(name=>[name,studioCoverBase+name+'.jpg']));
     const studioCoverImages=new Map();
     function studioLoadCover(name){
+      if(!mqCabShop()){
+        const own=mqStudioOwnCovers();
+        if(!own.length)return Promise.resolve(null);
+        const k=Math.max(0,studioCoverNames.indexOf(name));
+        const ownUrl=own[k%own.length];
+        if(!studioCoverImages.has(ownUrl))studioCoverImages.set(ownUrl,new Promise(resolve=>{const img=new Image();img.crossOrigin='anonymous';img.onload=()=>resolve(img);img.onerror=()=>resolve(null);img.src=ownUrl;}));
+        return studioCoverImages.get(ownUrl);
+      }
       const url=studioCoverUrls[name]||studioCoverUrls.kitchen;
       if(!studioCoverImages.has(url))studioCoverImages.set(url,new Promise(resolve=>{
         const img=new Image();img.crossOrigin='anonymous';
@@ -16445,6 +16612,7 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
       return header+defs+body+'</svg>';
     }
     function renderGallery(filter='all'){
+      mqStudioRefreshTemplates();
       grid.innerHTML='';MQ_STUDIO_TEMPLATES.filter(t=>filter==='all'||t.category===filter).forEach(t=>{
         const btn=document.createElement('button');btn.type='button';btn.className='mq-studio-tile';btn.innerHTML=`<div class="mq-studio-thumb-area"><img class="mq-studio-thumb" alt=""/></div><div class="mq-studio-tile-meta"><span><strong></strong><small></small></span><b aria-hidden="true">↗</b></div>`;
         if(t.category==='yard')btn.classList.add('mq-studio-yard-card');
