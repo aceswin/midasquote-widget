@@ -4002,7 +4002,7 @@
     return `<div class="mq-sec" id="mq-${p}-meas-sec" onclick="mqOpenIfClosed('${p}-meas')">
           ${collapsibleHeader(`${p}-meas`, 'Measurements')}
           <div style="font-size:13px;color:#4b5563;margin-bottom:10px;line-height:1.5">📐 Enter your measurements — your estimate is worked out from these.</div>
-          <div id="mq-${p}-meas-body" style="display:none"><div class="mq-grid3">
+          <div id="mq-${p}-meas-body" style="display:none">${q.measGuide ? `<div id="mq-${p}-meas-guide" style="display:none"></div>` : ''}<div class="mq-grid3">
             ${ms.map(m => `<div class="mq-field"><label class="mq-label" style="display:block;margin-bottom:8px">${mqCcEsc(m.label)}${m.label.toLowerCase().includes(m.unit.toLowerCase()) ? '' : ` (${mqCcEsc(m.unit)})`}</label>
               <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap"><div style="position:relative;display:inline-block"><input type="number" class="mq-linft-input" id="mq-${p}-meas-${m.id}" value="0" min="0" step="any" onclick="this.select()" style="text-align:center;width:130px;padding-right:${m.type === 'count' ? '8' : '40'}px"/>${m.type === 'count' ? '' : `<span style="position:absolute;right:6px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:13px;font-weight:600;pointer-events:none">${m.type === 'sqft' ? 'sq ft' : 'ft'}</span>`}</div>${m.type === 'count' ? (mqUnitEntry(m.unit) ? calcBtn(`mq-${p}-meas-${m.id}`, mqUnitEntry(m.unit), m.label) : '') : calcBtn(`mq-${p}-meas-${m.id}`, m.type === 'sqft' ? 'sqft' : 'linear', m.label)}</div>
             </div>`).join('')}
@@ -4039,6 +4039,9 @@
         countertops: mqQtCtRoomIds(q.id, rooms, ctItems, cfg).length > 0,
         // Phase 4: its own Measurements step (e.g. "Wall area", "Rooms").
         measures: mqQtMeasClean(q.measures),
+        // Oct 30: show the project type's how-to-measure pictures again,
+        // small and tap-to-zoom, on its Measurements screen.
+        measGuide: !!q.measGuide,
       }))
       // Shown once it has something to price: a custom pricing step of its
       // own, or a specialty item picked for one of its project types.
@@ -5635,7 +5638,29 @@
       mqBindCarouselNudge(track); // instead: a small one-time nudge, just to make sure people notice there's more than one image
       return outer;
     }
+    // The project type's measuring-guide photos, small and tap-to-zoom, on a
+    // quote type's Measurements screen (when the shop ticked that box).
+    window.mqQtMeasGuideFill = (prefix) => {
+      const box = document.getElementById(`mq-${prefix}-meas-guide`);
+      if (!box) return;
+      const room = (window._mqRoomTypes || []).find(r => r.id === gv(`mq-${prefix}-room`));
+      const own = (room && !room.hideMeasureGuide && !window._mqIsDemoPlan) ? [room.measureImage, ...(Array.isArray(room.measureImages) ? room.measureImages : [])].map(u => String(u || '').trim()).filter(Boolean) : [];
+      const photos = own.filter(u => !mqVideoEmbedInfo(u));
+      if (!photos.length) { box.style.display = 'none'; box.innerHTML = ''; return; }
+      const nm = room && room.name ? room.name : '';
+      window._mqMeasGuideMini = window._mqMeasGuideMini || {};
+      window._mqMeasGuideMini[prefix] = photos.map((src, k) => ({ src, label: nm ? `${nm} — measuring guide (${k + 1}/${photos.length})` : `Measuring guide (${k + 1}/${photos.length})` }));
+      const esc = t => String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+      box.innerHTML = `<div style="font-size:12px;font-weight:700;color:#2563eb;margin-bottom:6px">📸 How to measure — tap to zoom</div>
+        <div style="display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px">${photos.map((u, k) => `<img src="${esc(u)}" alt="How to measure ${k + 1}" loading="lazy" onclick="event.stopPropagation();mqQtMeasGuideZoom('${prefix}',${k})" onerror="this.style.display='none'" style="height:${photos.length === 1 ? 110 : 84}px;width:auto;max-width:${photos.length === 1 ? '100%' : 'none'};object-fit:contain;flex:0 0 auto;border-radius:8px;border:1px solid #e5e7eb;background:#f9fafb;cursor:zoom-in"/>`).join('')}</div>`;
+      box.style.cssText = 'display:block;margin-bottom:14px';
+    };
+    window.mqQtMeasGuideZoom = (prefix, i) => {
+      const list = (window._mqMeasGuideMini || {})[prefix] || [];
+      if (list[i] && window.mqPhotoLightbox) window.mqPhotoLightbox(list[i].src, list[i].label, list, i);
+    };
     window.mqRefreshMeasureGuide=(prefix)=>{
+      setTimeout(() => window.mqQtMeasGuideFill(prefix), 0);
       const guideEl = document.getElementById(`mq-${prefix}-measure-guide`);
       if (!guideEl) return;
       const roomId = gv(`mq-${prefix}-room`);

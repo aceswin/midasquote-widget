@@ -6509,6 +6509,7 @@ window.logoutMember = async function () {
                   <button type="button" class="mq-btn mq-btn-sm" title="Remove" onclick="mqQtMeasDel('${q.id}', ${mi})" style="color:#b91c1c">✕</button>
                 </div>`).join('')}
                 <button type="button" class="mq-btn mq-btn-sm" onclick="mqQtMeasAdd('${q.id}')">+ Add a measurement</button>
+                ${(q.measures || []).length ? `<label style="display:flex;align-items:flex-start;gap:8px;margin-top:12px;font-size:13px;color:#111;cursor:pointer"><input type="checkbox" ${q.measGuide ? 'checked' : ''} onchange="mqQtUpdate('${q.id}', { measGuide: this.checked })" style="width:16px;height:16px;margin-top:2px;flex-shrink:0"/><span><strong>Show the how-to-measure pictures again here</strong><span style="display:block;font-size:12px;color:#6b7280;margin-top:2px">Small, tap-to-zoom copies of the project type's measuring guide photos, right above these boxes — so customers don't have to scroll back up.</span></span></label>` : ''}
 `)}
             ${mqGrpBox(q.id + ':steps', '#16a34a', '#f0fdf4', '③ Priced steps', steps.length ? steps.map(c => mqEscHtml(c.name || 'Untitled')).join(' → ') : 'None yet — add one so this quote can price something', 'The steps customers go through — made on the Pricing tab.' + (mqBizOf(window._mqShopRecord.fields).ct ? ' Want a “Need countertops too?” step? In <strong>My Products → Countertops</strong>, tick this quote’s project types on the materials it should offer.' : ''), `
               <div style="font-size:12px;color:#374151">
@@ -11782,7 +11783,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const subset = field => { const m = mqJsonObj(f[field], {}); const o = {}; Object.keys(m).forEach(k => { if (keyOk(k)) o[k] = m[k]; }); return o; };
     const sub2 = field => { const m = mqJsonObj(f[field], {}); const o = {}; Object.keys(m).forEach(k => { if (catIds.has(k)) o[k] = m[k]; }); return o; };
     return {
-      qt: { name: (q.packEdit && q.packName) || q.name, sub: q.sub || '', icon: q.icon || 'grid', countertops: !!q.countertops || mqQtHasCountertops(qtId), measures: Array.isArray(q.measures) ? q.measures : [] },
+      qt: { name: (q.packEdit && q.packName) || q.name, measGuide: !!q.measGuide, sub: q.sub || '', icon: q.icon || 'grid', countertops: !!q.countertops || mqQtHasCountertops(qtId), measures: Array.isArray(q.measures) ? q.measures : [] },
       rooms, cats, items, specs,
       catRooms: sub2('Category rooms'), pickerLabels: sub2('Category picker labels'),
       photos: subset('Photos'), hidden: subset('Hidden'), featured: subset('Featured items'),
@@ -11887,6 +11888,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       if (opts.edit) { q.packEdit = true; q.packName = pack.qt.name || name; q.packIdx = idx || 0; }
       if (pack.qt.countertops && ctOk) { try { await mqCtTickRooms(Object.values(roomMap)); } catch(e) {} }
       if (Array.isArray(pack.qt.measures) && pack.qt.measures.length) q.measures = pack.qt.measures;
+      if (pack.qt.measGuide) q.measGuide = true;
       await mqSaveTabsCfg({ quoteTypes: [...mqQuoteTypesOf(shopRec.fields), q] });
       if (window._mqRooms) { window._mqRooms = rooms; renderRoomsList(); }
       window._mqSpecItemsList = null; window._mqSpecRecords = null;
