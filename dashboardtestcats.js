@@ -12004,9 +12004,12 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   async function mqTradeSnapPriced(qtId) {
     const snap = await mqTradeSnapshot(qtId);
     if (!(snap.cats.length || snap.specs.length || snap.qt.countertops)) throw Object.assign(new Error('empty'), { qtName: snap.qt.name });
+    if (!snap.rooms.some(r => r && r.active !== false)) throw Object.assign(new Error('norooms'), { qtName: snap.qt.name });
     return snap;
   }
-  const mqTradePackErr = e => e && e.message === 'empty' ? showMsg('mq-templates-msg', `"${e.qtName}" has nothing priced yet — give it a Pricing step or specialty item first.`, 'error') : mqTradeErr(e);
+  const mqTradePackErr = e => e && e.message === 'empty' ? showMsg('mq-templates-msg', `"${e.qtName}" has nothing priced yet — give it a Pricing step or specialty item first.`, 'error')
+    : e && e.message === 'norooms' ? showMsg('mq-templates-msg', `"${e.qtName}" has no project types switched on — add or switch one on in Project types first, so customers have something to pick.`, 'error')
+    : mqTradeErr(e);
   // Adds one of this shop's quotes to the pack (same name -> replaces it).
   window.mqTradePackAddQuote = async function(id) {
     const src = el('mq-trade-e-src')?.value;
