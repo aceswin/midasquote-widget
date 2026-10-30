@@ -11542,7 +11542,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const right = match
         ? `<span style="color:#15803d;font-weight:600">✓ "${mqEscHtml(match.name)}" quote set up</span> <a href="#" onclick="event.preventDefault();mqQtOpenInRooms('${match.id}')" style="color:#1d4ed8;font-weight:600;text-decoration:none;margin-left:6px">Project types →</a>`
         : (t.qtName && mqTradeHasPack(t)
-          ? `<span style="display:inline-flex;flex-direction:column;align-items:flex-end;gap:3px"><button type="button" class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqBizAddQt('${t.id}')">+ Add a ${mqEscHtml(t.qtName)} quote</button><span style="font-size:11px;color:#6b7280">Comes set up: ${mqEscHtml(mqTradePackSummary(mqTradePackInfo(t)))}</span></span>`
+          ? `<span style="display:inline-flex;flex-direction:column;align-items:flex-end;gap:3px"><button type="button" class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqBizAddQt('${t.id}')">${(() => { const inf = mqPackInfoNorm(mqTradePackInfo(t)); return inf && Array.isArray(inf.quotes) && inf.quotes.length > 1 ? `+ Add ${mqEscHtml(t.label)} quotes` : `+ Add a ${mqEscHtml((inf && inf.quotes && inf.quotes[0] && inf.quotes[0].name) || t.qtName)} quote`; })()}</button><span style="font-size:11px;color:#6b7280">Comes set up: ${mqEscHtml(mqTradePackSummary(mqTradePackInfo(t)))}</span></span>`
           : t.qtName
           ? `<button type="button" class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqBizAddQt('${t.id}')">+ Add a ${mqEscHtml(t.qtName)} quote</button>`
           : `<button type="button" class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqBizAddQt('${t.id}')">+ Add a quote type</button>`);
@@ -11691,6 +11691,25 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     return rec.id;
   }
   async function mqLibDelete(recId) { if (recId) { try { await atDelete(CONFIG.PROPOSAL_TEMPLATES_TABLE, recId); } catch(e) {} } }
+  // A saved pack body is either one quote snapshot ({qt, rooms, …}, the
+  // original shape) or {quotes:[snapshot, …]}.
+  function mqPackQuotes(body) {
+    if (!body) return [];
+    if (Array.isArray(body.quotes)) return body.quotes.filter(q => q && q.qt);
+    return body.qt ? [body] : [];
+  }
+  function mqPackSum(quotes) {
+    const tot = k => quotes.reduce((a, q) => a + ((q[k] || []).length), 0);
+    return { quotes: quotes.map(q => ({ name: q.qt.name || 'Quote' })), rooms: tot('rooms'), cats: tot('cats'), items: tot('items'), specs: tot('specs'), qt: { name: (quotes[0] && quotes[0].qt.name) || '' } };
+  }
+  // Whatever we have (a loaded body, an old inline pack, or the small
+  // summary kept on the trade) -> the summary shape.
+  function mqPackInfoNorm(x) {
+    if (!x) return null;
+    if (Array.isArray(x.quotes) && x.quotes[0] && x.quotes[0].qt) return mqPackSum(mqPackQuotes(x));
+    if (x.qt && Array.isArray(x.rooms)) return mqPackSum([x]);
+    return x;
+  }
   function mqTradeHasPack(t) { return !!(t && (t.pack || t.packRec)); }
   function mqTradePackInfo(t) { return t ? (t.pack || t.packSum || null) : null; }
   async function mqTradePackLoad(t) {
@@ -11725,9 +11744,11 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   }
   function mqTradePackSummary(pack) {
     if (!pack) return '';
+    pack = mqPackInfoNorm(pack) || pack;
     const n = (a, one, many) => `${a} ${a === 1 ? one : many}`;
     const cnt = x => Array.isArray(x) ? x.length : (Number(x) || 0);
-    const parts = [n(cnt(pack.rooms), 'project type', 'project types'), n(cnt(pack.cats), 'priced step', 'priced steps'), n(cnt(pack.items), 'option', 'options')];
+    const qn = Array.isArray(pack.quotes) && pack.quotes.length > 1 ? [`${pack.quotes.length} quotes (${pack.quotes.map(q => q.name).join(', ')})`] : [];
+    const parts = [...qn, n(cnt(pack.rooms), 'project type', 'project types'), n(cnt(pack.cats), 'priced step', 'priced steps'), n(cnt(pack.items), 'option', 'options')];
     if (cnt(pack.specs)) parts.push(n(cnt(pack.specs), 'specialty item', 'specialty items'));
     if (pack.qt && pack.qt.countertops) parts.push('countertops');
     return parts.join(' · ');
@@ -11770,17 +11791,37 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
 
   // Shop: adds the trade's quote type from its starter pack -- everything
   // gets new ids, and every link between them is pointed at the new ones.
+  // Shops (and the admin's edit copies): adds every quote in the trade's
+  // starter pack. A pack holds one or more quotes (Oct 29: e.g. Interior +
+  // Exterior painting).
   async function mqApplyTradePack(t, opts) {
     opts = opts || {};
     const msgId = opts.edit ? 'mq-templates-msg' : 'mq-shop-msg';
     const shopRec = window._mqShopRecord;
     if (!shopRec || !mqTradeHasPack(t)) return;
-    const info = mqTradePackInfo(t);
-    if (!opts.edit && !confirm(`Add the "${(info && info.qt && info.qt.name) || t.qtName}" quote, already set up by MidasQuote?\n\n${mqTradePackSummary(info)}.\n\nPrices are starting points — change anything after on Project types, Pricing and Specialty items.`)) return;
-    showMsg(msgId, `Setting up "${t.qtName || t.label}"… this takes a few seconds.`);
-    let pack = null;
-    try { pack = await mqTradePackLoad(t); } catch(e) { pack = null; }
-    if (!pack || !pack.qt) { showMsg(msgId, 'Couldn’t load that starter pack right now. Refresh and try again.', 'error'); return; }
+    const info = mqPackInfoNorm(mqTradePackInfo(t));
+    const qNames = info && Array.isArray(info.quotes) && info.quotes.length ? info.quotes.map(q => q.name) : [t.qtName || t.label];
+    const many = qNames.length > 1;
+    if (!opts.edit && !confirm(`Add ${many ? 'these quotes' : `the "${qNames[0]}" quote`}, already set up by MidasQuote?\n\n${many ? qNames.map(n => '• ' + n).join('\n') + '\n\n' : ''}${mqTradePackSummary(info)}.\n\nPrices are starting points — change anything after on Project types, Pricing and Specialty items.${many ? ' You can switch off any quote you don’t need.' : ''}`)) return;
+    showMsg(msgId, `Setting up ${many ? qNames.length + ' quotes' : '"' + qNames[0] + '"'}… this takes a few seconds.`);
+    let body = null;
+    try { body = await mqTradePackLoad(t); } catch(e) { body = null; }
+    const quotes = mqPackQuotes(body);
+    if (!quotes.length) { showMsg(msgId, 'Couldn’t load that starter pack right now. Refresh and try again.', 'error'); return; }
+    const names = [];
+    try {
+      for (let k = 0; k < quotes.length; k++) names.push(await mqApplyPackQuote(t, quotes[k], opts, k));
+    } catch(e) {
+      console.error('Starter pack failed', e);
+      showMsg(msgId, 'Something went wrong setting that up. Refresh and check Project types / Pricing before trying again.', 'error');
+      return;
+    }
+    const list = names.map(n => '"' + n + '"').join(' and ');
+    if (opts.edit) { showMsg(msgId, `✓ ${list} ${names.length > 1 ? 'are' : 'is'} open in your shop to edit — switched off on your widget, so customers never see ${names.length > 1 ? 'them' : 'it'}.`); if (window.mqTradeAdminRender) window.mqTradeAdminRender(); }
+    else showMsg(msgId, `✓ ${list} added and set up: ${mqTradePackSummary(mqPackSum(quotes))}. Check the prices on the Pricing tab — they're starting points.`);
+  }
+  async function mqApplyPackQuote(t, pack, opts, idx) {
+    const shopRec = window._mqShopRecord;
     const rid = p => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
     const f = shopRec.fields;
     const cfg = mqTabsCfgOf(f);
@@ -11843,7 +11884,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       Object.assign(shopRec.fields, upd);
       const ctOk = mqBizOf(shopRec.fields).ct;
       const q = { id: qtId, name, on: !opts.edit, proOnly: false, sub: pack.qt.sub || '', icon: pack.qt.icon || t.icon || 'grid', trade: t.id };
-      if (opts.edit) { q.packEdit = true; q.packName = pack.qt.name || name; }
+      if (opts.edit) { q.packEdit = true; q.packName = pack.qt.name || name; q.packIdx = idx || 0; }
       if (pack.qt.countertops && ctOk) { try { await mqCtTickRooms(Object.values(roomMap)); } catch(e) {} }
       if (Array.isArray(pack.qt.measures) && pack.qt.measures.length) q.measures = pack.qt.measures;
       await mqSaveTabsCfg({ quoteTypes: [...mqQuoteTypesOf(shopRec.fields), q] });
@@ -11851,12 +11892,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       window._mqSpecItemsList = null; window._mqSpecRecords = null;
       if (window._mqLastFetchTimes) Object.keys(window._mqLastFetchTimes).forEach(k => { window._mqLastFetchTimes[k] = 0; });
       mqRenderQuoteTypes();
-      if (opts.edit) { showMsg(msgId, `✓ "${name}" is open in your shop to edit — switched off on your widget, so customers never see it.`); if (window.mqTradeAdminRender) window.mqTradeAdminRender(); }
-      else showMsg(msgId, `✓ "${name}" added and set up: ${mqTradePackSummary(pack)}. Check the prices on the Pricing tab — they're starting points.`);
-    } catch(e) {
-      console.error('Starter pack failed', e);
-      showMsg(msgId, 'Something went wrong setting that up. Refresh and check Project types / Pricing before trying again.', 'error');
-    }
+      return name;
+    } catch(e) { throw e; }
   }
   window.mqApplyTradePack = mqApplyTradePack;
 
@@ -11895,19 +11932,22 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           ${t.id === 'other' ? '' : `<div style="border-top:1px dashed #e5e7eb;padding-top:10px">
             <div style="font-size:12px;font-weight:700;color:#111;margin-bottom:4px">Starter pack</div>
             ${(() => {
-              const work = myQts.find(q => q.packEdit && q.trade === t.id);
+              const works = myQts.filter(q => q.packEdit && q.trade === t.id).sort((a, b) => (a.packIdx || 0) - (b.packIdx || 0));
               const has = mqTradeHasPack(t);
-              if (work) return `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:9px;padding:10px 12px;font-size:12.5px;color:#14532d;line-height:1.5">
-                ✏️ Open in your shop as <strong>"${esc(work.name)}"</strong> — switched off on your widget, so customers never see it. Change it on <a href="#" onclick="event.preventDefault();mqQtOpenInRooms('${work.id}')" style="color:#1d4ed8;font-weight:600">Project types</a>, <a href="#" onclick="event.preventDefault();mqNav('pricing', document.querySelector('.mq-nav-item[onclick*=&quot;mqNav(\'pricing\'&quot;]'))" style="color:#1d4ed8;font-weight:600">Pricing</a> and Specialty items, then come back here.
+              const info = mqPackInfoNorm(mqTradePackInfo(t));
+              const pq = info && Array.isArray(info.quotes) ? info.quotes : (has ? [{ name: (info && info.qt && info.qt.name) || t.qtName }] : []);
+              if (works.length) return `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:9px;padding:10px 12px;font-size:12.5px;color:#14532d;line-height:1.5">
+                ✏️ Open in your shop: ${works.map(w => `<a href="#" onclick="event.preventDefault();mqQtOpenInRooms('${w.id}')" style="color:#1d4ed8;font-weight:700">"${esc(w.name)}"</a>`).join(', ')} — switched off on your widget, so customers never see ${works.length > 1 ? 'them' : 'it'}. Change ${works.length > 1 ? 'them' : 'it'} on Project types, <a href="#" onclick="event.preventDefault();mqNav('pricing', document.querySelector('.mq-nav-item[onclick*=&quot;mqNav(\'pricing\'&quot;]'))" style="color:#1d4ed8;font-weight:600">Pricing</a> and Specialty items, then come back here.${works.length < pq.length ? ` <strong>${pq.length - works.length} of the pack's quotes ${pq.length - works.length === 1 ? 'was' : 'were'} deleted from your shop and will be left out when you save.</strong>` : ''}
                 <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
-                  <button type="button" class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqTradeSavePack('${t.id}','${work.id}',true)">Save to pack &amp; remove from my shop</button>
-                  <button type="button" class="mq-btn mq-btn-sm" onclick="mqTradeSavePack('${t.id}','${work.id}',false)">Save to pack, keep editing</button>
-                  <button type="button" class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqTradeDiscardWork('${t.id}','${work.id}')">Discard changes</button>
+                  <button type="button" class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqTradeSavePack('${t.id}',true)">Save to pack &amp; remove from my shop</button>
+                  <button type="button" class="mq-btn mq-btn-sm" onclick="mqTradeSavePack('${t.id}',false)">Save to pack, keep editing</button>
+                  <button type="button" class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqTradeDiscardWork('${t.id}')">Discard changes</button>
                 </div></div>`;
               const others = myQts.filter(q => !q.packEdit);
-              return `<div style="font-size:12px;color:#6b7280;line-height:1.5;margin-bottom:8px">${has ? `Shops that tick ${esc(t.label)} get a copy of this pack with one click. To change it, open it in your shop, edit, and save it back. Shops that already used it keep their copy.` : `Build the quote in your own shop (Business info → quote types, then its project types, Pricing steps and Specialty items), then save it here. Shops that tick ${esc(t.label)} get a copy with one click.`}</div>
-                ${has ? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px"><button type="button" class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqTradeOpenPack('${t.id}')">✏️ Open in my shop to edit</button><button type="button" class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqTradeRemovePack('${t.id}')">Remove pack</button></div>` : ''}
-                ${others.length ? `<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><span style="font-size:12px;color:#374151">${has ? 'Or replace it with:' : 'Save from:'}</span><select id="mq-trade-e-src" style="${inp};width:auto!important;min-width:200px;max-width:320px!important">${others.map(q => `<option value="${q.id}">${esc(q.name)}</option>`).join('')}</select><button type="button" class="mq-btn ${has ? '' : 'mq-btn-primary '}mq-btn-sm" onclick="mqTradeSavePack('${t.id}')">${has ? 'Replace starter pack' : 'Save as starter pack'}</button></div>` : (has ? '' : '<div style="font-size:12px;color:#b45309">Add a quote type in this shop first (Business info → Estimator tabs).</div>')}`;
+              return `<div style="font-size:12px;color:#6b7280;line-height:1.5;margin-bottom:8px">${has ? `Shops that tick ${esc(t.label)} get ${pq.length > 1 ? 'all of these quotes' : 'this quote'} with one click. To change ${pq.length > 1 ? 'them' : 'it'}, open in your shop, edit, and save back. Shops that already used it keep their copy.` : `Build a quote in your own shop (Business info → quote types, then its project types, Pricing steps and Specialty items), then add it here. A pack can hold several quotes (e.g. Interior + Exterior painting). Shops that tick ${esc(t.label)} get them all with one click.`}</div>
+                ${has ? `<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px">${pq.map((q, k) => `<span style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;background:#fbf3df;color:#8a6510;border-radius:999px;padding:4px 6px 4px 11px">${esc(q.name)}<button type="button" onclick="mqTradePackDropQuote('${t.id}',${k})" title="Take out of the pack" style="border:0;background:#fff;color:#8a6510;border-radius:999px;width:18px;height:18px;line-height:18px;padding:0;cursor:pointer;font-size:12px">×</button></span>`).join('')}</div>
+                  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px"><button type="button" class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqTradeOpenPack('${t.id}')">✏️ Open in my shop to edit</button><button type="button" class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqTradeRemovePack('${t.id}')">Remove pack</button></div>` : ''}
+                ${others.length ? `<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><span style="font-size:12px;color:#374151">${has ? 'Add a quote to this pack:' : 'Add from:'}</span><select id="mq-trade-e-src" style="${inp};width:auto!important;min-width:200px;max-width:320px!important">${others.map(q => `<option value="${q.id}">${esc(q.name)}</option>`).join('')}</select><button type="button" class="mq-btn ${has ? '' : 'mq-btn-primary '}mq-btn-sm" onclick="mqTradePackAddQuote('${t.id}')">${has ? '+ Add to pack' : 'Save as starter pack'}</button></div>${has ? '<div style="font-size:11px;color:#9ca3af;margin-top:4px">A quote with the same name as one already in the pack replaces it.</div>' : ''}` : (has ? '' : '<div style="font-size:12px;color:#b45309">Add a quote type in this shop first (Business info → Estimator tabs).</div>')}`;
             })()}
           </div>`}
         </div>` : ''}
@@ -11957,35 +11997,76 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     if (!t || !confirm(`Delete "${t.label}"?\n\nShops that ticked it keep their quote types; it just disappears from the list.`)) return;
     try { await mqSaveTradeCatalog((window._mqTradeCatalog || []).filter(x => x.id !== id)); await mqLibDelete(t.packRec); showMsg('mq-templates-msg', `✓ "${t.label}" deleted.`); mqTradeAdminRender(); } catch(e) { mqTradeErr(e); }
   };
-  // Saves a quote type from this shop as the trade's starter pack (its own
-  // row). From an edit copy: optionally removes the copy afterwards.
-  window.mqTradeSavePack = async function(id, srcId, removeAfter) {
-    const src = srcId || el('mq-trade-e-src')?.value;
-    if (!src) return;
+  async function mqTradePackWrite(t, quotes) {
+    const packRec = await mqLibSave('pack', t.id, { quotes }, t.packRec);
+    await mqTradeUpsert(t.id, { pack: null, packRec, packSum: mqPackSum(quotes), packFrom: null, packAt: new Date().toISOString().slice(0, 10) });
+  }
+  async function mqTradeSnapPriced(qtId) {
+    const snap = await mqTradeSnapshot(qtId);
+    if (!(snap.cats.length || snap.specs.length || snap.qt.countertops)) throw Object.assign(new Error('empty'), { qtName: snap.qt.name });
+    return snap;
+  }
+  const mqTradePackErr = e => e && e.message === 'empty' ? showMsg('mq-templates-msg', `"${e.qtName}" has nothing priced yet — give it a Pricing step or specialty item first.`, 'error') : mqTradeErr(e);
+  // Adds one of this shop's quotes to the pack (same name -> replaces it).
+  window.mqTradePackAddQuote = async function(id) {
+    const src = el('mq-trade-e-src')?.value;
     const t = mqTradeEntries().find(x => x.id === id);
-    if (!t) return;
-    if (!srcId && mqTradeHasPack(t) && !confirm(`Replace ${t.label}'s starter pack with this quote?\n\nShops that already used the old one keep their copy.`)) return;
+    if (!src || !t) return;
     showMsg('mq-templates-msg', 'Saving starter pack…');
     try {
-      const pack = await mqTradeSnapshot(src);
-      if (!(pack.cats.length || pack.specs.length || pack.qt.countertops)) { showMsg('mq-templates-msg', `"${pack.qt.name}" has nothing priced yet — give it a Pricing step or specialty item first.`, 'error'); return; }
-      const packRec = await mqLibSave('pack', id, pack, t.packRec);
-      const packSum = { rooms: pack.rooms.length, cats: pack.cats.length, items: pack.items.length, specs: pack.specs.length, qt: { name: pack.qt.name } };
-      await mqTradeUpsert(id, { pack: null, packRec, packSum, packFrom: pack.qt.name, packAt: new Date().toISOString().slice(0, 10) });
-      if (removeAfter) await mqQtPurge(src);
-      showMsg('mq-templates-msg', `✓ Starter pack saved: ${mqTradePackSummary(pack)}.${removeAfter ? ' The copy was removed from your shop.' : ''}`);
+      const snap = await mqTradeSnapPriced(src);
+      const quotes = mqPackQuotes(await mqTradePackLoad(t));
+      const k = quotes.findIndex(q => String(q.qt.name || '').toLowerCase() === String(snap.qt.name || '').toLowerCase());
+      if (k >= 0 && !confirm(`The pack already has "${quotes[k].qt.name}". Replace it with this one?`)) { showMsg('mq-templates-msg', ''); return; }
+      if (k >= 0) quotes[k] = snap; else quotes.push(snap);
+      await mqTradePackWrite(t, quotes);
+      showMsg('mq-templates-msg', `✓ "${snap.qt.name}" ${k >= 0 ? 'updated in' : 'added to'} ${t.label}'s starter pack (${quotes.length} quote${quotes.length === 1 ? '' : 's'}).`);
+      mqTradeAdminRender();
+    } catch(e) { mqTradePackErr(e); }
+  };
+  window.mqTradePackDropQuote = async function(id, k) {
+    const t = mqTradeEntries().find(x => x.id === id);
+    if (!t) return;
+    try {
+      const quotes = mqPackQuotes(await mqTradePackLoad(t));
+      const q = quotes[k];
+      if (!q) return;
+      if (quotes.length === 1) { await mqTradeRemovePack(id); return; }
+      if (!confirm(`Take "${q.qt.name}" out of ${t.label}'s starter pack?`)) return;
+      quotes.splice(k, 1);
+      await mqTradePackWrite(t, quotes);
+      showMsg('mq-templates-msg', `✓ "${q.qt.name}" taken out of the pack.`);
       mqTradeAdminRender();
     } catch(e) { mqTradeErr(e); }
+  };
+  // Saves the edit copies back into the pack (all of them, in order).
+  window.mqTradeSavePack = async function(id, removeAfter) {
+    const t = mqTradeEntries().find(x => x.id === id);
+    if (!t) return;
+    const works = mqQuoteTypesOf(window._mqShopRecord.fields).filter(q => q.packEdit && q.trade === id).sort((a, b) => (a.packIdx || 0) - (b.packIdx || 0));
+    if (!works.length) return;
+    showMsg('mq-templates-msg', 'Saving starter pack…');
+    try {
+      const quotes = [];
+      for (const w of works) quotes.push(await mqTradeSnapPriced(w.id));
+      await mqTradePackWrite(t, quotes);
+      if (removeAfter) for (const w of works) await mqQtPurge(w.id);
+      showMsg('mq-templates-msg', `✓ Starter pack saved: ${mqTradePackSummary(mqPackSum(quotes))}.${removeAfter ? ' The copies were removed from your shop.' : ''}`);
+      mqTradeAdminRender();
+    } catch(e) { mqTradePackErr(e); }
   };
   window.mqTradeOpenPack = async function(id) {
     const t = mqTradeEntries().find(x => x.id === id);
     if (!t) return;
     await mqApplyTradePack(t, { edit: true });
   };
-  window.mqTradeDiscardWork = async function(id, qtId) {
-    if (!confirm('Remove the copy from your shop without saving? The starter pack stays as it was.')) return;
-    try { await mqQtPurge(qtId); showMsg('mq-templates-msg', '✓ Copy removed. The starter pack is unchanged.'); mqTradeAdminRender(); }
-    catch(e) { showMsg('mq-templates-msg', 'Error removing it.', 'error'); }
+  window.mqTradeDiscardWork = async function(id) {
+    if (!confirm('Remove the copies from your shop without saving? The starter pack stays as it was.')) return;
+    try {
+      const works = mqQuoteTypesOf(window._mqShopRecord.fields).filter(q => q.packEdit && q.trade === id);
+      for (const w of works) await mqQtPurge(w.id);
+      showMsg('mq-templates-msg', '✓ Copies removed. The starter pack is unchanged.'); mqTradeAdminRender();
+    } catch(e) { showMsg('mq-templates-msg', 'Error removing it.', 'error'); }
   };
   window.mqTradeRemovePack = async function(id) {
     const t = mqTradeEntries().find(x => x.id === id);
@@ -12002,8 +12083,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     for (const t of list) {
       try {
         const packRec = await mqLibSave('pack', t.id, t.pack, t.packRec);
-        const p = t.pack;
-        await mqTradeUpsert(t.id, { pack: null, packRec, packSum: { rooms: (p.rooms || []).length, cats: (p.cats || []).length, items: (p.items || []).length, specs: (p.specs || []).length, qt: { name: (p.qt && p.qt.name) || '' } } });
+        await mqTradeUpsert(t.id, { pack: null, packRec, packSum: mqPackSum(mqPackQuotes(t.pack)) });
       } catch(e) { console.warn('pack move failed', t.id, e); window._mqTradePacksMoved = false; }
     }
   }
