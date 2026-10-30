@@ -1979,12 +1979,12 @@ window.logoutMember = async function () {
                   <div style="font-size:13px;font-weight:700;color:#111">Your own quote types</div>
                   <div style="font-size:12px;color:#6b7280">Name it here, then set it up in Project types</div>
                 </div>
-                <div class="mq-hint" style="display:block;margin-bottom:.75rem">Add a quote of your own, like Refacing or Closets. Each one gets its own tab (or card) on your widget. Its project types live in <strong>Project types</strong>, and its steps are the custom pricing categories you give it on the <strong>Pricing</strong> tab.</div>
+                <div class="mq-hint" style="display:block;margin-bottom:.75rem" data-mq-gen="Add a quote of your own, like Painting or Flooring. Each one gets its own tab (or card) on your widget. Its project types live in &lt;strong&gt;Project types&lt;/strong&gt;, and its steps are the custom pricing categories you give it on the &lt;strong&gt;Pricing&lt;/strong&gt; tab.">Add a quote of your own, like Refacing or Closets. Each one gets its own tab (or card) on your widget. Its project types live in <strong>Project types</strong>, and its steps are the custom pricing categories you give it on the <strong>Pricing</strong> tab.</div>
                 <div id="mq-qt-list"></div>
                 <div id="mq-qt-add-closed"><button type="button" class="mq-btn mq-btn-sm" onclick="mqQtShowAdd(true)">+ Add a quote type</button></div>
                 <div id="mq-qt-add-open" style="display:none;border:1.5px solid #d7a42e;background:#fffdf7;border-radius:10px;padding:12px;margin-top:4px">
                   <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:4px">Name</label>
-                  <input type="text" id="mq-qt-add-name" maxlength="40" placeholder="e.g. Refacing" onkeydown="if(event.key==='Enter'){event.preventDefault();mqQtAdd();}" style="width:100%;max-width:320px;font-size:13px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit"/>
+                  <input type="text" id="mq-qt-add-name" maxlength="40" placeholder="e.g. Refacing" data-mq-gen-ph="e.g. Painting" onkeydown="if(event.key==='Enter'){event.preventDefault();mqQtAdd();}" style="width:100%;max-width:320px;font-size:13px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit"/>
                   <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#111;cursor:pointer;margin-top:10px">
                     <input type="checkbox" id="mq-qt-add-pro" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/> Pro only <span style="font-size:12px;color:#6b7280">(shows in MidasQuote Pro, not on your website widget)</span>
                   </label>
@@ -2119,7 +2119,7 @@ window.logoutMember = async function () {
                 <br><br>
                 🎨 <strong>Variants:</strong> Add multiple variants under a single item — e.g. a "Pullouts" item with several different pullout options, each priced individually.
                 <br><br>
-                📐 <strong>Sizes:</strong> Under Variants, you can add Sized options and the math is done for you — great for refacing doors. E.g. a "Maple shaker doors" item with variants for 9"×30", 10"×30", 11"×30", and so on — the sq ft price for each is generated automatically based on the rate you enter.
+                <span data-mq-gen="📐 &lt;strong&gt;Sizes:&lt;/strong&gt; Under Variants, you can add Sized options and the math is done for you — great for anything sold in set sizes. E.g. a &quot;Window trim&quot; item with variants for 24&quot;×36&quot;, 30&quot;×48&quot; and so on — the price for each is worked out automatically from the rate you enter.">📐 <strong>Sizes:</strong> Under Variants, you can add Sized options and the math is done for you — great for refacing doors. E.g. a "Maple shaker doors" item with variants for 9"×30", 10"×30", 11"×30", and so on — the sq ft price for each is generated automatically based on the rate you enter.</span>
                 <br><br>
                 🏷️ <strong>Supply vs. install pricing:</strong> Leave "Offer supply/install choice?" unchecked if this item only ever comes one way — just pick whichever label is true in the dropdown next to it (doesn't change the price, just what the customer sees). Check the box if you want the <em>customer</em> to choose between the two for this specific item — then enter a separate install price. That install price is <strong>labor only</strong> and gets added on top of the supply price.
                 <br><br>
@@ -2337,10 +2337,10 @@ window.logoutMember = async function () {
                 <div class="mqp-card">
                   <div class="mqp-icon">🧰</div>
                   <h3>Add the extras customers miss</h3>
-                  <p>Use <strong>Specialty items</strong> for the things a homeowner wouldn't put in a ballpark: finished ends, fillers and scribes, hourly labour, site visits, disposal. Price them flat, per linear foot or per square foot.</p>
+                  <p>Use <strong>Specialty items</strong> for the things a homeowner wouldn't put in a ballpark: <span data-mq-gen="prep work, hourly labour, site visits, disposal">finished ends, fillers and scribes, hourly labour, site visits, disposal</span>. Price them flat, per linear foot or per square foot.</p>
                   <p class="mqp-tip"><strong>Hourly work:</strong> make a flat-rate item priced per hour, then enter the hours as the quantity.</p>
                 </div>
-                <div class="mqp-card">
+                <div class="mqp-card" data-mq-cabonly="1">
                   <div class="mqp-icon">📐</div>
                   <h3>Side splashes and returns are built in</h3>
                   <p>No extra items needed. Enter <strong>side splashes</strong> in the backsplash step, and <strong>crown and valance returns</strong> right in the crown and valance step. Pro prices them into the quote for you.</p>
@@ -2399,7 +2399,7 @@ window.logoutMember = async function () {
             <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:1rem 1.25rem;margin-bottom:1.5rem;font-size:13px;color:#92400e;line-height:1.7">
               <strong>💡 How to add a photo:</strong><br>
               <strong>Option 1 —</strong> Click <em>"📤 Upload a photo"</em> on any item below and choose a photo straight from your device — easiest option, hosted permanently for you.<br>
-              <strong>Option 2 —</strong> Click <em>"📷 Choose from library"</em> to pick from our curated cabinet & countertop photo collection.<br>
+              <strong>Option 2 —</strong> Click <em>"📷 Choose from library"</em> to pick from our curated <span data-mq-gen="">cabinet &amp; countertop </span>photo collection.<br>
               <strong>Option 3 —</strong> Already have a photo hosted somewhere reliable? Paste its direct image link instead — just avoid social media links, since those expire and will eventually break.
             </div>
             <div id="mq-products-msg"></div>
@@ -2417,7 +2417,7 @@ window.logoutMember = async function () {
           <div class="mq-page mq-sr-tab" id="mq-page-showroom">
             <button class="mq-help-btn" onclick="mqShowHelp('showroom')"><span class="mq-help-badge">?</span> Need help?</button>
             <div class="mq-page-title">🖼️ Showroom</div>
-            <div class="mq-page-sub" style="max-width:640px">Manage everything that can appear on your showroom page — your real priced categories (materials, doors, specialty items, etc.) and any extra portfolio-style categories you add yourself. Reorder, rename (showroom display only — never touches your pricing or the widget), hide a whole category, or remove individual items. To add photos to a priced item so it starts showing up here, use the My Products tab.</div>
+            <div class="mq-page-sub" style="max-width:640px">Manage everything that can appear on your showroom page — your real priced categories (<span data-mq-gen="your pricing steps, specialty items, etc.">materials, doors, specialty items, etc.</span>) and any extra portfolio-style categories you add yourself. Reorder, rename (showroom display only — never touches your pricing or the widget), hide a whole category, or remove individual items. To add photos to a priced item so it starts showing up here, use the My Products tab.</div>
             <div id="mq-showroom-msg"></div>
 
             <div class="mq-card mq-sr-card">
@@ -3486,7 +3486,7 @@ window.logoutMember = async function () {
 
             <!-- MARKETING STUDIO v2.2: Visual template gallery and enhanced design editor. Legacy tools preserved below. -->
             <section id="mq-studio" class="mq-studio">
-              <div class="mq-studio-hero"><div><span class="mq-studio-kicker">✦ YOUR CREATIVE WORKSPACE</span><h2>Design work worth showing off.</h2><p>Art-directed ads for cabinet shops. Choose a composition, fine-tune your branding, and export beautifully.</p></div><span class="mq-studio-hero-star">✳</span></div>
+              <div class="mq-studio-hero"><div><span class="mq-studio-kicker">✦ YOUR CREATIVE WORKSPACE</span><h2>Design work worth showing off.</h2><p>Art-directed ads for <span data-mq-gen="your business">cabinet shops</span>. Choose a composition, fine-tune your branding, and export beautifully.</p></div><span class="mq-studio-hero-star">✳</span></div>
               <div class="mq-creative-hub" aria-label="Choose your creative tool">
                 <button type="button" class="mq-creative-choice" id="mq-creative-open-design">
                   <span class="mq-creative-emoji" aria-hidden="true">🎨</span><span><strong>Design Studio</strong><small>Social posts, promotions, posters, QR designs and fully movable yard-sign templates</small></span><span aria-hidden="true">→</span>
@@ -3509,7 +3509,7 @@ window.logoutMember = async function () {
                       <div class="mq-studio-card-title">Copy</div>
                       <label>Shop name (edit for this graphic)<input id="mq-studio-shop-name" type="text" maxlength="80" placeholder="Your shop name"></label>
                       <label>Headline<input id="mq-studio-headline" type="text" maxlength="90"></label>
-                      <div class="mq-studio-two-col"><label>Highlight word or phrase<input id="mq-studio-emphasis" type="text" maxlength="50" placeholder="e.g. DREAM KITCHEN"></label><label>Highlight colour<input id="mq-studio-emphasis-color" type="color" value="#f3d6a4"></label></div>
+                      <div class="mq-studio-two-col"><label>Highlight word or phrase<input id="mq-studio-emphasis" type="text" maxlength="50" placeholder="e.g. DREAM KITCHEN" data-mq-gen-ph="e.g. FRESH NEW LOOK"></label><label>Highlight colour<input id="mq-studio-emphasis-color" type="color" value="#f3d6a4"></label></div>
                       <label>Supporting line<input id="mq-studio-subline" type="text" maxlength="140"></label>
                       <label>Call to action<input id="mq-studio-cta" type="text" maxlength="48"></label>
                       <label>Website text (shown on the graphic)<input id="mq-studio-url-text" type="text" maxlength="110" placeholder="Defaults to your quote link"></label>
@@ -3743,7 +3743,7 @@ window.logoutMember = async function () {
                 <canvas id="mq-mk-canvas" width="1080" height="1080" style="width:280px;height:280px;border-radius:14px;display:block"></canvas>
                 <div style="width:100%;max-width:280px">
                   <label class="mq-label" style="display:block;margin-bottom:6px;font-size:11px">Headline text</label>
-                  <input type="text" id="mq-mk-graphic-headline" placeholder="Get your cabinet quote in under 5 minutes" maxlength="60" style="font-size:13px"/>
+                  <input type="text" id="mq-mk-graphic-headline" placeholder="Get your cabinet quote in under 5 minutes" data-mq-gen-ph="Get your quote in under 5 minutes" maxlength="60" style="font-size:13px"/>
                 </div>
                 <div style="display:flex;gap:8px;width:100%;max-width:280px">
                   <label class="mq-btn mq-btn-sm" style="flex:1;text-align:center;cursor:pointer">
@@ -6186,7 +6186,7 @@ window.logoutMember = async function () {
             <div class="mq-room-grp-top" onclick="mqRoomGrpToggle(this, '${r.id}:2')"><span class="mq-room-grp-chev" style="transform:rotate(${(window._mqRoomGrpOpen||new Set()).has('${r.id}:2') ? 90 : 0}deg)">▶</span><div style="flex:1;min-width:0"><div class="mq-room-grp-h">② What customers see when they pick it</div><div class="mq-room-grp-sum">${(r.description||'').trim() ? 'Note added' : 'No note'} · ${(r.coverImage || mqDefaultCoverImageUrlFor(r.id, r.name)) ? ((r.coverImage ? 'Your cover photo' : 'Default cover photo')) : 'No cover photo'}</div></div></div>
             <div class="mq-room-grp-b" style="display:${(window._mqRoomGrpOpen||new Set()).has('${r.id}:2') ? 'block' : 'none'}"><div class="mq-room-grp-sub">A short welcome note and a cover photo.</div>
             <label style="display:block;font-size:12px;color:#6b7280;font-weight:600;margin-bottom:2px" for="mq-room-desc-${idx}">Note to customers (optional)</label>
-          <textarea id="mq-room-desc-${idx}" placeholder="Optional note shown to customers when they pick this project type — e.g. &quot;For door refacing, skip the box materials below — just add your square footage under Specialty Items instead.&quot;" rows="2" style="width:100%;font-size:12px;padding:7px 10px;margin-top:2px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;resize:vertical;margin-bottom:8px">${(r.description||'').replace(/</g,'&lt;')}</textarea>
+          <textarea id="mq-room-desc-${idx}" placeholder="${(isQt || !mqCabShop()) ? 'Optional note shown to customers when they pick this project type — e.g. what&#39;s included, or what to have ready.' : 'Optional note shown to customers when they pick this project type — e.g. &quot;For door refacing, skip the box materials below — just add your square footage under Specialty Items instead.&quot;'}" rows="2" style="width:100%;font-size:12px;padding:7px 10px;margin-top:2px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;resize:vertical;margin-bottom:8px">${(r.description||'').replace(/</g,'&lt;')}</textarea>
           <div style="margin-bottom:10px">
             ${isDemo ? mqDemoImageLockedHTML('cover images') : `
             <div style="display:flex;gap:8px;align-items:flex-start">
@@ -6471,7 +6471,7 @@ window.logoutMember = async function () {
             <div style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#6b7280;margin:14px 0 8px">Quote settings</div>
             ${mqGrpBox(q.id + ':card', '#2563eb', '#eff6ff', '① Card &amp; icon', (q.sub ? '“' + mqEscHtml(q.sub) + '”' : 'No line under the name yet') + ' · ' + mqEscHtml(q.icon || 'grid') + ' icon', 'How this quote shows on its tab or card.', `
               <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:4px">Line under the name (on its card or tab)</label>
-              <input type="text" id="mq-qt-sub-${q.id}" maxlength="70" value="${mqEscHtml(q.sub || '')}" placeholder="e.g. New doors and fronts on your existing boxes" onchange="mqQtUpdate('${q.id}', { sub: this.value.trim() }, '✓ Saved.')" style="width:100%;max-width:420px;font-size:13px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit"/>
+              <input type="text" id="mq-qt-sub-${q.id}" maxlength="70" value="${mqEscHtml(q.sub || '')}" placeholder="${mqCabShop() ? 'e.g. New doors and fronts on your existing boxes' : 'e.g. What this quote covers, in a few words'}" onchange="mqQtUpdate('${q.id}', { sub: this.value.trim() }, '✓ Saved.')" style="width:100%;max-width:420px;font-size:13px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit"/>
               <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin:10px 0 6px">Icon</label>
               <div style="display:flex;flex-wrap:wrap;gap:6px">${Object.keys(MQ_QT_ICONS).map(k => `<button type="button" title="${k}" aria-label="Icon: ${k}" onclick="mqQtUpdate('${q.id}', { icon: '${k}' }, '✓ Icon updated.')" style="width:38px;height:38px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;${(q.icon || 'grid') === k ? 'background:#1a1a1a;color:#fff;border:1.5px solid #1a1a1a' : 'background:#fff;color:#374151;border:1px solid #d1d5db'}">${mqQtIconSvg(k, 20)}</button>`).join('')}</div>
               <div style="font-size:12px;color:#6b7280;margin-top:10px;line-height:1.5">The card photo customers see in Focused layout is the cover image of the first project type below. Name, on/off and Pro only are on <a href="#" onclick="event.preventDefault();mqNav('shop', document.querySelector('.mq-nav-item[onclick*=&quot;mqNav(\'shop\'&quot;]'))" style="color:#1d4ed8">Business info</a>.</div>
@@ -6497,7 +6497,7 @@ window.logoutMember = async function () {
                 <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
                   <button type="button" class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqQtAddStep('${q.id}')">+ Add a priced step for ${mqEscHtml(q.name)}</button>
                 </div>
-                <div style="font-size:12px;color:#6b7280;margin-top:8px;line-height:1.5">Specialty items work here too: in <strong>Specialty items</strong>, tick this quote's project types (they're listed as e.g. "Kitchen (${mqEscHtml(q.name)})") on any item and it shows in this quote's Details &amp; Selections step.</div>
+                <div style="font-size:12px;color:#6b7280;margin-top:8px;line-height:1.5">Specialty items work here too: in <strong>Specialty items</strong>, tick this quote's project types (they're listed as e.g. "${mqEscHtml(((window._mqRooms || []).find(x => x.forQt === q.id) || { name: mqCabShop() ? 'Kitchen' : 'Living room' }).name)} (${mqEscHtml(q.name)})") on any item and it shows in this quote's Details &amp; Selections step.</div>
               </div>`)}
             <div style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#6b7280;margin:18px 0 8px">Project types in this quote</div>
             <div id="mq-rooms-list-qt-${q.id}"></div>
@@ -11385,6 +11385,22 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const show = (id, on) => { const r = row(id); if (r) r.style.display = on ? '' : 'none'; };
     show('cabinets', biz.cab); show('countertops', biz.ct); show('both', biz.cab && biz.ct);
   }
+  // ── Wording for every trade (Oct 29): cabinet examples only for
+  // businesses that do cabinetry; everyone else gets general wording.
+  function mqCabShop() { const f = window._mqShopRecord && window._mqShopRecord.fields; return !f || mqBizOf(f).cab; }
+  window.mqCabShop = mqCabShop;
+  window.mqApplyTradeWording = function() {
+    const cab = mqCabShop();
+    document.querySelectorAll('[data-mq-gen]').forEach(e => {
+      if (e.dataset.mqCabhtml === undefined) e.dataset.mqCabhtml = e.innerHTML;
+      e.innerHTML = cab ? e.dataset.mqCabhtml : e.getAttribute('data-mq-gen');
+    });
+    document.querySelectorAll('[data-mq-gen-ph]').forEach(e => {
+      if (e.dataset.mqCabph === undefined) e.dataset.mqCabph = e.getAttribute('placeholder') || '';
+      e.setAttribute('placeholder', cab ? e.dataset.mqCabph : e.getAttribute('data-mq-gen-ph'));
+    });
+    document.querySelectorAll('[data-mq-cabonly]').forEach(e => { e.style.display = cab ? '' : 'none'; });
+  };
   function mqBizOf(fields) {
     const cfg = mqTabsCfgOf(fields);
     const h = cfg.hidden;
@@ -11423,6 +11439,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     if (!window._mqTradeCatalogLoaded) { mqLoadTradeCatalog().then(() => window.mqRenderBizTypes()); }
     const biz = mqBizOf(shopRec.fields);
     mqSyncTabRowsToBiz(biz);
+    window.mqApplyTradeWording();
     if (biz.ct && !Array.isArray(window._mqCtItems) && !window._mqCtItemsLoading) mqCtItemsLoad().then(() => window.mqRenderBizTypes());
     if (mqQuoteTypesOf(shopRec.fields).some(q => q.countertops)) mqCtMigrateQtFlags();
     const qts = mqQuoteTypesOf(shopRec.fields);
@@ -14377,7 +14394,7 @@ ${mqIsFreePlanShop() ? mqShowroomLockNoteHTML(true) : `      <label class="mq-bt
 
   function roomLinkSummaryText(visibleRooms, rooms, cat) {
     if (!visibleRooms || !visibleRooms.length) {
-      return cat === 'specialty' ? 'All cabinet types (not Countertops or your own quote types — tick to add)' : 'All project types';
+      return cat === 'specialty' ? (mqCabShop() ? 'All cabinet types (not Countertops or your own quote types — tick to add)' : 'None yet — tick the project types it’s for') : 'All project types';
     }
     const names = visibleRooms.map(id => mqRoomLabel(rooms.find(r => r.id === id))).filter(Boolean);
     // An empty visibleRooms list means "never configured, so visible for
@@ -16935,7 +16952,7 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
     Instant Pricing
     <span style="display:block;width:24px;height:1.5px;background:${eyebrow}"></span>
   </div>
-  <h2 style="font-family:'Cormorant Garamond',Georgia,serif;font-size:32px;font-weight:600;color:${headline};line-height:1.2;margin:0 0 0.75rem;letter-spacing:-0.01em">Get your cabinet estimate<br/>in under 5 minutes</h2>
+  <h2 style="font-family:'Cormorant Garamond',Georgia,serif;font-size:32px;font-weight:600;color:${headline};line-height:1.2;margin:0 0 0.75rem;letter-spacing:-0.01em">Get your ${mqCabShop() ? 'cabinet ' : ''}estimate<br/>in under 5 minutes</h2>
   <p style="font-size:14px;color:${para};line-height:1.7;max-width:460px;margin:0 auto">No phone tag, no awkward sales call. Fill in a few details and we'll send you a ballpark range you can actually plan around.</p>
 </div>`;
   }
@@ -17141,7 +17158,7 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
 
       let bgImage = _mqGraphicBgImage;
       let overlayOpacity = _mqGraphicOverlayOpacity;
-      let graphicHeadline = _mqGraphicHeadline || 'Get your cabinet quote in under 5 minutes';
+      let graphicHeadline = _mqGraphicHeadline || (mqCabShop() ? 'Get your cabinet quote in under 5 minutes' : 'Get your quote in under 5 minutes');
 
       function wrapText(text, font, maxWidth) {
         ctx.font = font;
@@ -17281,7 +17298,7 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
         graphicHeadlineInput.oninput = () => {
           const val = graphicHeadlineInput.value.trim();
           _mqGraphicHeadline = val;
-          graphicHeadline = val || 'Get your cabinet quote in under 5 minutes';
+          graphicHeadline = val || (mqCabShop() ? 'Get your cabinet quote in under 5 minutes' : 'Get your quote in under 5 minutes');
           drawGraphic();
           saveHeadlinesDebounced(shopRecord);
         };

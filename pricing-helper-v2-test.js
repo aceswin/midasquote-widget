@@ -6716,9 +6716,10 @@ window.mqphGoToWizard = function() {
         .mqcc-subbox-note{font-size:11px;color:#6b7280;line-height:1.45;margin-top:4px}
         .mqcc-check{display:flex !important;align-items:flex-start !important;gap:8px !important;font-size:13px !important;font-weight:600 !important;color:#111 !important;cursor:pointer;text-transform:none !important;letter-spacing:0 !important}
         .mqcc-check input{width:16px !important;height:16px !important;min-width:16px !important;margin:1px 0 0 !important;flex:none !important}
-        .mqcc-var-row{background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:8px;margin-top:8px}
-        .mqcc-var-row input,.mqcc-var-row select{font-size:12px !important;padding:5px 7px !important;height:auto !important}
-        .mqcc-var-line{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:12px;color:#374151}
+        .mqcc-var-row{background:#fff !important;border:1px solid #e5e7eb !important;border-radius:10px !important;padding:12px 14px !important;margin-top:10px !important}
+        .mqcc-var-row input,.mqcc-var-row select{font-size:13px !important;padding:6px 9px !important;height:auto !important;min-height:0 !important}
+        .mqcc-var-line{display:flex;align-items:center;gap:8px 10px;flex-wrap:wrap;font-size:12.5px;color:#374151;row-gap:10px}
+        .mqcc-var-line .mqph-btn{margin:0 !important}
         .mqcc-modal-pv-label{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#6b7280;margin-bottom:10px}
         @media(max-width:900px){.mqcc-modal-grid{grid-template-columns:1fr}.mqcc-modal-pv{position:static;max-height:none}}
         #mqcc-cat-tienames input,#mqcc-item-tienames input{width:15px !important;height:15px !important;min-width:15px !important;flex:none !important;margin:0 !important;padding:0 !important;box-shadow:none !important}</style>
@@ -6726,7 +6727,7 @@ window.mqphGoToWizard = function() {
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:${cats.length ? '14px' : '0'}">
           <div style="min-width:0;max-width:620px">
             <div class="mqph-cat-title">✨ Custom pricing categories</div>
-            <div style="font-size:12px;color:#6b7280;margin-top:6px;line-height:1.55">Make your own priced steps for anything not covered above — finished ends, site access, delivery, hourly work. Each category is its own step on your widget (Cabinets and Both tabs)${mqccQts().length ? ', or in one of your own quote types' : ''}. Photos, groups and which project types each option shows for are set in <strong>My Products</strong>, same as everything else.</div>
+            <div style="font-size:12px;color:#6b7280;margin-top:6px;line-height:1.55">${mqphComputeTabScope().countertopsOnly ? 'Make your own priced steps — prep work, site access, delivery, hourly work. Each category is its own step in one of your quote types' : `Make your own priced steps for anything not covered above — finished ends, site access, delivery, hourly work. Each category is its own step on your widget (Cabinets and Both tabs)${mqccQts().length ? ', or in one of your own quote types' : ''}`}. Photos, groups and which project types each option shows for are set in <strong>My Products</strong>, same as everything else.</div>
           </div>
           <button class="mqph-btn mqph-btn-primary mqph-btn-sm" onclick="mqccOpenCat(null)">+ New category</button>
         </div>
@@ -6831,7 +6832,10 @@ window.mqphGoToWizard = function() {
                 </div>
               </div>
             </div>
-            <label class="mqcc-check" id="mqcc-item-adj-wrap" style="margin:0 0 14px"><input type="checkbox" id="mqcc-item-adj"/> Apply this project type's % adjustments (materials % to the price, install % to the installation)</label>
+            <div id="mqcc-item-adj-wrap" style="margin:0 0 14px;display:flex;flex-direction:column;gap:3px">
+              <label class="mqcc-check" style="margin:0"><input type="checkbox" id="mqcc-item-adj"/> Let project types raise or lower this price</label>
+              <div id="mqcc-item-adj-hint" style="font-size:11.5px;color:#6b7280;line-height:1.5;padding-left:24px"></div>
+            </div>
             <div class="mqph-field" id="mqcc-item-showif-wrap"><label>Show this option</label><select id="mqcc-item-showif"></select></div>
             ${mqccTieFieldHtml('item')}
             <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin:4px 0 0;cursor:pointer">
@@ -7071,6 +7075,12 @@ window.mqphGoToWizard = function() {
     document.getElementById('mqcc-item-inst-min').value = inst && inst.min > 0 ? inst.min : '';
     mqccInstToggle();
     document.getElementById('mqcc-item-adj').checked = !!cfg.adj;
+    // Worded for where this step lives: a cabinet shop's Cabinets / Full
+    // project steps talk about Base cabinets %; a quote type (painting,
+    // flooring…) only ever sees its own Items %.
+    document.getElementById('mqcc-item-adj-hint').innerHTML = inQt
+      ? 'Off (normal): only a project type’s <strong>Total ballpark %</strong> changes this price. On: its <strong>Items %</strong> changes this price too, and its <strong>Installation %</strong> changes this option’s install. Set them on Project types → Price adjustments.'
+      : 'Off (normal — same as specialty items): only a project type’s <strong>Total ballpark %</strong> changes this price. On: its <strong>Base cabinets %</strong> changes this price too, and its <strong>Installation %</strong> changes this option’s install. Set them on Project types → Price adjustments.';
     mqccVarDraft = Array.isArray(cfg.variants) ? cfg.variants.map(v => ({ ...v })) : [];
     mqccVarRender();
     document.getElementById('mqcc-calc-a').value = '';
