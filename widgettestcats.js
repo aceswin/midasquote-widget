@@ -3207,7 +3207,9 @@
               // specialty items): priced exactly like 'each' with a fixed unit,
               // plus the measuring calculator next to the box (`entry`).
               how: MQ_CC_HOWS.includes(cfg.how) ? (cfg.how === 'sqft' || cfg.how === 'lft' ? 'each' : cfg.how) : 'flat',
-              entry: cfg.how === 'sqft' ? 'sqft' : (cfg.how === 'lft' ? 'linear' : ''),
+              // The measuring calculator also comes with a "custom unit" that's
+              // really square or linear feet (e.g. a shop typed "sq ft").
+              entry: cfg.how === 'sqft' ? 'sqft' : (cfg.how === 'lft' ? 'linear' : (cfg.how === 'each' ? mqUnitEntry(cfg.unit) : '')),
               src: typeof cfg.src === 'string' ? cfg.src : '',
               meas: typeof cfg.meas === 'string' ? cfg.meas : '',
               pctCc: typeof cfg.pctCc === 'string' ? cfg.pctCc : '',
@@ -3931,6 +3933,20 @@
     home: '<path d="M3.5 11L12 4l8.5 7"/><path d="M5.5 9.5V20h13V9.5"/><path d="M10 20v-5h4v5"/>',
     shelf: '<path d="M4 4v16M20 4v16"/><path d="M4 8.5h16M4 14h16M4 19.5h16"/>',
     sparkle: '<path d="M12 3l1.8 4.7 4.7 1.8-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/>',
+    bolt: '<path d="M13 2L4.5 13.5H12L11 22l8.5-11.5H12z"/>',
+    drop: '<path d="M12 3s6 6.4 6 11a6 6 0 0 1-12 0c0-4.6 6-11 6-11z"/>',
+    fan: '<circle cx="12" cy="12" r="1.6"/><path d="M12 10.4C12 6 13.5 3.5 16 3.5c2 0 2.5 2.5.5 4.5-1.5 1.5-3 2.2-4.5 2.4"/><path d="M13.6 12c4.4 0 6.9 1.5 6.9 4 0 2-2.5 2.5-4.5.5-1.5-1.5-2.2-3-2.4-4.5"/><path d="M12 13.6c0 4.4-1.5 6.9-4 6.9-2 0-2.5-2.5-.5-4.5 1.5-1.5 3-2.2 4.5-2.4"/><path d="M10.4 12C6 12 3.5 10.5 3.5 8c0-2 2.5-2.5 4.5-.5 1.5 1.5 2.2 3 2.4 4.5"/>',
+    flame: '<path d="M12 21c-3.9 0-6.5-2.6-6.5-6.2 0-3.4 2.4-5.4 3.6-8.3.5 1.8 1.4 2.9 2.6 3.4.3-2.7 1.5-5 3.3-6.9.4 3.2 3.5 6 3.5 10.6 0 4-2.6 7.4-6.5 7.4z"/>',
+    roof: '<path d="M2 14l10-9 10 9"/><path d="M5.6 10.8h12.8M8.9 7.9h6.2"/><path d="M5 13.5V20h14v-6.5"/>',
+    siding: '<path d="M3 5h18v15H3z"/><path d="M3 9h18M3 13h18M3 16.5h18"/>',
+    window: '<rect x="4.5" y="3.5" width="15" height="17" rx="1"/><path d="M12 3.5v17M4.5 12h15"/>',
+    fence: '<path d="M5 21V6l2-2.5L9 6v15M15 21V6l2-2.5L19 6v15"/><path d="M3 10h18M3 16h18"/>',
+    garage: '<path d="M3 10l9-6 9 6v11H3z"/><path d="M7 21v-8h10v8M7 16h10M7 18.5h10"/>',
+    leaf: '<path d="M5 19c0-8 5-14 15-15-.5 10-6.5 15-14 15z"/><path d="M5 19l8-8"/>',
+    bricks: '<rect x="3" y="4" width="18" height="16" rx="1"/><path d="M3 9.3h18M3 14.7h18M9 4v5.3M15 9.3v5.4M9 14.7V20"/>',
+    layers: '<path d="M12 3l9 5-9 5-9-5z"/><path d="M3 12.5l9 5 9-5"/><path d="M3 16.5l9 5 9-5"/>',
+    stairs: '<path d="M3 20h5v-5h5v-5h5V5h3"/><path d="M3 20h18"/>',
+    sofa: '<path d="M5 11V8a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v3"/><path d="M3 13a2 2 0 0 1 4 0v2h10v-2a2 2 0 0 1 4 0v4H3z"/><path d="M5 17v2M19 17v2"/>',
   };
   function mqQtIconSvg(key, size) {
     const s = size || 30;
@@ -3966,6 +3982,13 @@
   // Built once in loadShopData, after the custom categories (a quote type
   // with no priced steps yet isn't shown). allowPro = MidasQuote Pro.
   // A quote type's measurements: [{id:'m_…', label, type:'sqft'|'lft'|'count', unit}].
+  // "sq ft" / "square feet" → area calculator; "lin ft" / "ft" / "feet" → linear.
+  function mqUnitEntry(u) {
+    const t = String(u || '').trim().toLowerCase().replace(/\./g, '');
+    if (/^(sq ?ft|sqft|square ?f(ee|oo)t|sf|ft2|ft²)$/.test(t)) return 'sqft';
+    if (/^(lin ?ft|linft|linear ?f(ee|oo)t|lf|ft|feet|foot)$/.test(t)) return 'linear';
+    return '';
+  }
   function mqQtMeasClean(list) {
     return (Array.isArray(list) ? list : []).filter(m => m && /^m_[a-z0-9]+$/i.test(String(m.id || '')) && String(m.label || '').trim()).map(m => ({
       id: String(m.id), label: String(m.label).trim(), type: ['sqft', 'lft'].includes(m.type) ? m.type : 'count',
@@ -3981,7 +4004,7 @@
           <div style="font-size:13px;color:#4b5563;margin-bottom:10px;line-height:1.5">📐 Enter your measurements — your estimate is worked out from these.</div>
           <div id="mq-${p}-meas-body" style="display:none"><div class="mq-grid3">
             ${ms.map(m => `<div class="mq-field"><label class="mq-label" style="display:block;margin-bottom:8px">${mqCcEsc(m.label)}${m.label.toLowerCase().includes(m.unit.toLowerCase()) ? '' : ` (${mqCcEsc(m.unit)})`}</label>
-              <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap"><div style="position:relative;display:inline-block"><input type="number" class="mq-linft-input" id="mq-${p}-meas-${m.id}" value="0" min="0" step="any" onclick="this.select()" style="text-align:center;width:130px;padding-right:${m.type === 'count' ? '8' : '40'}px"/>${m.type === 'count' ? '' : `<span style="position:absolute;right:6px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:13px;font-weight:600;pointer-events:none">${m.type === 'sqft' ? 'sq ft' : 'ft'}</span>`}</div>${m.type === 'count' ? '' : calcBtn(`mq-${p}-meas-${m.id}`, m.type === 'sqft' ? 'sqft' : 'linear', m.label)}</div>
+              <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap"><div style="position:relative;display:inline-block"><input type="number" class="mq-linft-input" id="mq-${p}-meas-${m.id}" value="0" min="0" step="any" onclick="this.select()" style="text-align:center;width:130px;padding-right:${m.type === 'count' ? '8' : '40'}px"/>${m.type === 'count' ? '' : `<span style="position:absolute;right:6px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:13px;font-weight:600;pointer-events:none">${m.type === 'sqft' ? 'sq ft' : 'ft'}</span>`}</div>${m.type === 'count' ? (mqUnitEntry(m.unit) ? calcBtn(`mq-${p}-meas-${m.id}`, mqUnitEntry(m.unit), m.label) : '') : calcBtn(`mq-${p}-meas-${m.id}`, m.type === 'sqft' ? 'sqft' : 'linear', m.label)}</div>
             </div>`).join('')}
           </div></div>
         </div>`;
