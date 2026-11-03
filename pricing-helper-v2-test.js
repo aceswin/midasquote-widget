@@ -7953,20 +7953,27 @@ window.mqphGoToWizard = function() {
       </div>
       ${c.description ? `<div style="font-size:12px;color:#4b5563;margin-bottom:10px;line-height:1.5">${mqccEsc(c.description)}</div>` : ''}
       ${!catOn ? `<div style="font-size:12px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:6px 10px;margin-bottom:10px">This step is hidden until “${mqccEsc(ruleTarget ? ruleTarget.name : '')}” is picked.</div>` : ''}
+      ${items.length ? body : '<div style="font-size:12px;color:#9ca3af">Turned-off options don’t show to customers.</div>'}
       ${(() => {
         // Options priced per measurement: a sample of the quote's Measurements
         // screen (with the calculator), so the price can be tried out here.
         const ids = [...new Set(items.filter(i => i.how === 'meas' && i.meas).map(i => i.meas))];
         const ms = ids.map(id => mqccMeasFind(id)).filter(Boolean);
         if (!ms.length) return '';
-        return `<div style="background:#f0fdfa;border:1px solid #99f6e4;border-radius:8px;padding:8px 10px;margin-bottom:10px">
-          <div style="font-size:11px;font-weight:700;color:#0f766e;margin-bottom:6px">📐 Customers enter this on the Measurements screen first — try a number:</div>
+        return `<div style="background:#f0fdfa;border:1px solid #99f6e4;border-radius:8px;padding:8px 10px;margin-top:12px">
+          <div style="font-size:11px;font-weight:700;color:#0f766e;margin-bottom:6px">${(() => {
+            // The first step (in this quote's order) priced from a measurement is where customers enter it.
+            const order = mqccPlaceList(null, c.qt || '').map(x => x[0]).filter(v => /^cc:/.test(v)).map(v => v.slice(3));
+            const firstFor = id => order.find(cid => lineItems.some(r => r.fields && r.fields['Category'] === cid && r.fields['Active'] !== false && mqccCfg(r).how === 'meas' && mqccCfg(r).meas === id));
+            const elsewhere = ms.map(m => firstFor(m.id)).filter(cid => cid && cid !== c.id);
+            const other = elsewhere.length ? mqccCats().find(x => x.id === elsewhere[0]) : null;
+            return other ? `📐 Customers enter this in the earlier “${mqccEsc(other.name)}” step — try a number:` : '📐 Customers enter this right here, under the choices — try a number:';
+          })()}</div>
           <div style="display:flex;flex-wrap:wrap;gap:12px">${ms.map(m => `<label style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:#374151">${mqccEsc(m.label)}
             <input type="text" inputmode="decimal" value="${mqccPv.meas[m.id] || 0}" onchange="mqccPvMeasSet('${m.id}', this.value)" onclick="this.select()" style="width:70px;text-align:center;font-size:13px;padding:4px 6px;border:1px solid #d1d5db;border-radius:5px;font-family:inherit"/>
             <span style="font-size:11px;color:#6b7280">${mqccEsc(mqccMeasUnit(m))}</span>${mqccPvCalcBtn('meas:' + m.id, m.type === 'sqft' ? 'sq ft' : (m.type === 'lft' ? 'ft' : m.unit), m.label)}</label>`).join('')}</div>
         </div>`;
       })()}
-      ${items.length ? body : '<div style="font-size:12px;color:#9ca3af">Turned-off options don’t show to customers.</div>'}
     </div>`;
   }
   function mqccPvLinesHtml(c) {

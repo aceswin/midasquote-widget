@@ -3558,6 +3558,57 @@
     window._mqCcHooked = true;
   }
 
+  // Nov 2026 (Jordan): a measurement and the step priced from it act as one
+  // -- each measurement sits at the bottom of the first visible step whose
+  // options use it ("Wall paint finishes" -> its "Wall area" box), and only
+  // measurements no visible step uses stay on the Measurements screen (which
+  // hides when it's empty). Same inputs/ids, just moved, so pricing, saved
+  // quotes and the calculator don't change.
+  function mqQtMeasPlace(p, cats, room) {
+    const q = mqQtOfPrefix(p);
+    const ms = (q && q.measures) || [];
+    const msec = document.getElementById(`mq-${p}-meas-sec`);
+    if (!ms.length || !msec) return;
+    const home = msec.querySelector('.mq-grid3');
+    if (!home) return;
+    const shown = cats.filter(c => { const s = document.getElementById(`mq-${p}-cc-${c.id}-sec`); return s && s.style.display !== 'none'; })
+      .map(c => ({ c, sec: document.getElementById(`mq-${p}-cc-${c.id}-sec`) }))
+      .sort((a, b) => (a.sec.compareDocumentPosition(b.sec) & Node.DOCUMENT_POSITION_FOLLOWING) ? -1 : 1);
+    const boxOf = c => {
+      let box = document.getElementById(`mq-${p}-ccmeas-${c.id}`);
+      if (!box) {
+        const body = document.getElementById(`mq-${p}-cc-${c.id}-body`);
+        if (!body) return null;
+        box = document.createElement('div');
+        box.id = `mq-${p}-ccmeas-${c.id}`;
+        box.className = 'mq-cc-measbox';
+        box.style.cssText = 'display:none;margin-top:16px;padding-top:14px;border-top:1px dashed #d1d5db';
+        box.innerHTML = '<div style="font-size:13px;color:#4b5563;margin-bottom:10px;line-height:1.5">📐 Enter your measurements — your estimate is worked out from these.</div><div class="mq-cc-measguide"></div><div class="mq-grid3"></div>';
+        body.appendChild(box);
+      }
+      return box;
+    };
+    const used = new Set();
+    ms.forEach(m => {
+      const f = document.getElementById(`mq-${p}-measf-${m.id}`);
+      if (!f) return;
+      const hit = shown.find(x => x.c.items.some(it => it.how === 'meas' && it.meas === m.id && mqCcRoomOk(it, room)));
+      const box = hit && boxOf(hit.c);
+      const dest = box ? box.querySelector('.mq-grid3') : home;
+      if (f.parentNode !== dest) dest.appendChild(f);
+      if (box) used.add(box);
+    });
+    document.querySelectorAll(`[id^="mq-${p}-ccmeas-"]`).forEach(b => { b.style.display = used.has(b) && b.querySelector('.mq-grid3').children.length ? '' : 'none'; });
+    // The "how to measure" pictures go with the first group of measurements.
+    const guide = document.getElementById(`mq-${p}-meas-guide`);
+    if (guide) {
+      const homeHas = home.children.length > 0;
+      const firstBox = homeHas ? null : [...used].sort((a, b) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) ? -1 : 1)[0];
+      const gDest = firstBox ? firstBox.querySelector('.mq-cc-measguide') : home.parentNode;
+      if (guide.parentNode !== gDest) { if (firstBox) gDest.appendChild(guide); else home.parentNode.insertBefore(guide, home); }
+    }
+    msec.style.display = home.children.length ? '' : 'none';
+  }
   window.mqCcSync = function(p) {
     if (!(p === 'c' || p === 'b' || mqIsQt(p))) return;
     const cats = mqCcCatsFor(p);
@@ -3690,6 +3741,7 @@
       window._mqCcReshowing = true;
       try { window.mqRefreshAllPickerVisibility(p); } finally { window._mqCcReshowing = false; }
     }
+    if (mqIsQt(p)) { try { mqQtMeasPlace(p, cats, room); } catch(e) { console.warn('measurement placement', e); } }
     if (!changed && window.mqGetVisibleSections && window.mqGetVisibleSections(p).map(s => s.id).join('|') !== before) changed = true;
     if (changed && window.mqRenumberSteps) {
       window.mqRenumberSteps(p);
@@ -4008,7 +4060,7 @@
           ${collapsibleHeader(`${p}-meas`, 'Measurements')}
           <div style="font-size:13px;color:#4b5563;margin-bottom:10px;line-height:1.5">📐 Enter your measurements — your estimate is worked out from these.</div>
           <div id="mq-${p}-meas-body" style="display:none">${q.measGuide ? `<div id="mq-${p}-meas-guide" style="display:none"></div>` : ''}<div class="mq-grid3">
-            ${ms.map(m => `<div class="mq-field"><label class="mq-label" style="display:block;margin-bottom:8px">${mqCcEsc(m.label)}${m.label.toLowerCase().includes(m.unit.toLowerCase()) ? '' : ` (${mqCcEsc(m.unit)})`}</label>
+            ${ms.map(m => `<div class="mq-field" id="mq-${p}-measf-${m.id}"><label class="mq-label" style="display:block;margin-bottom:8px">${mqCcEsc(m.label)}${m.label.toLowerCase().includes(m.unit.toLowerCase()) ? '' : ` (${mqCcEsc(m.unit)})`}</label>
               <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap"><div style="position:relative;display:inline-block"><input type="number" class="mq-linft-input" id="mq-${p}-meas-${m.id}" value="0" min="0" step="any" onclick="this.select()" style="text-align:center;width:130px;padding-right:${m.type === 'count' ? '8' : '40'}px"/>${m.type === 'count' ? '' : `<span style="position:absolute;right:6px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:13px;font-weight:600;pointer-events:none">${m.type === 'sqft' ? 'sq ft' : 'ft'}</span>`}</div>${m.type === 'count' ? (mqUnitEntry(m.unit) ? calcBtn(`mq-${p}-meas-${m.id}`, mqUnitEntry(m.unit), m.label) : '') : calcBtn(`mq-${p}-meas-${m.id}`, m.type === 'sqft' ? 'sqft' : 'linear', m.label)}</div>
             </div>`).join('')}
           </div></div>
