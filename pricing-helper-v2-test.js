@@ -7168,9 +7168,15 @@ window.mqphGoToWizard = function() {
     const ed = mqccEditItem;
     if (!ed) return;
     const cid = ed.cid;
-    if ((targetId || null) === (ed.id || null)) return;
     const ov = document.getElementById('mqcc-item-overlay');
-    if (mqccItemSig() !== mqccItemSnap) {
+    const fresh = !ed.id && !targetId;
+    if (!fresh && (targetId || null) === (ed.id || null)) return;
+    if (fresh && !document.getElementById('mqcc-item-name').value.trim()) {
+      // Already on a blank new option -- nothing to save yet.
+      document.getElementById('mqcc-item-name').focus();
+      return;
+    }
+    if (fresh || mqccItemSig() !== mqccItemSnap) {
       const name = document.getElementById('mqcc-item-name').value.trim();
       if (!ed.id && !name) {
         if (!confirm('This new option has no name yet, so it can’t be saved. Leave it without saving?')) return;
@@ -8059,7 +8065,7 @@ window.mqphGoToWizard = function() {
     const items = i >= 0 ? saved.map(x => (x.id === draft.id ? { ...x, ...draft, groupName: x.groupName, groupOrder: x.groupOrder } : x)) : saved.concat([draft]);
     const savedNote = window._mqccItemSavedNote; window._mqccItemSavedNote = '';
     box.innerHTML = `${savedNote ? `<div style="font-size:12px;font-weight:600;color:#15803d;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:7px;padding:6px 10px;margin-bottom:8px">✓ “${mqccEsc(savedNote)}” saved</div>` : ''}${mqccPvViewHtml(c, items, draft.id)}
-      <button type="button" onclick="mqccItemGo(null)" ${ed.id ? '' : 'disabled'} style="width:100%;margin-top:10px;padding:8px;border-radius:8px;border:1.5px dashed #93c5fd;background:#eff6ff;color:#1e40af;font:inherit;font-size:12.5px;font-weight:700;cursor:${ed.id ? 'pointer' : 'default'};${ed.id ? '' : 'opacity:.5;'}">+ New option in “${mqccEsc(c.name)}”</button>
+      <button type="button" onclick="mqccItemGo(null)" style="width:100%;margin-top:10px;padding:8px;border-radius:8px;border:1.5px dashed #93c5fd;background:#eff6ff;color:#1e40af;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer">+ ${ed.id ? 'New option' : 'Save this one &amp; add another'} in “${mqccEsc(c.name)}”</button>
       <div style="font-size:11px;color:#6b7280;line-height:1.5;margin-top:8px">The highlighted ${c.answer === 'one' ? 'choice' : 'card'} is the option you're editing. <strong>Click any other option to edit it here</strong> — your changes to this one are saved first. The price check is under the price box.</div>`;
     // Keep this option in view inside the preview panel (desktop).
     const hiEl = box.querySelector('[data-mqcc-hi]'), pane = box.closest('.mqcc-modal-pv');
