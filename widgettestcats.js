@@ -3574,31 +3574,37 @@
     const shown = cats.filter(c => { const s = document.getElementById(`mq-${p}-cc-${c.id}-sec`); return s && s.style.display !== 'none'; })
       .map(c => ({ c, sec: document.getElementById(`mq-${p}-cc-${c.id}-sec`) }))
       .sort((a, b) => (a.sec.compareDocumentPosition(b.sec) & Node.DOCUMENT_POSITION_FOLLOWING) ? -1 : 1);
-    const boxOf = c => {
-      let box = document.getElementById(`mq-${p}-ccmeas-${c.id}`);
-      if (!box) {
-        const body = document.getElementById(`mq-${p}-cc-${c.id}-body`);
-        if (!body) return null;
-        box = document.createElement('div');
-        box.id = `mq-${p}-ccmeas-${c.id}`;
-        box.className = 'mq-cc-measbox';
-        box.style.cssText = 'display:none;margin-top:16px;padding-top:14px;border-top:1px dashed #d1d5db';
-        box.innerHTML = '<div style="font-size:13px;color:#4b5563;margin-bottom:10px;line-height:1.5">📐 Enter your measurements — your estimate is worked out from these.</div><div class="mq-cc-measguide"></div><div class="mq-grid3"></div>';
-        body.appendChild(box);
+    // Each step priced from a measurement gets its own "Measurements" step
+    // right after it (its next step, always), built like the original one.
+    const secOf = c => {
+      const step = document.getElementById(`mq-${p}-cc-${c.id}-sec`);
+      if (!step) return null;
+      const key = `${p}-measat-${c.id}`;
+      let ns = document.getElementById(`mq-${key}-sec`);
+      if (!ns) {
+        const tmp = document.createElement('div');
+        tmp.innerHTML = `<div class="mq-sec mq-measat-sec" id="mq-${key}-sec" style="display:none" onclick="mqOpenIfClosed('${key}')">${collapsibleHeader(key, 'Measurements')}<div style="font-size:13px;color:#4b5563;margin-bottom:10px;line-height:1.5">📐 Enter your measurements — your estimate is worked out from these.</div><div id="mq-${key}-body" style="display:none"><div class="mq-cc-measguide"></div><div class="mq-grid3"></div></div></div>`;
+        ns = tmp.firstElementChild;
       }
-      return box;
+      if (step.nextElementSibling !== ns) step.after(ns);
+      return ns;
     };
     const used = new Set();
     ms.forEach(m => {
       const f = document.getElementById(`mq-${p}-measf-${m.id}`);
       if (!f) return;
       const hit = shown.find(x => x.c.items.some(it => it.how === 'meas' && it.meas === m.id && mqCcRoomOk(it, room)));
-      const box = hit && boxOf(hit.c);
+      const box = hit && secOf(hit.c);
       const dest = box ? box.querySelector('.mq-grid3') : home;
       if (f.parentNode !== dest) dest.appendChild(f);
       if (box) used.add(box);
     });
-    document.querySelectorAll(`[id^="mq-${p}-ccmeas-"]`).forEach(b => { b.style.display = used.has(b) && b.querySelector('.mq-grid3').children.length ? '' : 'none'; });
+    // Keep each one glued right after its step, and shown only when it has boxes.
+    document.querySelectorAll(`[id^="mq-${p}-measat-"][id$="-sec"]`).forEach(b => {
+      const step = document.getElementById(b.id.replace(`-measat-`, '-cc-'));
+      if (step && step.nextElementSibling !== b) step.after(b);
+      b.style.display = used.has(b) && b.querySelector('.mq-grid3').children.length ? '' : 'none';
+    });
     // The "how to measure" pictures go with the first group of measurements.
     const guide = document.getElementById(`mq-${p}-meas-guide`);
     if (guide) {
@@ -10769,7 +10775,7 @@
         ? { t: 'Pick your doors & hinges', l: 'Doors', s: 'Choose a door style and the hinges you want. This is what your cabinets will look like.' }
         : { t: 'Pick your doors', l: 'Doors', s: 'Choose a door style. This is what your cabinets will look like.' };
     }
-    if (/^mq-q\d+-meas-sec$/.test(id)) return { t: 'Let’s get your measurements', l: 'Measurements', s: 'Enter your numbers below — a rough measurement is fine for a ballpark.' };
+    if (/^mq-q\d+-meas(at-[A-Za-z0-9_]+)?-sec$/.test(id)) return { t: 'Let’s get your measurements', l: 'Measurements', s: 'Enter your numbers below — a rough measurement is fine for a ballpark.' };
     if (ends('-cabinet-measurements-sec')) return { t: 'How much cabinetry do you need?', l: 'Size', s: 'Enter your linear feet. A rough measurement is fine for a ballpark.' };
     if (ends('-drawers-sec')) return { t: 'How about drawers?', l: 'Drawers', s: 'Tell us roughly how drawer-heavy you want your cabinets to be.' };
     if (ends('-tallcabs-sec')) return { t: 'Need any tall cabinets?', l: 'Tall cabinets', s: 'Pantries, linen towers, oven cabinets — add as many as you need, or just continue.' };

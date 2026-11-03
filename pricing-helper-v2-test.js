@@ -7967,7 +7967,7 @@ window.mqphGoToWizard = function() {
             const firstFor = id => order.find(cid => lineItems.some(r => r.fields && r.fields['Category'] === cid && r.fields['Active'] !== false && mqccCfg(r).how === 'meas' && mqccCfg(r).meas === id));
             const elsewhere = ms.map(m => firstFor(m.id)).filter(cid => cid && cid !== c.id);
             const other = elsewhere.length ? mqccCats().find(x => x.id === elsewhere[0]) : null;
-            return other ? `📐 Customers enter this in the earlier “${mqccEsc(other.name)}” step — try a number:` : '📐 Customers enter this right here, under the choices — try a number:';
+            return other ? `📐 Customers enter this in the Measurements step right after “${mqccEsc(other.name)}” — try a number:` : '📐 Customers enter this in the Measurements step right after this one — try a number:';
           })()}</div>
           <div style="display:flex;flex-wrap:wrap;gap:12px">${ms.map(m => `<label style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:#374151">${mqccEsc(m.label)}
             <input type="text" inputmode="decimal" value="${mqccPv.meas[m.id] || 0}" onchange="mqccPvMeasSet('${m.id}', this.value)" onclick="this.select()" style="width:70px;text-align:center;font-size:13px;padding:4px 6px;border:1px solid #d1d5db;border-radius:5px;font-family:inherit"/>
