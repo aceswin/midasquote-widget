@@ -3422,6 +3422,7 @@
         list.forEach(o => { const hit = cat.items.find(i => i.id === o.value); if (hit && hit.how === 'pct') delete o.badge; });
         body = `${pickerRow(`mq-${p}-cc-${cat.id}`, list, null, cat.id)}
           <select id="mq-${p}-cc-${cat.id}" style="display:none">${list.map(o => `<option value="${o.value}">${mqCcEsc(o.label)}</option>`).join('')}</select>
+          <div id="mq-${p}-ccdesc-${cat.id}" style="display:none;font-size:13.5px;color:#4b5563;margin-top:10px;line-height:1.45"></div>
           <div id="mq-${p}-ccqw-${cat.id}" style="display:none;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px">
             <label class="mq-label" id="mq-${p}-ccql-${cat.id}" style="margin:0">How many?</label>
             <div class="mq-qty-ctrl">
@@ -3612,6 +3613,10 @@
           }
         }
         const it = cat.items.find(i => i.id === (sel && sel.value));
+        // The picked option's description (Nov 2026: pick-one options never
+        // showed theirs) -- right above its "How many?".
+        const dsc = document.getElementById(`mq-${p}-ccdesc-${cat.id}`);
+        if (dsc) { dsc.textContent = (it && it.desc) || ''; dsc.style.display = it && it.desc ? 'block' : 'none'; }
         const qw = document.getElementById(`mq-${p}-ccqw-${cat.id}`);
         if (qw) qw.style.display = (it && it.how === 'each') ? 'flex' : 'none';
         const qu = document.getElementById(`mq-${p}-ccqu-${cat.id}`);
@@ -11436,6 +11441,9 @@
       @media (hover:hover){#mq-fx-chooser .mq-fx-ptog:hover{background:var(--mq-card-chip,rgba(255,255,255,.18))}}
       #mq-fx-chooser .mq-fx-card:hover,#mq-fx-chooser .mq-fx-card:focus-visible{transform:none;box-shadow:none;outline:none}
       #mq-fx-chooser .mq-fx-cardwrap:has(.mq-fx-card:hover),#mq-fx-chooser .mq-fx-cardwrap:has(.mq-fx-card:focus-visible){transform:translateY(-3px);box-shadow:0 14px 30px rgba(0,0,0,.16),0 0 0 4px var(--mq-card-tint,#e5e7eb)}
+      /* A card with no "N project types" bar (one project type): its photo fills
+         that space, so every card's header stays the same height (Jordan, Nov 2026). */
+      @media (min-width:700px){#mq-fx-chooser .mq-fx-cardwrap.mq-fx-solo .mq-fx-card-photo{flex:1 0 auto;margin-top:0}}
       #mq-fx-chooser .mq-fx-card-current{box-shadow:0 0 0 4px var(--mq-card-tint,#e5e7eb),0 4px 14px rgba(0,0,0,.07)}
 
       /* ── Full-screen focus mode ── */
@@ -11722,7 +11730,8 @@
         ${trust}
         ${many ? '<div class="mq-fx-slider"><button type="button" class="mq-fx-slide-arrow" data-dir="-1" aria-label="Previous">‹</button>' : ''}<div class="mq-fx-cards mq-fx-cards-${shown.length}${many ? ' mq-fx-cards-many' : ''}">${shown.map(t => {
           const n = typesFor(t.id).length;
-          return `<div class="mq-fx-cardwrap"><button type="button" class="mq-fx-card" data-tab="${t.id}" onclick="mqFxStart('${t.id}')"><span class="mq-fx-card-photo"><span class="mq-fx-card-icon">${t.icon}</span>${imgs(t.id)}</span><span class="mq-fx-card-body"><span class="mq-fx-card-text"><span class="mq-fx-card-title">${one ? t.startTitle : escH(t.title)}</span><span class="mq-fx-card-sub">${one ? 'Takes about 5 minutes' : escH(t.sub)}</span>${many && n > 1 ? `<span class="mq-fx-card-count">${n} project types</span>` : ''}</span><span class="mq-fx-card-arrow">›</span></span></button>${ptHTML(t)}</div>`;
+          const ptBar = ptHTML(t);
+          return `<div class="mq-fx-cardwrap${ptBar ? '' : ' mq-fx-solo'}"><button type="button" class="mq-fx-card" data-tab="${t.id}" onclick="mqFxStart('${t.id}')"><span class="mq-fx-card-photo"><span class="mq-fx-card-icon">${t.icon}</span>${imgs(t.id)}</span><span class="mq-fx-card-body"><span class="mq-fx-card-text"><span class="mq-fx-card-title">${one ? t.startTitle : escH(t.title)}</span><span class="mq-fx-card-sub">${one ? 'Takes about 5 minutes' : escH(t.sub)}</span>${many && n > 1 ? `<span class="mq-fx-card-count">${n} project types</span>` : ''}</span><span class="mq-fx-card-arrow">›</span></span></button>${ptBar}</div>`;
         }).join('')}
         </div>${many ? '<button type="button" class="mq-fx-slide-arrow" data-dir="1" aria-label="Next">›</button></div>' : ''}${pillsHTML}`;
       if (many) {
