@@ -11545,9 +11545,10 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       ${grpHtml}${otherT ? `<div style="margin-top:4px">${chip(otherT)}</div>` : ''}`;
     if (!tradesEl) return;
     const rows = mqBizTradeList(biz.trades).filter(t => !t.builtIn && isOn(t)).map(t => {
-      const match = mqQtsOfTrade(t, qts)[0] || null;
+      const matches = mqQtsOfTrade(t, qts);
+      const match = matches[0] || null;
       const right = match
-        ? `<span style="color:#15803d;font-weight:600">✓ "${mqEscHtml(match.name)}" quote set up</span> <a href="#" onclick="event.preventDefault();mqQtOpenInRooms('${match.id}')" style="color:#1d4ed8;font-weight:600;text-decoration:none;margin-left:6px">Project types →</a>`
+        ? `<span style="color:#15803d;font-weight:600">✓ ${matches.map(q => '"' + mqEscHtml(q.name) + '"').join(' + ')} ${matches.length > 1 ? 'quotes' : 'quote'} set up</span> <a href="#" onclick="event.preventDefault();mqQtOpenInRooms('${match.id}')" style="color:#1d4ed8;font-weight:600;text-decoration:none;margin-left:6px">Project types →</a>`
         : (t.qtName && mqTradeHasPack(t)
           ? `<span style="display:inline-flex;flex-direction:column;align-items:flex-end;gap:3px"><button type="button" class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqBizAddQt('${t.id}')">${(() => { const inf = mqPackInfoNorm(mqTradePackInfo(t)); return inf && Array.isArray(inf.quotes) && inf.quotes.length > 1 ? `+ Add ${mqEscHtml(t.label)} quotes` : `+ Add a ${mqEscHtml((inf && inf.quotes && inf.quotes[0] && inf.quotes[0].name) || t.qtName)} quote`; })()}</button><span style="font-size:11px;color:#6b7280">Comes set up: ${mqEscHtml(mqTradePackSummary(mqTradePackInfo(t)))}</span></span>`
           : t.qtName
@@ -11589,6 +11590,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const cfg = mqTabsCfgOf(shopRec.fields);
     const biz = mqBizOf(shopRec.fields);
     if (id !== 'cabinetry' && id !== 'countertops') {
+      try { await mqLoadTradeCatalog(); } catch(e) {} // so a starter pack is known even on a quick first click
       const t = [...MQ_BIZ_FIXED, ...mqTradeEntries()].find(x => x.id === id);
       const unticking = biz.trades.includes(id);
       const trades = unticking ? biz.trades.filter(x => x !== id) : [...biz.trades, id];
@@ -11615,6 +11617,9 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         if (changed.length) showMsg('mq-shop-msg', unticking
           ? `✓ ${t.label} unticked. ${changed.map(q => '"' + q.name + '"').join(', ')} hidden from your widget and Pro. Tick it again to bring ${changed.length === 1 ? 'it' : 'them'} back.`
           : `✓ ${changed.map(q => '"' + q.name + '"').join(', ')} back on your widget.`);
+        // Nov 2026 (Jordan): ticking a trade that has a starter pack sets its
+        // quote(s) up right away -- only the first time (no quote for it yet).
+        if (!unticking && !mine.size && mqTradeHasPack(t)) { mqRenderBizTypes(); await mqApplyTradePack(t, { auto: true }); mqRenderBizTypes(); }
       }
       catch(e) { showMsg('mq-shop-msg', 'Error saving.', 'error'); }
       return;
@@ -11809,7 +11814,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const info = mqPackInfoNorm(mqTradePackInfo(t));
     const qNames = info && Array.isArray(info.quotes) && info.quotes.length ? info.quotes.map(q => q.name) : [t.qtName || t.label];
     const many = qNames.length > 1;
-    if (!opts.edit && !confirm(`Add ${many ? 'these quotes' : `the "${qNames[0]}" quote`}, already set up by MidasQuote?\n\n${many ? qNames.map(n => '• ' + n).join('\n') + '\n\n' : ''}${mqTradePackSummary(info)}.\n\nPrices are starting points — change anything after on Project types, Pricing and Specialty items.${many ? ' You can switch off any quote you don’t need.' : ''}`)) return;
+    if (!opts.edit && !opts.auto && !confirm(`Add ${many ? 'these quotes' : `the "${qNames[0]}" quote`}, already set up by MidasQuote?\n\n${many ? qNames.map(n => '• ' + n).join('\n') + '\n\n' : ''}${mqTradePackSummary(info)}.\n\nPrices are starting points — change anything after on Project types, Pricing and Specialty items.${many ? ' You can switch off any quote you don’t need.' : ''}`)) return;
     showMsg(msgId, `Setting up ${many ? qNames.length + ' quotes' : '"' + qNames[0] + '"'}… this takes a few seconds.`);
     let body = null;
     try { body = await mqTradePackLoad(t); } catch(e) { body = null; }
