@@ -6762,6 +6762,12 @@ window.logoutMember = async function () {
   // picking "Contacted" doesn't reset whatever sort the shop owner had set.
   let _mqLeadSort = { field: 'date', dir: 'desc' };
 
+  // Leads saved without the Quote type / Room type dropdowns (Nov 2026: a
+  // value Airtable wouldn't accept) carry them in the Lead ID instead:
+  // "Name — Painting · Bedroom — date".
+  function mqLeadIdParts(f) { const p = String((f && f['Lead ID']) || '').split(' — '); return p.length >= 3 ? p[p.length - 2].split(' · ') : []; }
+  function mqLeadQt(f) { return (f && f['Quote type']) || mqLeadIdParts(f)[0] || ''; }
+  function mqLeadRoom(f) { return (f && f['Room type']) || (f && !f['Quote type'] ? (mqLeadIdParts(f)[1] || '') : ''); }
   function sortLeadsArray(leads) {
     const { field, dir } = _mqLeadSort;
     const mult = dir === 'asc' ? 1 : -1;
@@ -6771,8 +6777,8 @@ window.logoutMember = async function () {
         case 'name':  av = (a.fields['Customer name']  || '').toLowerCase(); bv = (b.fields['Customer name']  || '').toLowerCase(); break;
         case 'email': av = (a.fields['Customer email'] || '').toLowerCase(); bv = (b.fields['Customer email'] || '').toLowerCase(); break;
         case 'phone': av = (a.fields['Customer phone'] || '');               bv = (b.fields['Customer phone'] || '');               break;
-        case 'type':  av = (a.fields['Quote type'] || '').toLowerCase();     bv = (b.fields['Quote type'] || '').toLowerCase();     break;
-        case 'room':  av = (a.fields['Room type'] || '').toLowerCase();      bv = (b.fields['Room type'] || '').toLowerCase();      break;
+        case 'type':  av = mqLeadQt(a.fields).toLowerCase();     bv = mqLeadQt(b.fields).toLowerCase();     break;
+        case 'room':  av = mqLeadRoom(a.fields).toLowerCase();   bv = mqLeadRoom(b.fields).toLowerCase();   break;
         case 'price': av = a.fields['Estimate low'] || 0;                    bv = b.fields['Estimate low'] || 0;                    break;
         case 'date':
         default:      av = new Date(a.createdTime).getTime();                bv = new Date(b.createdTime).getTime();                break;
@@ -6962,9 +6968,9 @@ window.logoutMember = async function () {
         <td><strong>${f['Customer name'] || '—'}</strong>${sessionBadge ? '<br>'+sessionBadge : ''}</td>
         <td>${f['Customer email'] || '—'}</td>
         <td>${f['Customer phone'] || '—'}</td>
-        <td>${f['Quote type'] || '—'}</td>
-        <td>${f['Room type'] || '—'}</td>
-        <td>${f['Estimate low'] ? fmt(f['Estimate low']) + ' – ' + fmt(f['Estimate high']) : '—'}</td>
+        <td>${mqEscHtml(mqLeadQt(f)) || '—'}</td>
+        <td>${mqEscHtml(mqLeadRoom(f)) || '—'}</td>
+        <td>${f['Estimate low'] ? (f['Estimate low'] === f['Estimate high'] ? fmt(f['Estimate low']) : fmt(f['Estimate low']) + ' – ' + fmt(f['Estimate high'])) : '—'}</td>
         <td><span class="mq-badge mq-badge-${color}">${f['Status'] || 'New'}</span></td>
         <td>
           <select onchange="mqUpdateLeadStatus('${r.id}', this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #e5e7eb;border-radius:6px;font-family:inherit">

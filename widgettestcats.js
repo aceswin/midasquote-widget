@@ -600,7 +600,7 @@
               <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Email</td><td style="padding:6px 8px;border-bottom:1px solid #eee">${lead.email || 'Not provided'}</td></tr>
               <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Phone</td><td style="padding:6px 8px;border-bottom:1px solid #eee">${lead.phone || 'Not provided'}</td></tr>
               <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Quote type</td><td style="padding:6px 8px;border-bottom:1px solid #eee">${quoteType || 'Not provided'}${roomType ? ' — ' + roomType : ''}</td></tr>
-              <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Estimate</td><td style="padding:6px 8px;border-bottom:1px solid #eee">${CUR()}${(low||0).toLocaleString()} – ${CUR()}${(high||0).toLocaleString()}</td></tr>
+              <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Estimate</td><td style="padding:6px 8px;border-bottom:1px solid #eee">${(low||0) === (high||0) ? `${CUR()}${(low||0).toLocaleString()}` : `${CUR()}${(low||0).toLocaleString()} – ${CUR()}${(high||0).toLocaleString()}`}</td></tr>
               <tr><td style="padding:6px 8px;color:#666">Reason</td><td style="padding:6px 8px;color:#b91c1c;font-size:12px">${safeReason}</td></tr>
             </table>
           </div>`
@@ -635,8 +635,8 @@
           <tr><td style="padding:8px;background:#f9fafb;font-weight:600" colspan="2">Quote breakdown</td></tr>${lineRows}
         </table>
         <div style="background:#f0fdf4;border-radius:8px;padding:16px;text-align:center">
-          <div style="font-size:14px;color:#666;margin-bottom:4px">Estimated range</div>
-          <div style="font-size:28px;font-weight:700;color:#16a34a">${CUR()}${low.toLocaleString()} – ${CUR()}${high.toLocaleString()}</div>
+          <div style="font-size:14px;color:#666;margin-bottom:4px">${low === high ? 'Estimate' : 'Estimated range'}</div>
+          <div style="font-size:28px;font-weight:700;color:#16a34a">${low === high ? `${CUR()}${low.toLocaleString()}` : `${CUR()}${low.toLocaleString()} – ${CUR()}${high.toLocaleString()}`}</div>
           ${financingLine ? `<div style="font-size:13px;color:#166534;margin-top:6px;font-weight:600">💳 Est. payment: ${financingLine}</div>` : ''}
         </div>
       </div>`);
@@ -673,11 +673,16 @@
   // itself, so every call site only needs the function name swapped.
   async function mqSaveLeadWithCart(data, lead, quoteType, low, high, lines, roomType, total, prefix, contactRequested) {
     const cart = window._mqQuoteCart || [];
+    // Nov 2026 (Jordan): a project type with "Show range" off gives the
+    // customer one price -- the lead and the shop's emails carry that same
+    // price (low = high = the quote), not the hidden range.
+    if (!mqShouldShowRange(prefix) && total) { low = Math.round(total); high = low; }
     if (!cart.length) {
       return saveLead(data, lead, quoteType, low, high, lines, roomType, total, prefix, contactRequested);
     }
-    const cartLow = cart.reduce((s,e) => s + (e.low||0), 0);
-    const cartHigh = cart.reduce((s,e) => s + (e.high||0), 0);
+    const one = e => e.showRange === false && e.total;
+    const cartLow = cart.reduce((s,e) => s + (one(e) ? Math.round(e.total) : (e.low||0)), 0);
+    const cartHigh = cart.reduce((s,e) => s + (one(e) ? Math.round(e.total) : (e.high||0)), 0);
     const cartTotal = cart.reduce((s,e) => s + (e.total||0), 0);
     const combinedLines = [
       ...cart.flatMap(e => [{label: e.label, header: true}, ...e.lines.filter(l => !l.bold)]),
@@ -3541,6 +3546,9 @@
         if (!node) return;
         if (ref.nextElementSibling !== node) ref.parentNode.insertBefore(node, ref.nextSibling);
         ref = node;
+        // Its own Measurements step (if it has one) stays glued right after it.
+        const ma = document.getElementById(`mq-${p}-measat-${c.id}-sec`);
+        if (ma) { if (ref.nextElementSibling !== ma) ref.parentNode.insertBefore(ma, ref.nextSibling); ref = ma; }
       });
       last[key] = ref;
     });
@@ -3621,6 +3629,9 @@
     if (!cats.length) return;
     mqCcHookPickers();
     const before = window.mqGetVisibleSections ? window.mqGetVisibleSections(p).map(s => s.id).join('|') : '';
+    // Whatever the customer is typing in keeps the cursor even if a step moves.
+    const focusEl = document.activeElement && /^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName) ? document.activeElement : null;
+    let focusSel = null; try { focusSel = focusEl ? focusEl.selectionStart : null; } catch(e) { focusSel = null; }
     mqCcPlace(p);
     const room = mqCcRoom(p);
     let changed = false, reshow = false;
@@ -3748,6 +3759,7 @@
       try { window.mqRefreshAllPickerVisibility(p); } finally { window._mqCcReshowing = false; }
     }
     if (mqIsQt(p)) { try { mqQtMeasPlace(p, cats, room); } catch(e) { console.warn('measurement placement', e); } }
+    if (focusEl && document.activeElement !== focusEl && document.contains(focusEl)) { try { focusEl.focus({ preventScroll: true }); if (focusSel != null && focusEl.setSelectionRange) focusEl.setSelectionRange(focusSel, focusSel); } catch(e) {} }
     if (!changed && window.mqGetVisibleSections && window.mqGetVisibleSections(p).map(s => s.id).join('|') !== before) changed = true;
     if (changed && window.mqRenumberSteps) {
       window.mqRenumberSteps(p);
