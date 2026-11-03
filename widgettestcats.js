@@ -5514,7 +5514,9 @@
       const desc = room ? (room.description||'').trim() : '';
       // Free Demo tier never shows a shop's own cover photo, even if one is
       // still saved on the room — always the standard library image instead.
-      const coverImg = room ? ((!window._mqIsDemoPlan && (room.coverImage||'').trim()) || MQ_DEFAULT_COVER_IMAGES[mqDefaultImageKey(room)] || '') : '';
+      // Starter-pack photos (packCover / packMeasure, Nov 2026) count as
+      // MidasQuote defaults: they show on the free plan too.
+      const coverImg = room ? (((window._mqIsDemoPlan ? (room.packCover||'') : ((room.coverImage||'').trim() || room.packCover||''))).trim() || MQ_DEFAULT_COVER_IMAGES[mqDefaultImageKey(room)] || '') : '';
       if (!desc && !coverImg) { descEl.style.display = 'none'; return; }
       descEl.innerHTML = ''; // clear previous content before rebuilding
       if (coverImg) {
@@ -5719,7 +5721,8 @@
       const box = document.getElementById(`mq-${prefix}-meas-guide`);
       if (!box) return;
       const room = (window._mqRoomTypes || []).find(r => r.id === gv(`mq-${prefix}-room`));
-      const own = (room && !room.hideMeasureGuide && !window._mqIsDemoPlan) ? [room.measureImage, ...(Array.isArray(room.measureImages) ? room.measureImages : [])].map(u => String(u || '').trim()).filter(Boolean) : [];
+      const ownList = (room && !room.hideMeasureGuide && !window._mqIsDemoPlan) ? [room.measureImage, ...(Array.isArray(room.measureImages) ? room.measureImages : [])].map(u => String(u || '').trim()).filter(Boolean) : [];
+      const own = ownList.length ? ownList : ((room && !room.hideMeasureGuide && Array.isArray(room.packMeasure)) ? room.packMeasure.filter(Boolean) : []);
       const photos = own.filter(u => !mqVideoEmbedInfo(u));
       if (!photos.length) { box.style.display = 'none'; box.innerHTML = ''; return; }
       const nm = room && room.name ? room.name : '';
@@ -5746,10 +5749,12 @@
       // this forces the library-default fallback below unconditionally.
       // Custom measuring TEXT still works (it's typed, not an upload, so it
       // costs nothing and isn't part of what Demo restricts).
-      const customPrimary = (room && !window._mqIsDemoPlan) ? (room.measureImage||'').trim() : '';
+      const packM = (room && Array.isArray(room.packMeasure)) ? room.packMeasure.map(u=>(u||'').trim()).filter(Boolean) : [];
+      const hasOwnM = room && !window._mqIsDemoPlan && ((room.measureImage||'').trim() || (Array.isArray(room.measureImages) && room.measureImages.some(u => (u||'').trim())));
+      const customPrimary = hasOwnM ? (room.measureImage||'').trim() : (packM[0] || '');
       // Extra images are entirely opt-in — a shop that's never touched this
       // just has an empty/absent array.
-      const customExtra = (room && !window._mqIsDemoPlan && Array.isArray(room.measureImages)) ? room.measureImages.map(u=>(u||'').trim()).filter(Boolean) : [];
+      const customExtra = hasOwnM ? (Array.isArray(room.measureImages) ? room.measureImages.map(u=>(u||'').trim()).filter(Boolean) : []) : packM.slice(1);
       // A shop that's customized ANYTHING (even just adding extra images with
       // no primary set) gets exactly what they set, no default mixed in. Only
       // a shop that's never touched either field falls back to the full
@@ -11750,7 +11755,7 @@
         return PT_KEYS.find(k => nm.includes(k)) || null;
       };
       const ptPhoto = r => {
-        const own = !window._mqIsDemoPlan && String(r.coverImage || '').trim();
+        const own = (window._mqIsDemoPlan ? String(r.packCover || '') : (String(r.coverImage || '').trim() || String(r.packCover || ''))).trim();
         if (own) return cleanUrl(own);
         const k = ptKey(r);
         if (!k) return '';

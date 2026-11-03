@@ -6117,9 +6117,10 @@ window.logoutMember = async function () {
   // MidasQuote's own library photo instead. Renders in place of the normal
   // editable image block wherever a Demo shop would otherwise see an
   // upload button or a URL field for one of these.
-  function mqDemoImageLockedHTML(whatLabel) {
+  function mqDemoImageLockedHTML(whatLabel, starter) {
+    const pics = (Array.isArray(starter) ? starter : (starter ? [starter] : [])).filter(Boolean);
     return `<div style="background:#f9fafb;border:1px dashed #d1d5db;border-radius:8px;padding:10px 12px;font-size:12px;color:#6b7280;line-height:1.6">
-      🔒 Custom ${whatLabel} is a paid feature. On the free plan, MidasQuote's standard library photo always shows here — upgrade from the Account tab to use your own photos or video links.
+      ${pics.length ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">${pics.map(u => `<img src="${mqEscHtml(u)}" alt="" style="width:56px;height:56px;object-fit:cover;border-radius:6px;border:1px solid #e5e7eb;background:#fff" onerror="this.style.display='none'"/>`).join('')}</div>🔒 Your starter photo${pics.length > 1 ? 's show' : ' shows'} here on the free plan. Using your own ${whatLabel} is a paid feature — upgrade from the Account tab to change ${pics.length > 1 ? 'them' : 'it'}.` : `🔒 Custom ${whatLabel} is a paid feature. On the free plan, MidasQuote's standard library photo always shows here — upgrade from the Account tab to use your own photos or video links.`}
     </div>`;
   }
 
@@ -6209,7 +6210,7 @@ window.logoutMember = async function () {
             <label style="display:block;font-size:12px;color:#6b7280;font-weight:600;margin-bottom:2px" for="mq-room-desc-${idx}">Note to customers (optional)</label>
           <textarea id="mq-room-desc-${idx}" placeholder="${(isQt || !mqCabShop()) ? 'Optional note shown to customers when they pick this project type — e.g. what&#39;s included, or what to have ready.' : 'Optional note shown to customers when they pick this project type — e.g. &quot;For door refacing, skip the box materials below — just add your square footage under Specialty Items instead.&quot;'}" rows="2" style="width:100%;font-size:12px;padding:7px 10px;margin-top:2px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;resize:vertical;margin-bottom:8px">${(r.description||'').replace(/</g,'&lt;')}</textarea>
           <div style="margin-bottom:10px">
-            ${isDemo ? mqDemoImageLockedHTML('cover images') : `
+            ${isDemo ? mqDemoImageLockedHTML('cover images', r.packCover) : `
             <div style="display:flex;gap:8px;align-items:flex-start">
               <div id="mq-room-cover-preview-${idx}" style="width:56px;height:56px;border-radius:6px;overflow:hidden;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;border:1px solid #e5e7eb">
                 ${(r.coverImage || mqDefaultCoverImageUrlFor(r.id, r.name)) ? `<img src="${r.coverImage || mqDefaultCoverImageUrlFor(r.id, r.name)}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>` : '<span style="font-size:20px">🖼️</span>'}
@@ -6241,7 +6242,7 @@ window.logoutMember = async function () {
               ${isQt ? '' : `<button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqFillDefaultGuide('mq-room-measure-text-${idx}','${r.id}',${!!r.forCountertops})">↺ Use default guide</button>`}
               <div style="display:block;margin:8px 0 2px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:8px 11px;font-size:12px;color:#1e3a8a;line-height:1.9"><strong>✍️ Formatting tricks:</strong> <code style="background:#fff;border:1px solid #e5e7eb;border-radius:4px;padding:1px 5px;font-size:11.5px;color:#111;font-family:ui-monospace,Menlo,Consolas,monospace">**text**</code> → <strong>bold</strong> &nbsp;·&nbsp; <code style="background:#fff;border:1px solid #e5e7eb;border-radius:4px;padding:1px 5px;font-size:11.5px;color:#111;font-family:ui-monospace,Menlo,Consolas,monospace">[calc]</code> → calculator icon &nbsp;·&nbsp; <code style="background:#fff;border:1px solid #e5e7eb;border-radius:4px;padding:1px 5px;font-size:11.5px;color:#111;font-family:ui-monospace,Menlo,Consolas,monospace">[corner-img]</code> → corner-cabinets photo &nbsp;·&nbsp; <code style="background:#fff;border:1px solid #e5e7eb;border-radius:4px;padding:1px 5px;font-size:11.5px;color:#111;font-family:ui-monospace,Menlo,Consolas,monospace">[tip]text[/tip]</code> → yellow tip box</div>
             </div>
-            ${isDemo ? mqDemoImageLockedHTML('measuring guide images/videos') : `
+            ${isDemo ? mqDemoImageLockedHTML('measuring guide images/videos', r.packMeasure) : `
             <div style="display:flex;gap:8px;align-items:flex-start">
               <div id="mq-room-measure-img-preview-${idx}" style="width:56px;height:56px;border-radius:6px;overflow:hidden;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;border:1px solid #e5e7eb">
                 ${mqMeasureImgPreviewHTML(r.measureImage || mqDefaultMeasureImageUrlFor(r.id, r.name, r.forCountertops))}
@@ -6669,10 +6670,13 @@ window.logoutMember = async function () {
         showIslandButton: el(`mq-room-addisland-${idx}`)?.checked === true,
         islandAllowDoubleRow: el(`mq-room-islanddouble-${idx}`)?.checked === true,
         islandMaterialAdjPct: parseFloat(el(`mq-room-adj-island-mat-${idx}`)?.value) || 0,
-        coverImage: (el(`mq-room-cover-${idx}`)?.value || '').trim(),
+        // A photo box that isn't on screen (free plan) keeps what's saved.
+        coverImage: (el(`mq-room-cover-${idx}`) ? el(`mq-room-cover-${idx}`).value : (r.coverImage || '')).trim(),
         measureText: (el(`mq-room-measure-text-${idx}`)?.value || '').trim(),
-        measureImage: (el(`mq-room-measure-img-${idx}`)?.value || '').trim(),
-        measureImages: (r.measureImages || []).map((_, exIdx) => (el(`mq-room-measure-img-extra-${idx}-${exIdx}`)?.value || '').trim()),
+        measureImage: (el(`mq-room-measure-img-${idx}`) ? el(`mq-room-measure-img-${idx}`).value : (r.measureImage || '')).trim(),
+        measureImages: (r.measureImages || []).map((u, exIdx) => (el(`mq-room-measure-img-extra-${idx}-${exIdx}`) ? el(`mq-room-measure-img-extra-${idx}-${exIdx}`).value : (u || '')).trim()),
+        ...(r.packCover ? { packCover: r.packCover } : {}),
+        ...(Array.isArray(r.packMeasure) && r.packMeasure.length ? { packMeasure: r.packMeasure } : {}),
         ...(r.forCountertops === true ? { forCountertops: true } : {}),
         ...(r.forQt ? { forQt: r.forQt } : {}),
       })).filter(r => r.name); // drop any left with a blank name
@@ -11881,7 +11885,12 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const mergeCat = (field, src) => { const m = mqJsonObj(f[field], {}); let ch = false; Object.keys(src || {}).forEach(k => { if (catMap[k]) { const v = src[k]; m[catMap[k]] = Array.isArray(v) ? v.map(id => roomMap[id]).filter(Boolean) : v; ch = true; } }); return ch ? JSON.stringify(m) : null; };
       let rooms = window._mqRooms;
       if (!rooms) { rooms = mqJsonObj(f['Room types'], []); if (!Array.isArray(rooms) || !rooms.length) rooms = defaultRoomTypes(); }
-      rooms = [...rooms, ...(pack.rooms || []).map(r => Object.assign({}, r, { id: roomMap[r.id], forQt: qtId }))];
+      // The pack's cover / how-to-measure photos are remembered as this project
+      // type's starter photos -- MidasQuote defaults, so they show on the free
+      // plan too (the shop's own photos still need a paid plan).
+      rooms = [...rooms, ...(pack.rooms || []).map(r => Object.assign({}, r, { id: roomMap[r.id], forQt: qtId,
+        packCover: String(r.coverImage || r.packCover || '').trim(),
+        packMeasure: (m => m.length ? m : (Array.isArray(r.packMeasure) ? r.packMeasure : []))([r.measureImage, ...(Array.isArray(r.measureImages) ? r.measureImages : [])].map(u => String(u || '').trim()).filter(Boolean)) }))];
       let cats = mqJsonObj(f['Custom categories'], []); if (!Array.isArray(cats)) cats = [];
       cats = [...cats, ...(pack.cats || []).map(c => {
         const nc = Object.assign({}, c, { id: catMap[c.id], qt: qtId });
