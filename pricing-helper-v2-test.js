@@ -7105,6 +7105,7 @@ window.mqphGoToWizard = function() {
     itemOv.oninput = itemOv.onchange = () => mqccDraftItemPreview();
     mqccDraftItemPreview();
     itemOv.classList.add('show');
+    setTimeout(() => { mqccItemSnap = mqccItemSig(); }, 0);
     setTimeout(() => document.getElementById('mqcc-item-name')?.focus(), 50);
   };
   function mqccPerWord(how) {
@@ -7153,6 +7154,34 @@ window.mqphGoToWizard = function() {
     const rate = isPct ? (b / a) * 100 : b / a;
     const r2 = Math.round(rate * 100) / 100;
     out.innerHTML = `= <strong>${isPct ? r2 + '%' : mqccMoney(r2) + ' per ' + mqccEsc(mqccPerWord(how))}</strong> <button type="button" class="mqph-btn mqph-btn-secondary mqph-btn-sm" style="margin-left:6px" onclick="document.getElementById('mqcc-item-rate').value='${r2}';mqccCheck()">Use this</button>`;
+  };
+  // ── Switch options inside the window (Nov 2026): clicking another option
+  // in the live preview (or "+ New option") opens it here. Changes to the
+  // current one are saved first; nothing changed -> it just switches.
+  let mqccItemSnap = '';
+  function mqccItemSig() {
+    const ov = document.getElementById('mqcc-item-overlay');
+    if (!ov) return '';
+    return JSON.stringify([...ov.querySelectorAll('input,select,textarea')].map(e => e.type === 'checkbox' || e.type === 'radio' ? e.checked : e.value)) + JSON.stringify(mqccVarDraft || []);
+  }
+  window.mqccItemGo = async function(targetId) {
+    const ed = mqccEditItem;
+    if (!ed) return;
+    const cid = ed.cid;
+    if ((targetId || null) === (ed.id || null)) return;
+    const ov = document.getElementById('mqcc-item-overlay');
+    if (mqccItemSig() !== mqccItemSnap) {
+      const name = document.getElementById('mqcc-item-name').value.trim();
+      if (!ed.id && !name) {
+        if (!confirm('This new option has no name yet, so it can’t be saved. Leave it without saving?')) return;
+      } else {
+        const was = name;
+        await mqccSaveItem();
+        if (ov && ov.classList.contains('show')) return; // something needs fixing first -- stay here
+        window._mqccItemSavedNote = was;
+      }
+    }
+    mqccOpenItem(cid, targetId || null);
   };
   window.mqccSaveItem = async function() {
     const ed = mqccEditItem;
@@ -7863,7 +7892,8 @@ window.mqphGoToWizard = function() {
       const list = (c.required ? [] : [{ id: 'none', name: 'None' }]).concat(items);
       body = `<div style="display:flex;flex-wrap:wrap;gap:8px">${list.map(it => {
         const sel = val === it.id;
-        return `<button type="button"${hiA(it.id)} onclick="mqccPvPickOne('${c.id}','${it.id}')" style="${hi(it.id)}width:104px;padding:6px;border-radius:9px;border:${sel ? '2px solid #111' : '1px solid #e5e7eb'};background:#fff;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;font:inherit">
+        const go = hiId && it.id !== 'none' && it.id !== hiId ? `;mqccItemGo('${it.id}')` : '';
+        return `<button type="button"${hiA(it.id)}${go ? ' title="Click to edit this option"' : ''} onclick="mqccPvPickOne('${c.id}','${it.id}')${go}" style="${hi(it.id)}width:104px;padding:6px;border-radius:9px;border:${sel ? '2px solid #111' : '1px solid #e5e7eb'};background:#fff;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;font:inherit">
           ${mqccPvThumb(c.id, it, 88)}
           <span style="font-size:11px;font-weight:${sel ? 700 : 500};color:#111;line-height:1.25;text-align:center">${mqccEsc(it.name)}${it.proOnly ? proTag : ''}${it.tie ? ` <span title="${mqccEsc(mqccTieText(it.tie))}">🔗</span>` : ''}</span>
           <span style="font-size:10px;font-weight:700;border-radius:10px;padding:2px 8px;${sel ? 'background:#111;color:#fff' : 'border:1px solid #d1d5db;color:#374151'}">${sel ? '✓ Selected' : 'Select'}</span>
@@ -7894,7 +7924,8 @@ window.mqphGoToWizard = function() {
             : it.how === 'each'
             ? `<span style="display:inline-flex;align-items:center;gap:8px">${mqccPvStepper(`mqccPvQty('${it.id}',-1)`, `mqccPvQty('${it.id}',1)`, mqccPv.qty[it.id] || 0, it.unit)}${mqccPvCalcBtn('qty:' + it.id, it.unit, it.name)}</span>`
             : `<button type="button" onclick="mqccPvToggle('${it.id}')" style="${MQCC_PV_BTN}border:1.5px solid ${on ? '#1d4ed8' : '#d1d5db'};background:${on ? '#1d4ed8' : '#fff'};color:${on ? '#fff' : '#111'}">${on ? '✓ Added' : '+ Add'}</button>`;
-          return `<div${hiA(it.id)} style="${hi(it.id)}display:flex;gap:10px;padding:8px 10px;border-radius:8px;border:1px ${shown ? 'solid' : 'dashed'} ${on ? '#93c5fd' : '#e5e7eb'};background:${on ? '#eff6ff' : '#fff'};${shown ? '' : 'opacity:.55'}">
+          const goAny = hiId && it.id !== hiId ? ` title="Click to edit this option" onclick="if(!event.target.closest('button,input,select'))mqccItemGo('${it.id}')"` : '';
+          return `<div${hiA(it.id)}${goAny} style="${hi(it.id)}${goAny ? 'cursor:pointer;' : ''}display:flex;gap:10px;padding:8px 10px;border-radius:8px;border:1px ${shown ? 'solid' : 'dashed'} ${on ? '#93c5fd' : '#e5e7eb'};background:${on ? '#eff6ff' : '#fff'};${shown ? '' : 'opacity:.55'}">
             ${mqccPvThumb(c.id, it, 56)}
             <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px">
               <div style="font-size:13px;line-height:1.2;color:${on ? '#1d4ed8' : '#111'}">${mqccEsc(it.name)}${it.proOnly ? proTag : ''}</div>
@@ -8026,8 +8057,10 @@ window.mqphGoToWizard = function() {
     const saved = mqccPvItems(c.id);
     const i = saved.findIndex(x => x.id === draft.id);
     const items = i >= 0 ? saved.map(x => (x.id === draft.id ? { ...x, ...draft, groupName: x.groupName, groupOrder: x.groupOrder } : x)) : saved.concat([draft]);
-    box.innerHTML = `${mqccPvViewHtml(c, items, draft.id)}
-      <div style="font-size:11px;color:#6b7280;line-height:1.5;margin-top:10px">The highlighted ${c.answer === 'one' ? 'choice' : 'card'} is this option, shown with the rest of “${mqccEsc(c.name)}”. Click it to try it — the price check is under the price box.</div>`;
+    const savedNote = window._mqccItemSavedNote; window._mqccItemSavedNote = '';
+    box.innerHTML = `${savedNote ? `<div style="font-size:12px;font-weight:600;color:#15803d;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:7px;padding:6px 10px;margin-bottom:8px">✓ “${mqccEsc(savedNote)}” saved</div>` : ''}${mqccPvViewHtml(c, items, draft.id)}
+      <button type="button" onclick="mqccItemGo(null)" ${ed.id ? '' : 'disabled'} style="width:100%;margin-top:10px;padding:8px;border-radius:8px;border:1.5px dashed #93c5fd;background:#eff6ff;color:#1e40af;font:inherit;font-size:12.5px;font-weight:700;cursor:${ed.id ? 'pointer' : 'default'};${ed.id ? '' : 'opacity:.5;'}">+ New option in “${mqccEsc(c.name)}”</button>
+      <div style="font-size:11px;color:#6b7280;line-height:1.5;margin-top:8px">The highlighted ${c.answer === 'one' ? 'choice' : 'card'} is the option you're editing. <strong>Click any other option to edit it here</strong> — your changes to this one are saved first. The price check is under the price box.</div>`;
     // Keep this option in view inside the preview panel (desktop).
     const hiEl = box.querySelector('[data-mqcc-hi]'), pane = box.closest('.mqcc-modal-pv');
     if (hiEl && pane && pane.scrollHeight > pane.clientHeight) {
