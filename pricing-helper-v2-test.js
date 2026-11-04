@@ -6680,7 +6680,7 @@ window.mqphGoToWizard = function() {
           <span style="display:flex;gap:6px;flex-shrink:0" onclick="event.stopPropagation()">
             <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" title="Move up" ${!cats.slice(0, ci).some(x => (x.qt || '') === (c.qt || '')) ? 'disabled' : ''} onclick="mqccMoveCat('${c.id}',-1)">↑</button>
             <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" title="Move down" ${!cats.slice(ci + 1).some(x => (x.qt || '') === (c.qt || '')) ? 'disabled' : ''} onclick="mqccMoveCat('${c.id}',1)">↓</button>
-            <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="mqccOpenCat('${c.id}')">Settings</button>
+            <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" title="Rename this step or change its settings" onclick="mqccOpenCat('${c.id}')">✏️ Edit / rename</button>
             <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" title="Copy this category with all its options and photos" onclick="mqccDuplicateCat('${c.id}')">⧉ Duplicate</button>
             <button class="mqph-btn mqph-btn-primary mqph-btn-sm" onclick="mqccOpenItem('${c.id}',null)">+ Add option</button>
           </span>
@@ -6786,6 +6786,7 @@ window.mqphGoToWizard = function() {
             <button class="mqph-modal-hdr-close" onclick="mqccClose('mqcc-item-overlay')">×</button>
           </div>
           <div class="mqph-modal-body"><div class="mqcc-modal-grid"><div>
+            <div class="mqph-field" id="mqcc-item-step-wrap" style="display:none"><label>Which step is this option in?</label><select id="mqcc-item-step"></select><div style="font-size:11px;color:#6b7280;margin-top:4px">Change it to move this option (with its photo) into another step of this quote.</div></div>
             <div class="mqph-field"><label>Option name</label><input type="text" id="mqcc-item-name" maxlength="80" placeholder="Finished end panels"/></div>
             <div class="mqph-field"><label>Description for customers (optional)</label><input type="text" id="mqcc-item-desc" maxlength="200"/></div>
             <div class="mqph-field"><label>What it's priced on</label><select id="mqcc-item-how" onchange="mqccItemHowChanged()">${howOpts}</select></div>
@@ -6882,7 +6883,9 @@ window.mqphGoToWizard = function() {
   window.mqccOpenCat = function(cid) {
     mqccEditCat = cid;
     const c = cid ? mqccCats().find(x => x.id === cid) : null;
-    document.getElementById('mqcc-cat-title').textContent = c ? 'Category settings' : 'New category';
+    document.getElementById('mqcc-cat-title').textContent = c ? `Edit step: ${c.name}` : 'New category';
+    const saveBtnTxt = document.getElementById('mqcc-cat-save');
+    if (saveBtnTxt) saveBtnTxt.textContent = c ? 'Save changes' : 'Create step';
     document.getElementById('mqcc-cat-newtip').style.display = c ? 'none' : 'flex';
     const cabWords = !mqphComputeTabScope().countertopsOnly;
     document.getElementById('mqcc-cat-name').placeholder = cabWords ? 'Finishing & extras' : 'e.g. Paint finish';
@@ -6969,6 +6972,10 @@ window.mqphGoToWizard = function() {
       after: document.getElementById('mqcc-cat-after').value || 'specialty',
     };
     const qtPick = document.getElementById('mqcc-cat-qt') ? (document.getElementById('mqcc-cat-qt').value || '') : '';
+    // Same name already in this quote → almost always meant to edit that one
+    // (Jordan, Nov 2026: renames ended up as second copies).
+    const twin = cats.find(c => c.id !== mqccEditCat && (c.qt || '') === qtPick && (c.name || '').trim().toLowerCase() === name.toLowerCase());
+    if (twin && !confirm(`This quote already has a step called “${twin.name}”.\n\nTo change that step, click Cancel and use ✏️ Edit / rename on it instead.\n\nClick OK only if you really want two steps with the same name.`)) { btn.disabled = false; return; }
     let id = mqccEditCat;
     let moved = true;
     if (id) {
@@ -7043,6 +7050,15 @@ window.mqphGoToWizard = function() {
     const cfg = mqccCfg(r);
     document.getElementById('mqcc-item-title').textContent = r ? 'Edit option' : 'New option';
     document.getElementById('mqcc-item-sub').textContent = c.name;
+    { // Move an existing option into another step of the same quote.
+      const sib = mqccCats().filter(cc => (cc.qt || '') === (c.qt || ''));
+      const stSel = document.getElementById('mqcc-item-step');
+      if (stSel) {
+        stSel.innerHTML = sib.map(cc => `<option value="${cc.id}">${mqccEsc(cc.name)}${cc.id === cid ? ' (now)' : ''}</option>`).join('');
+        stSel.value = cid;
+        mqccShow('mqcc-item-step-wrap', !!r && sib.length > 1);
+      }
+    }
     document.getElementById('mqcc-item-name').value = r ? (r.fields['Name'] || '') : '';
     document.getElementById('mqcc-item-desc').value = r ? (r.fields['Description'] || '') : '';
     document.getElementById('mqcc-item-how').value = MQCC_HOW[cfg.how] ? cfg.how : 'flat';
@@ -7194,6 +7210,11 @@ window.mqphGoToWizard = function() {
     if (!ed) return;
     const name = document.getElementById('mqcc-item-name').value.trim();
     if (!name) { alert('Give the option a name.'); return; }
+    const stepSel = document.getElementById('mqcc-item-step');
+    const toCid = ed.id && stepSel && stepSel.value && mqccCats().some(x => x.id === stepSel.value) ? stepSel.value : ed.cid;
+    if (toCid !== ed.cid && lineItems.some(r => r.fields && r.fields['Category'] === toCid && (r.fields['Name'] || '').trim().toLowerCase() === name.toLowerCase())) {
+      alert('That step already has an option with this name — rename one of them first.'); return;
+    }
     if (lineItems.some(r => r.fields && r.fields['Category'] === ed.cid && r.id !== ed.id && (r.fields['Name'] || '').trim().toLowerCase() === name.toLowerCase())) {
       alert('This category already has an option with that name — photos are matched by name, so each one needs its own.'); return;
     }
@@ -7242,9 +7263,19 @@ window.mqphGoToWizard = function() {
     btn.disabled = true;
     try {
       if (ed.id) {
+        const r0 = lineItems.find(x => x.id === ed.id);
+        const oldName = r0 ? (r0.fields['Name'] || '') : name;
+        if (toCid !== ed.cid) {
+          const there = mqccItems(toCid);
+          fields.Category = toCid;
+          fields['Sort order'] = there.length ? Math.max(...there.map(x => x.fields['Sort order'] || 0)) + 1 : 1;
+        }
         await atUpdate(LINE_ITEMS_TABLE, ed.id, fields);
-        const r = lineItems.find(x => x.id === ed.id);
-        if (r) Object.assign(r.fields, fields);
+        if (r0) Object.assign(r0.fields, fields);
+        if (toCid !== ed.cid) {
+          try { await mqccCopyShopKeys(mqccKeyPairs(ed.cid, oldName, toCid, name, cfg)); } catch(e) {}
+          ed.cid = toCid;
+        }
       } else {
         const existing = mqccItems(ed.cid);
         const sort = existing.length ? Math.max(...existing.map(r => r.fields['Sort order'] || 0)) + 1 : 1;
