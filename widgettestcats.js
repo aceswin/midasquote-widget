@@ -11828,9 +11828,25 @@
           const max = track.scrollWidth - track.clientWidth - 2;
           arrows.forEach(a => { a.disabled = a.dataset.dir === '-1' ? track.scrollLeft <= 2 : track.scrollLeft >= max; });
         };
+        // Arrows move a whole "page": the card cut off at the edge comes all
+        // the way into view (Jordan, Nov 2026 -- it used to stop half way).
         arrows.forEach(a => a.addEventListener('click', () => {
-          const w = track.querySelector('.mq-fx-cardwrap');
-          track.scrollBy({ left: Number(a.dataset.dir) * (w ? w.getBoundingClientRect().width + 18 : track.clientWidth), behavior: 'smooth' });
+          const dir = Number(a.dataset.dir);
+          const tr = track.getBoundingClientRect(), sl = track.scrollLeft, vw = track.clientWidth;
+          const cards = [...track.querySelectorAll('.mq-fx-cardwrap')].map(c => { const r = c.getBoundingClientRect(); const st = r.left - tr.left + sl; return { st, en: st + r.width }; });
+          if (!cards.length) return;
+          const pad = 4;
+          let target;
+          if (dir > 0) {
+            const cut = cards.find(c => c.en > sl + vw - pad + 1);
+            target = cut ? cut.st - pad : sl + vw;
+          } else {
+            const firstFull = cards.findIndex(c => c.st >= sl + pad - 1);
+            const prev = cards[(firstFull > 0 ? firstFull : cards.length) - 1];
+            if (!prev || firstFull <= 0) target = 0;
+            else { const need = prev.en + pad - vw; const st = cards.find(c => c.st - pad >= need); target = st ? Math.min(st.st - pad, prev.st - pad) : prev.st - pad; }
+          }
+          track.scrollTo({ left: Math.max(0, target), behavior: 'smooth' });
         }));
         track.addEventListener('scroll', upd, { passive: true });
         window.addEventListener('resize', upd);
