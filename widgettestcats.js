@@ -4139,6 +4139,12 @@
 
   function mqQtCss(bc) {
     const c = /^#[0-9a-f]{6}$/i.test(bc || '') ? bc : '#1a1a1a';
+    // Arrow buttons: brand -> lighter brand gradient, brand-tinted shadow,
+    // white (or dark, on a light brand) chevron.
+    const aMix = (hex, t, to) => '#' + [1, 3, 5].map(i => { const v = parseInt(hex.slice(i, i + 2), 16); return Math.round(v + (to - v) * t).toString(16).padStart(2, '0'); }).join('');
+    const aLin = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+    const aLum = 0.2126 * aLin(parseInt(c.slice(1, 3), 16)) + 0.7152 * aLin(parseInt(c.slice(3, 5), 16)) + 0.0722 * aLin(parseInt(c.slice(5, 7), 16));
+    const aB = aMix(c, 0.4, 255), aFg = aLum > 0.5 ? '#111827' : '#ffffff';
     return `<style>
     #midasquote-widget .mq-tab-icon-svg{display:inline-flex;align-items:center;justify-content:center}
     #midasquote-widget .mq-tab-bar.mq-tab-bar-scroll{align-items:center;gap:6px}
@@ -4147,8 +4153,10 @@
     #midasquote-widget .mq-tab-track .mq-tab{flex:0 0 calc((100% - 16px) / 3);min-width:0;scroll-snap-align:start}
     #midasquote-widget .mq-tab-track .mq-tab-label{min-width:0;max-width:100%;overflow:hidden}
     #midasquote-widget .mq-tab-track .mq-tab-title,#midasquote-widget .mq-tab-track .mq-tab-sub{display:block;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.15}
-    #midasquote-widget .mq-tab-arrow{flex:0 0 34px;width:34px;height:34px;border-radius:50%;border:1.5px solid ${c};background:#fff;color:${c};display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0;box-shadow:0 2px 6px rgba(0,0,0,.12);font-family:inherit}
-    #midasquote-widget .mq-tab-arrow:disabled{opacity:.3;cursor:default;box-shadow:none}
+    #midasquote-widget .mq-tab-arrow{flex:0 0 34px;width:34px;height:34px;border-radius:50%;border:none;background:linear-gradient(135deg,${c} 0%,${aB} 100%);color:${aFg};display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0;box-shadow:0 6px 14px -4px ${c}99,0 2px 4px ${c}33,inset 0 1px 0 rgba(255,255,255,.35);font-family:inherit;transition:transform .15s,box-shadow .15s,opacity .2s}
+    @media (hover:hover){#midasquote-widget .mq-tab-arrow:not(:disabled):hover{transform:translateY(-1px) scale(1.06);box-shadow:0 10px 20px -6px ${c}b3,0 3px 6px ${c}40,inset 0 1px 0 rgba(255,255,255,.4)}}
+    #midasquote-widget .mq-tab-arrow:not(:disabled):active{transform:scale(.94)}
+    #midasquote-widget .mq-tab-arrow:disabled{opacity:.28;cursor:default;box-shadow:none;filter:saturate(.4)}
     #midasquote-widget .mq-tab-arrow svg{width:16px;height:16px}
     @media (max-width:600px){
       #midasquote-widget .mq-tab-track{gap:5px}
@@ -4301,6 +4309,10 @@
     upd();
     const act = track.querySelector('.mq-tab.active');
     if (act) setTimeout(() => mqTabScrollIntoView(act, true), 30);
+    // Same one-time "there's more" nudge as the focused cards -- after the
+    // first-visit tips popup is closed, and only from the start of the row.
+    const waitTips = () => { if (document.getElementById('mq-tips-popup')) return setTimeout(waitTips, 400); if (track.scrollLeft <= 2) mqBindCarouselNudge(track); };
+    setTimeout(waitTips, 600);
   }
   // Keeps the chosen tab fully in view inside the scrolling tab row.
   function mqTabScrollIntoView(btn, instant) {
@@ -11395,8 +11407,10 @@
       #mq-fx-chooser .mq-fx-pill:active{background:var(--mq-card-a,#1a1a1a);color:var(--mq-card-fg,#fff)}
       @media (hover:hover){#mq-fx-chooser .mq-fx-pill:hover{background:var(--mq-card-a,#1a1a1a);color:var(--mq-card-fg,#fff);transform:translateY(-1px)}}
       #mq-fx-chooser .mq-fx-card-count{display:none}
-      #mq-fx-chooser .mq-fx-slide-arrow{display:none;flex:0 0 44px;width:44px;height:44px;border-radius:50%;align-items:center;justify-content:center;border:1.5px solid var(--mq-card-a,#1a1a1a);background:#fff;color:var(--mq-card-ink,#1a1a1a);cursor:pointer;font-size:26px;line-height:1;padding:0 0 3px;font-family:inherit;box-shadow:0 2px 8px rgba(0,0,0,.08)}
-      #mq-fx-chooser .mq-fx-slide-arrow:disabled{opacity:.28;cursor:default;box-shadow:none}
+      #mq-fx-chooser .mq-fx-slide-arrow{display:none;flex:0 0 44px;width:44px;height:44px;border-radius:50%;align-items:center;justify-content:center;border:none;background:linear-gradient(135deg,var(--mq-card-a,#1a1a1a) 0%,var(--mq-card-b,#6b7280) 100%);color:var(--mq-card-fg,#fff);cursor:pointer;font-size:26px;line-height:1;padding:0 0 3px;font-family:inherit;box-shadow:0 8px 18px -6px var(--mq-card-sh,rgba(0,0,0,.45)),0 2px 5px var(--mq-card-sh2,rgba(0,0,0,.15)),inset 0 1px 0 rgba(255,255,255,.35);transition:transform .15s,box-shadow .15s,opacity .2s}
+      @media (hover:hover){#mq-fx-chooser .mq-fx-slide-arrow:not(:disabled):hover{transform:translateY(-2px) scale(1.06);box-shadow:0 12px 24px -8px var(--mq-card-sh,rgba(0,0,0,.5)),0 3px 7px var(--mq-card-sh2,rgba(0,0,0,.18)),inset 0 1px 0 rgba(255,255,255,.4)}}
+      #mq-fx-chooser .mq-fx-slide-arrow:not(:disabled):active{transform:scale(.94)}
+      #mq-fx-chooser .mq-fx-slide-arrow:disabled{opacity:.28;cursor:default;box-shadow:none;filter:saturate(.4)}
       @media (max-width:699px){
         #mq-fx-chooser .mq-fx-cards-many{gap:10px}
         #mq-fx-chooser .mq-fx-cards-many .mq-fx-card{flex-direction:row;align-items:center}
@@ -11870,6 +11884,8 @@
       ch.style.setProperty('--mq-card-a', bcRaw);
       ch.style.setProperty('--mq-card-b', mix(bcRaw, 0.45, 255));
       ch.style.setProperty('--mq-card-tint', bcRaw + '1a');
+      ch.style.setProperty('--mq-card-sh', bcRaw + '99');
+      ch.style.setProperty('--mq-card-sh2', bcRaw + '33');
       ch.style.setProperty('--mq-card-ink', lum > 0.42 ? mix(bcRaw, 0.5, 0) : bcRaw);
       // Cards are filled with the brand colour, so their text follows its lightness:
       // white on dark/medium colours, near-black on light ones (the switch point,
