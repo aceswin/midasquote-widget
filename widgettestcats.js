@@ -3620,6 +3620,16 @@
       const firstBox = homeHas ? null : [...used].sort((a, b) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) ? -1 : 1)[0];
       const gDest = firstBox ? firstBox.querySelector('.mq-cc-measguide') : home.parentNode;
       if (guide.parentNode !== gDest) { if (firstBox) gDest.appendChild(guide); else home.parentNode.insertBefore(guide, home); }
+      // ...and every later Measurements step shows the same pictures again.
+      document.querySelectorAll(`[id^="mq-${p}-measat-"][id$="-sec"]`).forEach(b => {
+        const h = b.querySelector('.mq-cc-measguide');
+        if (!h) return;
+        let cp = h.querySelector('.mq-mg-copy');
+        if (b === firstBox || !used.has(b)) { if (cp) cp.remove(); return; }
+        if (!cp) { cp = document.createElement('div'); cp.className = 'mq-mg-copy'; h.appendChild(cp); }
+        if (cp.innerHTML !== guide.innerHTML) cp.innerHTML = guide.innerHTML;
+        cp.style.cssText = guide.style.cssText;
+      });
     }
     msec.style.display = home.children.length ? '' : 'none';
   }
@@ -5724,7 +5734,8 @@
       const ownList = (room && !room.hideMeasureGuide && !window._mqIsDemoPlan) ? [room.measureImage, ...(Array.isArray(room.measureImages) ? room.measureImages : [])].map(u => String(u || '').trim()).filter(Boolean) : [];
       const own = ownList.length ? ownList : ((room && !room.hideMeasureGuide && Array.isArray(room.packMeasure)) ? room.packMeasure.filter(Boolean) : []);
       const photos = own.filter(u => !mqVideoEmbedInfo(u));
-      if (!photos.length) { box.style.display = 'none'; box.innerHTML = ''; return; }
+      const copies = () => document.querySelectorAll(`[id^="mq-${prefix}-measat-"] .mq-mg-copy`).forEach(cp => { cp.innerHTML = box.innerHTML; cp.style.cssText = box.style.cssText; });
+      if (!photos.length) { box.style.display = 'none'; box.innerHTML = ''; copies(); return; }
       const nm = room && room.name ? room.name : '';
       window._mqMeasGuideMini = window._mqMeasGuideMini || {};
       window._mqMeasGuideMini[prefix] = photos.map((src, k) => ({ src, label: nm ? `${nm} — measuring guide (${k + 1}/${photos.length})` : `Measuring guide (${k + 1}/${photos.length})` }));
@@ -5732,6 +5743,7 @@
       box.innerHTML = `<div style="font-size:12px;font-weight:700;color:#2563eb;margin-bottom:6px">📸 How to measure — tap to zoom</div>
         <div style="display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px">${photos.map((u, k) => `<img src="${esc(u)}" alt="How to measure ${k + 1}" loading="lazy" onclick="event.stopPropagation();mqQtMeasGuideZoom('${prefix}',${k})" onerror="this.style.display='none'" style="height:${photos.length === 1 ? 110 : 84}px;width:auto;max-width:${photos.length === 1 ? '100%' : 'none'};object-fit:contain;flex:0 0 auto;border-radius:8px;border:1px solid #e5e7eb;background:#f9fafb;cursor:zoom-in"/>`).join('')}</div>`;
       box.style.cssText = 'display:block;margin-bottom:14px';
+      copies();
     };
     window.mqQtMeasGuideZoom = (prefix, i) => {
       const list = (window._mqMeasGuideMini || {})[prefix] || [];
