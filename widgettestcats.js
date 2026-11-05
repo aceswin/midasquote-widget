@@ -3591,7 +3591,7 @@
       let ns = document.getElementById(`mq-${key}-sec`);
       if (!ns) {
         const tmp = document.createElement('div');
-        tmp.innerHTML = `<div class="mq-sec mq-measat-sec" id="mq-${key}-sec" style="display:none" onclick="mqOpenIfClosed('${key}')">${collapsibleHeader(key, 'Measurements')}<div style="font-size:13px;color:#4b5563;margin-bottom:10px;line-height:1.5">📐 Enter your measurements — your estimate is worked out from these.</div><div class="mq-meas-calchint" style="font-size:13px;color:#2563eb;font-weight:600;margin:-4px 0 12px;line-height:1.45">🧮 Got several walls or sections? Tap the calculator to add them up in mm, inches or feet — it does the math for you.</div><div id="mq-${key}-body" style="display:none"><div class="mq-cc-measguide"></div><div class="mq-grid3"></div></div></div>`;
+        tmp.innerHTML = `<div class="mq-sec mq-measat-sec" id="mq-${key}-sec" style="display:none" onclick="mqOpenIfClosed('${key}')">${collapsibleHeader(key, 'Measurements')}<div style="font-size:13px;color:#4b5563;margin-bottom:10px;line-height:1.5">📐 Enter your measurements — your estimate is worked out from these.</div><div id="mq-${key}-body" style="display:none"><div class="mq-cc-measguide"></div><div class="mq-grid3"></div><div class="mq-meas-calchint" style="font-size:13px;color:#2563eb;font-weight:600;margin:12px 0 0;line-height:1.45">🧮 Have several walls or sections? Tap the calculator to add them up in mm, inches or feet — it does the math for you.</div></div></div>`;
         ns = tmp.firstElementChild;
       }
       if (step.nextElementSibling !== ns) step.after(ns);
@@ -4086,12 +4086,12 @@
     if (!ms.length) return '';
     return `<div class="mq-sec" id="mq-${p}-meas-sec" onclick="mqOpenIfClosed('${p}-meas')">
           ${collapsibleHeader(`${p}-meas`, 'Measurements')}
-          <div style="font-size:13px;color:#4b5563;margin-bottom:10px;line-height:1.5">📐 Enter your measurements — your estimate is worked out from these.</div><div class="mq-meas-calchint" style="font-size:13px;color:#2563eb;font-weight:600;margin:-4px 0 12px;line-height:1.45">🧮 Got several walls or sections? Tap the calculator to add them up in mm, inches or feet — it does the math for you.</div>
+          <div style="font-size:13px;color:#4b5563;margin-bottom:10px;line-height:1.5">📐 Enter your measurements — your estimate is worked out from these.</div>
           <div id="mq-${p}-meas-body" style="display:none">${q.measGuide ? `<div id="mq-${p}-meas-guide" style="display:none"></div>` : ''}<div class="mq-grid3">
             ${ms.map(m => `<div class="mq-field" id="mq-${p}-measf-${m.id}"><label class="mq-label" style="display:block;margin-bottom:8px">${mqCcEsc(m.label)}${m.label.toLowerCase().includes(m.unit.toLowerCase()) ? '' : ` (${mqCcEsc(m.unit)})`}</label>
               <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap"><div style="position:relative;display:inline-block"><input type="number" class="mq-linft-input" id="mq-${p}-meas-${m.id}" value="0" min="0" step="any" onclick="this.select()" style="text-align:center;width:130px;padding-right:${m.type === 'count' ? '8' : '40'}px"/>${m.type === 'count' ? '' : `<span style="position:absolute;right:6px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:13px;font-weight:600;pointer-events:none">${m.type === 'sqft' ? 'sq ft' : 'ft'}</span>`}</div>${m.type === 'count' ? (mqUnitEntry(m.unit) ? calcBtn(`mq-${p}-meas-${m.id}`, mqUnitEntry(m.unit), m.label) : '') : calcBtn(`mq-${p}-meas-${m.id}`, m.type === 'sqft' ? 'sqft' : 'linear', m.label)}</div>
             </div>`).join('')}
-          </div></div>
+          </div><div class="mq-meas-calchint" style="font-size:13px;color:#2563eb;font-weight:600;margin:12px 0 0;line-height:1.45">🧮 Have several walls or sections? Tap the calculator to add them up in mm, inches or feet — it does the math for you.</div></div>
         </div>`;
   }
   // Project types of a quote type ticked on any active countertop material
