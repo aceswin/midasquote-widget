@@ -10911,6 +10911,9 @@
       c.classList.toggle('mq-fx-live-on', !!window._mqStickyPrefix && (hide || !!window._mqFxBarSide));
       c.classList.toggle('mq-fx-onres', !!(window._mqFxFull && tab && tab.classList.contains('mq-fx-results')));
     }
+    const onRes = !!(window._mqFxOn && tab && tab.classList.contains('mq-fx-results'));
+    document.documentElement.classList.toggle('mq-fx-res-cta', onRes);
+    if (onRes) mqFxResultCta(window._mqActiveTabPrefix || 'b');
     const priceEl = document.getElementById('mq-sticky-price');
     if (priceEl && !priceEl._mqFxObs) {
       priceEl._mqFxObs = true;
@@ -11282,7 +11285,42 @@
     if (!tab) return;
     tab.classList.add('mq-fx-results');
     window.mqFxApply(prefix);
+    [0, 120, 600, 1500].forEach(ms => setTimeout(() => mqFxResultCta(prefix), ms));
   };
+  // Focused results: a "next step" card right under Financing (or under the
+  // line items when there's no financing) with Book a consultation + Get
+  // pre-approved / Ask a question. These replace the same buttons in the side
+  // panel / bottom bar on the results screen (Jordan, Nov 2026).
+  function mqFxResultCta(prefix) {
+    const tab = mqFxTabEl(prefix);
+    if (!tab || !tab.classList.contains('mq-fx-results')) return;
+    const sd = window._mqShopData || {};
+    const raw = String(sd['Brand colour'] || window._mqFocalColor || '#1a1a1a').trim();
+    const bc = /^#[0-9a-f]{6}$/i.test(raw) ? raw : '#1a1a1a';
+    const mix = (t) => '#' + [1, 3, 5].map(i => { const v = parseInt(bc.slice(i, i + 2), 16); return Math.round(v + (255 - v) * t).toString(16).padStart(2, '0'); }).join('');
+    const lin = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+    const lum = 0.2126 * lin(parseInt(bc.slice(1, 3), 16)) + 0.7152 * lin(parseInt(bc.slice(3, 5), 16)) + 0.0722 * lin(parseInt(bc.slice(5, 7), 16));
+    const fg = lum > 0.5 ? '#111827' : '#ffffff';
+    const finLink = (window._mqFinancingOn && String(sd['Financing link'] || '').trim()) || '';
+    const shopName = mqCcEsc(sd['Shop name'] || 'us');
+    const second = finLink
+      ? `<button type="button" class="mq-fx-cta-btn mq-fx-cta-sec" onclick="window.open(${JSON.stringify(finLink).replace(/"/g, '&quot;')},'_blank')"><span>💳</span> Get pre-approved <span class="mq-fx-cta-arr">↗</span></button>`
+      : `<button type="button" class="mq-fx-cta-btn mq-fx-cta-sec" onclick="mqShowConsultModal()"><span>💬</span> Ask a question</button>`;
+    tab.querySelectorAll('.mq-result, .mq-combined-result').forEach(res => {
+      if (res.offsetParent === null && getComputedStyle(res).display === 'none') return;
+      let cta = res.querySelector(':scope > .mq-fx-cta');
+      if (!cta) { cta = document.createElement('div'); cta.className = 'mq-fx-cta'; }
+      cta.style.cssText = `--cta-a:${bc};--cta-b:${mix(0.35)};--cta-fg:${fg};--cta-sh:${bc}66;--cta-tint:${bc}12;--cta-line:${bc}33`;
+      const html = `<div class="mq-fx-cta-txt"><div class="mq-fx-cta-h">Ready for the next step?</div><div class="mq-fx-cta-sub">Talk it through with ${shopName} — free, no obligation.</div></div>
+        <div class="mq-fx-cta-row"><button type="button" class="mq-fx-cta-btn mq-fx-cta-pri" onclick="mqShowConsultModal()">📅 Book a consultation <span class="mq-fx-cta-arr">→</span></button>${second}</div>`;
+      if (cta._mqHtml !== html) { cta.innerHTML = html; cta._mqHtml = html; }
+      const fin = res.querySelector(':scope > .mq-financing-box');
+      const anchor = (fin && fin.style.display !== 'none') ? fin : res.querySelector(':scope > .mq-line-items');
+      if (anchor && anchor.nextElementSibling !== cta) anchor.after(cta);
+      else if (!anchor && !cta.parentNode) res.appendChild(cta);
+    });
+  }
+  window.mqFxResultCta = mqFxResultCta;
 
   window.mqFxEditAnswers = function(prefix, toStart) {
     const tab = mqFxTabEl(prefix);
@@ -11552,6 +11590,21 @@
         #midasquote-widget.mq-fx-onres #mq-fx-steps{display:none}
         #midasquote-widget.mq-fx-onres #mq-fx-side .mq-fx-side-foot{margin-top:auto}
       }
+
+      /* Results "next step" card (mqFxResultCta) */
+      #midasquote-widget .mq-fx-cta{display:none}
+      #midasquote-widget.mq-fx .mq-fx-results .mq-fx-cta{display:block;margin:18px 0 6px;padding:20px 20px 18px;border-radius:16px;background:linear-gradient(135deg,var(--cta-tint),#fff 70%);border:1px solid var(--cta-line);box-shadow:0 10px 30px -18px var(--cta-sh)}
+      #midasquote-widget .mq-fx-cta-h{font-size:18px;font-weight:800;color:#111827;letter-spacing:-.01em}
+      #midasquote-widget .mq-fx-cta-sub{font-size:13.5px;color:#4b5563;margin-top:3px}
+      #midasquote-widget .mq-fx-cta-row{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+      #midasquote-widget .mq-fx-cta-btn{flex:1 1 200px;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:50px;padding:12px 18px;border-radius:12px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;transition:transform .15s,box-shadow .15s}
+      #midasquote-widget .mq-fx-cta-pri{border:none;color:var(--cta-fg);background:linear-gradient(135deg,var(--cta-a) 0%,var(--cta-b) 100%);box-shadow:0 10px 22px -8px var(--cta-sh),inset 0 1px 0 rgba(255,255,255,.3)}
+      #midasquote-widget .mq-fx-cta-sec{background:#fff;color:#111827;border:1.5px solid var(--cta-line);box-shadow:0 4px 12px -8px rgba(0,0,0,.25)}
+      #midasquote-widget .mq-fx-cta-arr{transition:transform .15s}
+      @media (hover:hover){#midasquote-widget .mq-fx-cta-btn:hover{transform:translateY(-2px)}#midasquote-widget .mq-fx-cta-pri:hover{box-shadow:0 14px 28px -10px var(--cta-sh),inset 0 1px 0 rgba(255,255,255,.35)}#midasquote-widget .mq-fx-cta-btn:hover .mq-fx-cta-arr{transform:translateX(3px)}}
+      #midasquote-widget .mq-fx-cta-btn:active{transform:scale(.97)}
+      /* ...and they leave the side panel / bottom bar on the results screen */
+      html.mq-fx-res-cta #mq-sticky-ctas{display:none!important}
 
       /* Chooser cards: filled with the shop's brand colour. Text, arrow chip and dividers
          switch light/dark by the colour's lightness (set in JS as --mq-card-fg etc.). */
