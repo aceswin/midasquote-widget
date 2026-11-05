@@ -11304,7 +11304,7 @@
     const finLink = (window._mqFinancingOn && String(sd['Financing link'] || '').trim()) || '';
     const shopName = mqCcEsc(sd['Shop name'] || 'us');
     const second = finLink
-      ? `<button type="button" class="mq-fx-cta-btn mq-fx-cta-sec" onclick="window.open(${JSON.stringify(finLink).replace(/"/g, '&quot;')},'_blank')"><span>💳</span> Get pre-approved <span class="mq-fx-cta-arr">↗</span></button>`
+      ? `<button type="button" class="mq-fx-cta-btn mq-fx-cta-fin" onclick="window.open(${JSON.stringify(finLink).replace(/"/g, '&quot;')},'_blank')"><span>💳</span> Get pre-approved <span class="mq-fx-cta-arr">↗</span></button>`
       : `<button type="button" class="mq-fx-cta-btn mq-fx-cta-sec" onclick="mqShowConsultModal()"><span>💬</span> Ask a question</button>`;
     tab.querySelectorAll('.mq-result, .mq-combined-result').forEach(res => {
       if (res.offsetParent === null && getComputedStyle(res).display === 'none') return;
@@ -11312,7 +11312,7 @@
       if (!cta) { cta = document.createElement('div'); cta.className = 'mq-fx-cta'; }
       cta.style.cssText = `--cta-a:${bc};--cta-b:${mix(0.35)};--cta-fg:${fg};--cta-sh:${bc}66;--cta-tint:${bc}12;--cta-line:${bc}33`;
       const html = `<div class="mq-fx-cta-txt"><div class="mq-fx-cta-h">Ready for the next step?</div><div class="mq-fx-cta-sub">Talk it through with ${shopName} — free, no obligation.</div></div>
-        <div class="mq-fx-cta-row"><button type="button" class="mq-fx-cta-btn mq-fx-cta-pri" onclick="mqShowConsultModal()">📅 Book a consultation <span class="mq-fx-cta-arr">→</span></button>${second}</div>`;
+        <div class="mq-fx-cta-row"><button type="button" class="mq-fx-cta-btn ${finLink ? 'mq-fx-cta-sec' : 'mq-fx-cta-pri'}" onclick="mqShowConsultModal()">📅 Book a consultation <span class="mq-fx-cta-arr">→</span></button>${second}</div>`;
       if (cta._mqHtml !== html) { cta.innerHTML = html; cta._mqHtml = html; }
       const fin = res.querySelector(':scope > .mq-financing-box');
       const anchor = (fin && fin.style.display !== 'none') ? fin : res.querySelector(':scope > .mq-line-items');
@@ -11600,6 +11600,10 @@
       #midasquote-widget .mq-fx-cta-btn{flex:1 1 200px;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:50px;padding:12px 18px;border-radius:12px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;transition:transform .15s,box-shadow .15s}
       #midasquote-widget .mq-fx-cta-pri{border:none;color:var(--cta-fg);background:linear-gradient(135deg,var(--cta-a) 0%,var(--cta-b) 100%);box-shadow:0 10px 22px -8px var(--cta-sh),inset 0 1px 0 rgba(255,255,255,.3)}
       #midasquote-widget .mq-fx-cta-sec{background:#fff;color:#111827;border:1.5px solid var(--cta-line);box-shadow:0 4px 12px -8px rgba(0,0,0,.25)}
+      /* With a financing link, Get pre-approved is the filled one -- in the
+         Financing card's light green -- and Book a consultation goes white. */
+      #midasquote-widget .mq-fx-cta-fin{border:1.5px solid #86efac;color:#14532d;background:linear-gradient(135deg,#bbf7d0 0%,#ecfdf5 100%);box-shadow:0 10px 22px -10px rgba(22,163,74,.55),inset 0 1px 0 rgba(255,255,255,.6)}
+      @media (hover:hover){#midasquote-widget .mq-fx-cta-fin:hover{box-shadow:0 14px 28px -12px rgba(22,163,74,.6),inset 0 1px 0 rgba(255,255,255,.7)}}
       #midasquote-widget .mq-fx-cta-arr{transition:transform .15s}
       @media (hover:hover){#midasquote-widget .mq-fx-cta-btn:hover{transform:translateY(-2px)}#midasquote-widget .mq-fx-cta-pri:hover{box-shadow:0 14px 28px -10px var(--cta-sh),inset 0 1px 0 rgba(255,255,255,.35)}#midasquote-widget .mq-fx-cta-btn:hover .mq-fx-cta-arr{transform:translateX(3px)}}
       #midasquote-widget .mq-fx-cta-btn:active{transform:scale(.97)}
