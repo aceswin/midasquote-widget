@@ -6500,13 +6500,13 @@ window.logoutMember = async function () {
 `)}
             ${mqGrpBox(q.id + ':meas', '#0d9488', '#f0fdfa', '② Measurements', (q.measures || []).length ? (q.measures || []).map(m => mqEscHtml(m.label || 'Untitled')).join(' · ') : 'None yet', 'Numbers customers enter once — like “Wall area” or “Number of rooms”. Any option on the Pricing tab can then be priced on one (pick “One of this quote’s measurements”).', `
                 ${(q.measures || []).map((m, mi) => `<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
-                  <input type="text" maxlength="40" value="${mqEscHtml(m.label || '')}" placeholder="e.g. Wall area" onchange="mqQtMeasSet('${q.id}', ${mi}, 'label', this.value)" style="font-size:13px;padding:6px 9px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;width:180px"/>
-                  <select onchange="mqQtMeasSet('${q.id}', ${mi}, 'type', this.value)" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;width:auto">
+                  <input type="text" maxlength="40" value="${mqEscHtml(m.label || '')}" placeholder="e.g. Wall area" data-mq-meas="${q.id}|${mi}|label" onchange="mqQtMeasSet('${q.id}', ${mi}, 'label', this.value)" style="font-size:13px;padding:6px 9px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;width:180px"/>
+                  <select data-mq-meas="${q.id}|${mi}|type" onchange="mqQtMeasSet('${q.id}', ${mi}, 'type', this.value)" style="font-size:13px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;width:auto">
                     <option value="sqft" ${m.type === 'sqft' ? 'selected' : ''}>Square feet</option>
                     <option value="lft" ${m.type === 'lft' ? 'selected' : ''}>Linear feet</option>
                     <option value="count" ${m.type !== 'sqft' && m.type !== 'lft' ? 'selected' : ''}>A count…</option>
                   </select>
-                  ${m.type !== 'sqft' && m.type !== 'lft' ? `<input type="text" maxlength="24" value="${mqEscHtml(m.unit || '')}" placeholder="what's counted, e.g. rooms" onchange="mqQtMeasSet('${q.id}', ${mi}, 'unit', this.value)" style="font-size:13px;padding:6px 9px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;width:170px"/>` : ''}
+                  ${m.type !== 'sqft' && m.type !== 'lft' ? `<input type="text" maxlength="24" value="${mqEscHtml(m.unit || '')}" placeholder="what's counted, e.g. rooms" data-mq-meas="${q.id}|${mi}|unit" onchange="mqQtMeasSet('${q.id}', ${mi}, 'unit', this.value)" style="font-size:13px;padding:6px 9px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;width:170px"/>` : ''}
                   <button type="button" class="mq-btn mq-btn-sm" title="Remove" onclick="mqQtMeasDel('${q.id}', ${mi})" style="color:#b91c1c">✕</button>
                 </div>`).join('')}
                 <button type="button" class="mq-btn mq-btn-sm" onclick="mqQtMeasAdd('${q.id}')">+ Add a measurement</button>
@@ -12383,7 +12383,19 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   }
   window.mqQtUpdate = mqQtUpdate;
   // Phase 4: a quote type's Measurements (saved on the quote type).
-  function mqQtMeasList(id) { const q = mqQuoteTypesOf(window._mqShopRecord.fields).find(x => x.id === id); return (q && Array.isArray(q.measures)) ? q.measures.map(m => Object.assign({}, m)) : []; }
+  // Reads the saved list, then lays on whatever is typed in the boxes right
+  // now -- so "+ Add another" (or a quick second edit) never undoes a name
+  // that was still saving (Jordan, Nov 2026: "Floor area" went back to "Area").
+  function mqQtMeasList(id) {
+    const q = mqQuoteTypesOf(window._mqShopRecord.fields).find(x => x.id === id);
+    const list = (q && Array.isArray(q.measures)) ? q.measures.map(m => Object.assign({}, m)) : [];
+    document.querySelectorAll('[data-mq-meas]').forEach(inp => {
+      const [qid, i, key] = String(inp.dataset.mqMeas).split('|');
+      if (qid !== id || !list[+i]) return;
+      list[+i][key] = String(inp.value || '').trim();
+    });
+    return list;
+  }
   window.mqQtMeasAdd = function(id) {
     const list = mqQtMeasList(id);
     list.push({ id: 'm_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), label: list.length ? '' : 'Area', type: 'sqft', unit: '' });
