@@ -3597,22 +3597,43 @@
       if (step.nextElementSibling !== ns) step.after(ns);
       return ns;
     };
+    // A measurement box only shows once an option that uses it is picked
+    // (Jordan, Nov 2026: only Ceiling added -> don't ask for trim length).
+    // Pick-one steps with nothing chosen yet still show their boxes.
+    const usesM = (it, m) => it.how === 'meas' && it.meas === m.id && mqCcRoomOk(it, room);
+    const wantsM = (c, m) => {
+      if (c.answer === 'one') {
+        const sel = document.getElementById(`mq-${p}-cc-${c.id}`);
+        const v = sel ? sel.value : '';
+        const picked = v && c.items.find(it => it.id === v);
+        return picked ? usesM(picked, m) : c.items.some(it => usesM(it, m));
+      }
+      return c.items.some(it => usesM(it, m) && mqCcItemOn(p, c, it, room, 0) && mqCcPickedRaw(p, c, it));
+    };
     const used = new Set();
+    let measChanged = false;
     ms.forEach(m => {
       const f = document.getElementById(`mq-${p}-measf-${m.id}`);
       if (!f) return;
-      const hit = shown.find(x => x.c.items.some(it => it.how === 'meas' && it.meas === m.id && mqCcRoomOk(it, room)));
+      const rel = shown.filter(x => x.c.items.some(it => usesM(it, m)));
+      const hit = rel.find(x => wantsM(x.c, m)) || rel[0];
       const box = hit && secOf(hit.c);
       const dest = box ? box.querySelector('.mq-grid3') : home;
       if (f.parentNode !== dest) dest.appendChild(f);
-      if (box) used.add(box);
+      const on = !box || wantsM(hit.c, m);
+      f.style.display = on ? '' : 'none';
+      if (box && on) used.add(box);
     });
     // Keep each one glued right after its step, and shown only when it has boxes.
     document.querySelectorAll(`[id^="mq-${p}-measat-"][id$="-sec"]`).forEach(b => {
       const step = document.getElementById(b.id.replace(`-measat-`, '-cc-'));
       if (step && step.nextElementSibling !== b) step.after(b);
-      b.style.display = used.has(b) && b.querySelector('.mq-grid3').children.length ? '' : 'none';
+      const disp = used.has(b) && [...b.querySelector('.mq-grid3').children].some(x => x.style.display !== 'none') ? '' : 'none';
+      if (b.style.display !== disp) { b.style.display = disp; measChanged = true; }
     });
+    // Focused layout: a Measurements step just came or went -> refresh the
+    // "Step X of Y" count and side list (not while the customer is typing).
+    if (measChanged && window._mqFxOn && typeof window.mqFxApply === 'function') setTimeout(() => window.mqFxApply(p), 0);
     // The "how to measure" pictures go with the first group of measurements.
     const guide = document.getElementById(`mq-${p}-meas-guide`);
     if (guide) {
