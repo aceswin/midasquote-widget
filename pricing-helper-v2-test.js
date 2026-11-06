@@ -6787,7 +6787,7 @@ window.mqphGoToWizard = function() {
           </div>
           <div class="mqph-modal-body"><div class="mqcc-modal-grid"><div>
             <div class="mqph-field" id="mqcc-item-step-wrap" style="display:none"><label>Which step is this option in?</label><select id="mqcc-item-step"></select><div style="font-size:11px;color:#6b7280;margin-top:4px">Change it to move this option (with its photo) into another step of this quote.</div></div>
-            <div class="mqph-field"><label>Option name</label><input type="text" id="mqcc-item-name" maxlength="80" placeholder="Finished end panels"/></div>
+            <div class="mqph-field"><label>Option name</label><input type="text" id="mqcc-item-name" maxlength="80" placeholder="e.g. Premium upgrade"/></div>
             <div class="mqph-field"><label>Description for customers (optional)</label><input type="text" id="mqcc-item-desc" maxlength="200"/></div>
             <div class="mqph-field"><label>What it's priced on</label><select id="mqcc-item-how" onchange="mqccItemHowChanged()">${howOpts}</select></div>
             <div class="mqph-field" id="mqcc-item-src-wrap"><label>Which option’s number?</label><select id="mqcc-item-src" onchange="mqccItemHowChanged()"></select></div>
@@ -6847,7 +6847,8 @@ window.mqphGoToWizard = function() {
           </div>
           <div class="mqph-modal-footer">
             <button class="mqph-btn mqph-btn-secondary" onclick="mqccClose('mqcc-item-overlay')" style="margin-left:auto">Cancel</button>
-            <button class="mqph-btn mqph-btn-primary" id="mqcc-item-save" onclick="mqccSaveItem()">Save option</button>
+            <button class="mqph-btn mqph-btn-secondary" id="mqcc-item-saveadd" onmousedown="event.preventDefault()" onclick="mqccItemGo(null)" style="border-color:#93c5fd;color:#1e40af;background:#eff6ff">+ Save &amp; add another</button>
+            <button class="mqph-btn mqph-btn-primary" id="mqcc-item-save" onmousedown="event.preventDefault()" onclick="mqccSaveItem()">Save option</button>
           </div>
         </div>
       </div>`;
@@ -7930,7 +7931,7 @@ window.mqphGoToWizard = function() {
       body = `<div style="display:flex;flex-wrap:wrap;gap:8px">${list.map(it => {
         const sel = val === it.id;
         const go = hiId && it.id !== 'none' && it.id !== hiId ? `;mqccItemGo('${it.id}')` : '';
-        return `<button type="button"${hiA(it.id)}${go ? ' title="Click to edit this option"' : ''} onclick="mqccPvPickOne('${c.id}','${it.id}')${go}" style="${hi(it.id)}width:104px;padding:6px;border-radius:9px;border:${sel ? '2px solid #111' : '1px solid #e5e7eb'};background:#fff;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;font:inherit">
+        return `<button type="button"${hiA(it.id)}${go ? ' title="Click to edit this option"' : ''} onmousedown="event.preventDefault()" onclick="mqccPvPickOne('${c.id}','${it.id}')${go}" style="${hi(it.id)}width:104px;padding:6px;border-radius:9px;border:${sel ? '2px solid #111' : '1px solid #e5e7eb'};background:#fff;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;font:inherit">
           ${mqccPvThumb(c.id, it, 88)}
           <span style="font-size:11px;font-weight:${sel ? 700 : 500};color:#111;line-height:1.25;text-align:center">${mqccEsc(it.name)}${it.proOnly ? proTag : ''}${it.tie ? ` <span title="${mqccEsc(mqccTieText(it.tie))}">🔗</span>` : ''}</span>
           <span style="font-size:10px;font-weight:700;border-radius:10px;padding:2px 8px;${sel ? 'background:#111;color:#fff' : 'border:1px solid #d1d5db;color:#374151'}">${sel ? '✓ Selected' : 'Select'}</span>
@@ -7961,7 +7962,7 @@ window.mqphGoToWizard = function() {
             : it.how === 'each'
             ? `<span style="display:inline-flex;align-items:center;gap:8px">${mqccPvStepper(`mqccPvQty('${it.id}',-1)`, `mqccPvQty('${it.id}',1)`, mqccPv.qty[it.id] || 0, it.unit)}${mqccPvCalcBtn('qty:' + it.id, it.unit, it.name)}</span>`
             : `<button type="button" onclick="mqccPvToggle('${it.id}')" style="${MQCC_PV_BTN}border:1.5px solid ${on ? '#1d4ed8' : '#d1d5db'};background:${on ? '#1d4ed8' : '#fff'};color:${on ? '#fff' : '#111'}">${on ? '✓ Added' : '+ Add'}</button>`;
-          const goAny = hiId && it.id !== hiId ? ` title="Click to edit this option" onclick="if(!event.target.closest('button,input,select'))mqccItemGo('${it.id}')"` : '';
+          const goAny = hiId && it.id !== hiId ? ` title="Click to edit this option" onmousedown="if(!event.target.closest('input,select'))event.preventDefault()" onclick="if(!event.target.closest('button,input,select'))mqccItemGo('${it.id}')"` : '';
           return `<div${hiA(it.id)}${goAny} style="${hi(it.id)}${goAny ? 'cursor:pointer;' : ''}display:flex;gap:10px;padding:8px 10px;border-radius:8px;border:1px ${shown ? 'solid' : 'dashed'} ${on ? '#93c5fd' : '#e5e7eb'};background:${on ? '#eff6ff' : '#fff'};${shown ? '' : 'opacity:.55'}">
             ${mqccPvThumb(c.id, it, 56)}
             <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px">
@@ -8103,7 +8104,7 @@ window.mqphGoToWizard = function() {
     const items = i >= 0 ? saved.map(x => (x.id === draft.id ? { ...x, ...draft, groupName: x.groupName, groupOrder: x.groupOrder } : x)) : saved.concat([draft]);
     const savedNote = window._mqccItemSavedNote; window._mqccItemSavedNote = '';
     box.innerHTML = `${savedNote ? `<div style="font-size:12px;font-weight:600;color:#15803d;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:7px;padding:6px 10px;margin-bottom:8px">✓ “${mqccEsc(savedNote)}” saved</div>` : ''}${mqccPvViewHtml(c, items, draft.id)}
-      <button type="button" onclick="mqccItemGo(null)" style="width:100%;margin-top:10px;padding:8px;border-radius:8px;border:1.5px dashed #93c5fd;background:#eff6ff;color:#1e40af;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer">+ ${ed.id ? 'New option' : 'Save this one &amp; add another'} in “${mqccEsc(c.name)}”</button>
+      <button type="button" onmousedown="event.preventDefault()" onclick="mqccItemGo(null)" style="width:100%;margin-top:10px;padding:8px;border-radius:8px;border:1.5px dashed #93c5fd;background:#eff6ff;color:#1e40af;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer">+ ${ed.id ? 'New option' : 'Save this one &amp; add another'} in “${mqccEsc(c.name)}”</button>
       <div style="font-size:11px;color:#6b7280;line-height:1.5;margin-top:8px">The highlighted ${c.answer === 'one' ? 'choice' : 'card'} is the option you're editing. <strong>Click any other option to edit it here</strong> — your changes to this one are saved first. The price check is under the price box.</div>`;
     // Keep this option in view inside the preview panel (desktop).
     const hiEl = box.querySelector('[data-mqcc-hi]'), pane = box.closest('.mqcc-modal-pv');
