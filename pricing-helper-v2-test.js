@@ -7181,7 +7181,25 @@ window.mqphGoToWizard = function() {
     if (!ov) return '';
     return JSON.stringify([...ov.querySelectorAll('input,select,textarea')].map(e => e.type === 'checkbox' || e.type === 'radio' ? e.checked : e.value)) + JSON.stringify(mqccVarDraft || []);
   }
+  // Saving can take a second on a real connection: show "Saving…" on the
+  // first click straight away and ignore extra clicks meanwhile, so it never
+  // looks like it needs a second click (or saves the option twice).
+  let mqccGoBusy = false;
   window.mqccItemGo = async function(targetId) {
+    if (mqccGoBusy) return;
+    mqccGoBusy = true;
+    const btns = [...document.querySelectorAll('#mqcc-item-saveadd, #mqcc-item-pv button[onclick="mqccItemGo(null)"]')];
+    const pv = document.getElementById('mqcc-item-pv');
+    btns.forEach(b => { b.dataset.mqT = b.innerHTML; b.disabled = true; b.innerHTML = 'Saving…'; b.style.cursor = 'wait'; });
+    if (pv) pv.style.cursor = 'wait';
+    try { await mqccItemGoRun(targetId); }
+    finally {
+      mqccGoBusy = false;
+      btns.forEach(b => { if (b.isConnected && b.dataset.mqT != null) { b.innerHTML = b.dataset.mqT; b.disabled = false; b.style.cursor = ''; } });
+      if (pv) pv.style.cursor = '';
+    }
+  };
+  async function mqccItemGoRun(targetId) {
     const ed = mqccEditItem;
     if (!ed) return;
     const cid = ed.cid;
@@ -7205,7 +7223,7 @@ window.mqphGoToWizard = function() {
       }
     }
     mqccOpenItem(cid, targetId || null);
-  };
+  }
   window.mqccSaveItem = async function() {
     const ed = mqccEditItem;
     if (!ed) return;
