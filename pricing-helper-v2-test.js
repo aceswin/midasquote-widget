@@ -7097,6 +7097,17 @@ window.mqphGoToWizard = function() {
     [...howSel.querySelectorAll('optgroup')].forEach(g => { g.hidden = [...g.children].every(o => o.hidden); });
     const pctAllOpt = howSel.querySelector('option[value="pct_all"]');
     if (pctAllOpt) pctAllOpt.textContent = inQt ? '% of everything else in this quote' : MQCC_HOW.pct_all.label;
+    // Show the real names next to the generic choices, e.g.
+    // "% of one of your custom categories (Fence style, Height, Gates…)".
+    // A dropdown list can't be styled per word, so it's plain text, cut to fit.
+    {
+      const fit = (base, names) => { if (!names.length) return base; let t = base + '  (' + names.join(', ') + ')'; if (t.length > 78) t = t.slice(0, 76).replace(/[,\s]+[^,]*$/, '') + '…)'; return t; };
+      const sibNames = mqccCats().filter(x => x.id !== c.id && (inQt ? (x.qt || '') === (c.qt || '') : true)).map(x => x.name);
+      const ccOpt = howSel.querySelector('option[value="pct_cc"]');
+      if (ccOpt) ccOpt.textContent = fit(MQCC_HOW.pct_cc.label, sibNames);
+      const mOpt = howSel.querySelector('option[value="meas"]');
+      if (mOpt) mOpt.textContent = measList.length ? fit('One of this quote’s measurements', measList.map(m => m.label)) : MQCC_HOW.meas.label;
+    }
     if (inQt && CAB_HOWS.includes(howSel.value)) howSel.value = 'flat';
     const tieWrap = document.getElementById('mqcc-item-tiecat') && document.getElementById('mqcc-item-tiecat').closest('.mqph-field');
     if (tieWrap) tieWrap.style.setProperty('display', inQt ? 'none' : '', inQt ? 'important' : '');
