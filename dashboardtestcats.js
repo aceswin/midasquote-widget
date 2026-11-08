@@ -11123,7 +11123,10 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
 
     const content = el('mq-products-content');
     if (content) {
-      const catsOrdered = ['material','door','drawer','hinge','countertop','trim_crown','trim_valance','tall_cabinet', ...customCats.map(c => c.id)];
+      // Steps of a quote whose trade is unticked stay out of My Products too
+      // (photos etc. are kept and come back when the trade is ticked again).
+      const notOffP = window.mqQtsNotOffered ? window.mqQtsNotOffered(shopRecord.fields) : new Set();
+      const catsOrdered = ['material','door','drawer','hinge','countertop','trim_crown','trim_valance','tall_cabinet', ...customCats.filter(c => !(c.qt && notOffP.has(c.qt))).map(c => c.id)];
       const hasCats = catsOrdered.some(c => byCategory[c]?.length);
       content.innerHTML = (!hasCats && !specItems.length)
         ? '<div class="mq-empty">Set up your pricing first — your configured items will appear here automatically.</div>'
@@ -11634,6 +11637,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         mqRenderQuoteTypes();
         if (window._mqRooms) renderRoomsList();
         mqApplyEstimatorTabScopeToPricing();
+        // My Products follows straight away (from what's already loaded).
+        try { if (window._mqLineItems && document.getElementById('mq-products-content') && window._mqShopRecord) initProductsTab(window._mqShopRecord, window._mqLineItems); } catch(e) {}
         if (changed.length) showMsg('mq-shop-msg', unticking
           ? `✓ ${t.label} unticked. ${changed.map(q => '"' + q.name + '"').join(', ')} hidden from your widget and Pro. Tick it again to bring ${changed.length === 1 ? 'it' : 'them'} back.`
           : `✓ ${changed.map(q => '"' + q.name + '"').join(', ')} back on your widget.`);
