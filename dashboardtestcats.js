@@ -11262,7 +11262,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const stillOnCount = ALL_TAB_IDS.filter(id => id === tabId ? false : (el('mq-tab-' + id + '-toggle')?.classList.contains('on'))).length
         + mqQuoteTypesOf(shopRec.fields).filter(q => q.on !== false && !q.proOnly).length;
       if (stillOnCount === 0) {
-        showMsg('mq-shop-msg', 'At least one estimator tab has to stay visible.', 'error');
+        showMsg('mq-shop-msg', 'At least one quote type has to stay visible.', 'error');
         return;
       }
     }
@@ -12378,6 +12378,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       await mqSaveTabsCfg({ quoteTypes: qts });
       mqRenderQuoteTypes();
       if (window._mqRooms) renderRoomsList();
+      // On/off or a rename changes which quote groups Pricing shows.
+      if ('on' in change || 'name' in change) mqApplyEstimatorTabScopeToPricing();
       if (okMsg) showMsg('mq-shop-msg', okMsg);
     } catch(e) { showMsg('mq-shop-msg', 'Error saving.', 'error'); mqRenderQuoteTypes(); }
   }
@@ -12423,13 +12425,13 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     if (turningOff) {
       const builtOn = ['both', 'cabinets', 'countertops'].filter(t => !cfg.hidden.includes(t)).length;
       const otherOn = cfg.quoteTypes.filter(x => x.id !== id && x.on !== false && !x.proOnly).length;
-      if (!builtOn && !otherOn) { showMsg('mq-shop-msg', 'At least one estimator tab has to stay visible.', 'error'); return; }
+      if (!builtOn && !otherOn) { showMsg('mq-shop-msg', 'At least one quote type has to stay visible.', 'error'); return; }
     }
     // Switching on a quote type whose trade was unticked ticks the trade again.
     if (!turningOff && q.trade && !cfg.business.trades.includes(q.trade) && [...MQ_BIZ_FIXED, ...mqTradeEntries()].some(t => t.id === q.trade)) {
       const qts = cfg.quoteTypes.map(x => { if (x.id !== id) return x; const nx = Object.assign({}, x, { on: true }); delete nx.offByTrade; return nx; });
       mqSaveTabsCfg({ quoteTypes: qts, business: { trades: [...cfg.business.trades, q.trade], off: cfg.business.off } })
-        .then(() => { mqRenderQuoteTypes(); if (window._mqRooms) renderRoomsList(); showMsg('mq-shop-msg', `✓ "${q.name}" is showing on your widget.`); })
+        .then(() => { mqRenderQuoteTypes(); if (window._mqRooms) renderRoomsList(); mqApplyEstimatorTabScopeToPricing(); showMsg('mq-shop-msg', `✓ "${q.name}" is showing on your widget.`); })
         .catch(() => { showMsg('mq-shop-msg', 'Error saving.', 'error'); mqRenderQuoteTypes(); });
       return;
     }
