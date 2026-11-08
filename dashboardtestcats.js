@@ -405,8 +405,8 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
           <p style="margin:0">Pick <strong>Classic</strong> (one scrolling page, the original look) or <strong>Focused</strong> (one question at a time, full screen). It changes your embedded widget and your standalone link everywhere at once — no new embed code to paste. Use the Preview links to try either one before choosing. MidasQuote Pro always stays the same.</p>
         </div>
         <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">🗂️ Estimator tabs</div>
-          <p style="margin:0">A card further down lets you turn off any of your widget's top-level tabs (Full project quote, Cabinets only, Countertops only) per shop — whatever's left automatically fills the space. At least one has to stay on, and there's a checkbox to apply the same choice to MidasQuote Pro.</p>
+          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">🗂️ Quote types</div>
+          <p style="margin:0">A card further down lets you turn off any of your widget's quote types (Full project quote, Cabinets only, Countertops only) per shop — whatever's left automatically fills the space. At least one has to stay on, and there's a checkbox to apply the same choice to MidasQuote Pro.</p>
         </div>
         <p style="margin-top:1.1rem">Everything on this tab autosaves a second or two after you stop typing — you'll see a small toast confirm each save.</p>
       `
@@ -928,7 +928,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
           <br><br>
           Want the bigger picture instead? <strong style="color:#2563eb">📖 Help guide</strong> in the sidebar covers every part of the dashboard in one place, organized by topic — good for a first read-through before you dive in.
           <br><br>
-          Only offer some of what MidasQuote can quote? In Business info → <strong>🗂️ Estimator tabs</strong>, you can turn off whichever tabs don't apply to you — a countertops-only shop, for example, can turn off <strong style="color:#2563eb">Full project quote</strong> and <strong style="color:#2563eb">Cabinets only</strong>, so customers only ever see the Countertops tab.
+          Only offer some of what MidasQuote can quote? In Business info → <strong>🗂️ Quote types</strong>, you can turn off whichever quote types don't apply to you — a countertops-only shop, for example, can turn off <strong style="color:#2563eb">Full project quote</strong> and <strong style="color:#2563eb">Cabinets only</strong>, so customers only ever see the Countertops tab.
           <br><br>
           Take your time exploring — there's no rush, and almost everything here autosaves as you go.
           <br><br>
@@ -1951,10 +1951,10 @@ window.logoutMember = async function () {
             <div class="mq-card">
               <div class="mq-card-title" onclick="mqToggleShopSection('tabs')" style="cursor:pointer;user-select:none">
                 <span id="mq-shopsec-tabs-chevron" style="font-size:11px;color:#6b7280;display:inline-block;transition:transform 0.15s">▶</span>
-                🗂️ Estimator tabs
+                🗂️ Quote types
               </div>
               <div id="mq-shopsec-tabs-body" style="display:none">
-              <div class="mq-hint" style="display:block;margin-bottom:1rem">Choose which quote tabs show on your widget. Whatever's left automatically shifts over to fill the space — at least one tab must stay visible. With 4 or more, customers get arrows to slide through them.</div>
+              <div class="mq-hint" style="display:block;margin-bottom:1rem">Choose which quote types show on your widget. Whatever's left automatically shifts over to fill the space — at least one tab must stay visible. With 4 or more, customers get arrows to slide through them.</div>
               <div class="mq-toggle-row" style="margin-bottom:1rem">
                 <div>
                   <div style="font-size:13px;font-weight:500;color:#111">Show "Full project quote" tab</div>
@@ -5117,7 +5117,7 @@ window.logoutMember = async function () {
   }
 
   // Whichever ONE estimator tab (if any) is the only thing customers can
-  // reach, per Shop Info's "🗂️ Estimator tabs" toggles ('Hidden widget
+  // reach, per Shop Info's "🗂️ Quote types" toggles ('Hidden widget
   // tabs' = {hidden:[...], applyToPro}). Per Jordan: "after this fix Id
   // like to make all cabinet related items in pricing tab to become hidden
   // when the countertops only toggle is the only on on... and if the
@@ -11969,7 +11969,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
               return `<div style="font-size:12px;color:#6b7280;line-height:1.5;margin-bottom:8px">${has ? `Shops that tick ${esc(t.label)} get ${pq.length > 1 ? 'all of these quotes' : 'this quote'} with one click. To change ${pq.length > 1 ? 'them' : 'it'}, open in your shop, edit, and save back. Shops that already used it keep their copy.` : `Build a quote in your own shop (Business info → quote types, then its project types, Pricing steps and Specialty items), then add it here. A pack can hold several quotes (e.g. Interior + Exterior painting). Shops that tick ${esc(t.label)} get them all with one click.`}</div>
                 ${has ? `<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px">${pq.map((q, k) => `<span style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;background:#fbf3df;color:#8a6510;border-radius:999px;padding:4px 6px 4px 11px">${esc(q.name)}<button type="button" onclick="mqTradePackDropQuote('${t.id}',${k})" title="Take out of the pack" style="border:0;background:#fff;color:#8a6510;border-radius:999px;width:18px;height:18px;line-height:18px;padding:0;cursor:pointer;font-size:12px">×</button></span>`).join('')}</div>
                   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px"><button type="button" class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqTradeOpenPack('${t.id}')">✏️ Open in my shop to edit</button><button type="button" class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqTradeRemovePack('${t.id}')">Remove pack</button></div>` : ''}
-                ${others.length ? `<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><span style="font-size:12px;color:#374151">${has ? 'Add a quote to this pack:' : 'Add from:'}</span><select id="mq-trade-e-src" style="${inp};width:auto!important;min-width:200px;max-width:320px!important">${others.map(q => `<option value="${q.id}">${esc(q.name)}</option>`).join('')}</select><button type="button" class="mq-btn ${has ? '' : 'mq-btn-primary '}mq-btn-sm" onclick="mqTradePackAddQuote('${t.id}')">${has ? '+ Add to pack' : 'Save as starter pack'}</button></div>${has ? '<div style="font-size:11px;color:#9ca3af;margin-top:4px">A quote with the same name as one already in the pack replaces it.</div>' : ''}` : (has ? '' : '<div style="font-size:12px;color:#b45309">Add a quote type in this shop first (Business info → Estimator tabs).</div>')}`;
+                ${others.length ? `<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><span style="font-size:12px;color:#374151">${has ? 'Add a quote to this pack:' : 'Add from:'}</span><select id="mq-trade-e-src" style="${inp};width:auto!important;min-width:200px;max-width:320px!important">${others.map(q => `<option value="${q.id}">${esc(q.name)}</option>`).join('')}</select><button type="button" class="mq-btn ${has ? '' : 'mq-btn-primary '}mq-btn-sm" onclick="mqTradePackAddQuote('${t.id}')">${has ? '+ Add to pack' : 'Save as starter pack'}</button></div>${has ? '<div style="font-size:11px;color:#9ca3af;margin-top:4px">A quote with the same name as one already in the pack replaces it.</div>' : ''}` : (has ? '' : '<div style="font-size:12px;color:#b45309">Add a quote type in this shop first (Business info → Quote types).</div>')}`;
             })()}
           </div>`}
         </div>` : ''}
