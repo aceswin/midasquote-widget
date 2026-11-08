@@ -6478,7 +6478,8 @@ window.logoutMember = async function () {
     if (wrap) {
       const cats = mqCustomCatsOf(window._mqShopRecord);
       document.querySelectorAll('.mq-rooms-qt-sec').forEach(n => n.remove());
-      wrap.insertAdjacentHTML('beforebegin', qts.map(q => {
+      const notOffR = window.mqQtsNotOffered();
+      wrap.insertAdjacentHTML('beforebegin', qts.filter(q => !notOffR.has(q.id)).map(q => {
         const steps = cats.filter(c => c.qt === q.id);
         const hasSomething = steps.length || mqQtHasCountertops(q.id) || mqQtHasSpecialty(q.id);
         const state = q.on === false ? 'Hidden (turned off on Business info)' : (q.proOnly ? 'MidasQuote Pro only' : (hasSomething ? 'Showing on your widget' : ('Not showing yet — add a priced step' + (mqBizOf(window._mqShopRecord.fields).ct ? ', a specialty item or countertops' : ' or a specialty item'))));
@@ -11495,6 +11496,20 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // Quote types that belong to a trade: made from its "+ Add a … quote"
   // button (trade: id), or -- for ones made before that was saved -- named
   // like it (e.g. "Painting").
+  // Quote types belonging to a trade the shop has unticked under "What does
+  // your business do?" -- not offered, so they leave the Quote types list,
+  // Project types and Pricing (Jordan, Nov 2026). Quotes with no trade
+  // (e.g. a custom "Fresh Doors") always stay.
+  window.mqQtsNotOffered = function(fields) {
+    try {
+      const cfg = mqTabsCfgOf(fields || window._mqShopRecord.fields);
+      const trades = (cfg.business && cfg.business.trades) || [];
+      const out = new Set();
+      cfg.quoteTypes.forEach(q => { if (q.offByTrade || (q.trade && !trades.includes(q.trade))) out.add(q.id); });
+      mqTradeEntries().forEach(t => { if (!trades.includes(t.id)) mqQtsOfTrade(t, cfg.quoteTypes).forEach(q => { if (!q.trade && q.on === false) out.add(q.id); }); });
+      return out;
+    } catch(e) { return new Set(); }
+  };
   function mqQtsOfTrade(t, qts) {
     const own = qts.filter(q => q.trade === t.id);
     if (own.length || !t.qtName) return own;
@@ -11618,6 +11633,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         await mqSaveTabsCfg({ business: { trades, off: biz.off }, quoteTypes });
         mqRenderQuoteTypes();
         if (window._mqRooms) renderRoomsList();
+        mqApplyEstimatorTabScopeToPricing();
         if (changed.length) showMsg('mq-shop-msg', unticking
           ? `✓ ${t.label} unticked. ${changed.map(q => '"' + q.name + '"').join(', ')} hidden from your widget and Pro. Tick it again to bring ${changed.length === 1 ? 'it' : 'them'} back.`
           : `✓ ${changed.map(q => '"' + q.name + '"').join(', ')} back on your widget.`);
@@ -12296,7 +12312,10 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const list = el('mq-qt-list');
     const shopRec = window._mqShopRecord;
     if (!list || !shopRec) return;
-    const qts = mqQuoteTypesOf(shopRec.fields);
+    const notOff = window.mqQtsNotOffered(shopRec.fields);
+    const qtsAll = mqQuoteTypesOf(shopRec.fields);
+    const qts = qtsAll.filter(q => !notOff.has(q.id));
+    const hiddenQ = qtsAll.filter(q => notOff.has(q.id));
     const cats = mqCustomCatsOf(shopRec);
     const editing = window._mqQtEditing || '';
     list.innerHTML = qts.map(q => {
@@ -12327,7 +12346,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         </div>
         <div class="mq-toggle${on ? ' on' : ''}" title="${on ? 'Showing' : 'Hidden'}" onclick="mqQtToggle('${q.id}')"></div>
       </div>`;
-    }).join('');
+    }).join('') + (hiddenQ.length ? `<div style="font-size:12px;color:#6b7280;line-height:1.5;margin:.25rem 0 .75rem">🔕 Not listed because you don't offer that trade: <strong>${hiddenQ.map(q => mqEscHtml(q.name)).join(', ')}</strong>. Tick the trade under "What does your business do?" to bring ${hiddenQ.length === 1 ? 'it' : 'them'} back, with everything you set up.</div>` : '');
     if (editing) { const inp = el('mq-qt-rename-' + editing); if (inp) { inp.focus(); inp.select(); } }
     if (window.mqRenderBizTypes) window.mqRenderBizTypes();
     // The Pricing tab's "Built-in cabinet pricing" switches were removed

@@ -6633,11 +6633,17 @@ window.mqphGoToWizard = function() {
     const qtsAll = mqccQts();
     // Turned-off quote types (Business info → Quote types) are left off
     // Pricing entirely; their steps come back when the quote is switched on.
-    const qtsOff = new Set(qtsAll.filter(q => q.on === false).map(q => q.id));
+    // Jordan, Nov 2026: a quote switched off by hand stays here (build it
+    // before it goes live); one whose trade was unticked on Business info
+    // ("we don't offer this any more") is hidden.
+    let bizTrades = null;
+    try { const tc = JSON.parse(mqccShopFields()['Hidden widget tabs'] || 'null'); if (tc && tc.business && Array.isArray(tc.business.trades)) bizTrades = tc.business.trades; } catch(e) {}
+    const qtsOff = typeof window.mqQtsNotOffered === 'function' ? window.mqQtsNotOffered(mqccShopFields())
+      : new Set(qtsAll.filter(q => q.on === false && (q.offByTrade || (q.trade && bizTrades && !bizTrades.includes(q.trade)))).map(q => q.id));
     const groupOf = c => c.qt ? (qtsOff.has(c.qt) ? '__off' : (qtsAll.some(q => q.id === c.qt) ? c.qt : '__gone')) : '';
     const groupKeys = ['', ...qtsAll.filter(q => !qtsOff.has(q.id)).map(q => q.id), '__gone'];
     const offNames = qtsAll.filter(q => qtsOff.has(q.id)).map(q => q.name);
-    const groupLabel = k => k === '' ? 'Cabinets (Cabinets only &amp; Cabinets + countertops)' : (k === '__gone' ? 'A deleted quote type — not showing anywhere' : '🗂️ ' + mqccEsc(mqccQtName(k)));
+    const groupLabel = k => k === '' ? 'Cabinets (Cabinets only &amp; Cabinets + countertops)' : (k === '__gone' ? 'A deleted quote type — not showing anywhere' : '🗂️ ' + mqccEsc(mqccQtName(k)) + ((qtsAll.find(q => q.id === k) || {}).on === false ? ' <span style="font-weight:700;color:#b45309;background:#fffbeb;border:1px solid #fde68a;border-radius:999px;padding:1px 8px;letter-spacing:0;text-transform:none">Off — not on your widget yet</span>' : ''));
     const blockOf = (c, ci) => {
       const key = c.id;
       const items = mqccItems(c.id);
@@ -6703,7 +6709,7 @@ window.mqphGoToWizard = function() {
           if (!list.length && k !== '' && k !== '__gone') return head + `<div style="font-size:12px;color:#9ca3af;margin-bottom:8px">No steps yet — this quote won't show on your widget until it has at least one.</div>`;
           if (!list.length) return '';
           return `<div data-mqcc-group="${k}">` + head + list.map(c => blockOf(c, cats.indexOf(c))).join('') + `</div>`;
-        }).join('') + (offNames.length ? `<div style="margin:14px 0 4px;font-size:12px;color:#6b7280;line-height:1.5">🔕 Hidden because they're turned off: <strong>${offNames.map(mqccEsc).join(', ')}</strong>. Switch one back on in Business info → Quote types to see and edit its steps here.</div>` : '')
+        }).join('') + (offNames.length ? `<div style="margin:14px 0 4px;font-size:12px;color:#6b7280;line-height:1.5">🔕 Hidden because you don't offer that trade any more: <strong>${offNames.map(mqccEsc).join(', ')}</strong>. Tick the trade again on Business info (or switch the quote back on) to see and edit its steps here.</div>` : '')
       : cats.map(blockOf).join('');
 
     const howGroups = [...new Set(Object.values(MQCC_HOW).map(o => o.group))];
