@@ -6669,7 +6669,11 @@ window.logoutMember = async function () {
     try {
       // Read current DOM values so any in-progress edits get captured, not
       // just whatever was there when the list was last rendered.
-      const rooms = (window._mqRooms || []).map((r, idx) => ({
+      // A project type whose boxes aren't on screen (e.g. its quote's trade
+      // is unticked, so its section is hidden) is kept exactly as saved --
+      // never read as blank and dropped. (Bug Nov 7-8 2026: that wiped the
+      // project types of Jordan's unticked trades.)
+      const rooms = (window._mqRooms || []).map((r, idx) => !el(`mq-room-name-${idx}`) ? Object.assign({}, r) : ({
         id: r.id,
         name: (el(`mq-room-name-${idx}`)?.value || '').trim(),
         materialAdjPct: parseFloat(el(`mq-room-adj-mat-${idx}`)?.value) || 0,
@@ -12020,7 +12024,10 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         <div><button type="button" class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqTradeAdd()">Add business type</button></div>
       </div>
       <div style="border-top:1px dashed #e5e7eb;padding-top:12px;margin-top:12px;display:grid;gap:6px;max-width:640px">
-        <div style="font-size:13px;font-weight:700;color:#111">📦 Import starter packs</div>
+        <div style="font-size:13px;font-weight:700;color:#111">♻️ Restore my project types</div>
+        <div style="font-size:12px;color:#6b7280;line-height:1.5">Lost project types on quote types you'd already saved into a starter pack? This puts them back (with their photos and measuring text) from the pack. It only adds missing ones.</div>
+        <div><button type="button" class="mq-btn mq-btn-secondary mq-btn-sm" onclick="mqRestoreRoomsFromPacks()">Restore from starter packs</button></div>
+        <div style="font-size:13px;font-weight:700;color:#111;margin-top:8px">📦 Import starter packs</div>
         <div style="font-size:12px;color:#6b7280;line-height:1.5">Load a starter-packs file (e.g. one Claude made). Each business type in it gets that pack. Business types that already have a pack are skipped unless you tick Replace.</div>
         <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
           <label class="mq-btn mq-btn-primary mq-btn-sm" style="cursor:pointer;margin:0">Choose file…<input type="file" accept=".json,application/json" style="display:none" onchange="mqTradeImportPacks(this)"/></label>
@@ -12031,6 +12038,39 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   };
   // Admin: bulk-load starter packs from a JSON file:
   // { packs: { <tradeId>: { quotes: [ <same shape mqTradeSnapshot makes> ] } } }
+  // Admin recovery: put back project types from the saved starter packs for
+  // any of my quote types that have lost them (Nov 2026 bug). Only adds
+  // project types that are missing (same id), never changes existing ones.
+  window.mqRestoreRoomsFromPacks = async function() {
+    const shopRec = window._mqShopRecord;
+    if (!shopRec) return;
+    await mqLoadTradeCatalog(true);
+    const myQts = mqQuoteTypesOf(shopRec.fields);
+    let rooms = []; try { rooms = JSON.parse(shopRec.fields['Room types'] || '[]'); } catch(e) {}
+    const have = new Set(rooms.map(r => r.id));
+    const added = [];
+    for (const t of mqTradeEntries()) {
+      if (!mqTradeHasPack(t)) continue;
+      let body = null; try { body = await mqTradePackLoad(t); } catch(e) {}
+      for (const pq of mqPackQuotes(body)) {
+        const mine = myQts.find(q => q.trade === t.id && q.name === pq.qt.name) || myQts.find(q => q.name === pq.qt.name);
+        if (!mine) continue;
+        const missing = (pq.rooms || []).filter(r => r && r.id && !have.has(r.id));
+        if (!missing.length) continue;
+        missing.forEach(r => { rooms.push(Object.assign({}, r, { forQt: mine.id })); have.add(r.id); });
+        added.push(`${mine.name} (${missing.map(r => r.name).join(', ')})`);
+      }
+    }
+    if (!added.length) { showMsg('mq-templates-msg', 'Nothing to restore — every quote type already has its project types.'); return; }
+    if (!confirm(`Put back these project types from your starter packs?\n\n${added.join('\n')}`)) return;
+    try {
+      await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Room types': JSON.stringify(rooms) });
+      shopRec.fields['Room types'] = JSON.stringify(rooms);
+      window._mqRooms = rooms;
+      try { renderRoomsList(); } catch(e) {}
+      showMsg('mq-templates-msg', `✓ Restored project types for: ${added.join(' · ')}`);
+    } catch(e) { showMsg('mq-templates-msg', 'Error restoring — please try again.', 'error'); }
+  };
   window.mqTradeImportPacks = async function(input) {
     const file = input && input.files && input.files[0];
     if (input) input.value = '';
