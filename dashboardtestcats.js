@@ -5233,8 +5233,17 @@ window.logoutMember = async function () {
     const bz = cfg.business || {};
     if ((changes && changes.business) || bz.set || (bz.trades && bz.trades.length) || (bz.off && bz.off.length)) { out.business = { trades: bz.trades || [], off: bz.off || [] }; const ind = bz.industry || prevIndustry; if (ind) out.business.industry = ind; }
     const payload = JSON.stringify(out);
-    await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Hidden widget tabs': payload });
+    // Nov 2026 (Jordan: a renamed measurement kept going back to "Area"):
+    // the change goes into the local copy straight away, before the save
+    // finishes, and saves go out one at a time in order -- so a second edit
+    // made while the first is still saving builds on it instead of on the
+    // old copy (which used to undo the first edit).
+    const prev = shopRec.fields['Hidden widget tabs'];
     shopRec.fields['Hidden widget tabs'] = payload;
+    const run = (window._mqTabsSaveQ || Promise.resolve()).catch(() => {}).then(() => atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Hidden widget tabs': payload }));
+    window._mqTabsSaveQ = run;
+    try { await run; }
+    catch(e) { if (shopRec.fields['Hidden widget tabs'] === payload) shopRec.fields['Hidden widget tabs'] = prev; throw e; }
     return cfg;
   }
 
@@ -12411,7 +12420,11 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   async function mqQtUpdate(id, change, okMsg) {
     const shopRec = window._mqShopRecord;
     if (!shopRec) return;
-    const qts = mqQuoteTypesOf(shopRec.fields).map(q => q.id === id ? Object.assign({}, q, change) : q);
+    // Whatever's typed in this quote's measurement boxes right now rides
+    // along with any other change (e.g. ticking "Show the how-to-measure
+    // pictures again"), so it can't put back an old name.
+    const liveMeas = !('measures' in (change || {})) && document.querySelector(`[data-mq-meas^="${id}|"]`) ? mqQtMeasList(id) : null;
+    const qts = mqQuoteTypesOf(shopRec.fields).map(q => q.id === id ? Object.assign({}, q, liveMeas ? { measures: liveMeas } : {}, change) : q);
     try {
       await mqSaveTabsCfg({ quoteTypes: qts });
       mqRenderQuoteTypes();
@@ -18869,7 +18882,71 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
 
   // Load pricing helper when that nav item is clicked
   const origMqNav = window.mqNav;
+  // ── "Leave without saving?" (Jordan, Nov 2026) ──
+  // Pages with a Save changes button (Business info, Project types, My
+  // Products, Templates) remember when something was typed/ticked that
+  // isn't saved yet. Switching tab then asks Save / Leave without saving /
+  // Stay; closing or reloading the browser tab gets the browser's own
+  // "Leave site?" warning. Fields that save themselves don't count.
+  const MQ_DIRTY = new Set(); window._mqDirty = MQ_DIRTY;
+  const MQ_SAVE_FNS = { shop: ['mqSaveShop'], rooms: ['mqSaveRooms'], products: ['mqSaveProducts'], templates: ['mqSaveMasterRoomDefs', 'mqSaveTemplatePhotos'] };
+  const MQ_AUTOSAVE_RE = /save|mqQt|mqBiz|mqTrade|mqcc|mqLib|mqStep|atUpdate|mqRoomGrp|mqRoomSec|filter|sort|search/i;
+  function mqWrapSaves() {
+    Object.entries(MQ_SAVE_FNS).forEach(([pg, names]) => names.forEach(n => {
+      const f = window[n];
+      if (typeof f !== 'function' || f._mqWrapped) return;
+      const w = async function(...a) { const r = await f.apply(this, a); MQ_DIRTY.delete(pg); return r; };
+      w._mqWrapped = true; window[n] = w;
+    }));
+  }
+  function mqMarkDirty(e) {
+    const t = e.target;
+    if (!t || !t.closest || !t.matches || !t.matches('input, select, textarea')) return;
+    const pg = t.closest('.mq-page');
+    const page = pg && pg.id ? pg.id.replace('mq-page-', '') : '';
+    if (!MQ_SAVE_FNS[page] || t.closest('[data-mq-nodirty]')) return;
+    const h = ['onchange', 'oninput', 'onblur', 'onclick', 'onkeyup'].map(k => t.getAttribute(k) || '').join(' ');
+    if (MQ_AUTOSAVE_RE.test(h) || t.type === 'search' || /search|filter/i.test(t.id || '')) return;
+    mqWrapSaves();
+    MQ_DIRTY.add(page);
+  }
+  document.addEventListener('input', mqMarkDirty, true);
+  document.addEventListener('change', mqMarkDirty, true);
+  window.addEventListener('beforeunload', e => { if (MQ_DIRTY.size) { e.preventDefault(); e.returnValue = ''; } });
+  const MQ_PAGE_NAMES = { shop: 'Business info', rooms: 'Project types', products: 'My Products', templates: 'Templates' };
+  function mqAskLeave(page) {
+    return new Promise(res => {
+      const ov = document.createElement('div');
+      ov.style.cssText = 'position:fixed;inset:0;background:rgba(17,24,39,.45);z-index:100000;display:flex;align-items:center;justify-content:center;padding:16px';
+      ov.innerHTML = `<div style="background:#fff;border-radius:16px;max-width:420px;width:100%;padding:24px;box-shadow:0 24px 60px rgba(0,0,0,.25);font-family:inherit">
+        <div style="font-size:18px;font-weight:800;color:#111;margin-bottom:6px">Leave without saving?</div>
+        <div style="font-size:14px;color:#4b5563;line-height:1.5;margin-bottom:18px">You've made changes on <strong>${MQ_PAGE_NAMES[page] || 'this page'}</strong> that aren't saved yet.</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <button type="button" data-a="save" style="padding:12px;border:none;border-radius:10px;background:#1a1a1a;color:#fff;font-weight:700;font-size:15px;cursor:pointer;font-family:inherit">💾 Save changes &amp; continue</button>
+          <button type="button" data-a="leave" style="padding:12px;border:1.5px solid #fecaca;border-radius:10px;background:#fff;color:#b91c1c;font-weight:700;font-size:15px;cursor:pointer;font-family:inherit">Leave without saving</button>
+          <button type="button" data-a="stay" style="padding:10px;border:none;background:none;color:#374151;font-weight:600;font-size:14px;cursor:pointer;font-family:inherit">Stay on this page</button>
+        </div></div>`;
+      ov.addEventListener('click', e => { const a = e.target.closest('[data-a]'); if (!a && e.target !== ov) return; ov.remove(); res(a ? a.dataset.a : 'stay'); });
+      document.body.appendChild(ov);
+    });
+  }
+  function mqDiscardPage(page) {
+    try {
+      if (page === 'rooms' && window._mqRooms) renderRoomsList();
+      else if (page === 'products' && window._mqLineItems && window._mqShopRecord) initProductsTab(window._mqShopRecord, window._mqLineItems);
+      else if (page === 'shop' && window._mqShopRecord) populateShop(window._mqShopRecord);
+    } catch(e) {}
+  }
   window.mqNav = async function(page, navEl) {
+    const curEl = document.querySelector('#midasquote-dashboard .mq-page.active');
+    const cur = curEl && curEl.id ? curEl.id.replace('mq-page-', '') : '';
+    if (cur && cur !== page && MQ_DIRTY.has(cur)) {
+      const ans = await mqAskLeave(cur);
+      if (ans === 'stay') return;
+      if (ans === 'save') {
+        try { await MQ_PAGE_SAVE_ACTIONS[cur].fn(); MQ_DIRTY.delete(cur); } catch(e) { return; }
+      } else { MQ_DIRTY.delete(cur); mqDiscardPage(cur); }
+    }
     origMqNav(page, navEl);
     if (window.mqRefreshPlanBanner) window.mqRefreshPlanBanner(); // plan may have changed since the page loaded
     // Re-checks on every tab switch, not just the initial page load — so a
