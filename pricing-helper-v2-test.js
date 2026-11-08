@@ -6697,6 +6697,7 @@ window.mqphGoToWizard = function() {
         </div>
         <div id="mqph-cat-body-${key}" style="display:none">
           ${c.description ? `<div style="padding:10px 16px 0;font-size:12px;color:#6b7280;line-height:1.5">Customers see: “${mqccEsc(c.description)}”</div>` : ''}
+          ${c.answer === 'one' && mqccItems(c.id).length > 1 ? `<div style="padding:8px 16px 0;font-size:12px;color:#6b7280;line-height:1.5">↕️ ${c.manualOrder ? `Customers see these <strong>in your order</strong> (set with ↑ ↓). <a href="#" onclick="event.preventDefault();event.stopPropagation();mqccOrderReset('${c.id}')" style="color:#1d4ed8">Go back to cheapest first</a>` : `Customers see these <strong>cheapest first</strong>. Move one with ↑ ↓ to use your own order instead.`}</div>` : ''}
           ${items.length ? rows : `<div style="padding:16px;font-size:12px;color:#6b7280;line-height:1.5">No options yet. Click <strong>+ Add option</strong> to add the first one.</div>`}
           ${items.length ? mqccPreviewShell(c) : ''}
         </div>
@@ -7692,12 +7693,22 @@ window.mqphGoToWizard = function() {
       }
     }
   }
+  window.mqccOrderReset = async function(cid) {
+    const cats0 = mqccCats(), ci = cats0.findIndex(c => c.id === cid);
+    if (ci < 0) return;
+    cats0[ci] = Object.assign({}, cats0[ci]); delete cats0[ci].manualOrder;
+    try { await mqccSaveCats(cats0); mqccRerender(cid); } catch(e) { alert('Could not save: ' + e.message); }
+  };
   window.mqccMoveItem = async function(cid, id, dir) {
     const items = mqccItems(cid);
     const i = items.findIndex(r => r.id === id), j = i + dir;
     if (i < 0 || j < 0 || j >= items.length) return;
     [items[i], items[j]] = [items[j], items[i]];
     try {
+      // Moving an option = "use my order" on the widget (pick-one steps are
+      // otherwise listed cheapest-first there).
+      const cats0 = mqccCats(), ci = cats0.findIndex(c => c.id === cid);
+      if (ci >= 0 && !cats0[ci].manualOrder) { cats0[ci] = Object.assign({}, cats0[ci], { manualOrder: true }); await mqccSaveCats(cats0); }
       // Renumber the whole list 1..n so equal/missing sort orders can't stick.
       for (let k = 0; k < items.length; k++) {
         if ((items[k].fields['Sort order'] || 0) !== k + 1) {
@@ -7966,7 +7977,9 @@ window.mqphGoToWizard = function() {
     let body = '';
     if (c.answer === 'one') {
       const val = mqccPvOneVal(c, items);
-      const list = (c.required ? [] : [{ id: 'none', name: 'None' }]).concat(items);
+      // Same order as the widget: cheapest first unless the shop set its own.
+      const ordered = (c.manualOrder || items.some(i => i.groupName)) ? items : items.map((it, k) => ({ it, k })).sort((a, b) => ((a.it.rate || 0) - (b.it.rate || 0)) || (a.k - b.k)).map(x => x.it);
+      const list = (c.required ? [] : [{ id: 'none', name: 'None' }]).concat(ordered);
       body = `<div style="display:flex;flex-wrap:wrap;gap:8px">${list.map(it => {
         const sel = val === it.id;
         const go = hiId && it.id !== 'none' && it.id !== hiId ? `;mqccItemGo('${it.id}')` : '';

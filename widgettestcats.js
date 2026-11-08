@@ -3251,6 +3251,9 @@
           description: String(c.description || ''),
           answer: c.answer === 'one' ? 'one' : 'any',
           required: !!c.required,
+          // Pick-one steps list cheapest-first unless the shop has set its
+          // own order with the arrows on the Pricing tab (Jordan, Nov 2026).
+          manualOrder: !!c.manualOrder,
           showIf: typeof c.showIf === 'string' ? c.showIf : '',
           // A built-in step key, or 'cc:<id>' = right after another custom step.
           after: (MQ_CC_ANCHORS.includes(c.after) || /^cc:cc_[a-z0-9]+$/i.test(String(c.after || ''))) ? c.after : 'specialty',
@@ -3421,7 +3424,11 @@
           value: it.id, label: it.name, photoUrl: it.photoUrl, featured: it.featured, icon: '✨', price: it.rate,
           visibleRooms: it.visibleRooms, groupName: it.groupName, groupOrder: it.groupOrder, groupDesc: it.groupDesc,
         }));
-        const list = sortBadgeAndGroupItems(cat.required ? opts : [{ value: 'none', label: 'None', icon: '🚫' }, ...opts]);
+        let list = sortBadgeAndGroupItems(cat.required ? opts : [{ value: 'none', label: 'None', icon: '🚫' }, ...opts]);
+        if (cat.manualOrder && !opts.some(o => o.groupName)) {
+          const at = id => cat.items.findIndex(i => i.id === id);
+          list = [...list.filter(o => o.value === 'none'), ...list.filter(o => o.value !== 'none').sort((a, b) => at(a.value) - at(b.value))];
+        }
         // Badges ($/$$/$$$) only mean something for a plain price — a %
         // option's "rate" is a percentage, not dollars.
         list.forEach(o => { const hit = cat.items.find(i => i.id === o.value); if (hit && hit.how === 'pct') delete o.badge; });
