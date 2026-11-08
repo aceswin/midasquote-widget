@@ -12019,7 +12019,44 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         ${iconRow(window._mqTradeNewIcon || 'grid', `window._mqTradeNewIcon=this.dataset.icon;document.querySelectorAll('#mq-trade-new-icons button').forEach(b=>{const on=b===this;b.style.background=on?'#1a1a1a':'#fff';b.style.color=on?'#fff':'#374151'})`).replace('<div ', '<div id="mq-trade-new-icons" ')}
         <div><button type="button" class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqTradeAdd()">Add business type</button></div>
       </div>
+      <div style="border-top:1px dashed #e5e7eb;padding-top:12px;margin-top:12px;display:grid;gap:6px;max-width:640px">
+        <div style="font-size:13px;font-weight:700;color:#111">📦 Import starter packs</div>
+        <div style="font-size:12px;color:#6b7280;line-height:1.5">Load a starter-packs file (e.g. one Claude made). Each business type in it gets that pack. Business types that already have a pack are skipped unless you tick Replace.</div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <label class="mq-btn mq-btn-primary mq-btn-sm" style="cursor:pointer;margin:0">Choose file…<input type="file" accept=".json,application/json" style="display:none" onchange="mqTradeImportPacks(this)"/></label>
+          <label style="font-size:12px;color:#374151;display:inline-flex;gap:6px;align-items:center;cursor:pointer"><input type="checkbox" id="mq-trade-import-replace" style="width:14px;height:14px"/> Replace packs that already exist</label>
+        </div>
+      </div>
       <div style="font-size:11px;color:#9ca3af;margin-top:10px">Storage used: ${Math.round(used / 1000)} KB of ${Math.round(MQ_TRADE_STORE_LIMIT / 1000)} KB</div>`;
+  };
+  // Admin: bulk-load starter packs from a JSON file:
+  // { packs: { <tradeId>: { quotes: [ <same shape mqTradeSnapshot makes> ] } } }
+  window.mqTradeImportPacks = async function(input) {
+    const file = input && input.files && input.files[0];
+    if (input) input.value = '';
+    if (!file) return;
+    let data;
+    try { data = JSON.parse(await file.text()); } catch(e) { showMsg('mq-templates-msg', "That file isn't a starter-packs file.", 'error'); return; }
+    const packs = data && data.packs && typeof data.packs === 'object' ? data.packs : null;
+    if (!packs) { showMsg('mq-templates-msg', "That file isn't a starter-packs file.", 'error'); return; }
+    const replace = !!(document.getElementById('mq-trade-import-replace') || {}).checked;
+    const ids = Object.keys(packs);
+    if (!confirm(`Import ${ids.length} starter pack${ids.length === 1 ? '' : 's'}?\n\n${replace ? 'Existing packs for these business types will be REPLACED.' : 'Business types that already have a pack are skipped.'}`)) return;
+    const done = [], skipped = [], failed = [];
+    await mqLoadTradeCatalog(true);
+    for (const id of ids) {
+      const t = mqTradeEntries().find(x => x.id === id);
+      const quotes = mqPackQuotes(packs[id]);
+      if (!t || !quotes.length) { failed.push(id); continue; }
+      if (mqTradeHasPack(t) && !replace) { skipped.push(t.label); continue; }
+      const bad = quotes.find(q => !q || !q.qt || !Array.isArray(q.rooms) || !q.rooms.length || !Array.isArray(q.cats) || !Array.isArray(q.items));
+      if (bad) { failed.push(t.label); continue; }
+      showMsg('mq-templates-msg', `Importing ${t.label}… (${done.length + skipped.length + failed.length + 1} of ${ids.length})`);
+      try { await mqTradePackWrite(t, quotes); done.push(t.label); }
+      catch(e) { console.warn('import failed', id, e); failed.push(t.label); }
+    }
+    showMsg('mq-templates-msg', `✓ Imported ${done.length} starter pack${done.length === 1 ? '' : 's'}${skipped.length ? ` · skipped ${skipped.length} that already had one (${skipped.join(', ')})` : ''}${failed.length ? ` · couldn't import: ${failed.join(', ')}` : ''}.`, failed.length ? 'error' : undefined);
+    mqTradeAdminRender();
   };
   async function mqTradeUpsert(id, change) {
     const list = (window._mqTradeCatalog || []).slice();
