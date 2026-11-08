@@ -6202,6 +6202,10 @@ window.logoutMember = async function () {
             <input type="checkbox" id="mq-room-showrange-${idx}" ${r.showRange === false ? '' : 'checked'} onchange="mqSaveRooms()" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
             💵 Show price as a range <span style="font-weight:400;color:#9ca3af">(uncheck for one clean number instead — e.g. "${CUR()}2,600" instead of "${CUR()}2,375 – ${CUR()}3,000")</span>
           </label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#6b7280;font-weight:600;margin-bottom:8px;cursor:pointer">
+            <input type="checkbox" id="mq-room-hideprices-${idx}" ${r.showLinePrices ? '' : 'checked'} onchange="mqSaveRooms()" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
+            🙈 Don't show item prices in the breakdown <span style="font-weight:400;color:#9ca3af">(on the widget results and the customer's email — uncheck to show what each item costs)</span>
+          </label>
                     </div>
           </div>
           <div class="mq-room-grp" style="--grp:#7c3aed;--grpbg:#f5f3ff">
@@ -6423,6 +6427,7 @@ window.logoutMember = async function () {
             hideFromPro: document.getElementById(`mq-room-visibility-${oldIdx}`)?.value === 'hideFromPro',
             hideMeasureGuide: document.getElementById(`mq-room-hidemeasure-${oldIdx}`)?.checked === true,
             showRange: document.getElementById(`mq-room-showrange-${oldIdx}`)?.checked !== false,
+            showLinePrices: (b => b ? !b.checked : !!orig.showLinePrices)(document.getElementById(`mq-room-hideprices-${oldIdx}`)),
             showIslandButton: document.getElementById(`mq-room-addisland-${oldIdx}`)?.checked === true,
             islandAllowDoubleRow: document.getElementById(`mq-room-islanddouble-${oldIdx}`)?.checked === true,
             islandMaterialAdjPct: parseFloat(document.getElementById(`mq-room-adj-island-mat-${oldIdx}`)?.value) || 0,
@@ -6668,6 +6673,8 @@ window.logoutMember = async function () {
         hideFromPro: el(`mq-room-visibility-${idx}`)?.value === 'hideFromPro',
         hideMeasureGuide: el(`mq-room-hidemeasure-${idx}`)?.checked === true,
         showRange: el(`mq-room-showrange-${idx}`)?.checked !== false,
+        // Default (box ticked) = customers see the items but not their prices.
+        showLinePrices: (b => b ? !b.checked : !!r.showLinePrices)(el(`mq-room-hideprices-${idx}`)),
         showIslandButton: el(`mq-room-addisland-${idx}`)?.checked === true,
         islandAllowDoubleRow: el(`mq-room-islanddouble-${idx}`)?.checked === true,
         islandMaterialAdjPct: parseFloat(el(`mq-room-adj-island-mat-${idx}`)?.value) || 0,
@@ -11968,7 +11975,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         </div>
         ${isEdit ? `<div style="border-top:1px dashed #e5e7eb;margin-top:10px;padding-top:10px;display:grid;gap:8px">
           <label style="font-size:12px;font-weight:600;color:#374151">Name shops see<br><input id="mq-trade-e-label" maxlength="40" value="${esc(t.label)}" style="${inp};width:100%;max-width:320px;margin-top:3px"/></label>
-          ${t.id === 'other' ? '' : `<label style="font-size:12px;font-weight:600;color:#374151">Quote name it makes<br><input id="mq-trade-e-qt" maxlength="40" value="${esc(t.qtName || '')}" style="${inp};width:100%;max-width:320px;margin-top:3px"/></label>`}
+          ${t.id === 'other' ? '' : `<label style="font-size:12px;font-weight:600;color:#374151">Quote name it makes <span style="font-weight:400;color:#6b7280">${mqTradeHasPack(t) ? '— not used while there\'s a starter pack (shops get the pack\'s quotes, with their own names)' : '— only used until you save a starter pack'}</span><br><input id="mq-trade-e-qt" maxlength="40" value="${esc(t.qtName || '')}" style="${inp};width:100%;max-width:320px;margin-top:3px"/></label>`}
           <div style="font-size:12px;font-weight:600;color:#374151">Icon</div>
           ${iconRow(t.icon, `document.querySelectorAll('#mq-trade-e-icons button').forEach(b=>{b.style.background='#fff';b.style.color='#374151'});this.style.background='#1a1a1a';this.style.color='#fff';window._mqTradeIcon=this.dataset.icon`).replace('<div ', '<div id="mq-trade-e-icons" ')}
           <div><button type="button" class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqTradeSaveEdit('${t.id}')">Save</button></div>
@@ -12066,6 +12073,13 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       if (k >= 0 && !confirm(`The pack already has "${quotes[k].qt.name}". Replace it with this one?`)) { showMsg('mq-templates-msg', ''); return; }
       if (k >= 0) quotes[k] = snap; else quotes.push(snap);
       await mqTradePackWrite(t, quotes);
+      // Tag your own copy with this trade too, so it's listed under it on
+      // Business info and hides with it (only if you offer that trade).
+      try {
+        const qts = mqQuoteTypesOf(window._mqShopRecord.fields), sq = qts.find(q => q.id === src);
+        const myTrades = ((mqTabsCfgOf(window._mqShopRecord.fields).business || {}).trades) || [];
+        if (sq && !sq.trade && !sq.packEdit && myTrades.includes(t.id)) { sq.trade = t.id; await mqSaveTabsCfg({ quoteTypes: qts }); mqRenderQuoteTypes(); }
+      } catch(e) {}
       showMsg('mq-templates-msg', `✓ "${snap.qt.name}" ${k >= 0 ? 'updated in' : 'added to'} ${t.label}'s starter pack (${quotes.length} quote${quotes.length === 1 ? '' : 's'}).`);
       mqTradeAdminRender();
     } catch(e) { mqTradePackErr(e); }

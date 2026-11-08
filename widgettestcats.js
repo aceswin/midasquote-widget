@@ -642,7 +642,26 @@
       </div>`);
 
   if (lead.email && !lead._isSkip) {
-      const customerLineRows = (lines||[]).filter(l=>l&&l.label&&!l.bold)
+      const hasSecs = (lines || []).some(l => l && l.header);
+      const pricedEmail = hasSecs ? (lines || []).some(l => l && l.header && l.priced) : mqShouldShowLinePrices(prefix);
+      const rowOf = (l, priced) => priced
+        ? `<tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:${l.adj ? '#6b7280' : '#444'}">${l.adj ? '' : '✓ '}${l.label}</td><td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:right;font-weight:600;color:#111;white-space:nowrap">${l.included ? 'Included' : mqLineAmt(l.cost)}</td></tr>`
+        : `<tr><td ${pricedEmail ? 'colspan="2" ' : ''}style="padding:6px 8px;border-bottom:1px solid #eee;color:#444">✓ ${l.label}</td></tr>`;
+      const secRows = () => {
+        // Several quotes (cart): a heading per quote, priced or not per its own project type.
+        const out = []; let cur = null;
+        (lines || []).forEach(l => { if (!l || !l.label) return; if (l.header) { cur = { h: l, items: [] }; out.push(cur); } else if (!l.bold) { if (!cur) { cur = { h: null, items: [] }; out.push(cur); } cur.items.push(l); } });
+        return out.map(sec => {
+          const p = !!(sec.h && sec.h.priced);
+          const items = p ? mqPricedLines(sec.items, sec.h.secTotal) : [...sec.items].sort((a, b) => b.cost - a.cost);
+          return (sec.h ? `<tr><td ${pricedEmail ? 'colspan="2" ' : ''}style="padding:12px 8px 4px;font-weight:700;color:#111;font-size:13px">${sec.h.label}</td></tr>` : '')
+            + items.sort((a, b) => (a.adj ? 1 : 0) - (b.adj ? 1 : 0) || (b.cost - a.cost)).map(l => rowOf(l, p)).join('');
+        }).join('');
+      };
+      const customerLineRows = hasSecs ? secRows() : pricedEmail
+        ? mqPricedLines(lines, total).sort((a, b) => (a.adj - b.adj) || (b.cost - a.cost))
+            .map(l => `<tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:${l.adj ? '#6b7280' : '#444'}">${l.adj ? '' : '✓ '}${l.label}</td><td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:right;font-weight:600;color:#111;white-space:nowrap">${l.included ? 'Included' : mqLineAmt(l.cost)}</td></tr>`).join('')
+        : (lines||[]).filter(l=>l&&l.label&&!l.bold)
         .sort((a,b)=>b.cost-a.cost)
         .map(l=>`<tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#444">✓ ${l.label}</td></tr>`).join('');
       await sendEmail(lead.email, contactRequested ? `We got your request — ${shop['Shop name']}` : `Your quote from ${shop['Shop name']}`,
@@ -656,7 +675,7 @@
             ${financingLine ? `<div style="font-size:13px;color:#166534;margin-top:6px;font-weight:600">💳 As low as ${financingLine}*</div><div style="font-size:10.5px;color:#6b7280;margin-top:2px">*Estimated payment only — subject to approval and final terms.</div>` : ''}
           </div>
           <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
-            <tr><td style="padding:8px;background:#f9fafb;font-weight:600">What’s included</td></tr>${customerLineRows}
+            <tr><td ${pricedEmail ? 'colspan="2" ' : ''}style="padding:8px;background:#f9fafb;font-weight:600">What’s included</td></tr>${customerLineRows}
           </table>
           <p style="color:#666;font-size:14px">${shop['Disclaimer text'] || (mqShouldShowRange(prefix) ? 'Ballpark estimate only. Contact us for a full quote.' : 'This quote is not final — please contact us for final numbers.')}</p>
           <p style="color:#666;font-size:14px;margin-top:8px">⚠ Jobs outside our local delivery area may be subject to additional travel charges — your final quote will confirm the exact amount.</p>
@@ -685,8 +704,8 @@
     const cartHigh = cart.reduce((s,e) => s + (one(e) ? Math.round(e.total) : (e.high||0)), 0);
     const cartTotal = cart.reduce((s,e) => s + (e.total||0), 0);
     const combinedLines = [
-      ...cart.flatMap(e => [{label: e.label, header: true}, ...e.lines.filter(l => !l.bold)]),
-      {label: quoteType, header: true},
+      ...cart.flatMap(e => [{label: e.label, header: true, priced: !!e.linePrices, secTotal: e.total}, ...e.lines.filter(l => !l.bold)]),
+      {label: quoteType, header: true, priced: mqShouldShowLinePrices(prefix), secTotal: total},
       ...lines.filter(l => !l.bold),
     ];
     const combinedLabel = [...cart.map(e => e.label), roomType || quoteType].join(' + ');
@@ -7094,7 +7113,7 @@
         const needsRewind = !!(roomEl && prevRoomId != null && prevRoomId !== actualValue);
         if (needsRewind) roomEl.value = prevRoomId;
 
-        let result, label, showRange, formSnapshot, roomId;
+        let result, label, showRange, linePrices, formSnapshot, roomId;
         try {
           if (prefix === 'b') {
             const cab = window._mqCalcCabinet('b');
@@ -7120,6 +7139,7 @@
             label = r.roomLabel || 'Cabinets';
           }
           showRange = mqShouldShowRange(prefix);
+          linePrices = mqShouldShowLinePrices(prefix);
           roomId = roomEl ? roomEl.value : null;
           formSnapshot = mqSnapshotFormState(prefix);
         } finally {
@@ -7129,7 +7149,7 @@
         window._mqQuoteCart.push({
           id: 'cart_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
           label, prefix, roomId, formSnapshot,
-          showRange,
+          showRange, linePrices,
           low: result.low, high: result.high, total: result.total,
           lines: result.lines,
         });
@@ -8651,10 +8671,13 @@
       mqRefreshBallparkWording(prefix);
       document.getElementById(rangeEl).textContent=mqFmtPrice(prefix, result.low, result.high, result.total);
       const ul=document.getElementById(listEl);ul.innerHTML='';
-      const sorted=[...result.lines].filter(l=>!l.bold).sort((a,b)=>b.cost-a.cost);
+      const priced = mqShouldShowLinePrices(prefix);
+      const sorted = priced ? mqPricedLines(result.lines, result.total).sort((a, b) => (a.adj - b.adj) || (b.cost - a.cost)) : [...result.lines].filter(l=>!l.bold).sort((a,b)=>b.cost-a.cost);
       sorted.forEach(l=>{
         const li=document.createElement('li');
-        li.innerHTML=`<span class="mq-li-lbl">✓ ${l.label}</span>`;
+        li.innerHTML = priced
+          ? `<span class="mq-li-lbl" style="${l.adj ? 'color:#6b7280' : ''}">${l.adj ? '' : '✓ '}${l.label}</span><span class="mq-li-amt" style="float:right;font-weight:600;color:#111827;margin-left:12px">${l.included ? 'Included' : mqLineAmt(l.cost)}</span>`
+          : `<span class="mq-li-lbl">✓ ${l.label}</span>`;
         ul.appendChild(li);
       });
       mqRenderDiscountBox(prefix, result.discount, result.low, result.high, result.total);
@@ -8707,12 +8730,12 @@
         const cabRows = document.getElementById('mq-b-cab-rows');
         if (cabRows) {
           cabRows.innerHTML = '';
-          [...cab.lines].filter(l=>!l.bold).sort((a,b)=>b.cost-a.cost).forEach(l=>{const d=document.createElement('div');d.className='mq-combined-row';d.innerHTML=`<span class="mq-clbl">✓ ${l.label}</span>`;cabRows.appendChild(d);});
+          mqFillCombinedRows(cabRows, cab.lines, cab.total);
         }
         const ctRows = document.getElementById('mq-b-ct-rows');
         if (ctRows) {
           ctRows.innerHTML = '';
-          [...ct.lines].filter(l=>!l.bold).sort((a,b)=>b.cost-a.cost).forEach(l=>{const d=document.createElement('div');d.className='mq-combined-row';d.innerHTML=`<span class="mq-clbl">✓ ${l.label}</span>`;ctRows.appendChild(d);});
+          mqFillCombinedRows(ctRows, ct.lines, ct.total);
           if (!ctRows.children.length) { const d=document.createElement('div'); d.className='mq-combined-row'; d.innerHTML=`<span class="mq-clbl">None selected</span>`; ctRows.appendChild(d); }
         }
         const tl = cab.low+ct.low, th = cab.high+ct.high, totalB = cab.total+ct.total;
@@ -8825,9 +8848,9 @@
           // stops announcing it in the results panel.
           if (vanityNoteB) vanityNoteB.style.display = 'none';
           const cabRows=document.getElementById('mq-b-cab-rows');cabRows.innerHTML='';
-          [...cab.lines].filter(l=>!l.bold).sort((a,b)=>b.cost-a.cost).forEach(l=>{const d=document.createElement('div');d.className='mq-combined-row';d.innerHTML=`<span class="mq-clbl">✓ ${l.label}</span>`;cabRows.appendChild(d);});
+          mqFillCombinedRows(cabRows, cab.lines, cab.total);
           const ctRows=document.getElementById('mq-b-ct-rows');ctRows.innerHTML='';
-          [...ct.lines].filter(l=>!l.bold).sort((a,b)=>b.cost-a.cost).forEach(l=>{const d=document.createElement('div');d.className='mq-combined-row';d.innerHTML=`<span class="mq-clbl">✓ ${l.label}</span>`;ctRows.appendChild(d);});
+          mqFillCombinedRows(ctRows, ct.lines, ct.total);
           if(!ctRows.children.length){const d=document.createElement('div');d.className='mq-combined-row';d.innerHTML=`<span class="mq-clbl">None selected</span>`;ctRows.appendChild(d);}
           const tl=cab.low+ct.low,th=cab.high+ct.high,totalB=cab.total+ct.total;
           mqRenderDiscountBox('b', mqCombineDiscount(cab, ct), tl, th, totalB);
@@ -8838,7 +8861,7 @@
           document.getElementById('mq-b-loading').classList.remove('show');
           document.getElementById('mq-b-result').classList.add('show');if(window.mqFxShowResults)mqFxShowResults('b');mqScrollResultsIntoView('b');
           document.getElementById('mq-b-calc-btn').disabled=false;
-          if(lead) await mqSaveLeadWithCart(data,lead,'Cabinets + Countertops',tl,th,[{label:'Cabinets',header:true},...cab.lines,{label:'Countertops',header:true},...ct.lines],cab.roomLabel,totalB,'b');
+          if(lead) await mqSaveLeadWithCart(data,lead,'Cabinets + Countertops',tl,th,[{label:'Cabinets',header:true,priced:mqShouldShowLinePrices('b'),secTotal:cab.total},...cab.lines,{label:'Countertops',header:true,priced:mqShouldShowLinePrices('b'),secTotal:ct.total},...ct.lines],cab.roomLabel,totalB,'b');
         },1200);
       });
     };
@@ -10079,7 +10102,7 @@
       const cab = window._mqCalcCabinet('b'), ct = window._mqCalcCountertop('b');
       return {
         prefix, low: cab.low + ct.low, high: cab.high + ct.high, total: cab.total + ct.total,
-        lines: [{label:'Cabinets',header:true}, ...cab.lines.filter(l=>!l.bold), {label:'Countertops',header:true}, ...ct.lines.filter(l=>!l.bold)],
+        lines: [{label:'Cabinets',header:true,priced:mqShouldShowLinePrices('b'),secTotal:cab.total}, ...cab.lines.filter(l=>!l.bold), {label:'Countertops',header:true,priced:mqShouldShowLinePrices('b'),secTotal:ct.total}, ...ct.lines.filter(l=>!l.bold)],
         quoteType: 'Cabinets + Countertops', roomLabel: cab.roomLabel,
       };
     }
@@ -10187,6 +10210,44 @@
   // the standalone Countertops tab are all tied to a selected room, so they
   // all respect that room's own showRange setting (defaulting to true/range,
   // same as it's always behaved, for any room that's never touched this).
+  // Project type setting (Project types → "Don't show item prices in the
+  // breakdown", ticked by default): unticked = each line shows its price on
+  // the results and in the customer's email (Jordan, Nov 2026).
+  function mqShouldShowLinePrices(prefix) {
+    const roomEl = document.getElementById(`mq-${prefix}-room`);
+    const room = (window._mqRoomTypes || []).find(r => r.id === (roomEl ? roomEl.value : ''));
+    return !!(room && room.showLinePrices === true);
+  }
+  window.mqShouldShowLinePrices = mqShouldShowLinePrices;
+  // Priced breakdown rows: the lines, plus one "adjustments" row for whatever
+  // the total adds or takes off beyond them (minimums, project-type %, etc.)
+  // so the rows always add up to the estimate shown. Discounts have their
+  // own box, so they're left out of that difference.
+  function mqPricedLines(lines, total) {
+    const ls = (lines || []).filter(l => l && l.label && !l.bold && !l.header);
+    const sum = ls.reduce((a, l) => a + (Number(l.cost) || 0), 0);
+    const dl = (lines || []).find(l => l && l.discount);
+    const disc = dl && window._mqDiscount && window._mqDiscount.show ? -(Number(dl.cost) || 0) : 0;
+    const diff = Math.round((Number(total) || 0) + disc - sum);
+    const out = ls.map(l => ({ label: l.label, cost: Number(l.cost) || 0, included: !!l.included }));
+    if (total && Math.abs(diff) >= 1) out.push({ label: 'Project adjustments', cost: diff, adj: true });
+    return out;
+  }
+  // Cabinets + Countertops result: one section's rows (priced when the
+  // project type shows item prices).
+  function mqFillCombinedRows(rowsEl, lines, total) {
+    const priced = mqShouldShowLinePrices('b');
+    const list = priced ? (total ? mqPricedLines(lines, total).sort((a, b) => (a.adj - b.adj) || (b.cost - a.cost)) : []) : [...(lines || [])].filter(l => !l.bold).sort((a, b) => b.cost - a.cost);
+    list.forEach(l => {
+      const d = document.createElement('div'); d.className = 'mq-combined-row';
+      d.innerHTML = priced
+        ? `<span class="mq-clbl" style="${l.adj ? 'color:#6b7280' : ''}">${l.adj ? '' : '✓ '}${l.label}</span><span style="float:right;font-weight:600;color:#111827;margin-left:12px">${l.included ? 'Included' : mqLineAmt(l.cost)}</span>`
+        : `<span class="mq-clbl">✓ ${l.label}</span>`;
+      rowsEl.appendChild(d);
+    });
+  }
+  window.mqFillCombinedRows = mqFillCombinedRows;
+  const mqLineAmt = c => (c < 0 ? '−' : '') + CUR() + Math.round(Math.abs(c)).toLocaleString();
   function mqShouldShowRange(prefix) {
     // Inlined rather than calling gv() — gv is scoped inside a different,
     // inner function and isn't reachable from every place this needs to
