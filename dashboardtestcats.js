@@ -11528,8 +11528,9 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const cfg = mqTabsCfgOf(fields || window._mqShopRecord.fields);
       const trades = (cfg.business && cfg.business.trades) || [];
       const out = new Set();
-      cfg.quoteTypes.forEach(q => { if (q.offByTrade || (q.trade && !trades.includes(q.trade))) out.add(q.id); });
-      mqTradeEntries().forEach(t => { if (!trades.includes(t.id)) mqQtsOfTrade(t, cfg.quoteTypes).forEach(q => { if (!q.trade && q.on === false) out.add(q.id); }); });
+      // A pack opened for editing (admin) always stays visible, ticked or not.
+      cfg.quoteTypes.forEach(q => { if (!q.packEdit && (q.offByTrade || (q.trade && !trades.includes(q.trade)))) out.add(q.id); });
+      mqTradeEntries().forEach(t => { if (!trades.includes(t.id)) mqQtsOfTrade(t, cfg.quoteTypes).forEach(q => { if (!q.trade && !q.packEdit && q.on === false) out.add(q.id); }); });
       return out;
     } catch(e) { return new Set(); }
   };
@@ -12084,16 +12085,30 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     if (!confirm(`Import ${ids.length} starter pack${ids.length === 1 ? '' : 's'}?\n\n${replace ? 'Existing packs for these business types will be REPLACED.' : 'Business types that already have a pack are skipped.'}`)) return;
     const done = [], skipped = [], failed = [];
     await mqLoadTradeCatalog(true);
+    // Rows left behind by an earlier import that was cut short get reused
+    // instead of duplicated.
+    const rowOf = {}; try { (await mqLibRows('pack')).forEach(r => { if (r && r.key) rowOf[r.key] = r.id; }); } catch(e) {}
+    const wait = ms => new Promise(r => setTimeout(r, ms));
     for (const id of ids) {
-      const t = mqTradeEntries().find(x => x.id === id);
+      const t0 = mqTradeEntries().find(x => x.id === id);
+      const t = t0 && Object.assign({}, t0, { packRec: t0.packRec || rowOf[id] || undefined });
       const quotes = mqPackQuotes(packs[id]);
       if (!t || !quotes.length) { failed.push(id); continue; }
       if (mqTradeHasPack(t) && !replace) { skipped.push(t.label); continue; }
       const bad = quotes.find(q => !q || !q.qt || !Array.isArray(q.rooms) || !q.rooms.length || !Array.isArray(q.cats) || !Array.isArray(q.items));
       if (bad) { failed.push(t.label); continue; }
       showMsg('mq-templates-msg', `Importing ${t.label}… (${done.length + skipped.length + failed.length + 1} of ${ids.length})`);
-      try { await mqTradePackWrite(t, quotes); done.push(t.label); }
-      catch(e) { console.warn('import failed', id, e); failed.push(t.label); }
+      // Airtable only takes a few writes a second, so go steadily and retry
+      // a busy moment a couple of times before giving up on a pack.
+      let ok = false;
+      for (let tryN = 0; tryN < 4 && !ok; tryN++) {
+        try {
+          if (tryN) { await wait(1500 * tryN); await mqLoadTradeCatalog(true); const fresh = mqTradeEntries().find(x => x.id === id); if (fresh && fresh.packRec) t.packRec = fresh.packRec; }
+          await mqTradePackWrite(t, quotes); ok = true;
+        } catch(e) { console.warn('import try failed', id, tryN, e); }
+      }
+      if (ok) done.push(t.label); else failed.push(t.label);
+      await wait(350);
     }
     showMsg('mq-templates-msg', `✓ Imported ${done.length} starter pack${done.length === 1 ? '' : 's'}${skipped.length ? ` · skipped ${skipped.length} that already had one (${skipped.join(', ')})` : ''}${failed.length ? ` · couldn't import: ${failed.join(', ')}` : ''}.`, failed.length ? 'error' : undefined);
     mqTradeAdminRender();
