@@ -11665,7 +11665,15 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           : `✓ ${changed.map(q => '"' + q.name + '"').join(', ')} back on your widget.`);
         // Nov 2026 (Jordan): ticking a trade that has a starter pack sets its
         // quote(s) up right away -- only the first time (no quote for it yet).
-        if (!unticking && !mine.size && mqTradeHasPack(t)) { mqRenderBizTypes(); await mqApplyTradePack(t, { auto: true }); mqRenderBizTypes(); }
+        // A quote of this trade left with no project types AND no steps (the
+        // Nov 2026 side-by-side bug) counts as not set up: it's replaced.
+        let rf = []; try { rf = JSON.parse(window._mqShopRecord.fields['Room types'] || '[]'); } catch(e) {}
+        const cf = mqCustomCatsOf(window._mqShopRecord);
+        const empty = [...mine].filter(qid => { const hasR = rf.some(r => r && r.forQt === qid), hasC = cf.some(c => c && c.qt === qid); return window._mqIsAdminShop ? (!hasR && !hasC) : (!hasR || !hasC); });
+        if (!unticking && mqTradeHasPack(t) && (!mine.size || empty.length === mine.size)) {
+          if (empty.length) await mqSaveTabsCfg({ quoteTypes: mqQuoteTypesOf(window._mqShopRecord.fields).filter(q => !empty.includes(q.id)) });
+          mqRenderBizTypes(); await mqApplyTradePack(t, { auto: true }); mqRenderBizTypes();
+        }
       }
       catch(e) { showMsg('mq-shop-msg', 'Error saving.', 'error'); }
       return;
@@ -11878,7 +11886,16 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     if (opts.edit) { showMsg(msgId, `✓ ${list} ${names.length > 1 ? 'are' : 'is'} open in your shop to edit — switched off on your widget, so customers never see ${names.length > 1 ? 'them' : 'it'}.`); if (window.mqTradeAdminRender) window.mqTradeAdminRender(); }
     else showMsg(msgId, `✓ ${list} added and set up: ${mqTradePackSummary(mqPackSum(quotes))}. Check the prices on the Pricing tab — they're starting points.`);
   }
-  async function mqApplyPackQuote(t, pack, opts, idx) {
+  // Packs are set up one at a time: ticking several trades quickly used to run
+  // them side by side, and each one saved the project types / steps list it
+  // had read before the others finished -- so all but the last lost theirs
+  // (Jordan, Nov 2026: quote types with no project types or pricing).
+  function mqApplyPackQuote(...args) {
+    const run = (window._mqPackApplyQ || Promise.resolve()).catch(() => {}).then(() => mqApplyPackQuoteRun(...args));
+    window._mqPackApplyQ = run;
+    return run;
+  }
+  async function mqApplyPackQuoteRun(t, pack, opts, idx) {
     const shopRec = window._mqShopRecord;
     const rid = p => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
     const f = shopRec.fields;
