@@ -4784,6 +4784,7 @@
     })();
     // 4+ tabs (the shop's own quote types): arrows + a sliding row of pills.
     mqTabBarSetup();
+    if (!window._mqFxOn && window.mqAddqTabHint) window.mqAddqTabHint();
 
     // Exposed globally so the sticky estimate bar (which lives outside this
     // closure — wireWidget runs fresh on every render/new estimate) can call
@@ -7881,6 +7882,9 @@
     };
 
     window.mqShowLead=cb=>{
+      // Adding another quote to an estimate they already gave their details
+      // for: don't ask again — the updated lead goes out with the same details.
+      if ((window._mqQuoteCart||[]).length && window._mqSessionLead) { cb(Object.assign({}, window._mqSessionLead)); return; }
       pendingCb=cb;
       // Prefill from previously saved info so repeat visitors don't re-type
       try{
@@ -7913,6 +7917,7 @@
       const lead={name:gv('mq-lead-name'),email:gv('mq-lead-email'),phone:gv('mq-lead-phone')};
       // Remember for next time so they don't have to re-type
       try{localStorage.setItem('mq_lead_info',JSON.stringify(lead));}catch(e){}
+      window._mqSessionLead=Object.assign({},lead);
       document.getElementById('mq-lead-overlay').classList.remove('show');
       if(pendingCb){pendingCb(lead);pendingCb=null;}
     };
@@ -10228,6 +10233,7 @@
     if (window.mqFxPlaceBar) window.mqFxPlaceBar();
     mqUpdateLivePreview(prefix);
     mqSetStickyPrice(prefix, low, high, total, false);
+    try { if (window.mqAddqAfterCalc) window.mqAddqAfterCalc(prefix, low, high, total); } catch (e) { console.error(e); }
     if (!window._mqStickyDismissed) {
       const bar = document.getElementById('mq-sticky-bar');
       if (bar) bar.classList.add('show');
@@ -10290,6 +10296,252 @@
     const f = n => CUR() + Math.round(n).toLocaleString();
     return `${f(low)} – ${f(high)}`;
   }
+  // ===================== Add another quote (Nov 2026) =====================
+  // One running estimate across quote types AND project types. The cart
+  // (window._mqQuoteCart) already carried every section into the totals,
+  // the lead and the emails; this adds the visible way in: an "Add another
+  // quote" picker on the results, a "Your whole estimate" box under each
+  // result, and (Focused) a Back on step 1 that returns to the estimate
+  // instead of wiping it. Classic + Focused, widget.js + widgetpro.js.
+  const MQ_ADDQ_BUILTIN = {
+    both:        { title: 'Cabinets + countertops', icon: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.7 4.7 1.8-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg>' },
+    cabinets:    { title: 'Cabinets', icon: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="2"/><path d="M12 3.5v17"/><path d="M9.6 11v2M14.4 11v2"/></svg>' },
+    countertops: { title: 'Countertops', icon: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 9.5h19v4h-19z"/><path d="M5 13.5v6.5M19 13.5v6.5"/><path d="M6 6.5h4"/></svg>' },
+  };
+  function mqAddqTabIdOf(p) { return p === 'b' ? 'both' : (p === 'ct' ? 'countertops' : (p === 'c' ? 'cabinets' : p)); }
+  function mqAddqTabBtn(tabId) { return document.querySelector(`#midasquote-widget .mq-tab[onclick^="mqSwitchTab('${tabId}'"]`); }
+  function mqAddqPrice(e) { return e.showRange === false ? (CUR() + Math.round(e.total || 0).toLocaleString()) : fmtRange(e.low || 0, e.high || 0); }
+  // Every quote type the customer can see (its tab button is on the page —
+  // hidden / switched-off / trade-unticked ones never get one) with its
+  // project types.
+  function mqAddqGroups() {
+    const qts = window._mqQuoteTypes || [];
+    return [...document.querySelectorAll('#midasquote-widget .mq-tab[onclick^="mqSwitchTab(\'"]')].map(btn => {
+      const m = (btn.getAttribute('onclick') || '').match(/mqSwitchTab\('([^']+)'/);
+      if (!m) return null;
+      const tabId = m[1], p = mqPrefixOfTabId(tabId);
+      const q = qts.find(x => x.prefix === tabId);
+      const bi = MQ_ADDQ_BUILTIN[tabId];
+      const title = q ? q.name : (bi ? bi.title : ((btn.querySelector('.mq-tab-title') || btn).textContent.trim()));
+      const icon = q ? mqQtIconSvg(q.icon, 22) : (bi ? bi.icon : '');
+      const sel = document.getElementById(`mq-${p}-room`);
+      const rooms = sel ? [...sel.options].map(o => ({ id: o.value, name: o.textContent.trim() })) : [{ id: '', name: title }];
+      return { tabId, p, title, icon, rooms };
+    }).filter(g => g && g.rooms.length);
+  }
+  function mqAddqOptionCount() { return mqAddqGroups().reduce((s, g) => s + g.rooms.length, 0); }
+
+  function mqAddqCss() {
+    if (document.getElementById('mq-addq-css')) return;
+    const st = document.createElement('style');
+    st.id = 'mq-addq-css';
+    st.textContent = `
+      #midasquote-widget .mq-addq-box{margin:16px 0 4px;border:1px solid var(--aq-line,#e5e7eb);border-radius:12px;background:var(--aq-tint,#f9fafb);padding:14px 16px}
+      #midasquote-widget .mq-addq-h{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#6b7280;margin:0 0 6px}
+      #midasquote-widget .mq-addq-row{display:flex;justify-content:space-between;gap:10px;padding:6px 0;font-size:14px;color:#374151;border-bottom:1px dashed #e5e7eb}
+      #midasquote-widget .mq-addq-row b{white-space:nowrap;color:#111827}
+      #midasquote-widget .mq-addq-row.mq-addq-cur span:first-child::after{content:' · this one';color:#9ca3af;font-size:12px}
+      #midasquote-widget .mq-addq-tot{display:flex;justify-content:space-between;gap:10px;padding:10px 0 2px;font-size:15px;font-weight:800;color:#111827}
+      #midasquote-widget .mq-addq-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:12px;padding:12px 14px;border-radius:10px;border:1.5px dashed var(--aq-c,#1a1a1a);background:#fff;color:var(--aq-c,#1a1a1a);font:inherit;font-size:15px;font-weight:700;cursor:pointer;transition:background .15s,transform .15s}
+      #midasquote-widget .mq-addq-btn:hover{background:var(--aq-tint,#f9fafb);transform:translateY(-1px)}
+      #midasquote-widget .mq-addq-note{font-size:12.5px;color:#6b7280;text-align:center;margin-top:6px;line-height:1.4}
+      #midasquote-widget .mq-addq-tabhint{font-size:12.5px;color:#6b7280;text-align:center;padding:6px 12px 0;line-height:1.4}
+      #mq-addq-ov{position:fixed;inset:0;z-index:2147483000;background:rgba(17,24,39,.55);display:flex;align-items:center;justify-content:center;padding:16px;font-family:inherit}
+      #mq-addq-ov .mq-addq-m{background:#fff;border-radius:16px;max-width:520px;width:100%;max-height:min(86vh,720px);display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(0,0,0,.3);overflow:hidden;font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}
+      #mq-addq-ov .mq-addq-mh{padding:18px 20px 10px;display:flex;align-items:flex-start;gap:10px}
+      #mq-addq-ov .mq-addq-mt{font-size:19px;font-weight:800;color:#111827;margin:0}
+      #mq-addq-ov .mq-addq-ms{font-size:13.5px;color:#6b7280;margin:4px 0 0;line-height:1.45}
+      #mq-addq-ov .mq-addq-x{margin-left:auto;background:none;border:none;font-size:22px;line-height:1;color:#6b7280;cursor:pointer;padding:2px 6px}
+      #mq-addq-ov .mq-addq-list{overflow:auto;padding:4px 20px 20px}
+      #mq-addq-ov .mq-addq-g{border:1px solid #e5e7eb;border-radius:12px;margin-top:10px;overflow:hidden}
+      #mq-addq-ov .mq-addq-gh{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--aq-tint,#f9fafb);font-weight:700;font-size:15px;color:#111827}
+      #mq-addq-ov .mq-addq-gi{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;background:#fff;color:var(--aq-c,#1a1a1a);border:1px solid var(--aq-line,#e5e7eb);flex-shrink:0}
+      #mq-addq-ov .mq-addq-gi svg{width:20px;height:20px}
+      #mq-addq-ov .mq-addq-opt{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:11px 14px;border:none;border-top:1px solid #f1f5f9;background:#fff;font:inherit;font-size:14.5px;color:#111827;cursor:pointer}
+      #mq-addq-ov .mq-addq-opt:hover:not([disabled]){background:var(--aq-tint,#f9fafb)}
+      #mq-addq-ov .mq-addq-opt[disabled]{cursor:default;color:#9ca3af}
+      #mq-addq-ov .mq-addq-tag{margin-left:auto;font-size:12px;font-weight:600;white-space:nowrap;color:#6b7280}
+      #mq-addq-ov .mq-addq-tag.on{color:#15803d}
+      #mq-addq-ov .mq-addq-go{margin-left:auto;color:var(--aq-c,#1a1a1a);font-weight:800}
+    `;
+    document.head.appendChild(st);
+  }
+  function mqAddqVars() {
+    const raw = String(((window._mqShopData || {})['Brand colour']) || '#1a1a1a').trim();
+    const c = /^#[0-9a-f]{6}$/i.test(raw) ? raw : '#1a1a1a';
+    return `--aq-c:${c};--aq-tint:${c}0f;--aq-line:${c}33`;
+  }
+
+  // Under every result: the whole estimate so far (once there is more than
+  // one section) + the "Add another quote" button. Runs after each
+  // Calculate (mqShowStickyBar). Financing on that panel follows the whole
+  // estimate once there's more than one section.
+  window.mqAddqAfterCalc = function(prefix, low, high, total) {
+    const res = document.getElementById(`mq-${prefix}-result`);
+    if (!res) return;
+    mqAddqCss();
+    const cart = window._mqQuoteCart || [];
+    const canAdd = mqAddqOptionCount() > 1;
+    const rb = res.closest('.mq-tab-content') && res.closest('.mq-tab-content').querySelector('.mq-fx-resbtn-addq');
+    if (rb) rb.style.display = canAdd ? '' : 'none';
+    let box = res.querySelector(':scope > .mq-addq-box');
+    if (!cart.length && !canAdd) { if (box) box.remove(); return; }
+    if (!box) {
+      box = document.createElement('div');
+      box.className = 'mq-addq-box';
+      const fin = res.querySelector(':scope > .mq-financing-box');
+      if (fin) fin.before(box); else res.appendChild(box);
+    }
+    box.style.cssText = mqAddqVars();
+    let html = '';
+    if (cart.length) {
+      const pv = window._mqLivePreview;
+      const curLabel = (pv && pv.label) || ((document.getElementById(`mq-${prefix}-res-title`) || {}).textContent || '').replace(/ estimate$/, '') || 'This quote';
+      const cur = { label: curLabel, low, high, total, showRange: mqShouldShowRange(prefix) };
+      const all = [...cart, cur];
+      const allNoRange = all.every(e => e.showRange === false);
+      const tl = all.reduce((s, e) => s + (e.low || 0), 0), th = all.reduce((s, e) => s + (e.high || 0), 0), tt = all.reduce((s, e) => s + (e.total || 0), 0);
+      html += `<div class="mq-addq-h">Your whole estimate</div>`
+        + cart.map(e => `<div class="mq-addq-row"><span>${mqCcEsc(e.label)}</span><b>${mqAddqPrice(e)}</b></div>`).join('')
+        + `<div class="mq-addq-row mq-addq-cur"><span>${mqCcEsc(cur.label)}</span><b>${mqAddqPrice(cur)}</b></div>`
+        + `<div class="mq-addq-tot"><span>Total</span><span>${allNoRange ? CUR() + Math.round(tt).toLocaleString() : fmtRange(tl, th)}</span></div>`;
+      mqUpdateFinancingBox(prefix, allNoRange ? tt : tl, allNoRange ? tt : th, tt);
+    }
+    if (canAdd) {
+      html += `<button type="button" class="mq-addq-btn" onclick="mqAddqOpen()">➕ Add another quote</button>`
+        + `<div class="mq-addq-note">${cart.length ? 'Keep adding — everything stays on this one estimate.' : 'Need more done? Add it here and get one combined estimate.'}</div>`;
+    }
+    if (box._mqHtml !== html) { box.innerHTML = html; box._mqHtml = html; }
+  };
+
+  window.mqAddqClose = function() { const ov = document.getElementById('mq-addq-ov'); if (ov) ov.remove(); };
+  window.mqAddqOpen = function() {
+    mqAddqCss();
+    window.mqAddqClose();
+    const cart = window._mqQuoteCart || [];
+    const cur = window._mqActiveTabPrefix;
+    const curRoom = ((document.getElementById(`mq-${cur}-room`) || {}).value) || '';
+    const groups = mqAddqGroups();
+    const body = groups.map(g => {
+      const opts = g.rooms.map(r => {
+        const isCur = g.p === cur && (r.id || '') === curRoom;
+        const inCart = cart.some(e => e.prefix === g.p && (e.roomId || '') === (r.id || ''));
+        const tag = isCur ? `<span class="mq-addq-tag">Viewing now</span>` : (inCart ? `<span class="mq-addq-tag on">✓ Added · tap to edit</span>` : `<span class="mq-addq-go">＋</span>`);
+        return `<button type="button" class="mq-addq-opt"${isCur ? ' disabled' : ''} onclick="mqAddqPick('${mqCcAttr(g.tabId)}','${mqCcAttr(r.id)}')"><span>${mqCcEsc(r.name)}</span>${tag}</button>`;
+      }).join('');
+      return `<div class="mq-addq-g"><div class="mq-addq-gh"><span class="mq-addq-gi">${g.icon}</span>${mqCcEsc(g.title)}</div>${opts}</div>`;
+    }).join('');
+    const ov = document.createElement('div');
+    ov.id = 'mq-addq-ov';
+    ov.style.cssText = mqAddqVars();
+    ov.innerHTML = `<div class="mq-addq-m" role="dialog" aria-modal="true" aria-label="Add another quote"><div class="mq-addq-mh"><div><p class="mq-addq-mt">Add another quote</p><p class="mq-addq-ms">Pick what else you need. It's added to this same estimate — nothing you've done so far is lost.</p></div><button type="button" class="mq-addq-x" onclick="mqAddqClose()" aria-label="Close">×</button></div><div class="mq-addq-list">${body}</div></div>`;
+    ov.addEventListener('click', e => { if (e.target === ov) window.mqAddqClose(); });
+    document.body.appendChild(ov);
+  };
+
+  window.mqAddqPick = function(tabId, roomId) {
+    window.mqAddqClose();
+    const p = mqPrefixOfTabId(tabId);
+    const cur = window._mqActiveTabPrefix;
+    const curSel = document.getElementById(`mq-${cur}-room`);
+    const curRoom = curSel ? curSel.value : '';
+    const fx = !!window._mqFxOn;
+    const sel = document.getElementById(`mq-${p}-room`);
+    window._mqPrevRoomId = window._mqPrevRoomId || {};
+    if (p === cur) {
+      if (sel && sel.value !== roomId) {
+        window._mqPrevRoomId[p] = sel.value;
+        sel.value = roomId;
+        sel.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      document.getElementById(`mq-${p}-result`)?.classList.remove('show');
+      if (fx && window.mqFxEditAnswers) window.mqFxEditAnswers(p, true);
+    } else if (fx && window.mqFxStartType) {
+      window.mqFxStartType(tabId, roomId);
+    } else {
+      if (sel && sel.value !== roomId) {
+        window._mqPrevRoomId[p] = sel.value;
+        sel.value = roomId;
+        sel.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      const btn = mqAddqTabBtn(tabId);
+      if (btn) window.mqSwitchTab(tabId, btn);
+      document.getElementById(`mq-${p}-result`)?.classList.remove('show');
+    }
+    // Where "← Back to my estimate" (Focused step 1) returns to.
+    const left = (window._mqQuoteCart || []).find(e => e.prefix === cur && (e.roomId || '') === (curRoom || ''));
+    window._mqAddqReturn = left ? { cartId: left.id } : null;
+    if (!fx) {
+      const target = (sel && sel.offsetParent ? sel : null) || document.getElementById(`mq-tab-${tabId}`);
+      if (target && window.mqScrollWithOffset) window.mqScrollWithOffset(target, 90);
+    }
+  };
+
+  // Re-shows a saved section's results without asking for contact details
+  // again or saving another lead (lead === null skips both).
+  function mqAddqRecalcQuiet(p) {
+    const fn = p === 'b' ? window.mqCalcBoth : p === 'ct' ? window.mqCalcCountertops : p === 'c' ? window.mqCalcCabinets : () => window.mqCalcQt(p);
+    if (typeof fn !== 'function') return;
+    const orig = window.mqShowLead;
+    window.mqShowLead = cb => cb(null);
+    try { fn(); } finally { window.mqShowLead = orig; }
+  }
+  // Brings a saved section back onto its form and shows its results.
+  function mqAddqOpenEntry(entry) {
+    const p = entry.prefix, tabId = mqAddqTabIdOf(p);
+    const sel = document.getElementById(`mq-${p}-room`);
+    window._mqPrevRoomId = window._mqPrevRoomId || {};
+    if (p === window._mqActiveTabPrefix) {
+      if (sel) { window._mqPrevRoomId[p] = sel.value; sel.value = entry.roomId || ''; sel.dispatchEvent(new Event('change', { bubbles: true })); }
+    } else {
+      if (sel && entry.roomId != null) { sel.value = entry.roomId; window._mqPrevRoomId[p] = entry.roomId; }
+      if (window._mqFxOn && window.mqFxStart) window.mqFxStart(tabId);
+      else { const btn = mqAddqTabBtn(tabId); if (btn) window.mqSwitchTab(tabId, btn); }
+      // Cabinets / Cabinets + countertops only bring a saved section back
+      // through their project-type dropdown (quote types and Countertops
+      // already did it on the tab switch above).
+      if (sel && (window._mqQuoteCart || []).some(e => e.id === entry.id)) {
+        window._mqPrevRoomId[p] = sel.value;
+        sel.value = entry.roomId || sel.value;
+        sel.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    }
+    setTimeout(() => mqAddqRecalcQuiet(p), 30);
+  }
+  // Focused: "← Back" on step 1. With nothing else on the estimate it's the
+  // old behaviour (back to the chooser, quote cleared). Otherwise it goes
+  // back to the estimate — anything already started here is kept on it.
+  window.mqFxBackFromStart = function() {
+    const cart = window._mqQuoteCart || [];
+    if (!cart.length) return window.mqFxToChooser();
+    const cur = window._mqActiveTabPrefix;
+    const sel = document.getElementById(`mq-${cur}-room`);
+    window._mqPrevRoomId = window._mqPrevRoomId || {};
+    if (sel) window._mqPrevRoomId[cur] = sel.value;
+    const committed = window.mqCommitCurrentConfig ? window.mqCommitCurrentConfig(cur) : false;
+    if (window.mqResetCurrentProject) window.mqResetCurrentProject(cur);
+    const ret = window._mqAddqReturn;
+    window._mqAddqReturn = null;
+    const list = window._mqQuoteCart || [];
+    const entry = (!committed && ret && list.find(e => e.id === ret.cartId)) || list[list.length - 1];
+    if (!entry) return window.mqFxToChooser();
+    mqAddqOpenEntry(entry);
+  };
+  window.mqFxBackLabel = function() { return (window._mqQuoteCart || []).length ? '← Back to my estimate' : '← Back'; };
+
+  // Classic: a quiet line under the tab bar when there's more than one
+  // quote type to pick from.
+  window.mqAddqTabHint = function() {
+    const bar = document.querySelector('#midasquote-widget .mq-tab-bar');
+    if (!bar) return;
+    mqAddqCss();
+    let hint = bar.parentNode.querySelector(':scope > .mq-addq-tabhint');
+    const many = document.querySelectorAll('#midasquote-widget .mq-tab-bar .mq-tab').length > 1;
+    if (!many) { if (hint) hint.remove(); return; }
+    if (!hint) { hint = document.createElement('div'); hint.className = 'mq-addq-tabhint'; bar.after(hint); }
+    hint.textContent = 'Pick one to get started — you can add more after your first estimate.';
+  };
+  // ===================== end add another quote =====================
   // Single entry point for every place a price gets shown to a customer —
   // shows the usual ballpark range, or the exact clean total with no spread
   // at all, depending on the selected project type's own preference.
@@ -10471,6 +10723,7 @@
       // range so the sticky bar updates off the exact same calculation —
       // no separate/duplicate math, both pieces always agree.
       let range = window._mqRefreshResultsPanel ? window._mqRefreshResultsPanel(prefix) : null;
+      const panelShown = !!range;
       if (!range && window._mqCalcCabinet && window._mqCalcCountertop) {
         if (prefix === 'b') {
           const cab = window._mqCalcCabinet('b'), ct = window._mqCalcCountertop('b');
@@ -10489,6 +10742,7 @@
       if (range) {
         mqSetStickyPrice(prefix, range.low, range.high, range.total, true);
         mqUpdateLivePreview(prefix, range);
+        if (panelShown && window.mqAddqAfterCalc) window.mqAddqAfterCalc(prefix, range.low, range.high, range.total);
       }
     } catch (e) { /* mid-edit DOM state can briefly be inconsistent — just skip this tick */ }
   }
@@ -11155,7 +11409,7 @@
     const isLast = index >= total - 1;
     const back = index > 0
       ? `<button type="button" class="mq-step-back-btn" onclick="event.stopPropagation();mqStepBack('${prefix}')">← Back</button>`
-      : `<button type="button" class="mq-step-back-btn" onclick="event.stopPropagation();mqFxToChooser()">← Back</button>`;
+      : `<button type="button" class="mq-step-back-btn" onclick="event.stopPropagation();mqFxBackFromStart()">${window.mqFxBackLabel ? window.mqFxBackLabel() : '← Back'}</button>`;
     return `${back}<button type="button" class="mq-step-continue-btn" onclick="event.stopPropagation();mqStepContinue('${prefix}')">${isLast ? 'See my estimate ✨' : 'Continue →'}</button>`;
   };
 
@@ -11234,6 +11488,7 @@
     // project type, the typed-in email used for "email me a copy" and the
     // side panel's totals all live outside it, so they are cleared here too.
     window._mqQuoteCart = [];
+    window._mqAddqReturn = null;
     window._mqLivePreview = null;
     window._mqPrevRoomId = {};
     window._mqLeadEmail = '';
@@ -11411,7 +11666,7 @@
         <div class="mq-fx-cta-row"><button type="button" class="mq-fx-cta-btn ${finLink ? 'mq-fx-cta-sec' : 'mq-fx-cta-pri'}" onclick="mqShowConsultModal()">📅 Book a consultation <span class="mq-fx-cta-arr">→</span></button>${second}</div>`;
       if (cta._mqHtml !== html) { cta.innerHTML = html; cta._mqHtml = html; }
       const fin = res.querySelector(':scope > .mq-financing-box');
-      const anchor = (fin && fin.style.display !== 'none') ? fin : res.querySelector(':scope > .mq-line-items');
+      const anchor = (fin && fin.style.display !== 'none') ? fin : (res.querySelector(':scope > .mq-addq-box') || res.querySelector(':scope > .mq-line-items'));
       if (anchor && anchor.nextElementSibling !== cta) anchor.after(cta);
       else if (!anchor && !cta.parentNode) res.appendChild(cta);
     });
@@ -11911,7 +12166,7 @@
         const bar = document.createElement('div');
         bar.className = 'mq-fx-resbar';
         bar.innerHTML = `<button type="button" class="mq-fx-resbtn" onclick="mqFxEditAnswers('${prefix}')">← Edit my answers</button>`
-          + ((prefix === 'ct' || (mqIsQt(prefix) && ((document.getElementById(`mq-${prefix}-room`) || {}).options || []).length < 2)) ? '' : `<button type="button" class="mq-fx-resbtn" onclick="mqFxEditAnswers('${prefix}', true)">➕ Quote another project type</button>`);
+          + `<button type="button" class="mq-fx-resbtn mq-fx-resbtn-addq" onclick="mqAddqOpen()">➕ Add another quote</button>`;
         tab.insertBefore(bar, tab.firstChild);
       }
     });
@@ -12002,7 +12257,7 @@
         ? `<div class="mq-fx-pills"><div class="mq-fx-pills-lbl">Or jump straight to a project</div><div class="mq-fx-pills-row">${pillItems.map(p => `<button type="button" class="mq-fx-pill" onclick="mqFxStartType('${p.tab}','${escH(p.r.id)}')">${escH(p.r.name)}</button>`).join('')}</div></div>`
         : '';
       ch.innerHTML = `<div class="mq-fx-ch-title">${one ? 'Ready for your estimate?' : 'What would you like a quote for?'}</div>
-        <div class="mq-fx-ch-sub">${one ? 'Answer a few quick questions to get your estimate.' : 'Pick one to get started.'}</div>
+        <div class="mq-fx-ch-sub">${one ? 'Answer a few quick questions to get your estimate.' : 'Pick one to get started — you can add more after your first estimate.'}</div>
         ${trust}
         ${many ? '<div class="mq-fx-slider"><button type="button" class="mq-fx-slide-arrow" data-dir="-1" aria-label="Previous">‹</button>' : ''}<div class="mq-fx-cards mq-fx-cards-${shown.length}${many ? ' mq-fx-cards-many' : ''}">${shown.map(t => {
           const n = typesFor(t.id).length;
