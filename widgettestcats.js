@@ -2068,7 +2068,31 @@
   window.mqScrollPickerRow = function(selectId, direction) {
     const row = document.getElementById(`mq-vprow-${selectId}`);
     if (!row) return;
-    row.scrollBy({ left: row.clientWidth * 0.85 * direction, behavior: 'smooth' });
+    // Card-aligned: right → the first card cut off on the right lands
+    // flush at the left edge; left → the card cut off on the left lands
+    // flush at the right edge. Falls back to a plain page if cards are
+    // wider than the row.
+    const max = row.scrollWidth - row.clientWidth;
+    const rr = row.getBoundingClientRect();
+    const padL = parseFloat(getComputedStyle(row).paddingLeft) || 0;
+    const cur = row.scrollLeft, w = row.clientWidth;
+    const cards = Array.from(row.children).filter(c => c.offsetWidth > 0).map(c => {
+      const r = c.getBoundingClientRect();
+      const l = r.left - rr.left + cur - row.clientLeft;
+      return { l, r: l + r.width };
+    });
+    let target = null;
+    if (direction > 0) {
+      const c = cards.find(c => c.r > cur + w + 1);
+      if (c && c.l - padL > cur + 1) target = c.l - padL;
+    } else {
+      const left = cards.filter(c => c.l < cur + padL - 1);
+      const c = left[left.length - 1];
+      if (c && c.r + padL - w < cur - 1) target = c.r + padL - w;
+    }
+    if (target == null) target = cur + w * 0.85 * direction;
+    target = Math.max(0, Math.min(max, Math.round(target)));
+    row.scrollTo({ left: target, behavior: 'smooth' });
   };
   window.mqUpdateAllPickerArrows = function() {
     // Deferred a frame — scrollWidth/clientWidth need real layout to have
