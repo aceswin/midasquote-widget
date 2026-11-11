@@ -5421,6 +5421,46 @@ window.logoutMember = async function () {
       : DEFAULT_MEASURE_GUIDE_TEXT_GENERAL;
   };
 
+  // Trade project types (quote types other than cabinets/countertops): the
+  // default guide is the one in MidasQuote's starter pack for that trade.
+  // Pack project types get new ids when they're added to a shop, so the
+  // match is by quote type + project type name (or the pack's only project
+  // type, when the shop renamed it).
+  window.mqFillPackGuide = async function(textareaId, roomId, btn) {
+    const ta = el(textareaId);
+    const shopRec = window._mqShopRecord;
+    if (!ta || !shopRec) return;
+    const rooms = mqJsonObj(shopRec.fields['Room types'], []);
+    const room = (Array.isArray(rooms) ? rooms : []).find(r => r && r.id === roomId);
+    const q = room && mqQuoteTypesOf(shopRec.fields).find(x => x.id === room.forQt);
+    if (!room || !q) return;
+    const label = btn ? btn.textContent : '';
+    if (btn) { btn.disabled = true; btn.textContent = 'Loading…'; }
+    const norm = s => String(s || '').trim().toLowerCase();
+    let text = null;
+    try {
+      await mqLoadTradeCatalog(false);
+      const trades = mqTradeEntries().filter(mqTradeHasPack);
+      trades.sort((a, b) => (b.id === q.trade) - (a.id === q.trade));
+      for (const t of trades) {
+        let body = null; try { body = await mqTradePackLoad(t); } catch(e) {}
+        const pqs = mqPackQuotes(body);
+        const pq = pqs.find(x => x && x.qt && norm(x.qt.name) === norm(q.name))
+          || (t.id === q.trade ? (pqs[q.packIdx || 0] || (pqs.length === 1 ? pqs[0] : null)) : null);
+        if (!pq) continue;
+        const pr = (pq.rooms || []).filter(Boolean);
+        const hit = pr.find(r => norm(r.name) === norm(room.name)) || (pr.length === 1 ? pr[0] : null);
+        if (hit && String(hit.measureText || '').trim()) { text = hit.measureText; break; }
+      }
+    } catch(e) { console.warn('default guide', e); }
+    if (btn) { btn.disabled = false; btn.textContent = label; }
+    if (!text) { alert(`There's no default guide for "${room.name}" yet.\n\nDefault guides come from MidasQuote's starter pack for ${q.name}.`); return; }
+    if (ta.value.trim() && ta.value.trim() !== text.trim() && !confirm("Replace what's in this box with the default guide text?")) return;
+    ta.value = text;
+    ta.dispatchEvent(new Event('input', { bubbles: true }));
+    ta.dispatchEvent(new Event('change', { bubbles: true }));
+  };
+
   // Deliberately separate from mqFillDefaultGuide above — a shop may want
   // their own custom image with the default text, or vice versa, so these
   // reset independently rather than being bundled into one button. Clears
@@ -6291,7 +6331,7 @@ window.logoutMember = async function () {
           </label>
             <textarea id="mq-room-measure-text-${idx}" placeholder="${isQt ? 'Your own measuring instructions for this project type. Leave blank (and no images) to skip the How to measure step.' : 'Leave blank to use the standard measuring guide. Fill in to show your own instructions for this project type instead — e.g. how to measure for refacing vs. a full kitchen.'}" rows="3" style="width:100%;font-size:12px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;resize:vertical;margin-bottom:6px">${(r.measureText||'').replace(/</g,'&lt;')}</textarea>
             <div style="margin-bottom:8px">
-              ${isQt ? '' : `<button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqFillDefaultGuide('mq-room-measure-text-${idx}','${r.id}',${!!r.forCountertops})">↺ Use default guide</button>`}
+              ${isQt ? `<button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqFillPackGuide('mq-room-measure-text-${idx}','${r.id}',this)">↺ Use default guide</button>` : `<button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqFillDefaultGuide('mq-room-measure-text-${idx}','${r.id}',${!!r.forCountertops})">↺ Use default guide</button>`}
               <div style="display:block;margin:8px 0 2px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:8px 11px;font-size:12px;color:#1e3a8a;line-height:1.9"><strong>✍️ Formatting tricks:</strong> <code style="background:#fff;border:1px solid #e5e7eb;border-radius:4px;padding:1px 5px;font-size:11.5px;color:#111;font-family:ui-monospace,Menlo,Consolas,monospace">**text**</code> → <strong>bold</strong> &nbsp;·&nbsp; <code style="background:#fff;border:1px solid #e5e7eb;border-radius:4px;padding:1px 5px;font-size:11.5px;color:#111;font-family:ui-monospace,Menlo,Consolas,monospace">[calc]</code> → calculator icon &nbsp;·&nbsp; <code style="background:#fff;border:1px solid #e5e7eb;border-radius:4px;padding:1px 5px;font-size:11.5px;color:#111;font-family:ui-monospace,Menlo,Consolas,monospace">[corner-img]</code> → corner-cabinets photo &nbsp;·&nbsp; <code style="background:#fff;border:1px solid #e5e7eb;border-radius:4px;padding:1px 5px;font-size:11.5px;color:#111;font-family:ui-monospace,Menlo,Consolas,monospace">[tip]text[/tip]</code> → yellow tip box</div>
             </div>
             ${isDemo ? mqDemoImageLockedHTML('measuring guide images/videos', r.packMeasure) : `
