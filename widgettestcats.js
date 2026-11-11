@@ -3222,6 +3222,10 @@
             try { cfg = f['Custom pricing'] ? JSON.parse(f['Custom pricing']) : {}; } catch(e) { cfg = {}; }
             if (!cfg || typeof cfg !== 'object') cfg = {};
             const key = photoKeyFor(c.id, f['Name'] || '');
+            // Option photos can live on the option itself (cfg.ph: '' = the
+            // option, 'v<id>' = a variant) -- Nov 2026, the shop's single
+            // Photos field filled up. Same free-plan rule as shop photos.
+            const ph = (!window._mqIsDemoPlan && cfg.ph && typeof cfg.ph === 'object') ? cfg.ph : {};
             return {
               id: r.id,
               name: (f['Name'] || '').trim(),
@@ -3253,9 +3257,9 @@
               variants: (Array.isArray(cfg.variants) && ['each','sqft','lft'].includes(cfg.how) && c.answer !== 'one')
                 ? cfg.variants.filter(v => v && v.id && String(v.label || '').trim()).map(v => ({
                     id: String(v.id), label: String(v.label).trim(), price: parseFloat(v.price) || 0, min: parseFloat(v.min) || 0,
-                    photoUrl: (shopPhotos || {})[key + '_v' + v.id] || '', featured: !!(shopFeatured || {})[key + '_v' + v.id],
+                    photoUrl: (shopPhotos || {})[key + '_v' + v.id] || ph['v' + v.id] || '', featured: !!(shopFeatured || {})[key + '_v' + v.id],
                   })) : [],
-              photoUrl: (shopPhotos || {})[key] || '',
+              photoUrl: (shopPhotos || {})[key] || ph[''] || '',
               featured: !!(shopFeatured || {})[key],
               visibleRooms: effectiveVisibleRooms(parseVisibleRooms(f), c.id),
               groupName: (f['Group name'] || '').trim(),
