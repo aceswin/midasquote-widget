@@ -6550,7 +6550,7 @@ window.logoutMember = async function () {
               <input type="text" id="mq-qt-sub-${q.id}" maxlength="70" value="${mqEscHtml(q.sub || '')}" placeholder="${mqCabShop() ? 'e.g. New doors and fronts on your existing boxes' : 'e.g. What this quote covers, in a few words'}" onchange="mqQtUpdate('${q.id}', { sub: this.value.trim() }, '✓ Saved.')" style="width:100%;max-width:420px;font-size:13px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit"/>
               <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin:10px 0 6px">Icon</label>
               <div style="display:flex;flex-wrap:wrap;gap:6px">${Object.keys(MQ_QT_ICONS).map(k => `<button type="button" title="${k}" aria-label="Icon: ${k}" onclick="mqQtUpdate('${q.id}', { icon: '${k}' }, '✓ Icon updated.')" style="width:38px;height:38px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;${(q.icon || 'grid') === k ? 'background:#1a1a1a;color:#fff;border:1.5px solid #1a1a1a' : 'background:#fff;color:#374151;border:1px solid #d1d5db'}">${mqQtIconSvg(k, 20)}</button>`).join('')}</div>
-              <div style="font-size:12px;color:#6b7280;margin-top:10px;line-height:1.5">The card photo customers see in Focused layout is the cover image of the first project type below. Name, on/off and Pro only are on <a href="#" onclick="event.preventDefault();mqNav('shop', document.querySelector('.mq-nav-item[onclick*=&quot;mqNav(\'shop\'&quot;]'))" style="color:#1d4ed8">Business info</a>.</div>
+              <div style="font-size:12px;color:#6b7280;margin-top:10px;line-height:1.5">The card photo customers see in Focused layout is the cover image of the first project type below. Name, on/off and Pro only are on <a href="#" onclick="event.preventDefault();mqGoTo('shop')" style="color:#1d4ed8">Business info</a>.</div>
 `)}
             ${mqGrpBox(q.id + ':meas', '#0d9488', '#f0fdfa', '② Measurements', (q.measures || []).length ? (q.measures || []).map(m => mqEscHtml(m.label || 'Untitled')).join(' · ') : 'None yet', 'Numbers customers enter once — like “Wall area” or “Number of rooms”. Any option on the Pricing tab can then be priced on one (pick “One of this quote’s measurements”).', `
                 ${(q.measures || []).map((m, mi) => `<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
@@ -6570,7 +6570,7 @@ window.logoutMember = async function () {
               <div style="font-size:12px;color:#374151">
                 <strong>Priced steps:</strong> ${steps.length ? steps.map(c => mqEscHtml(c.name || 'Untitled')).join(' → ') : '<span style="color:#6b7280">none yet</span>'}
                 <span style="color:#6b7280">— these come from the Pricing tab's custom pricing categories set to "${mqEscHtml(q.name)}".</span>
-                <a href="#" onclick="event.preventDefault();mqNav('pricing', document.querySelector('.mq-nav-item[onclick*=&quot;mqNav(\'pricing\'&quot;]'))" style="color:#1d4ed8;font-weight:600;white-space:nowrap">Go to Pricing →</a>
+                <a href="#" onclick="event.preventDefault();mqGoTo('pricing')" style="color:#1d4ed8;font-weight:600;white-space:nowrap">Go to Pricing →</a>
                 <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
                   <button type="button" class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqQtAddStep('${q.id}')">+ Add a priced step for ${mqEscHtml(q.name)}</button>
                 </div>
@@ -11729,7 +11729,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const nothing = !biz.cab && !biz.ct && !qts.some(q => q.on !== false && !q.proOnly);
     // Countertops ticked but nothing priced yet -> say so.
     const ctNoPricing = biz.ct && Array.isArray(window._mqCtItems) && !window._mqCtItems.some(r => r.fields && r.fields['Active'] !== false);
-    tradesEl.innerHTML = rows.join('') + (ctNoPricing ? `<div style="font-size:12.5px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:8px 10px;margin:4px 0 6px;line-height:1.5">Countertops is ticked, but you have no countertop pricing yet — <a href="#" onclick="event.preventDefault();mqNav('pricing', document.querySelector('.mq-nav-item[onclick*=&quot;mqNav(\'pricing\'&quot;]'))" style="color:#1d4ed8;font-weight:600">set it up on the Pricing tab →</a></div>` : '') + (nothing ? `<div style="font-size:12.5px;color:#b45309;margin-top:4px">Your widget has no quotes to show yet. Add a quote type for your trade.</div>` : '')
+    tradesEl.innerHTML = rows.join('') + (ctNoPricing ? `<div style="font-size:12.5px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:8px 10px;margin:4px 0 6px;line-height:1.5">Countertops is ticked, but you have no countertop pricing yet — <a href="#" onclick="event.preventDefault();mqGoTo('pricing')" style="color:#1d4ed8;font-weight:600">set it up on the Pricing tab →</a></div>` : '') + (nothing ? `<div style="font-size:12.5px;color:#b45309;margin-top:4px">Your widget has no quotes to show yet. Add a quote type for your trade.</div>` : '')
       + ((!biz.cab || !biz.ct) ? `<div style="font-size:12px;color:#6b7280;margin-top:6px;line-height:1.5">${!biz.cab && !biz.ct ? 'Built-in cabinet and countertop pricing is hidden' : (!biz.cab ? 'Built-in cabinet pricing is hidden' : 'Built-in countertop pricing is hidden')} on the Pricing, My products and Project types tabs, and the matching built-in quote is hidden in MidasQuote Pro too. Nothing is deleted. Tick it again any time to bring it back.</div>` : '');
   };
   window.mqBizGrpToggle = function(id) {
@@ -12142,7 +12142,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
               const info = mqPackInfoNorm(mqTradePackInfo(t));
               const pq = info && Array.isArray(info.quotes) ? info.quotes : (has ? [{ name: (info && info.qt && info.qt.name) || t.qtName }] : []);
               if (works.length) return `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:9px;padding:10px 12px;font-size:12.5px;color:#14532d;line-height:1.5">
-                ✏️ Open in your shop: ${works.map(w => `<a href="#" onclick="event.preventDefault();mqQtOpenInRooms('${w.id}')" style="color:#1d4ed8;font-weight:700">"${esc(w.name)}"</a>`).join(', ')} — switched off on your widget, so customers never see ${works.length > 1 ? 'them' : 'it'}. Change ${works.length > 1 ? 'them' : 'it'} on Project types, <a href="#" onclick="event.preventDefault();mqNav('pricing', document.querySelector('.mq-nav-item[onclick*=&quot;mqNav(\'pricing\'&quot;]'))" style="color:#1d4ed8;font-weight:600">Pricing</a> and Specialty items, then come back here.${works.length < pq.length ? ` <strong>${pq.length - works.length} of the pack's quotes ${pq.length - works.length === 1 ? 'was' : 'were'} deleted from your shop and will be left out when you save.</strong>` : ''}
+                ✏️ Open in your shop: ${works.map(w => `<a href="#" onclick="event.preventDefault();mqQtOpenInRooms('${w.id}')" style="color:#1d4ed8;font-weight:700">"${esc(w.name)}"</a>`).join(', ')} — switched off on your widget, so customers never see ${works.length > 1 ? 'them' : 'it'}. Change ${works.length > 1 ? 'them' : 'it'} on Project types, <a href="#" onclick="event.preventDefault();mqGoTo('pricing')" style="color:#1d4ed8;font-weight:600">Pricing</a> and Specialty items, then come back here.${works.length < pq.length ? ` <strong>${pq.length - works.length} of the pack's quotes ${pq.length - works.length === 1 ? 'was' : 'were'} deleted from your shop and will be left out when you save.</strong>` : ''}
                 <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
                   <button type="button" class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqTradeSavePack('${t.id}',true)">Save to pack &amp; remove from my shop</button>
                   <button type="button" class="mq-btn mq-btn-sm" onclick="mqTradeSavePack('${t.id}',false)">Save to pack, keep editing</button>
@@ -19118,6 +19118,12 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
 
   // Load pricing helper when that nav item is clicked
   const origMqNav = window.mqNav;
+  // Links like "Go to Pricing →" (Nov 2026: the old inline version had a
+  // quoting mistake and did nothing).
+  window.mqGoTo = function(page) {
+    const el = document.getElementById('mq-nav-' + page) || [...document.querySelectorAll('.mq-nav-item')].find(n => (n.getAttribute('onclick') || '').includes(`mqNav('${page}'`));
+    window.mqNav(page, el || null);
+  };
   // ── "Leave without saving?" (Jordan, Nov 2026) ──
   // Pages with a Save changes button (Business info, Project types, My
   // Products, Templates) remember when something was typed/ticked that
