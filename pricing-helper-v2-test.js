@@ -7311,6 +7311,8 @@ window.mqphGoToWizard = function() {
     if (vars.length) cfg.variants = vars.map(v => { const o = { id: v.id, label: String(v.label).trim(), price: Math.round((parseFloat(v.price) || 0) * 100) / 100, min: Math.round((parseFloat(v.min) || 0) * 100) / 100 }; if (v.sized) Object.assign(o, { sized: true, dimA: v.dimA, dimB: v.dimB, unit: v.unit === 'mm' ? 'mm' : 'in', swap: !!v.swap, rateMode: v.rateMode || 'flat', rate: parseFloat(v.rate) || 0 }); return o; });
     const tie = mqccTieRead('item');
     if (tie) cfg.tie = tie;
+    // Keep the option's own photos (set on My Products, Nov 2026).
+    if (ed.id) { const oldCfg = mqccCfg(lineItems.find(x => x.id === ed.id)); if (oldCfg.ph && typeof oldCfg.ph === 'object') cfg.ph = oldCfg.ph; }
     const fields = {
       Name: name,
       Description: document.getElementById('mqcc-item-desc').value.trim(),
@@ -7785,7 +7787,12 @@ window.mqphGoToWizard = function() {
     let photos = {};
     try { photos = JSON.parse(mqccShopFields()['Photos'] || '{}'); } catch(e) { photos = {}; }
     const base = String(name || '').replace(/\s*—\s*(uppers|bases|some drawers|mostly drawers|with doors|no doors)\s*$/i, '').trim();
-    return photos[`li_${cid}_${base.replace(/[^a-z0-9]/gi, '_').toLowerCase()}`] || '';
+    const k = `li_${cid}_${base.replace(/[^a-z0-9]/gi, '_').toLowerCase()}`;
+    if (photos[k]) return photos[k];
+    // ...or on the option itself (cfg.ph), Nov 2026.
+    const r = (lineItems || []).find(x => x.fields && x.fields['Category'] === cid && String(x.fields['Name'] || '').trim() === String(name || '').trim());
+    let cfg = {}; try { cfg = JSON.parse((r && r.fields['Custom pricing']) || '{}') || {}; } catch(e) {}
+    return (cfg.ph && cfg.ph['']) || '';
   }
   function mqccPvOneVal(c, items) {
     const v = mqccPv.one[c.id];
