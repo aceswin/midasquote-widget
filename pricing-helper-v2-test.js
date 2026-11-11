@@ -6707,7 +6707,24 @@ window.mqphGoToWizard = function() {
       ? groupKeys.map(k => {
           const list = cats.filter(c => groupOf(c) === k);
           const head = `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin:16px 0 6px"><div style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#6b7280">${groupLabel(k)}</div>${k && k !== '__gone' ? `<button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="window._mqccNewCatQt='${k}';mqccOpenCat(null)">+ New step for ${mqccEsc(mqccQtName(k))}</button>` : ''}</div>`;
-          if (!list.length && k !== '' && k !== '__gone') return head + `<div style="font-size:12px;color:#9ca3af;margin-bottom:8px">No steps yet — this quote won't show on your widget until it has at least one.</div>`;
+          if (k && k !== '__gone') {
+            // Each quote type in its own coloured box (same colour as on My
+            // Products), with a Hide / Show toggle (Jordan, Nov 2026).
+            const q = qtsAll.find(x => x.id === k) || {};
+            const PAL = window.MQ_QT_PAL || [['#2563eb','#eff6ff']];
+            const [bd, bg] = PAL[Math.max(0, qtsAll.filter(x => !qtsOff.has(x.id)).findIndex(x => x.id === k)) % PAL.length];
+            const shut = (window._mqccQtShut || (window._mqccQtShut = new Set())).has(k);
+            const icon = typeof window.mqQtIconSvg === 'function' ? window.mqQtIconSvg(q.icon || 'grid', 16) : '🗂️';
+            const offTag = q.on === false ? ' <span style="font-weight:700;font-size:11px;color:#b45309;background:#fffbeb;border:1px solid #fde68a;border-radius:999px;padding:1px 8px">Off — not on your widget yet</span>' : '';
+            const bhead = `<div onclick="if(!event.target.closest('button'))mqccQtToggle('${k}')" style="display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;flex-wrap:wrap">
+              <span style="width:30px;height:30px;border-radius:8px;background:#fff;border:1px solid ${bd}44;color:${bd};display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">${icon}</span>
+              <span style="font-size:16px;font-weight:800;color:#111827">${mqccEsc(mqccQtName(k))}</span>
+              <span style="font-size:12px;color:#6b7280">${list.length} step${list.length === 1 ? '' : 's'}</span>${offTag}
+              <span style="margin-left:auto;display:inline-flex;gap:10px;align-items:center"><button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="window._mqccNewCatQt='${k}';mqccOpenCat(null)">+ New step</button><span class="mqcc-qt-shut-lab" style="font-size:12px;font-weight:600;color:${bd}">${shut ? 'Show ▸' : 'Hide ▾'}</span></span>
+            </div>`;
+            const body = list.length ? list.map(c => blockOf(c, cats.indexOf(c))).join('') : `<div style="font-size:12px;color:#6b7280;margin-top:10px">No steps yet — this quote won't show on your widget until it has at least one.</div>`;
+            return `<div data-mqcc-group="${k}" style="border:1.5px solid ${bd}55;border-left:5px solid ${bd};background:${bg};border-radius:16px;padding:12px 14px 10px;margin:14px 0">${bhead}<div class="mqcc-qt-body" style="${shut ? 'display:none;' : ''}margin-top:6px">${body}</div></div>`;
+          }
           if (!list.length) return '';
           return `<div data-mqcc-group="${k}">` + head + list.map(c => blockOf(c, cats.indexOf(c))).join('') + `</div>`;
         }).join('') + (offNames.length ? `<div style="margin:14px 0 4px;font-size:12px;color:#6b7280;line-height:1.5">🔕 Hidden because you don't offer that trade any more: <strong>${offNames.map(mqccEsc).join(', ')}</strong>. Tick the trade again on Business info (or switch the quote back on) to see and edit its steps here.</div>` : '')
@@ -6721,7 +6738,7 @@ window.mqphGoToWizard = function() {
         #mqcc-cat-tienames label,#mqcc-item-tienames label{display:flex !important;align-items:center !important;gap:8px !important;text-transform:none !important;letter-spacing:0 !important;font-weight:400 !important;font-size:13px !important;color:#111 !important;margin:0 !important;padding:3px 0 !important;cursor:pointer}
         #mqph-scope-custom ~ .mqph-overlay .mqcc-wide, .mqcc-wide{max-width:980px !important}
         .mqcc-modal-grid{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:22px;align-items:start}
-        .mqcc-modal-pv{position:sticky;top:0;max-height:calc(90vh - 190px);overflow-y:auto;background:#f8fafc !important;border:1px solid #e5e7eb !important;border-radius:12px !important;padding:14px !important}
+        .mqcc-modal-pv{position:sticky;top:0;max-height:calc(90vh - 120px);overflow-y:auto;background:#f8fafc !important;border:1px solid #e5e7eb !important;border-radius:12px !important;padding:14px !important}
         .mqcc-subbox{background:#f9fafb !important;border:1px solid #e5e7eb !important;border-radius:8px !important;padding:10px 12px !important;margin:0 0 14px !important}
         .mqcc-subbox-title{font-size:11px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.05em}
         .mqcc-subbox-note{font-size:11px;color:#6b7280;line-height:1.45;margin-top:4px}
@@ -7693,6 +7710,15 @@ window.mqphGoToWizard = function() {
       }
     }
   }
+  window.mqccQtToggle = function(k) {
+    const set = window._mqccQtShut || (window._mqccQtShut = new Set());
+    set.has(k) ? set.delete(k) : set.add(k);
+    const g = document.querySelector(`[data-mqcc-group="${k}"]`);
+    if (!g) return;
+    const b = g.querySelector('.mqcc-qt-body'), l = g.querySelector('.mqcc-qt-shut-lab');
+    if (b) b.style.display = set.has(k) ? 'none' : '';
+    if (l) l.textContent = set.has(k) ? 'Show ▸' : 'Hide ▾';
+  };
   window.mqccOrderReset = async function(cid) {
     const cats0 = mqccCats(), ci = cats0.findIndex(c => c.id === cid);
     if (ci < 0) return;
@@ -8156,7 +8182,7 @@ window.mqphGoToWizard = function() {
     const items = i >= 0 ? saved.map(x => (x.id === draft.id ? { ...x, ...draft, groupName: x.groupName, groupOrder: x.groupOrder } : x)) : saved.concat([draft]);
     const savedNote = window._mqccItemSavedNote; window._mqccItemSavedNote = '';
     box.innerHTML = `${savedNote ? `<div style="font-size:12px;font-weight:600;color:#15803d;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:7px;padding:6px 10px;margin-bottom:8px">✓ “${mqccEsc(savedNote)}” saved</div>` : ''}${mqccPvViewHtml(c, items, draft.id)}
-      <button type="button" onmousedown="event.preventDefault()" onclick="mqccItemGo(null)" style="width:100%;margin-top:10px;padding:8px;border-radius:8px;border:1.5px dashed #93c5fd;background:#eff6ff;color:#1e40af;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer">+ ${ed.id ? 'New option' : 'Save this one &amp; add another'} in “${mqccEsc(c.name)}”</button>
+      <button type="button" onmousedown="event.preventDefault()" onclick="mqccItemGo(null)" style="position:sticky;bottom:-14px;z-index:3;box-shadow:0 -8px 14px -6px rgba(248,250,252,.95),0 4px 10px -6px rgba(30,64,175,.35);width:100%;margin-top:10px;padding:8px;border-radius:8px;border:1.5px dashed #93c5fd;background:#eff6ff;color:#1e40af;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer">+ ${ed.id ? 'New option' : 'Save this one &amp; add another'} in “${mqccEsc(c.name)}”</button>
       <div style="font-size:11px;color:#6b7280;line-height:1.5;margin-top:8px">The highlighted ${c.answer === 'one' ? 'choice' : 'card'} is the option you're editing. <strong>Click any other option to edit it here</strong> — your changes to this one are saved first. The price check is under the price box.</div>`;
     // Keep this option in view inside the preview panel (desktop).
     const hiEl = box.querySelector('[data-mqcc-hi]'), pane = box.closest('.mqcc-modal-pv');

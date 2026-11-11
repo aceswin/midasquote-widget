@@ -5189,6 +5189,9 @@ window.logoutMember = async function () {
     stairs: '<path d="M3 20h5v-5h5v-5h5V5h3"/><path d="M3 20h18"/>',
     sofa: '<path d="M5 11V8a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v3"/><path d="M3 13a2 2 0 0 1 4 0v2h10v-2a2 2 0 0 1 4 0v4H3z"/><path d="M5 17v2M19 17v2"/>',
   };
+  window.mqQtIconSvg = (k, z) => mqQtIconSvg(k, z);
+  // One colour per quote type, same on My Products and Pricing.
+  window.MQ_QT_PAL = [['#2563eb','#eff6ff'],['#16a34a','#f0fdf4'],['#d97706','#fffbeb'],['#9333ea','#faf5ff'],['#db2777','#fdf2f8'],['#0891b2','#ecfeff']];
   function mqQtIconSvg(key, size) {
     const s = size || 22;
     return `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${MQ_QT_ICONS[key] || MQ_QT_ICONS.grid}</svg>`;
@@ -11187,13 +11190,12 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
             // Garage doors' (Jordan, Nov 2026). Cabinet / shared steps first.
             const qtOfCat = {}; customCats.forEach(c => { if (c.qt) qtOfCat[c.id] = c.qt; });
             const loose = catsOrdered.filter(c => !qtOfCat[c]);
-            const PAL = [['#2563eb','#eff6ff'],['#16a34a','#f0fdf4'],['#d97706','#fffbeb'],['#9333ea','#faf5ff'],['#db2777','#fdf2f8'],['#0891b2','#ecfeff']];
+            const PAL = window.MQ_QT_PAL;
             const shut = window._mqProdQtShut || (window._mqProdQtShut = new Set());
-            let n = 0;
-            const groups = mqQuoteTypesOf(shopRecord.fields).filter(q => !notOffP.has(q.id)).map(q => {
+            const groups = mqQuoteTypesOf(shopRecord.fields).filter(q => !notOffP.has(q.id)).map((q, qi) => {
               const html = catsOrdered.filter(c => qtOfCat[c] === q.id).map(catSection).join('');
               if (!html.trim()) return '';
-              const [bd, bg] = PAL[n++ % PAL.length];
+              const [bd, bg] = PAL[qi % PAL.length];
               const steps = catsOrdered.filter(c => qtOfCat[c] === q.id && byCategory[c]?.length).length;
               const isShut = shut.has(q.id);
               return `<div class="mq-prod-qtgroup" data-qt="${q.id}" style="grid-column:1/-1;border:1.5px solid ${bd}55;border-left:5px solid ${bd};background:${bg};border-radius:16px;padding:12px 14px 14px">
