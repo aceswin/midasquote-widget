@@ -5078,6 +5078,33 @@ window.logoutMember = async function () {
   const CABINET_ONLY_CATS = ['material', 'door', 'drawer', 'hinge', 'trim_crown', 'trim_valance', 'tall_cabinet'];
   // The shop's custom pricing categories (Pricing tab → ✨ Custom pricing
   // categories). [{ id:'cc_…', name, description, answer, required, showIf, proOnly }]
+  // ── Option photos kept on the option itself (Nov 2026) ──
+  // A shop's photos all lived in one Airtable text field (100k characters);
+  // with 20+ trades that filled up. Photos of custom-step options now live
+  // in the option's own "Custom pricing" JSON as cfg.ph ('' = the option,
+  // 'v<variantId>' = a variant). Everything that shows photos merges them
+  // back under the usual keys, so nothing downstream changes.
+  function mqCcPhotoKey(cat, name) {
+    const base = String(name || '').replace(/\s*—\s*(uppers|bases|some drawers|mostly drawers|with doors|no doors)\s*$/i, '').trim();
+    return `li_${cat}_${base.replace(/[^a-z0-9]/gi, '_').toLowerCase()}`;
+  }
+  function mqCcItemPhotoKeys(r) {
+    const f = (r && r.fields) || {};
+    if (!/^cc_[a-z0-9]+$/i.test(f['Category'] || '')) return null;
+    let cfg = {}; try { cfg = JSON.parse(f['Custom pricing'] || '{}') || {}; } catch(e) { cfg = {}; }
+    const key = mqCcPhotoKey(f['Category'], f['Name']);
+    const out = { '': key };
+    (Array.isArray(cfg.variants) ? cfg.variants : []).forEach(v => { if (v && v.id) out['v' + v.id] = key + '_v' + v.id; });
+    return { cfg, keys: out };
+  }
+  window.mqCcPhotosFromItems = function(lineItems) {
+    const map = {};
+    (lineItems || []).forEach(r => {
+      const x = mqCcItemPhotoKeys(r); if (!x || !x.cfg.ph || typeof x.cfg.ph !== 'object') return;
+      Object.entries(x.keys).forEach(([rel, k]) => { if (x.cfg.ph[rel]) map[k] = x.cfg.ph[rel]; });
+    });
+    return map;
+  };
   function mqCustomCatsOf(shopRecord) {
     let a = [];
     try { a = JSON.parse((shopRecord && shopRecord.fields && shopRecord.fields['Custom categories']) || '[]'); } catch(e) { a = []; }
@@ -8759,6 +8786,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // adding/changing a photo still happens on My Products.
     let savedPhotos = {};
     try { savedPhotos = shopRecord.fields['Photos'] ? JSON.parse(shopRecord.fields['Photos']) : {}; } catch(e) {}
+    savedPhotos = Object.assign(window.mqCcPhotosFromItems(window._mqLineItems || []), savedPhotos);
     const rooms = window._mqRooms || defaultRoomTypes();
     const roomOptions = rooms.map(r => `<option value="${r.id}">${mqEscHtml(mqRoomLabel(r))}</option>`).join('');
     container.innerHTML = `
@@ -9987,7 +10015,19 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     }
   };
 
+  // One save at a time (the first save after the Nov 2026 change moves every
+  // option photo onto its option, which takes a little while).
+  let mqProdSaveBusy = false, mqProdSaveAgain = false;
   window.mqSaveProducts = async function() {
+    if (mqProdSaveBusy) { mqProdSaveAgain = true; return; }
+    mqProdSaveBusy = true;
+    try { await mqSaveProductsRun(); }
+    finally {
+      mqProdSaveBusy = false;
+      if (mqProdSaveAgain) { mqProdSaveAgain = false; window.mqSaveProducts(); }
+    }
+  };
+  async function mqSaveProductsRun() {
     const shopRec = window._mqShopRecord;
     if (!shopRec) return;
     // Scoped to this tab's own container specifically — otherwise, if the
@@ -10031,6 +10071,34 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // of steps that no longer exist (deleted steps, discarded pack copies)
     // pile up in it, so they're cleared out here (Jordan, Nov 2026: "Error
     // saving" once the field filled up).
+    // Custom-step option photos go onto the options themselves (cfg.ph); the
+    // shop's Photos field keeps cabinet, specialty and other photos only.
+    const liAll = window._mqLineItems;
+    if (Array.isArray(liAll) && liAll.length) {
+      const moved = []; let nMoved = 0;
+      for (const r of liAll) {
+        const x = mqCcItemPhotoKeys(r); if (!x) continue;
+        const cur = (x.cfg.ph && typeof x.cfg.ph === 'object') ? x.cfg.ph : {};
+        const want = {};
+        Object.entries(x.keys).forEach(([rel, k]) => {
+          const inDom = scope.querySelector(`[id="mq-photo-${k}"]`);
+          const v = inDom ? String(inDom.value || '').trim() : (photos[k] || cur[rel] || '');
+          if (v) want[rel] = v;
+        });
+        const keysOf = Object.values(x.keys);
+        if (JSON.stringify(want) !== JSON.stringify(Object.fromEntries(Object.entries(cur).filter(([rel]) => rel in x.keys)))) {
+          const cfg = Object.assign({}, x.cfg); if (Object.keys(want).length) cfg.ph = want; else delete cfg.ph;
+          const json = JSON.stringify(cfg);
+          nMoved++; if (nMoved % 5 === 1) showMsg('mq-products-msg', `Saving photos… (${nMoved})`);
+          let ok = false;
+          for (let t = 0; t < 3 && !ok; t++) { try { await atUpdate(CONFIG.LINE_ITEMS_TABLE, r.id, { 'Custom pricing': json }); ok = true; } catch(e) { await new Promise(res => setTimeout(res, 800 * (t + 1))); } }
+          if (!ok) continue;
+          r.fields['Custom pricing'] = json;
+        }
+        moved.push(...keysOf);
+      }
+      moved.forEach(k => { delete photos[k]; });
+    }
     // Safety: only when a field is actually getting full, and only if this
     // shop's step list loaded properly (an empty/unreadable list would make
     // every step look deleted).
@@ -10071,7 +10139,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       });
       showMsg('mq-products-msg', '✓ Photos saved!');
     } catch(e) { console.warn('mqSaveProducts', e); showMsg('mq-products-msg', 'Error saving — please try again. (' + String((e && e.message) || e).slice(0, 160) + ')', 'error'); }
-  };
+  }
 
   // Same pattern as mqSaveProducts, but scoped to the Templates tab and
   // saving to the master template shop record instead of the admin's own
@@ -10122,6 +10190,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     let savedProducts = {};
     try { if (shopRecord.fields['Photos']) savedPhotos = JSON.parse(shopRecord.fields['Photos']); } catch(e) {}
     try { if (shopRecord.fields['Products']) savedProducts = JSON.parse(shopRecord.fields['Products']); } catch(e) {}
+    savedPhotos = Object.assign(window.mqCcPhotosFromItems((Array.isArray(lineItemsData) ? lineItemsData : null) || window._mqLineItems || []), savedPhotos);
 
     // Categories to exclude from My Products (no photos needed)
     const EXCLUDED_CATS = new Set(['install','zone','tax','removal','backsplash','cutout','other']);
