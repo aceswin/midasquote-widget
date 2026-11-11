@@ -12585,7 +12585,10 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const on = q.on !== false;
       const extras = [mqQtHasCountertops(q.id) ? 'countertops' : '', mqQtHasSpecialty(q.id) ? 'specialty items' : ''].filter(Boolean);
       const offTrade = !on && q.offByTrade && q.trade ? [...MQ_BIZ_FIXED, ...mqTradeEntries()].find(t => t.id === q.trade) : null;
-      const status = offTrade
+      const packT = q.packEdit && q.trade ? mqTradeEntries().find(t => t.id === q.trade) : null;
+      const status = packT
+        ? `<span style="color:#1d4ed8">✏️ Starter pack copy you're editing (${mqEscHtml(packT.label)}) — always shown here, even if that trade is unticked. Done? Templates → ${mqEscHtml(packT.label)} → <strong>Save to pack &amp; remove from my shop</strong>.</span>`
+        : offTrade
         ? `<span style="color:#6b7280">Hidden — ${mqEscHtml(offTrade.label)} is unticked under "What does your business do?"</span>`
         : !nSteps && !extras.length
         ? `<span style="color:#b45309">Not showing yet — give it a priced step${mqBizOf(shopRec.fields).ct ? ', a specialty item or countertops' : ' or a specialty item'}</span>`

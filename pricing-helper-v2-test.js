@@ -6715,7 +6715,7 @@ window.mqphGoToWizard = function() {
             const [bd, bg] = PAL[Math.max(0, qtsAll.filter(x => !qtsOff.has(x.id)).findIndex(x => x.id === k)) % PAL.length];
             const shut = (window._mqccQtShut || (window._mqccQtShut = new Set())).has(k);
             const icon = typeof window.mqQtIconSvg === 'function' ? window.mqQtIconSvg(q.icon || 'grid', 16) : '🗂️';
-            const offTag = q.on === false ? ' <span style="font-weight:700;font-size:11px;color:#b45309;background:#fffbeb;border:1px solid #fde68a;border-radius:999px;padding:1px 8px">Off — not on your widget yet</span>' : '';
+            const offTag = q.packEdit ? ' <span style="font-weight:700;font-size:11px;color:#1d4ed8;background:#eff6ff;border:1px solid #bfdbfe;border-radius:999px;padding:1px 8px">✏️ Starter pack copy you\'re editing</span>' : q.on === false ? ' <span style="font-weight:700;font-size:11px;color:#b45309;background:#fffbeb;border:1px solid #fde68a;border-radius:999px;padding:1px 8px">Off — not on your widget yet</span>' : '';
             const bhead = `<div onclick="if(!event.target.closest('button'))mqccQtToggle('${k}')" style="display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;flex-wrap:wrap">
               <span style="width:30px;height:30px;border-radius:8px;background:#fff;border:1px solid ${bd}44;color:${bd};display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">${icon}</span>
               <span style="font-size:16px;font-weight:800;color:#111827">${mqccEsc(mqccQtName(k))}</span>
