@@ -5270,6 +5270,15 @@ window.logoutMember = async function () {
   // cached copy), since this runs at the end of initProductsTab, which
   // itself is always handed the just-refetched shop record by mqNav's
   // 'products' block.
+  window.mqProdQtToggle = function(qtId) {
+    const shut = window._mqProdQtShut || (window._mqProdQtShut = new Set());
+    shut.has(qtId) ? shut.delete(qtId) : shut.add(qtId);
+    const g = document.querySelector(`#mq-products-content .mq-prod-qtgroup[data-qt="${qtId}"]`);
+    if (!g) return;
+    const grid = g.querySelector('.mq-product-category-grid'), lab = g.querySelector('span[style*="margin-left:auto"]');
+    if (grid) grid.style.display = shut.has(qtId) ? 'none' : '';
+    if (lab) lab.textContent = shut.has(qtId) ? 'Show ▸' : 'Hide ▾';
+  };
   function mqApplyEstimatorTabScopeToProducts() {
     const { countertopsOnly, cabinetsOnly } = mqComputeTabScope((window._mqShopRecord || {}).fields);
     CABINET_ONLY_CATS.forEach(cat => {
@@ -11172,7 +11181,33 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
               </div>
             </div>
             <div style="font-size:11px;color:#9ca3af;margin-top:10px">Shown on any item you mark below — change the wording or color here and every marked item updates automatically, no need to re-mark anything.</div>
-          </div>` + `<div class="mq-product-category-grid">${catsOrdered.map(catSection).join('')}${specSection}</div>`;
+          </div>` + (() => {
+            // Group each quote type's steps in its own coloured box with a
+            // heading, so Windows & doors' "Extras" can't be mixed up with
+            // Garage doors' (Jordan, Nov 2026). Cabinet / shared steps first.
+            const qtOfCat = {}; customCats.forEach(c => { if (c.qt) qtOfCat[c.id] = c.qt; });
+            const loose = catsOrdered.filter(c => !qtOfCat[c]);
+            const PAL = [['#2563eb','#eff6ff'],['#16a34a','#f0fdf4'],['#d97706','#fffbeb'],['#9333ea','#faf5ff'],['#db2777','#fdf2f8'],['#0891b2','#ecfeff']];
+            const shut = window._mqProdQtShut || (window._mqProdQtShut = new Set());
+            let n = 0;
+            const groups = mqQuoteTypesOf(shopRecord.fields).filter(q => !notOffP.has(q.id)).map(q => {
+              const html = catsOrdered.filter(c => qtOfCat[c] === q.id).map(catSection).join('');
+              if (!html.trim()) return '';
+              const [bd, bg] = PAL[n++ % PAL.length];
+              const steps = catsOrdered.filter(c => qtOfCat[c] === q.id && byCategory[c]?.length).length;
+              const isShut = shut.has(q.id);
+              return `<div class="mq-prod-qtgroup" data-qt="${q.id}" style="grid-column:1/-1;border:1.5px solid ${bd}55;border-left:5px solid ${bd};background:${bg};border-radius:16px;padding:12px 14px 14px">
+                <div onclick="mqProdQtToggle('${q.id}')" style="display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none">
+                  <span style="width:30px;height:30px;border-radius:8px;background:#fff;border:1px solid ${bd}44;color:${bd};display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">${mqQtIconSvg(q.icon || 'grid', 16)}</span>
+                  <span style="font-size:16px;font-weight:800;color:#111827">${mqEscHtml(q.name)}</span>
+                  <span style="font-size:12px;color:#6b7280">${steps} step${steps === 1 ? '' : 's'}${q.on === false ? ' · off' : ''}</span>
+                  <span style="margin-left:auto;font-size:12px;font-weight:600;color:${bd}">${isShut ? 'Show ▸' : 'Hide ▾'}</span>
+                </div>
+                <div class="mq-product-category-grid" style="${isShut ? 'display:none' : ''}">${html}</div>
+              </div>`;
+            }).join('');
+            return `<div class="mq-product-category-grid">${loose.map(catSection).join('')}${specSection}</div>` + (groups ? `<div style="display:grid;gap:16px;margin-top:16px">${groups}</div>` : '');
+          })();
 
       mqApplyEstimatorTabScopeToProducts();
 
