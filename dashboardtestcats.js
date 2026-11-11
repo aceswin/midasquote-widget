@@ -10027,6 +10027,24 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const key = cb.id.replace('mq-featured-', '');
       if (cb.checked) featured[key] = true; else delete featured[key];
     });
+    // Each of these is one Airtable text field (100,000 characters max). Photos
+    // of steps that no longer exist (deleted steps, discarded pack copies)
+    // pile up in it, so they're cleared out here (Jordan, Nov 2026: "Error
+    // saving" once the field filled up).
+    // Safety: only when a field is actually getting full, and only if this
+    // shop's step list loaded properly (an empty/unreadable list would make
+    // every step look deleted).
+    const liveCc = new Set(mqCustomCatsOf(shopRec).map(c => c.id));
+    const ccRaw = String(shopRec.fields['Custom categories'] || '');
+    const deadKey = k => { const m = /^li_(cc_[A-Za-z0-9]+)_/.exec(k); return !!(m && !liveCc.has(m[1])); };
+    if (liveCc.size && ccRaw.length > 2) [photos, hidden, featured].forEach(o => { if (JSON.stringify(o).length > 80000) Object.keys(o).forEach(k => { if (deadKey(k)) delete o[k]; }); });
+    const FIELD_MAX = 100000;
+    const sizes = { Photos: JSON.stringify(photos).length, Hidden: JSON.stringify(hidden).length, 'Featured items': JSON.stringify(featured).length };
+    const full = Object.entries(sizes).find(([, n]) => n > FIELD_MAX);
+    if (full) {
+      showMsg('mq-products-msg', `Can't save — the ${full[0] === 'Photos' ? 'photo list' : full[0]} for this shop is full (${Math.round(full[1] / 1000)}k of 100k characters). Tell Claude: "My Products photo field is full".`, 'error');
+      return;
+    }
     const badgeLabelInput = document.getElementById('mq-badge-label');
     const badgeLabelToSave = badgeLabelInput ? (badgeLabelInput.value.trim() || 'Best seller') : (shopRec.fields['Badge label'] || 'Best seller');
     const badgeColorInput = document.getElementById('mq-badge-color');
@@ -10052,7 +10070,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         setTimeout(() => { btn.textContent = 'Save changes'; }, 2000);
       });
       showMsg('mq-products-msg', '✓ Photos saved!');
-    } catch(e) { showMsg('mq-products-msg', 'Error saving — please try again.', 'error'); }
+    } catch(e) { console.warn('mqSaveProducts', e); showMsg('mq-products-msg', 'Error saving — please try again. (' + String((e && e.message) || e).slice(0, 160) + ')', 'error'); }
   };
 
   // Same pattern as mqSaveProducts, but scoped to the Templates tab and
