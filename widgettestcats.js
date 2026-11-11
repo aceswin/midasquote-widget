@@ -3388,7 +3388,7 @@
   function mqCcCardHTML(p, cat, it) {
     const safeName = mqCcEsc(it.name);
     const thumb = it.photoUrl
-      ? `<img class="mq-spec-thumb" src="${mqCcAttr(it.photoUrl)}" alt="${safeName}" onclick="event.stopPropagation();mqPhotoLightbox('${it.photoUrl.replace(/'/g,"\\'")}','${it.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')" onerror="this.outerHTML='<div class=\\'mq-spec-thumb-placeholder\\'>✨</div>'"/>`
+      ? `<img class="mq-spec-thumb" src="${mqCcAttr(it.photoUrl)}" alt="${safeName}" onmouseenter="mqHoverPreviewShow(this,'${mqCcAttr(it.photoUrl.replace(/\\/g,'\\\\').replace(/'/g,"\\'"))}','${mqCcAttr(it.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'"))}')" onmouseleave="mqHoverPreviewHide()" onclick="event.stopPropagation();mqHoverPreviewHide();mqPhotoLightbox('${it.photoUrl.replace(/'/g,"\\'")}','${it.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')" onerror="this.outerHTML='<div class=\\'mq-spec-thumb-placeholder\\'>✨</div>'"/>`
       : `<div class="mq-spec-thumb-placeholder">✨</div>`;
     const featured = it.featured ? `<span class="mq-vpicker-featured-badge" style="background:${window._mqBadgeColor||'#f59e0b'}">🏆 ${(window._mqBadgeLabel||'Best seller').replace(/</g,'&lt;')}</span>` : '';
     const srcHit = it.how === 'opt' ? mqCcFind(it.src) : null;
