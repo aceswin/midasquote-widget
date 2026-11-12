@@ -460,7 +460,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         <p>This is where your actual cabinet, countertop, and trim pricing lives — box materials, door styles, hinges, drawer configurations, countertop materials, crown/valance, and tall cabinets.</p>
         <p>Start by running the pricing wizard with a few of your most commonly sold items. No need to add everything here. Just keep it to a max of 5 items for each category (box materials, drawer styles, door styles, hinges). No need to list items with matching prices either. You can easily add multiple items of the same or different price using the "Mini pricing wizards" afterwards.</p>
         <p>Prices you set here are what the widget's calculator actually uses — this is the core of your quoting math, so it's worth double-checking your quotes.</p>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
+        <div class="mq-cab-hw-note" style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Don't add handles or knobs here</div>
           <p style="margin:0">If you supply hardware, add it as a Specialty Item instead with its own per-unit price, so customers can choose how many they need. It's your choice to add handles/knobs. If you install handles but don't supply them, then you still need to make sure you include handle installation in your door installation pricing (you'll be reminded in the pricing wizard). If you do supply handles, then it's still best to add in the installation costs when reminded in the pricing wizard — that way, if a customer doesn't include handles in their ballpark, your estimate will still have the installation of them covered.</p>
         </div>
@@ -759,6 +759,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   };
 
   window.mqShowHelp = function(pageId) {
+    if (window.mqCabHwApply) window.mqCabHwApply();
     const content = MQ_HELP_CONTENT[pageId];
     if (!content) return;
     let modal = document.getElementById('mq-help-modal');
@@ -2073,7 +2074,7 @@ window.logoutMember = async function () {
               <div class="mq-page-title">Pricing</div>
               <div class="mq-page-sub">Build accurate estimates using your shop’s own prices. Manage materials, installation and upgrades — changes update your estimator automatically.</div>
             </div>
-            <div class="mq-pricing-hardware-note">
+            <div class="mq-pricing-hardware-note mq-cab-hw-note">
               <span class="mq-pricing-hardware-icon" aria-hidden="true">🔧</span>
               <div><strong>Handles &amp; knobs</strong><p>Prices vary by style, so add hardware as <strong>Specialty Items</strong> instead of including it in your cabinet rates. If your shop installs the hardware, remember to include that labour in your door installation pricing.</p></div>
             </div>
@@ -2115,8 +2116,8 @@ window.logoutMember = async function () {
               <div id="mq-spec-tips-body" class="mqph-hl" style="display:none;padding:0 16px 14px;font-size:13px;color:#166534;line-height:1.7;border:none">
                 💡 <strong>Pricing tip:</strong> Pick how each item is priced under <strong>How is this priced?</strong> — <strong>Flat rate</strong>, <strong>Per lin ft</strong>, <strong>Per sq ft</strong>, or <strong>Custom</strong> for anything else (hours, 2x4s, visits). With Custom, name the unit exactly how customers should see it, and quantities can use decimals like 2.5.
                 <br><br>
-                🔧 <strong>Handles & knobs:</strong> If you supply hardware, add each type as a specialty item (e.g. "Standard handle", "Standard knob") with your per-unit price. Customers can then add how many they need. If you don't supply hardware, leave it out — the widget will automatically let customers know it's not included.
-                <br><br>
+                <span class="mq-cab-hw-note">🔧 <strong>Handles & knobs:</strong> If you supply hardware, add each type as a specialty item (e.g. "Standard handle", "Standard knob") with your per-unit price. Customers can then add how many they need. If you don't supply hardware, leave it out — the widget will automatically let customers know it's not included.
+                <br><br></span>
                 🎨 <strong>Variants:</strong> Add multiple variants under a single item — e.g. a "Pullouts" item with several different pullout options, each priced individually.
                 <br><br>
                 <span data-mq-gen="📐 &lt;strong&gt;Sizes:&lt;/strong&gt; Under Variants, you can add Sized options and the math is done for you — great for anything sold in set sizes. E.g. a &quot;Window trim&quot; item with variants for 24&quot;×36&quot;, 30&quot;×48&quot; and so on — the price for each is worked out automatically from the rate you enter.">📐 <strong>Sizes:</strong> Under Variants, you can add Sized options and the math is done for you — great for refacing doors. E.g. a "Maple shaker doors" item with variants for 9"×30", 10"×30", 11"×30", and so on — the sq ft price for each is generated automatically based on the rate you enter.</span>
@@ -5340,7 +5341,22 @@ window.logoutMember = async function () {
   // runs. Re-running mqph2Init hands it the CURRENT window._mqShopRecord
   // fresh every time, which both re-syncs the reference and re-applies the
   // scoping (loadAndRender calls mqphApplyEstimatorTabScope at the end).
+  // Handles & knobs notes (Pricing banner, Pricing help, Specialty tips)
+  // are about cabinet hardware — hidden for shops with no cabinet quote.
+  function mqCabHwApply() {
+    try {
+      if (!document.getElementById('mq-cab-hw-css')) {
+        const st = document.createElement('style'); st.id = 'mq-cab-hw-css';
+        st.textContent = 'html.mq-no-cab .mq-cab-hw-note{display:none!important}';
+        document.head.appendChild(st);
+      }
+      const f = (window._mqShopRecord || {}).fields;
+      document.documentElement.classList.toggle('mq-no-cab', !!(f && mqComputeTabScope(f).countertopsOnly));
+    } catch(e) {}
+  }
+  window.mqCabHwApply = mqCabHwApply;
   function mqApplyEstimatorTabScopeToPricing() {
+    mqCabHwApply();
     const helperContainer = document.getElementById('mq-pricing-helper-v2');
     if (helperContainer && helperContainer.dataset.loaded && typeof window.mqph2Init === 'function') {
       window.mqph2Init(window._mqShopRecord, window._mqPricingRecord);
@@ -19229,6 +19245,7 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
         try { await MQ_PAGE_SAVE_ACTIONS[cur].fn(); MQ_DIRTY.delete(cur); } catch(e) { return; }
       } else { MQ_DIRTY.delete(cur); mqDiscardPage(cur); }
     }
+    mqCabHwApply();
     origMqNav(page, navEl);
     if (window.mqRefreshPlanBanner) window.mqRefreshPlanBanner(); // plan may have changed since the page loaded
     // Re-checks on every tab switch, not just the initial page load — so a
