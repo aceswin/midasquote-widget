@@ -6652,6 +6652,7 @@ window.mqphGoToWizard = function() {
         c.required ? mqccChip(c.answer === 'one' ? 'Must choose' : 'Must answer', 'gray') : '',
         c.proOnly ? mqccChip('⚡ Pro only', 'gold') : '',
         c.showIf ? mqccChip('Only if ' + mqccEsc(mqccOptionLabel(c.showIf) || 'option removed'), 'gray') : '',
+        (() => { const hid = mqccCatRoomsHidden()[c.id] || []; if (!hid.length) return ''; const rs = mqccQtRooms(c.qt || ''); const on = rs.filter(r => !hid.includes(r.id)); return rs.length > 1 && on.length < rs.length ? mqccChip('Only for ' + mqccEsc(on.map(r => r.name).join(', ') || 'no project types'), 'gray') : ''; })(),
         c.qt ? mqccChip('🗂️ ' + mqccEsc(mqccQtName(c.qt) || 'Deleted quote — not showing'), mqccQtName(c.qt) ? 'gold' : 'gray') : '',
         (c.qt ? (/^cc:/.test(c.after || '') || c.after === 'specialty') : (c.after && c.after !== 'specialty')) ? mqccChip('📍 ' + mqccEsc(mqccPlaceLabel(c.after, c.qt)), 'gray') : '',
       ].join(' ');
@@ -6772,7 +6773,11 @@ window.mqphGoToWizard = function() {
           <div class="mqph-modal-body"><div id="mqcc-cat-newtip" style="display:none;align-items:flex-start;gap:10px;background:#fffbeb;border:1px solid #fcd34d;border-left:4px solid #f59e0b;border-radius:10px;padding:11px 14px;margin-bottom:16px;font-size:13px;line-height:1.5;color:#78350f"><span style="font-size:17px;line-height:1.2">💡</span><span><strong>You're making the step itself</strong> — its name, the question customers see, and where it goes. The choices inside it (and their prices) come next: after you save, click <strong>+ Add option</strong> on the step.</span></div><div class="mqcc-modal-grid"><div>
             <div class="mqph-field" id="mqcc-cat-qt-wrap"><label>Which quote is this step in?</label>
               <select id="mqcc-cat-qt" onchange="mqccCatQtChanged()"></select>
-              <div style="font-size:11px;color:#6b7280;margin-top:4px;line-height:1.45">Choose which quote type this step appears in. You can then pick exactly which of its project types show this step in <strong>My Products</strong>.</div>
+              <div style="font-size:11px;color:#6b7280;margin-top:4px;line-height:1.45">Choose which quote type this step appears in.</div>
+            </div>
+            <div class="mqph-field" id="mqcc-cat-rooms-wrap" style="display:none !important"><label>Show this step for these project types</label>
+              <div id="mqcc-cat-rooms" style="display:flex;flex-wrap:wrap;gap:6px 14px;padding:2px 0"></div>
+              <div style="font-size:11px;color:#6b7280;margin-top:5px;line-height:1.45">Applies to every option in this step. Individual options can still be hidden for a project type in <strong>My Products</strong>.</div>
             </div>
             <div class="mqph-field"><label>Category name</label><input type="text" id="mqcc-cat-name" maxlength="60" placeholder="Finishing &amp; extras"/></div>
             <div class="mqph-field"><label>Short description for customers (optional)</label><input type="text" id="mqcc-cat-desc" maxlength="200" placeholder="A few finishing details that make the install look built-in."/></div>
@@ -6790,7 +6795,7 @@ window.mqphGoToWizard = function() {
             </div>
             <div class="mqph-field" id="mqcc-cat-showif-wrap"><label>Only show this step if…</label>
               <select id="mqcc-cat-showif"></select>
-              <div style="font-size:11px;color:#6b7280;margin-top:4px;line-height:1.45">Optional — show this step only after a certain earlier choice, e.g. “Ceiling finish” only if “Ceilings” was picked. Which project types it shows for is set in My Products.</div>
+              <div style="font-size:11px;color:#6b7280;margin-top:4px;line-height:1.45">Optional — show this step only after a certain earlier choice, e.g. “Ceiling finish” only if “Ceilings” was picked.</div>
             </div>
 
             <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin:4px 0 0;cursor:pointer">
@@ -6938,6 +6943,7 @@ window.mqphGoToWizard = function() {
     qtSel.value = curQt;
     mqccShow('mqcc-cat-qt-wrap', qts.length > 0 || !!curQt);
     mqccCatQtFill(c);
+    mqccCatRoomsFill();
     document.getElementById('mqcc-cat-delete').style.display = c ? '' : 'none';
     mqccCatAnswerChanged();
     const catOv = document.getElementById('mqcc-cat-overlay');
@@ -6972,9 +6978,52 @@ window.mqphGoToWizard = function() {
       afterSel.value = v;
     }
   }
+  // ── "Show this step for these project types" (Nov 2026) ──
+  // Same setting My Products' per-step 🗂️ project-type control edits: the
+  // shop's "Category rooms" ({stepId: [hidden project type ids]}), which the
+  // widget already uses to hide every option in the step for those project
+  // types. Only shown when the step's quote has more than one project type.
+  function mqccCatRoomsHidden() {
+    try { const o = JSON.parse(mqccShopFields()['Category rooms'] || '{}'); return (o && typeof o === 'object') ? o : {}; } catch(e) { return {}; }
+  }
+  function mqccQtRooms(qt) {
+    let rooms = [];
+    try { rooms = JSON.parse(mqccShopFields()['Room types'] || '[]'); } catch(e) { rooms = []; }
+    return (Array.isArray(rooms) ? rooms : []).filter(r => r && r.id && (qt ? r.forQt === qt : (!r.forQt && !r.forCountertops)));
+  }
+  function mqccCatRoomsFill() {
+    const wrap = document.getElementById('mqcc-cat-rooms-wrap'), box = document.getElementById('mqcc-cat-rooms');
+    if (!wrap || !box) return;
+    const qt = document.getElementById('mqcc-cat-qt') ? (document.getElementById('mqcc-cat-qt').value || '') : '';
+    const rooms = mqccQtRooms(qt);
+    if (rooms.length < 2) { wrap.style.setProperty('display', 'none', 'important'); box.innerHTML = ''; return; }
+    const sameQuote = mqccEditCat && (((mqccCats().find(x => x.id === mqccEditCat) || {}).qt || '') === qt);
+    const hidden = new Set(sameQuote ? (mqccCatRoomsHidden()[mqccEditCat] || []) : []);
+    box.innerHTML = rooms.map(r => `<label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;font-weight:500">
+        <input type="checkbox" class="mqcc-cat-room" value="${mqccEsc(r.id)}" ${hidden.has(r.id) ? '' : 'checked'} style="width:16px;height:16px"/> ${mqccEsc(r.name || 'Project type')}${r.active === false ? ' <span style="color:#9ca3af;font-weight:400">(off)</span>' : ''}</label>`).join('');
+    wrap.style.removeProperty('display');
+  }
+  function mqccCatRoomsRead() {
+    const boxes = [...document.querySelectorAll('#mqcc-cat-rooms .mqcc-cat-room')];
+    if (!boxes.length) return null;
+    return { hidden: boxes.filter(b => !b.checked).map(b => b.value), all: boxes.map(b => b.value), names: boxes.filter(b => b.checked).map(b => b.parentNode.textContent.trim()) };
+  }
+  async function mqccSaveCatRooms(cid, pick) {
+    const cr = mqccCatRoomsHidden();
+    const before = JSON.stringify(cr[cid] || []);
+    if (pick && pick.hidden.length) cr[cid] = pick.hidden; else delete cr[cid];
+    if (JSON.stringify(cr[cid] || []) === before) return;
+    const json = JSON.stringify(cr);
+    await atUpdate(SHOPS_TABLE, shopRecord.id, { 'Category rooms': json });
+    shopRecord.fields['Category rooms'] = json;
+    if (window._mqShopRecord && window._mqShopRecord.fields) window._mqShopRecord.fields['Category rooms'] = json;
+    window._mqCategoryRooms = cr;
+    if (window._mqLastFetchTimes) window._mqLastFetchTimes['products'] = 0;
+  }
   window.mqccCatQtChanged = function() {
     const c = mqccEditCat ? mqccCats().find(x => x.id === mqccEditCat) : null;
     mqccCatQtFill(c);
+    mqccCatRoomsFill();
     mqccDraftCatPreview();
   };
   window.mqccCatAnswerChanged = function() {
@@ -7001,6 +7050,8 @@ window.mqphGoToWizard = function() {
       after: document.getElementById('mqcc-cat-after').value || 'specialty',
     };
     const qtPick = document.getElementById('mqcc-cat-qt') ? (document.getElementById('mqcc-cat-qt').value || '') : '';
+    const roomPick = mqccCatRoomsRead();
+    if (roomPick && roomPick.hidden.length === roomPick.all.length) { alert('Tick at least one project type for this step to show in.'); btn.disabled = false; return; }
     // Same name already in this quote → almost always meant to edit that one
     // (Jordan, Nov 2026: renames ended up as second copies).
     const twin = cats.find(c => c.id !== mqccEditCat && (c.qt || '') === qtPick && (c.name || '').trim().toLowerCase() === name.toLowerCase());
@@ -7030,6 +7081,7 @@ window.mqphGoToWizard = function() {
     }
     try {
       await mqccSaveCats(cats);
+      await mqccSaveCatRooms(id, roomPick);
       mqccClose('mqcc-cat-overlay');
       mqccRerender(id);
       mqccMsg(mqccEditCat ? '✓ Category saved.' : '✓ Category added — now add its options.');
@@ -8155,8 +8207,9 @@ window.mqphGoToWizard = function() {
     if (sample) items = ['Option 1', 'Option 2', 'Option 3'].map((n, i) => ({ id: '__s' + i, name: n, desc: '', rate: 0, how: i === 1 ? 'each' : 'flat', unit: i === 1 ? 'units' : '', min: 0, showIf: '', proOnly: false, src: '', pctCc: '', tie: null, groupName: '', groupOrder: 0 }));
     const place = mqccPlaceLabel(document.getElementById('mqcc-cat-after').value);
     const rule = document.getElementById('mqcc-cat-showif');
+    const rp = mqccCatRoomsRead();
     box.innerHTML = `${mqccPvViewHtml(c, items)}
-      <div style="font-size:11px;color:#6b7280;line-height:1.5;margin-top:10px">📍 Step goes: <strong>${mqccEsc(place)}</strong>${rule && rule.value ? `<br>👁 Only shows when “${mqccEsc(mqccOptionLabel(rule.value))}” is picked` : ''}${sample ? '<br>Sample options shown — add your real ones after saving.' : ''}</div>`;
+      <div style="font-size:11px;color:#6b7280;line-height:1.5;margin-top:10px">📍 Step goes: <strong>${mqccEsc(place)}</strong>${rp && rp.hidden.length ? `<br>🗂️ Only for: <strong>${mqccEsc(rp.names.join(', ') || 'no project types')}</strong>` : ''}${rule && rule.value ? `<br>👁 Only shows when “${mqccEsc(mqccOptionLabel(rule.value))}” is picked` : ''}${sample ? '<br>Sample options shown — add your real ones after saving.' : ''}</div>`;
   }
   function mqccDraftItemPreview() {
     const box = document.getElementById('mqcc-item-pv');
