@@ -7530,6 +7530,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const open = body.style.display === 'none';
     body.style.display = open ? 'block' : 'none';
     if (chev) chev.style.transform = open ? 'rotate(90deg)' : 'rotate(0deg)';
+    if (open && key === 'lh' && window.mqPbShowInPreview) window.mqPbShowInPreview(id, 0, 'lh');
   };
   function mqPropSettingsSummary(f) {
     const dep = f['Deposit type'] === 'Flat amount' ? `${CUR()}${f['Deposit value'] || 0} deposit` : `${f['Deposit value'] || 0}% deposit`;
@@ -7961,6 +7962,17 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   window.mqPbRender = function(id, focusIdx) {
     const box = document.getElementById(`mq-prop-canvas-${id}`);
     if (!box) return;
+    // Click a block on the left → its spot lights up in the preview (Nov 2026).
+    if (!box._mqPvHi) {
+      box._mqPvHi = true;
+      const hi = ev => {
+        if (ev.target.closest('button,[draggable] span[title^="Drag"]')) return;
+        const row = ev.target.closest('.mq-pb[data-i]');
+        if (row) window.mqPbShowInPreview(id, +row.dataset.i);
+      };
+      box.addEventListener('click', hi);
+      box.addEventListener('focusin', hi);
+    }
     const blocks = _mqPropBlocks[id] || [];
     box.innerHTML = blocks.length
       ? blocks.map((b, i) => mqPbBlockHTML(id, b, i, blocks)).join('')
@@ -8410,6 +8422,35 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const body = mqPbOpenSection(id, key);
     if (body) mqPbFlash(body.parentElement);
   }
+  // Outline the part of the live preview that block i makes, and scroll to it.
+  window.mqPbShowInPreview = function(id, i, sec) {
+    const box = document.getElementById(`mq-prop-preview-${id}`);
+    if (!box) return;
+    let top, bottom;
+    const offTop = el => { let y = 0; while (el && el !== box) { y += el.offsetTop; el = el.offsetParent; } return y; };
+    if (box.style.position !== 'relative') box.style.position = 'relative';
+    if (sec) {
+      const parts = [...box.querySelectorAll(`[data-pb-sec="${sec}"]`)].filter(e => e.offsetHeight > 0);
+      if (!parts.length) return;
+      top = offTop(parts[0]); bottom = top + parts[0].offsetHeight;
+    } else {
+      const marks = [...box.querySelectorAll('[data-pb-i]')];
+      const k = marks.findIndex(m => +m.dataset.pbI === i);
+      if (k < 0) return;
+      top = offTop(marks[k]);
+      const nxt = marks.slice(k + 1).find(m => offTop(m) > top + 2);
+      const foot = box.querySelector('[data-pb-sec="lh"]:last-of-type');
+      bottom = nxt ? offTop(nxt) : (foot && offTop(foot) > top ? offTop(foot) : box.scrollHeight - 16);
+      if (bottom - top < 18) bottom = top + 22;
+    }
+    let ov = box.querySelector('.mq-pb-pv-hi');
+    if (!ov) { ov = document.createElement('div'); ov.className = 'mq-pb-pv-hi'; box.appendChild(ov); }
+    ov.style.cssText = `position:absolute;left:8px;right:8px;top:${top - 6}px;height:${bottom - top + 6}px;border:3px solid #e2bf63;background:rgba(226,191,99,.13);border-radius:8px;pointer-events:none;z-index:5;transition:opacity .5s;opacity:1`;
+    const target = Math.max(0, top - 30);
+    if (top < box.scrollTop || bottom > box.scrollTop + box.clientHeight) box.scrollTo({ top: target, behavior: 'smooth' });
+    clearTimeout(box._mqHiT);
+    box._mqHiT = setTimeout(() => { ov.style.opacity = '0'; }, 1600);
+  };
   window.mqPbJump = function(id, i) {
     mqPbOpenSection(id, 'text');
     const canvas = document.getElementById(`mq-prop-canvas-${id}`);
@@ -8592,7 +8633,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
 
         <div style="margin-top:14px;padding-top:12px;border-top:1px solid #e5e7eb">
           <button class="mq-btn mq-btn-sm" onclick="mqResetProposalTemplateDefaults('${t.id}')">↺ Reset to defaults</button>
-          <span style="font-size:10.5px;color:#9ca3af;margin-left:8px">Restores the Body text, accent colour, deposit, tax, and prices setting for this template's size category — the name stays as you've set it.</span>
+          <span style="font-size:10.5px;color:#9ca3af;margin-left:8px">Restores the Body text, accent colour, deposit, tax, and prices setting back to this template's starting defaults — the name stays as you've set it.</span>
         </div>
         </div>
       </div>`;
