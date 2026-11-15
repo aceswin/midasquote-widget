@@ -1671,11 +1671,15 @@ window.logoutMember = async function () {
             <div id="mq-shop-msg"></div>
 
             <div class="mq-card" id="mq-biz-card">
-              <div class="mq-card-title" style="cursor:default">🧭 What does your business do?</div>
+              <div class="mq-card-title" onclick="mqToggleShopSection('biz')" style="cursor:pointer;user-select:none;flex-wrap:wrap">
+                <span id="mq-shopsec-biz-chevron" style="font-size:11px;color:#6b7280;display:inline-block;transition:transform 0.15s;transform:rotate(90deg)">▶</span>
+                🧭 What does your business do?
+                <span id="mq-biz-sum" style="font-size:12.5px;font-weight:500;color:#6b7280;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%"></span>
+              </div>
               <div id="mq-shopsec-biz-body">
-              <div class="mq-hint" style="display:block;margin-bottom:12px">Pick your industry, then tick everything you quote. Cabinetry and Countertops turn our built-in quotes (and their pricing sections) on or off. For any other trade, you set up its own quote type.</div>
+              <div class="mq-hint" style="display:block;margin-bottom:10px;font-size:12px;line-height:1.45">Tick everything you quote. Cabinetry and Countertops switch our built-in quotes on or off; any other trade gets its own quote type.</div>
               <div id="mq-biz-chips" style="display:flex;flex-wrap:wrap;gap:8px"></div>
-              <div id="mq-biz-trades" style="margin-top:12px"></div>
+              <div id="mq-biz-trades" style="margin-top:10px"></div>
               </div>
             </div>
 
@@ -11738,7 +11742,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const isOn = t => t.id === 'cabinetry' ? biz.cab : (t.id === 'countertops' ? biz.ct : biz.trades.includes(t.id));
     const chip = t => {
       const on = isOn(t);
-      return `<button type="button" class="mq-biz-chip" data-mq-biz="${t.id}" aria-pressed="${on}" onclick="mqBizToggle('${t.id}')" style="display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:600;font-family:inherit;padding:8px 13px;border-radius:999px;cursor:pointer;${on ? 'background:#1a1a1a;color:#fff;border:1.5px solid #1a1a1a' : 'background:#fff;color:#374151;border:1.5px solid #d1d5db'}"><span style="width:15px;height:15px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;line-height:1;${on ? 'background:#d7a42e;color:#1a1a1a' : 'border:1.5px solid #9ca3af'}">${on ? '✓' : ''}</span>${mqEscHtml(t.label)}</button>`;
+      return `<button type="button" class="mq-biz-chip" data-mq-biz="${t.id}" aria-pressed="${on}" onclick="mqBizToggle('${t.id}')" style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;font-family:inherit;padding:5px 11px;border-radius:999px;cursor:pointer;${on ? 'background:#1a1a1a;color:#fff;border:1.5px solid #1a1a1a' : 'background:#fff;color:#374151;border:1.5px solid #d1d5db'}"><span style="width:13px;height:13px;border-radius:3px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;line-height:1;${on ? 'background:#d7a42e;color:#1a1a1a' : 'border:1.5px solid #9ca3af'}">${on ? '✓' : ''}</span>${mqEscHtml(t.label)}</button>`;
     };
     // Industry first, then its trades in groups (groups with nothing ticked
     // start folded once anything is ticked, so the list stays short).
@@ -11753,19 +11757,28 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const grpHtml = groups.filter(g => g.list.length).map(g => {
       const n = g.list.filter(isOn).length;
       const open = window._mqBizGrpOpen[g.id] !== undefined ? window._mqBizGrpOpen[g.id] : (!anyOn || n > 0);
-      return `<div class="mq-biz-grp" data-mq-bizgrp="${g.id}" style="border:1px solid #e5e7eb;border-radius:10px;margin-bottom:8px;background:#fff">
-        <button type="button" onclick="mqBizGrpToggle('${g.id}')" aria-expanded="${open}" style="display:flex;width:100%;align-items:center;justify-content:space-between;gap:10px;background:none;border:0;padding:10px 12px;font-family:inherit;font-size:13px;font-weight:700;color:#111;cursor:pointer;text-align:left">
+      return `<div class="mq-biz-grp${open ? ' mq-biz-grp-open' : ''}" data-mq-bizgrp="${g.id}" style="border:1px solid #e5e7eb;border-radius:9px;background:#fff;min-width:0">
+        <button type="button" onclick="mqBizGrpToggle('${g.id}')" aria-expanded="${open}" style="display:flex;width:100%;align-items:center;justify-content:space-between;gap:10px;background:none;border:0;padding:7px 11px;font-family:inherit;font-size:12.5px;font-weight:700;color:#111;cursor:pointer;text-align:left">
           <span>${mqEscHtml(g.label)}${n ? ` <span style="font-weight:600;color:#15803d;font-size:12px;margin-left:4px">${n} ticked</span>` : ''}</span>
           <span style="display:inline-block;color:#6b7280;transition:transform .15s;transform:rotate(${open ? 180 : 0}deg)">▾</span>
         </button>
-        <div style="display:${open ? 'flex' : 'none'};flex-wrap:wrap;gap:8px;padding:0 12px 12px">${g.list.map(chip).join('')}</div>
+        <div style="display:${open ? 'flex' : 'none'};flex-wrap:wrap;gap:6px;padding:0 10px 10px">${g.list.map(chip).join('')}</div>
       </div>`;
     }).join('');
     chips.style.display = 'block';
-    chips.innerHTML = `<div style="font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#6b7280;margin-bottom:6px">Your industry</div>
-      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:14px">${MQ_INDUSTRIES.map(x => { const on = x.id === ind.id; return `<button type="button" onclick="mqBizIndustry('${x.id}')" aria-pressed="${on}" style="font-size:13px;font-weight:600;font-family:inherit;padding:8px 13px;border-radius:999px;cursor:pointer;${on ? 'background:#fbf3df;color:#8a6510;border:1.5px solid #d7a42e' : 'background:#fff;color:#374151;border:1.5px solid #d1d5db'}">${on ? '✓ ' : ''}${mqEscHtml(x.label)}</button>`; }).join('')}<span style="font-size:12px;color:#9ca3af">More industries coming soon</span></div>
-      <div style="font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#6b7280;margin-bottom:6px">What you quote</div>
-      ${grpHtml}${otherT ? `<div style="margin-top:4px">${chip(otherT)}</div>` : ''}`;
+    if (!document.getElementById('mq-biz-css')) {
+      const st = document.createElement('style'); st.id = 'mq-biz-css';
+      st.textContent = '#mq-biz-grps{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:6px;align-items:start}#mq-biz-grps .mq-biz-grp-open{grid-column:1/-1}';
+      document.head.appendChild(st);
+    }
+    chips.innerHTML = `<div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;margin-bottom:10px"><span style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#6b7280;margin-right:2px">Industry</span>${MQ_INDUSTRIES.map(x => { const on = x.id === ind.id; return `<button type="button" onclick="mqBizIndustry('${x.id}')" aria-pressed="${on}" style="font-size:12.5px;font-weight:600;font-family:inherit;padding:5px 11px;border-radius:999px;cursor:pointer;${on ? 'background:#fbf3df;color:#8a6510;border:1.5px solid #d7a42e' : 'background:#fff;color:#374151;border:1.5px solid #d1d5db'}">${on ? '✓ ' : ''}${mqEscHtml(x.label)}</button>`; }).join('')}<span style="font-size:11.5px;color:#9ca3af">More industries coming soon</span></div>
+      <div style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#6b7280;margin-bottom:5px">What you quote</div>
+      <div id="mq-biz-grps">${grpHtml}</div>${otherT ? `<div style="margin-top:6px">${chip(otherT)}</div>` : ''}`;
+    // Header summary + first-visit fold: open for a new shop or while a
+    // ticked trade still needs its quote added, folded otherwise.
+    const sumEl = el('mq-biz-sum');
+    const onList = all.filter(isOn).map(t => t.label);
+    if (sumEl) sumEl.textContent = onList.length ? '· ' + (onList.length > 4 ? onList.slice(0, 4).join(', ') + ` +${onList.length - 4} more` : onList.join(', ')) : '· nothing ticked yet';
     if (!tradesEl) return;
     const rows = mqBizTradeList(biz.trades).filter(t => !t.builtIn && isOn(t)).map(t => {
       const matches = mqQtsOfTrade(t, qts);
@@ -11777,12 +11790,20 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           : t.qtName
           ? `<button type="button" class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqBizAddQt('${t.id}')">+ Add a ${mqEscHtml(t.qtName)} quote</button>`
           : `<button type="button" class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqBizAddQt('${t.id}')">+ Add a quote type</button>`);
-      return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;border:1px solid #e5e7eb;border-radius:10px;padding:9px 12px;margin-bottom:8px;font-size:13px">
-        <span style="display:inline-flex;align-items:center;gap:8px;font-weight:600;color:#111"><span style="width:30px;height:30px;border-radius:7px;background:#fbf3df;color:#8a6510;display:inline-flex;align-items:center;justify-content:center">${mqQtIconSvg(t.icon, 17)}</span>${mqEscHtml(t.label)}</span>
+      return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;border:1px solid #e5e7eb;border-radius:9px;padding:6px 10px;margin-bottom:6px;font-size:12.5px">
+        <span style="display:inline-flex;align-items:center;gap:8px;font-weight:600;color:#111"><span style="width:26px;height:26px;border-radius:6px;background:#fbf3df;color:#8a6510;display:inline-flex;align-items:center;justify-content:center">${mqQtIconSvg(t.icon, 15)}</span>${mqEscHtml(t.label)}</span>
         <span>${right}</span>
       </div>`;
     });
     const nothing = !biz.cab && !biz.ct && !qts.some(q => q.on !== false && !q.proOnly);
+    if (!window._mqBizCardFolded) {
+      window._mqBizCardFolded = true;
+      const needsQuote = mqBizTradeList(biz.trades).some(t => !t.builtIn && isOn(t) && !mqQtsOfTrade(t, qts).length);
+      if (!nothing && !needsQuote && all.some(isOn)) {
+        const b = el('mq-shopsec-biz-body'), c = el('mq-shopsec-biz-chevron');
+        if (b) b.style.display = 'none'; if (c) c.style.transform = 'rotate(0deg)';
+      }
+    }
     // Countertops ticked but nothing priced yet -> say so.
     const ctNoPricing = biz.ct && Array.isArray(window._mqCtItems) && !window._mqCtItems.some(r => r.fields && r.fields['Active'] !== false);
     tradesEl.innerHTML = rows.join('') + (ctNoPricing ? `<div style="font-size:12.5px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:8px 10px;margin:4px 0 6px;line-height:1.5">Countertops is ticked, but you have no countertop pricing yet — <a href="#" onclick="event.preventDefault();mqGoTo('pricing')" style="color:#1d4ed8;font-weight:600">set it up on the Pricing tab →</a></div>` : '') + (nothing ? `<div style="font-size:12.5px;color:#b45309;margin-top:4px">Your widget has no quotes to show yet. Add a quote type for your trade.</div>` : '')
@@ -11794,6 +11815,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const body = box.children[1], btn = box.children[0];
     const open = body.style.display === 'none';
     body.style.display = open ? 'flex' : 'none';
+    box.classList.toggle('mq-biz-grp-open', open);
     btn.setAttribute('aria-expanded', open);
     btn.lastElementChild.style.transform = `rotate(${open ? 180 : 0}deg)`;
     window._mqBizGrpOpen = window._mqBizGrpOpen || {};
