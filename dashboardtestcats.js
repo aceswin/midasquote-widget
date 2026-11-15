@@ -16755,18 +16755,18 @@ ${mqIsFreePlanShop() ? mqShowroomLockNoteHTML(true) : `      <label class="mq-bt
     function studioPopulateStarterPhotos(t){
       const id=t.id;
       const targets=mqStudioCustomLayers.filter(layer=>layer.type==='image'&&!layer.qrCode&&(!layer.image&&!layer.dataUrl));
-      targets.forEach((layer,index)=>{
+      return Promise.all(targets.map((layer,index)=>{
         const kind=studioCoverForTemplate(t,index);
         const initialLayerId=layer.id;
-        studioLoadCover(kind).then(img=>{
+        return studioLoadCover(kind).then(img=>{
           if(!img||mqStudioSelected?.id!==id)return;
           const current=mqStudioCustomLayers.find(l=>l.id===initialLayerId);
           // Never overwrite a photo the user has uploaded while the cover was loading.
           if(!current||current.image||current.dataUrl)return;
           current.image=img;current.starterCover=kind;
-          update();
-        });
-      });
+          if(!mqThumbing)update();
+        }).catch(()=>{});
+      }));
     }
 
     const grid=root.querySelector('#mq-studio-grid'), workspace=root.querySelector('#mq-studio-workspace');
@@ -16994,20 +16994,24 @@ function defaultDoodleLayer(kind='burst'){return {id:layerUid(),type:'shape',nam
 function defaultBrushSwipeLayer(){return {id:layerUid(),type:'shape',name:'Brush swipe',place:'front',x:180,y:160,w:420,h:120,rotation:-4,opacity:100,shadowColor:'#000000',shadowBlur:0,shadowX:0,shadowY:0,shape:'brush',radius:24,fill:'#f5d94a',stroke:'#f5d94a',strokeWidth:0}}
 function defaultBubbleLayer(){return {id:layerUid(),type:'shape',name:'Speech bubble',place:'front',x:180,y:180,w:360,h:220,rotation:0,opacity:100,shadowColor:'#000000',shadowBlur:10,shadowX:0,shadowY:6,shape:'bubble',radius:28,fill:'#ffffff',stroke:'#ffffff',strokeWidth:0}}
 function defaultStickerLayer(){return {id:layerUid(),type:'shape',name:'Sticker burst',place:'front',x:180,y:180,w:260,h:260,rotation:-6,opacity:100,shadowColor:'#000000',shadowBlur:12,shadowX:0,shadowY:7,shape:'starburst',radius:20,fill:'#f4d84d',stroke:'#ffffff',strokeWidth:0}}
+// Yard signs that are a full photo with text over it (matches their gallery
+// look, Jordan Nov 2026) — same real photo + tint layers as Scan & Estimate.
+const MQ_BLEED_YARD=new Set(['yard','yardscan','yardfinance','yardbooking','launch','premium','before']);
 function defaultProjectPhotoLayer(t,composition){
   const landscape=field('size').value==='landscape',portrait=field('size').value==='portrait'||field('size').value==='poster',story=field('size').value==='story';
   const W=landscape?1620:1080,H=story?1920:portrait?field('size').value==='poster'?1620:1350:1080;
   const k=Math.min(W/1080,H/1080);
   let x,y,w,h;
-  if(composition==='window'){x=48;y=H/k*.39;w=W/k-96;h=H/k*.49}
+  if(MQ_BLEED_YARD.has(t.id)){x=0;y=0;w=W/k;h=H/k}
+  else if(composition==='window'){x=48;y=H/k*.39;w=W/k-96;h=H/k*.49}
   else if(composition==='split'){x=W/k*.54;y=0;w=W/k*.46;h=H/k}
   else if(t.mode==='split'){x=landscape?W/k*.57:W/k*.13;y=landscape?H/k*.13:H/k*.48;w=landscape?W/k*.37:W/k*.74;h=landscape?H/k*.71:H/k*.32}
   else if(t.mode==='frame'){x=W/k*.07;y=H/k*.07;w=W/k*.86;h=H/k*.42}
   // Scan & Estimate (Nov 2026): its full-bleed photo and the dark tint over
   // it are real layers (behind the text) so both can be edited/faded/removed.
-  else if(t.mode==='qr'){x=0;y=0;w=W/k;h=H/k}
+  else if(t.mode==='qr'||MQ_BLEED_YARD.has(t.id)){x=0;y=0;w=W/k;h=H/k}
   else return null;
-  const bleed=t.mode==='qr';
+  const bleed=t.mode==='qr'||MQ_BLEED_YARD.has(t.id);
   return {id:layerUid(),type:'image',projectPhoto:true,fullBleed:bleed,_fbFmt:field('size').value,name:bleed?'Background image':'Photo area',place:bleed?'back':'front',x:Math.round(x),y:Math.round(y),w:Math.round(w),h:Math.round(h),rotation:0,opacity:100,shadowColor:'#000000',shadowBlur:0,shadowX:0,shadowY:0,fit:'cover',radius:0,stroke:'#ffffff',strokeWidth:0,fill:safeColor(field('quick-surface').value,'#e9d9c8'),image:mqStudioPhoto};
 }
 function projectPhotoLayer(){return mqStudioCustomLayers.find(l=>l.projectPhoto)}
@@ -17798,8 +17802,49 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
           }).catch(()=>{});
         }
         btn.querySelector('strong').textContent=t.title;btn.querySelector('small').textContent=t.tag;
+        btn.dataset.tid=t.id;btn.classList.add('mq-studio-real-'+mqStudioDefaultSize(t));
+        const cached=mqRealThumbs.get(mqRealThumbKey(t));if(cached)preview.src=cached;
         btn.addEventListener('click',()=>select(t));grid.appendChild(btn);
       });
+      mqRenderRealThumbs();
+    }
+    // Gallery pictures drawn by the editor itself (Jordan, Nov 2026): same
+    // layout, true shape and the shop's own starter photos, so what you click
+    // is exactly what opens. Runs in the background; a click on any design
+    // stops it. History and browser drafts are switched off while it runs.
+    var mqThumbing=false,mqThumbCancel=false,mqThumbRun=0;
+    const mqRealThumbs=new Map();
+    const mqRealThumbKey=t=>t.id+'|'+safeColor(color)+'|'+(t.headline||'')+'|'+(t.sub||'');
+    async function mqRenderRealThumbs(){
+      if(mqStudioSelected||mqThumbing)return;
+      const run=++mqThumbRun;mqThumbCancel=false;
+      const tiles=[...grid.querySelectorAll('.mq-studio-tile[data-tid]')];
+      const todo=tiles.map(b=>MQ_STUDIO_TEMPLATES.find(x=>x.id===b.dataset.tid)).filter(t=>t&&!mqRealThumbs.has(mqRealThumbKey(t)));
+      if(!todo.length)return;
+      const keep={photo:mqStudioPhoto,selectedLayer:mqStudioSelectedLayerId};
+      mqThumbing=true;
+      try{
+        for(const t of todo){
+          if(mqThumbCancel||run!==mqThumbRun)return;
+          await new Promise(r=>setTimeout(r,30));
+          if(mqThumbCancel||run!==mqThumbRun||mqStudioSelected&&!mqThumbing)return;
+          mqStudioCustomLayers=[];mqStudioDetached=false;mqStudioSelectedLayerId=null;
+          const loads=select(t,{thumb:true});
+          await Promise.race([Promise.resolve(loads),new Promise(r=>setTimeout(r,4000))]);
+          if(document.fonts&&document.fonts.ready)await Promise.race([document.fonts.ready,new Promise(r=>setTimeout(r,800))]);
+          if(mqThumbCancel||run!==mqThumbRun)return;
+          update(true);
+          const src=field('canvas');const sc=Math.min(1,520/Math.max(src.width,src.height));
+          const cv=document.createElement('canvas');cv.width=Math.round(src.width*sc);cv.height=Math.round(src.height*sc);
+          cv.getContext('2d').drawImage(src,0,0,cv.width,cv.height);
+          let url=null;try{url=cv.toDataURL('image/jpeg',0.82);}catch(e){}
+          if(url){mqRealThumbs.set(mqRealThumbKey(t),url);const img=grid.querySelector(`.mq-studio-tile[data-tid="${t.id}"] img`);if(img)img.src=url;}
+        }
+      }finally{
+        // Only tidy up if nobody opened a design meanwhile.
+        if(!mqThumbCancel&&run===mqThumbRun){mqStudioSelected=null;mqStudioCustomLayers=[];mqStudioDetached=false;mqStudioSelectedLayerId=keep.selectedLayer;mqStudioPhoto=keep.photo;}
+        mqThumbing=false;
+      }
     }
     let mqStudioFocus=null, mqStudioFocusTimer=null, mqStudioGuide=null;
     // History is scoped to the current template. Keep browser autosaves conservative: image-heavy
@@ -17828,7 +17873,7 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
     }
     function historyButtons(){const u=field('undo'),r=field('redo');if(u)u.disabled=mqHistoryIndex<=0;if(r)r.disabled=mqHistoryIndex>=mqHistory.length-1;}
     function commitStudioHistory(){
-      if(mqRestoring||!mqStudioSelected)return;
+      if(mqRestoring||mqThumbing||!mqStudioSelected)return;
       const state=captureStudioState();if(!state)return;
       // Exclude object identity from equality by comparing relevant serializable fields only.
       const fingerprint=JSON.stringify({values:state.values,quickSurface:state.quickSurface,layers:state.layers,detached:state.detached,selected:state.selected,photoSrc:state.photo?.src||'',logoSrc:state.logo?.src||''});
@@ -17837,13 +17882,13 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
       mqHistory.push({state,fingerprint});if(mqHistory.length>35)mqHistory.shift();
       mqHistoryIndex=mqHistory.length-1;historyButtons();scheduleDraftSave();
     }
-    function scheduleStudioHistory(){if(mqRestoring||!mqStudioSelected||studioPointerActive)return;clearTimeout(mqHistoryTimer);mqHistoryTimer=setTimeout(commitStudioHistory,450);}
+    function scheduleStudioHistory(){if(mqRestoring||mqThumbing||!mqStudioSelected||studioPointerActive)return;clearTimeout(mqHistoryTimer);mqHistoryTimer=setTimeout(commitStudioHistory,450);}
     function undoRedo(delta){clearTimeout(mqHistoryTimer);commitStudioHistory();const next=mqHistoryIndex+delta;if(next<0||next>=mqHistory.length)return;mqHistoryIndex=next;restoreStudioState(mqHistory[next].state);historyButtons();scheduleDraftSave();}
     function serializeDraft(){const state=captureStudioState();if(!state)return null;
       return {version:1,template:state.template,values:state.values,quickSurface:state.quickSurface,layers:state.layers.map(l=>{const c={...l};if(c.dataUrl&&c.dataUrl.length>200000)delete c.dataUrl;return c}),detached:state.detached};}
     function draftKey(){return `midasquote_studio_autosave_${shopRecord.id||'shop'}_${mqStudioSelected?.id||'design'}`;}
     function writeStudioDraft(){if(!mqStudioSelected)return;const status=field('history-status');try{localStorage.setItem(draftKey(),JSON.stringify(serializeDraft()));if(status)status.textContent='Saved in this browser';}catch(err){if(status)status.textContent='Autosave unavailable · use Save draft';}}
-    function scheduleDraftSave(){clearTimeout(mqDraftTimer);const status=field('history-status');if(status)status.textContent='Unsaved changes';mqDraftTimer=setTimeout(writeStudioDraft,1400);}
+    function scheduleDraftSave(){if(mqThumbing)return;clearTimeout(mqDraftTimer);const status=field('history-status');if(status)status.textContent='Unsaved changes';mqDraftTimer=setTimeout(writeStudioDraft,1400);}
     function loadStudioDraft(){const raw=localStorage.getItem(draftKey());if(!raw)return false;
       try{const saved=JSON.parse(raw);if(saved.template!==mqStudioSelected?.id)return false;const snapshot=captureStudioState();
         snapshot.values=saved.values||{};snapshot.quickSurface=saved.quickSurface; snapshot.layers=saved.layers||[];
@@ -17882,14 +17927,16 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
       if(mqStudioNeedsQr(mqStudioSelected)){const qrLayer=defaultQrLayer();if(['yardscan','yardshowroom'].includes(mqStudioSelected?.id)){qrLayer.x=1270;qrLayer.y=190;qrLayer.w=250;qrLayer.h=250;qrLayer.radius=18;qrLayer.strokeWidth=12;}additions.push(qrLayer);}
       mqStudioDetached=true;mqStudioCustomLayers.push(...additions);mqStudioSelectedLayerId=null;renderLayerList();syncLayerControls();update();if(!silent)mqShowToast('Everything is freely movable');
     }
-    function select(t){
-      if(window.matchMedia('(max-width:680px)').matches&&!workspace.classList.contains('mq-studio-phone-allowed')){
+    function select(t,o){
+      const thumbMode=!!(o&&o.thumb);
+      if(!thumbMode){mqThumbCancel=true;mqThumbing=false;}
+      if(!thumbMode&&window.matchMedia('(max-width:680px)').matches&&!workspace.classList.contains('mq-studio-phone-allowed')){
         const note=document.querySelector('#mq-page-marketing .mq-studio-mobile-notice');
         note?.scrollIntoView({block:'center',behavior:'smooth'});
         mqShowToast('For precise editing, use a tablet or desktop. Or tap Continue on phone anyway.');
         return;
       }
-      mqStudioSelected=t;field('edit-title').textContent=t.title;if(field('template-select'))field('template-select').value=t.id;field('shop-name').value=shopName;field('headline').value=t.headline;field('subline').value=t.sub;field('cta').value=t.cta;field('color').value=safeColor(color);field('quick-brand').value=safeColor(color);field('quick-surface').value='#e9d9c8';field('quick-accent').value='#d9be97';field('size').value=mqStudioDefaultSize(t);setDefaults();field('composition').value=t.id==='premium'?'cinema':mqStudioIsYard(t)?'split':t.id==='before'?'original':t.id==='poster'?'window':'original';if(t.id==='yardbefore'||t.id.startsWith('ys-'))field('composition').value='original';field('finish').value=t.mode==='luxury'?'bold':t.mode==='frame'?'editorial':(mqStudioIsYard(t)||t.category==='print')?'architect':'cinematic';field('accent').value=t.mode==='frame'?'frame':t.mode==='luxury'?'corner':mqStudioIsYard(t)?'stripe':'none';if(t.mode==='minimal'){field('headline-color').value='#382b36';field('sub-color').value='#685861'}if(t.id==='yardfinance'){field('cta-bg').value='#f4d84d';field('cta-color').value='#211a21';field('headline-color').value='#ffffff';field('sub-color').value='#fff5df';field('accent-color').value='#f4d84d';}if(t.id==='yardshowroom'){field('cta').value='BROWSE OUR SHOWROOM';field('headline-color').value='#ffffff';field('sub-color').value='#fff5df';field('accent-color').value='#c9a24b';}workspace.style.display='flex';workspace.classList.add('mq-studio-fullscreen','mq-studio-canvas-first');lockStudioScroll();workspace.classList.remove('mq-studio-property-mode','mq-studio-show-layers');if(field('layers-toggle'))field('layers-toggle').textContent='☷ All layers';previewShift=0;preview.style.transform='';update(true);if(t.id==='yardbefore'||t.id.startsWith('ys-')){mqStudioDetached=true;}else{detachBuiltIns(true);}const photoArea=(t.id==='yardbefore'||t.id.startsWith('ys-'))?null:(mqStudioUsesDefaultPhoto(t)?defaultProjectPhotoLayer(t,field('composition').value):null);if(photoArea){mqStudioCustomLayers.unshift(photoArea);if(photoArea.fullBleed){const tint={...defaultShapeLayer(),name:'Photo tint',place:'back',x:0,y:0,w:photoArea.w,h:photoArea.h,radius:0,fill:'#190c17',stroke:'#190c17',opacity:75,fullBleed:true,_fbFmt:photoArea._fbFmt};mqStudioCustomLayers.splice(1,0,tint);}}const seededLayers=seededStudioLayers(t);if(seededLayers.length){mqStudioCustomLayers.push(...seededLayers);}renderLayerList();update();studioPopulateStarterPhotos(t);resetStudioHistory();requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      mqStudioSelected=t;field('edit-title').textContent=t.title;if(field('template-select'))field('template-select').value=t.id;field('shop-name').value=shopName;field('headline').value=t.headline;field('subline').value=t.sub;field('cta').value=t.cta;field('color').value=safeColor(color);field('quick-brand').value=safeColor(color);field('quick-surface').value='#e9d9c8';field('quick-accent').value='#d9be97';field('size').value=mqStudioDefaultSize(t);setDefaults();field('composition').value=t.id==='premium'?'cinema':mqStudioIsYard(t)?'split':t.id==='before'?'original':t.id==='poster'?'window':'original';if(t.id==='yardbefore'||t.id.startsWith('ys-'))field('composition').value='original';if(MQ_BLEED_YARD.has(t.id))field('composition').value='original';field('finish').value=t.mode==='luxury'?'bold':t.mode==='frame'?'editorial':(mqStudioIsYard(t)||t.category==='print')?'architect':'cinematic';field('accent').value=t.mode==='frame'?'frame':t.mode==='luxury'?'corner':mqStudioIsYard(t)?'stripe':'none';if(t.mode==='minimal'){field('headline-color').value='#382b36';field('sub-color').value='#685861'}if(t.id==='yardfinance'){field('cta-bg').value='#f4d84d';field('cta-color').value='#211a21';field('headline-color').value='#ffffff';field('sub-color').value='#fff5df';field('accent-color').value='#f4d84d';}if(t.id==='yardshowroom'){field('cta').value='BROWSE OUR SHOWROOM';field('headline-color').value='#ffffff';field('sub-color').value='#fff5df';field('accent-color').value='#c9a24b';}if(!thumbMode){workspace.style.display='flex';workspace.classList.add('mq-studio-fullscreen','mq-studio-canvas-first');lockStudioScroll();workspace.classList.remove('mq-studio-property-mode','mq-studio-show-layers');if(field('layers-toggle'))field('layers-toggle').textContent='☷ All layers';previewShift=0;preview.style.transform='';}update(true);if(t.id==='yardbefore'||t.id.startsWith('ys-')){mqStudioDetached=true;}else{detachBuiltIns(true);}const photoArea=(t.id==='yardbefore'||t.id.startsWith('ys-'))?null:(mqStudioUsesDefaultPhoto(t)?defaultProjectPhotoLayer(t,field('composition').value):null);if(photoArea){mqStudioCustomLayers.unshift(photoArea);if(photoArea.fullBleed){const tint={...defaultShapeLayer(),name:'Photo tint',place:'back',x:0,y:0,w:photoArea.w,h:photoArea.h,radius:0,fill:'#190c17',stroke:'#190c17',opacity:mqStudioIsYard(t)?48:MQ_BLEED_YARD.has(t.id)?58:75,fullBleed:true,_fbFmt:photoArea._fbFmt};mqStudioCustomLayers.splice(1,0,tint);}}const seededLayers=seededStudioLayers(t);if(seededLayers.length){mqStudioCustomLayers.push(...seededLayers);}if(thumbMode){return studioPopulateStarterPhotos(t);}renderLayerList();update();studioPopulateStarterPhotos(t);resetStudioHistory();requestAnimationFrame(()=>requestAnimationFrame(()=>{
       // Browser chooses the actual scrollable ancestor (in Webflow .mq-content has overflow:visible).
       // scrollIntoView works on the document and nested scrollers, unlike manually altering .mq-content.
       if(workspace.classList.contains('mq-studio-fullscreen'))return;
