@@ -211,7 +211,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     if (!btn) {
       btn = document.createElement('button');
       btn.id = 'mq-floating-save';
-      btn.style.cssText = "position:fixed;bottom:26px;z-index:9998;padding:14px 24px;border-radius:999px;border:1px solid rgba(212,175,55,0.22);background:linear-gradient(180deg,#151820 0%,#0f1116 100%);color:#fff;font-size:14px;font-weight:700;letter-spacing:0.01em;cursor:pointer;box-shadow:0 18px 40px rgba(15,23,42,0.24);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;transition:transform 0.15s, box-shadow 0.15s";
+      btn.style.cssText = "position:fixed;bottom:26px;z-index:9998;padding:14px 24px;border-radius:8px;border:1px solid rgba(212,175,55,0.22);background:linear-gradient(180deg,#151820 0%,#0f1116 100%);color:#fff;font-size:14px;font-weight:700;letter-spacing:0.01em;cursor:pointer;box-shadow:0 18px 40px rgba(15,23,42,0.24);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;transition:transform 0.15s, box-shadow 0.15s";
       btn.onmouseover = () => { btn.style.boxShadow = '0 22px 44px rgba(15,23,42,0.3)'; btn.style.transform = 'translateY(-1px)'; };
       btn.onmouseout = () => { btn.style.boxShadow = '0 18px 40px rgba(15,23,42,0.24)'; btn.style.transform = 'translateY(0)'; };
       document.body.appendChild(btn);
@@ -1333,7 +1333,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       #midasquote-dashboard .mq-table-wrap::-webkit-scrollbar-thumb{background:#9ca3af;border-radius:6px;border:2px solid #f3f4f6}
       #midasquote-dashboard .mq-table-wrap::-webkit-scrollbar-thumb:hover{background:#6b7280}
       #midasquote-dashboard .mq-page{display:none;position:relative}
-      #midasquote-dashboard .mq-help-btn{position:absolute;top:-32px;right:0;background:#eff6ff;color:#2563eb;border:1.5px solid #93c5fd;border-radius:999px;padding:6px 14px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;transition:background 0.15s;z-index:5}
+      #midasquote-dashboard .mq-help-btn{position:absolute;top:-32px;right:0;background:#eff6ff;color:#2563eb;border:1.5px solid #93c5fd;border-radius:8px;padding:6px 14px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;transition:background 0.15s;z-index:5}
       #midasquote-dashboard .mq-help-btn:hover{background:#dbeafe}
       /* Trial/Demo banner: 80% wide on desktop so the floating "Need help?" button (which pokes up into the banner's space) never sits on top of it. Full width on phones, where that button sits clear above it. */
       #midasquote-dashboard #mq-plan-banner > div{max-width:80%}
@@ -1419,7 +1419,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       #midasquote-dashboard #mq-spec-table-wrap{padding:14px}
       #midasquote-dashboard .mq-table tr:last-child td{border-bottom:none}
       #midasquote-dashboard .mq-table tr:hover td{background:#f9fafb}
-      #midasquote-dashboard .mq-badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500}
+      #midasquote-dashboard .mq-badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:8px;font-size:11px;font-weight:500}
       #midasquote-dashboard .mq-badge-green{background:#dcfce7;color:#166534}
       #midasquote-dashboard .mq-badge-blue{background:#dbeafe;color:#1e40af}
       #midasquote-dashboard .mq-badge-yellow{background:#fef9c3;color:#854d0e}
@@ -1448,7 +1448,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 
       /* ── Help guide — folder-tab layout ── */
       #midasquote-dashboard .mq-help-header-row{display:flex;align-items:flex-start;justify-content:space-between;gap:1.5rem;margin-bottom:1.5rem;flex-wrap:wrap}
-      #midasquote-dashboard #mq-help-search{font-family:inherit;font-size:13px;padding:9px 16px;border:1.5px solid #d1d5db;border-radius:999px;width:220px;flex-shrink:0;background:#fff}
+      #midasquote-dashboard #mq-help-search{font-family:inherit;font-size:13px;padding:9px 16px;border:1.5px solid #d1d5db;border-radius:8px;width:220px;flex-shrink:0;background:#fff}
       #midasquote-dashboard #mq-help-search:focus{outline:none;border-color:#1a1a1a}
       #midasquote-dashboard .mq-help-folder{border-radius:14px;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,0.10);max-width:1080px}
       #midasquote-dashboard .mq-help-tabbar{background:#1a1a1a;display:flex;flex-wrap:wrap-reverse;align-items:flex-end;gap:4px;padding:16px 14px 0}
@@ -2100,7 +2100,7 @@ window.logoutMember = async function () {
               .mq-rooms-sec-chev{display:inline-block;font-size:11px;color:#6b7280;transition:transform .15s;flex-shrink:0}
               .mq-rooms-sec.open .mq-rooms-sec-chev{transform:rotate(90deg)}
               .mq-rooms-sec-title{font-size:15px;font-weight:700;color:#1a1a1a}
-              .mq-rooms-sec-count{font-size:12px;font-weight:600;color:#374151;background:#f1f3f6;border-radius:99px;padding:4px 10px;white-space:nowrap}
+              .mq-rooms-sec-count{font-size:12px;font-weight:600;color:#374151;background:#f1f3f6;border-radius:8px;padding:4px 10px;white-space:nowrap}
               .mq-rooms-sec-body{display:none;border-top:1px solid #f0f0f0;padding:16px 18px 18px}
               .mq-rooms-sec.open .mq-rooms-sec-body{display:block}
               .mq-rooms-qt-badge{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.04em;color:#8a6510;background:#fbf3df;border-radius:4px;padding:2px 6px;margin-left:8px;vertical-align:2px}
@@ -3299,12 +3299,12 @@ window.logoutMember = async function () {
       #midasquote-dashboard .mq-topbar-actions .mq-btn:hover{background:#fff;box-shadow:0 6px 18px rgba(15,23,42,.08)}
       #midasquote-dashboard .mq-top-navigation{position:sticky;top:60px;z-index:84;background:rgba(248,250,252,.94)!important;backdrop-filter:blur(10px);border-bottom:1px solid #e6ebf2;box-shadow:0 4px 12px rgba(15,23,42,.04)}
       #midasquote-dashboard .mq-nav-major{padding:14px clamp(14px,2.6vw,38px) 6px!important;gap:8px!important}
-      #midasquote-dashboard .mq-major-tab{border:1px solid #e6ebf2!important;background:#fff!important;color:#475569!important;border-radius:999px!important;padding:10px 16px!important;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+      #midasquote-dashboard .mq-major-tab{border:1px solid #e6ebf2!important;background:#fff!important;color:#475569!important;border-radius:8px!important;padding:10px 16px!important;box-shadow:0 1px 2px rgba(15,23,42,.04)}
       #midasquote-dashboard .mq-major-tab:hover{background:#f8fafc!important;color:#111827!important;border-color:#d8e0ea!important}
       #midasquote-dashboard .mq-major-tab.active{background:linear-gradient(180deg,#fff8e7 0%,#fff2ce 100%)!important;border-color:#e7c66b!important;color:#1f2937!important;box-shadow:0 8px 18px rgba(212,175,55,.14)!important}
       #midasquote-dashboard .mq-top-navigation .mq-sidebar{padding:10px clamp(14px,2.6vw,38px) 15px!important;gap:8px!important;scrollbar-width:none}
       #midasquote-dashboard .mq-top-navigation .mq-sidebar::-webkit-scrollbar{display:none}
-      #midasquote-dashboard .mq-top-navigation .mq-nav-item{border:1px solid #e4e9f1!important;border-radius:999px!important;padding:9px 14px!important;color:#475569!important;background:#fff!important;box-shadow:0 1px 2px rgba(15,23,42,.03)}
+      #midasquote-dashboard .mq-top-navigation .mq-nav-item{border:1px solid #e4e9f1!important;border-radius:8px!important;padding:9px 14px!important;color:#475569!important;background:#fff!important;box-shadow:0 1px 2px rgba(15,23,42,.03)}
       #midasquote-dashboard .mq-top-navigation .mq-nav-item:hover{background:#f8fafc!important;border-color:#d7dde7!important;transform:translateY(-1px)}
       #midasquote-dashboard .mq-top-navigation .mq-nav-item.active{background:linear-gradient(180deg,#12151c 0%,#181c24 100%)!important;border-color:#12151c!important;color:#fff!important;box-shadow:0 10px 22px rgba(15,23,42,.12)}
       #midasquote-dashboard .mq-nav-step{width:22px!important;height:22px!important;border-color:#dce2ea!important;background:#f8fafc!important;color:#334155!important}
@@ -5791,7 +5791,7 @@ window.logoutMember = async function () {
     if (!st || !ov) return;
     const esc = mqEscHtml;
     const list = st.all.filter(x => st.tab === 'all' || x.kind === st.tab);
-    const tab = (k, l) => `<button type="button" onclick="mqImgLibTab('${k}')" style="padding:7px 14px;border-radius:99px;font:600 13px system-ui,sans-serif;cursor:pointer;${st.tab === k ? 'background:#1a1a1a;color:#fff;border:1px solid #1a1a1a' : 'background:#fff;color:#374151;border:1px solid #d1d5db'}">${l}</button>`;
+    const tab = (k, l) => `<button type="button" onclick="mqImgLibTab('${k}')" style="padding:7px 14px;border-radius:8px;font:600 13px system-ui,sans-serif;cursor:pointer;${st.tab === k ? 'background:#1a1a1a;color:#fff;border:1px solid #1a1a1a' : 'background:#fff;color:#374151;border:1px solid #d1d5db'}">${l}</button>`;
     const multi = st.mode === 'measure';
     ov.innerHTML = `<div style="background:#fff;border-radius:16px;width:min(920px,100%);max-height:88vh;display:flex;flex-direction:column;font-family:system-ui,sans-serif;box-shadow:0 24px 60px rgba(0,0,0,.3)">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:18px 20px 12px;border-bottom:1px solid #eef0f3">
@@ -9003,7 +9003,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
                       <button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqDeleteSpec('${r.id}')">Delete</button>
                       <button class="mq-btn mq-btn-sm" title="Copy this item, all its settings, and every variant — handy for a similar item you don't want to rebuild from scratch" onclick="mqDuplicateSpec('${r.id}')">⧉ Duplicate</button>
                     </div>
-                    <span class="mq-spec-variant-pill" id="mq-spec-variant-pill-${r.id}" onclick="mqToggleVariantsPanel('${r.id}')" style="display:inline-block;font-size:11px;font-weight:700;padding:4px 9px;border-radius:999px;background:${variantCount?'#eef2ff':'#f3f4f6'};color:${variantCount?'#4338ca':'#6b7280'};cursor:pointer;white-space:nowrap">${variantCount ? `${variantCount} variant${variantCount===1?'':'s'}` : 'No variants'} ▾</span>
+                    <span class="mq-spec-variant-pill" id="mq-spec-variant-pill-${r.id}" onclick="mqToggleVariantsPanel('${r.id}')" style="display:inline-block;font-size:11px;font-weight:700;padding:4px 9px;border-radius:8px;background:${variantCount?'#eef2ff':'#f3f4f6'};color:${variantCount?'#4338ca':'#6b7280'};cursor:pointer;white-space:nowrap">${variantCount ? `${variantCount} variant${variantCount===1?'':'s'}` : 'No variants'} ▾</span>
                   </div>
                 </div>
               </td>
@@ -11311,7 +11311,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           // in natural DOM order, filling right-then-down for free -- no
           // grid-column spans or nested grids needed anywhere, which is what
           // caused the full-screen-width button bug in the previous round.
-          const badgeHtml = `<span style="position:absolute;top:6px;right:6px;font-size:10px;font-weight:600;color:#92400e;background:#fde68a;padding:2px 7px;border-radius:999px;white-space:nowrap">${variants.length} var.</span>`;
+          const badgeHtml = `<span style="position:absolute;top:6px;right:6px;font-size:10px;font-weight:600;color:#92400e;background:#fde68a;padding:2px 7px;border-radius:8px;white-space:nowrap">${variants.length} var.</span>`;
           // Jordan: "i have like 50 variants and am having to uncheck each
           // one individually" -- a single checkbox on the template card that
           // bulk-flips every one of this item's variant "Hide from showroom"
@@ -11828,7 +11828,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const chip = t => {
       const pend = window._mqBizBusy && window._mqBizBusy[t.id];
       const on = pend ? pend.on : isOn(t);
-      return `<button type="button" class="mq-biz-chip" data-mq-biz="${t.id}" aria-pressed="${on}" onclick="mqBizToggle('${t.id}')" style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;font-family:inherit;padding:5px 11px;border-radius:999px;cursor:pointer;${on ? 'background:#1a1a1a;color:#fff;border:1.5px solid #1a1a1a' : 'background:#fff;color:#374151;border:1.5px solid #d1d5db'}"><span style="width:13px;height:13px;border-radius:3px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;line-height:1;${pend ? 'font-size:11px' : on ? 'background:#d7a42e;color:#1a1a1a' : 'border:1.5px solid #9ca3af'}">${pend ? '⏳' : on ? '✓' : ''}</span>${mqEscHtml(t.label)}${pend ? `<span class="mq-biz-chip-wait" style="font-size:11px;font-weight:500;opacity:.8">${pend.on ? 'Setting up…' : 'Saving…'}</span>` : ''}</button>`;
+      return `<button type="button" class="mq-biz-chip" data-mq-biz="${t.id}" aria-pressed="${on}" onclick="mqBizToggle('${t.id}')" style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;font-family:inherit;padding:5px 11px;border-radius:8px;cursor:pointer;${on ? 'background:#1a1a1a;color:#fff;border:1.5px solid #1a1a1a' : 'background:#fff;color:#374151;border:1.5px solid #d1d5db'}"><span style="width:13px;height:13px;border-radius:3px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;line-height:1;${pend ? 'font-size:11px' : on ? 'background:#d7a42e;color:#1a1a1a' : 'border:1.5px solid #9ca3af'}">${pend ? '⏳' : on ? '✓' : ''}</span>${mqEscHtml(t.label)}${pend ? `<span class="mq-biz-chip-wait" style="font-size:11px;font-weight:500;opacity:.8">${pend.on ? 'Setting up…' : 'Saving…'}</span>` : ''}</button>`;
     };
     // Industry first, then its trades in groups (groups with nothing ticked
     // start folded once anything is ticked, so the list stays short).
@@ -11861,7 +11861,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         + '#mq-biz-grps .mq-biz-grp-open > button{border-bottom:1px solid #f1e3bd !important;margin-bottom:10px;background:#fbf3df !important;border-radius:9px 9px 0 0 !important;color:#6b4f0c !important}';
       document.head.appendChild(st);
     }
-    chips.innerHTML = `<div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;margin-bottom:10px"><span style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#6b7280;margin-right:2px">Industry</span>${MQ_INDUSTRIES.map(x => { const on = x.id === ind.id; return `<button type="button" onclick="mqBizIndustry('${x.id}')" aria-pressed="${on}" style="font-size:12.5px;font-weight:600;font-family:inherit;padding:5px 11px;border-radius:999px;cursor:pointer;${on ? 'background:#fbf3df;color:#8a6510;border:1.5px solid #d7a42e' : 'background:#fff;color:#374151;border:1.5px solid #d1d5db'}">${on ? '✓ ' : ''}${mqEscHtml(x.label)}</button>`; }).join('')}<span style="font-size:11.5px;color:#9ca3af">More industries coming soon</span></div>
+    chips.innerHTML = `<div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;margin-bottom:10px"><span style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#6b7280;margin-right:2px">Industry</span>${MQ_INDUSTRIES.map(x => { const on = x.id === ind.id; return `<button type="button" onclick="mqBizIndustry('${x.id}')" aria-pressed="${on}" style="font-size:12.5px;font-weight:600;font-family:inherit;padding:5px 11px;border-radius:8px;cursor:pointer;${on ? 'background:#fbf3df;color:#8a6510;border:1.5px solid #d7a42e' : 'background:#fff;color:#374151;border:1.5px solid #d1d5db'}">${on ? '✓ ' : ''}${mqEscHtml(x.label)}</button>`; }).join('')}<span style="font-size:11.5px;color:#9ca3af">More industries coming soon</span></div>
       <div style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#6b7280;margin-bottom:5px">What you quote</div>
       <div id="mq-biz-grps">${grpHtml}</div>${otherT ? `<div style="margin-top:6px">${chip(otherT)}</div>` : ''}`;
     // Header summary + first-visit fold: open for a new shop or while a
@@ -12351,7 +12351,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
                 </div></div>`;
               const others = myQts.filter(q => !q.packEdit);
               return `<div style="font-size:12px;color:#6b7280;line-height:1.5;margin-bottom:8px">${has ? `Shops that tick ${esc(t.label)} get ${pq.length > 1 ? 'all of these quotes' : 'this quote'} with one click. To change ${pq.length > 1 ? 'them' : 'it'}, open in your shop, edit, and save back. Shops that already used it keep their copy.` : `Build a quote in your own shop (Business info → quote types, then its project types, Pricing steps and Specialty items), then add it here. A pack can hold several quotes (e.g. Interior + Exterior painting). Shops that tick ${esc(t.label)} get them all with one click.`}</div>
-                ${has ? `<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px">${pq.map((q, k) => `<span style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;background:#fbf3df;color:#8a6510;border-radius:999px;padding:4px 6px 4px 11px">${esc(q.name)}<button type="button" onclick="mqTradePackDropQuote('${t.id}',${k})" title="Take out of the pack" style="border:0;background:#fff;color:#8a6510;border-radius:999px;width:18px;height:18px;line-height:18px;padding:0;cursor:pointer;font-size:12px">×</button></span>`).join('')}</div>
+                ${has ? `<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px">${pq.map((q, k) => `<span style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;background:#fbf3df;color:#8a6510;border-radius:8px;padding:4px 6px 4px 11px">${esc(q.name)}<button type="button" onclick="mqTradePackDropQuote('${t.id}',${k})" title="Take out of the pack" style="border:0;background:#fff;color:#8a6510;border-radius:8px;width:18px;height:18px;line-height:18px;padding:0;cursor:pointer;font-size:12px">×</button></span>`).join('')}</div>
                   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px"><button type="button" class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqTradeOpenPack('${t.id}')">✏️ Open in my shop to edit</button><button type="button" class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqTradeRemovePack('${t.id}')">Remove pack</button></div>` : ''}
                 ${others.length ? `<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><span style="font-size:12px;color:#374151">${has ? 'Add a quote to this pack:' : 'Add from:'}</span><select id="mq-trade-e-src" style="${inp};width:auto!important;min-width:200px;max-width:320px!important">${others.map(q => `<option value="${q.id}">${esc(q.name)}</option>`).join('')}</select><button type="button" class="mq-btn ${has ? '' : 'mq-btn-primary '}mq-btn-sm" onclick="mqTradePackAddQuote('${t.id}')">${has ? '+ Add to pack' : 'Save as starter pack'}</button></div>${has ? '<div style="font-size:11px;color:#9ca3af;margin-top:4px">A quote with the same name as one already in the pack replaces it.</div>' : ''}` : (has ? '' : '<div style="font-size:12px;color:#b45309">Add a quote type in this shop first (Business info → Quote types).</div>')}`;
             })()}
@@ -12675,7 +12675,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       return `<div style="border:1px solid #e5e7eb;border-radius:10px;padding:10px 12px;margin-bottom:8px">
         <div style="display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap">
           <div style="flex:1;min-width:200px">
-            <div style="font-size:13.5px;font-weight:700;color:#111">${esc(b.name || 'Step')} <span style="font-size:11.5px;font-weight:600;color:#8a6510;background:#fbf3df;border-radius:999px;padding:2px 8px;margin-left:4px">${esc(b.tradeLabel || 'Any business')}</span></div>
+            <div style="font-size:13.5px;font-weight:700;color:#111">${esc(b.name || 'Step')} <span style="font-size:11.5px;font-weight:600;color:#8a6510;background:#fbf3df;border-radius:8px;padding:2px 8px;margin-left:4px">${esc(b.tradeLabel || 'Any business')}</span></div>
             <div style="font-size:12px;color:#6b7280;margin-top:2px">${names.length} option${names.length === 1 ? '' : 's'}${names.length ? ': ' + esc(names.slice(0, 5).join(', ')) + (names.length > 5 ? '…' : '') : ''}${(st.measures || []).length ? ' · uses ' + esc(st.measures.map(m => m.label).join(', ')) : ''}</div>
             <div style="font-size:11.5px;color:#9ca3af;margin-top:2px">Saved ${esc(b.at || '')}${srcOk ? ` from your step “${esc((cats.find(c => c.id === st.cid) || {}).name || '')}”` : ' (its original step is no longer in your shop)'}</div>
           </div>
@@ -15641,7 +15641,7 @@ ${mqIsFreePlanShop() ? mqShowroomLockNoteHTML(true) : `      <label class="mq-bt
         <span id="mq-spec-pricecell-${r.id}">${mqSpecPriceCellHTML(r)}</span>
         <span id="mq-spec-pricedcell-${r.id}">${mqSpecPricedCellHTML(r)}</span>
       </div>
-      <span class="mq-spec-variant-pill" id="mq-spec-variant-pill-${r.id}" onclick="mqToggleVariantsPanel('${r.id}')" style="display:inline-block;width:fit-content;font-size:11px;font-weight:700;padding:4px 9px;border-radius:999px;background:${variantCount?'#eef2ff':'#f3f4f6'};color:${variantCount?'#4338ca':'#6b7280'};cursor:pointer;white-space:nowrap">${variantCount ? `${variantCount} variant${variantCount===1?'':'s'}` : 'No variants'} ▾</span>
+      <span class="mq-spec-variant-pill" id="mq-spec-variant-pill-${r.id}" onclick="mqToggleVariantsPanel('${r.id}')" style="display:inline-block;width:fit-content;font-size:11px;font-weight:700;padding:4px 9px;border-radius:8px;background:${variantCount?'#eef2ff':'#f3f4f6'};color:${variantCount?'#4338ca':'#6b7280'};cursor:pointer;white-space:nowrap">${variantCount ? `${variantCount} variant${variantCount===1?'':'s'}` : 'No variants'} ▾</span>
       <div id="mq-spec-variants-row-${r.id}" style="display:none;background:#fafafa;border-radius:8px;padding:10px 4px 4px">
         <div id="mq-spec-variants-panel-${r.id}">${mqVariantsPanelHTML(r)}</div>
       </div>
@@ -19560,7 +19560,7 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
         if (isActive) {
           planEl.innerHTML = `
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-              <span style="background:#dcfce7;color:#166534;font-size:12px;font-weight:500;padding:3px 10px;border-radius:20px">${status || 'Active'}</span>
+              <span style="background:#dcfce7;color:#166534;font-size:12px;font-weight:500;padding:3px 10px;border-radius:8px">${status || 'Active'}</span>
               <span style="font-size:14px;font-weight:500;color:#111">MidasQuote</span>
             </div>
             <p style="font-size:13px;color:#6b7280">Your subscription is active. Manage it using the buttons below.</p>`;
@@ -19588,7 +19588,7 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
           }
           planEl.innerHTML = `
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-              <span style="background:#e0e7ff;color:#3730a3;font-size:12px;font-weight:500;padding:3px 10px;border-radius:20px">${plan === 'Demo' ? 'Free' : plan}</span>
+              <span style="background:#e0e7ff;color:#3730a3;font-size:12px;font-weight:500;padding:3px 10px;border-radius:8px">${plan === 'Demo' ? 'Free' : plan}</span>
               <span style="font-size:14px;font-weight:500;color:#111">Free plan</span>
             </div>
             ${trialExpiryHTML}
@@ -19606,7 +19606,7 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
           const label = status || 'Inactive';
           planEl.innerHTML = `
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-              <span style="background:#fee2e2;color:#dc2626;font-size:12px;font-weight:500;padding:3px 10px;border-radius:20px">${label}</span>
+              <span style="background:#fee2e2;color:#dc2626;font-size:12px;font-weight:500;padding:3px 10px;border-radius:8px">${label}</span>
               <span style="font-size:14px;font-weight:500;color:#111">No active plan</span>
             </div>
             <p style="font-size:13px;color:#6b7280">Your subscription has ended. You still have dashboard access for now — pick a plan below to reactivate your widget.</p>`;

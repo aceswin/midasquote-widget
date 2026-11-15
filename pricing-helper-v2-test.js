@@ -248,9 +248,9 @@ let wizardBaseline = null;
        #mq-pricing-helper-v2 .mqph-setup-title{font-size:15px !important;font-weight:800 !important;letter-spacing:-.01em !important;color:#172033 !important}
        #mq-pricing-helper-v2 .mqph-setup-sub{font-size:12px !important;line-height:1.55 !important;color:#64748b !important;max-width:850px !important}
        #mq-pricing-helper-v2 .mqph-chip-row{padding:20px 22px !important;gap:9px !important}
-       #mq-pricing-helper-v2 .mqph-chip{background:#f8fafc !important;border:1px solid #e2e8f0 !important;color:#26364b !important;border-radius:999px !important;padding:9px 12px !important;box-shadow:0 2px 6px rgba(15,23,42,.025) !important}
-       #mq-pricing-helper-v2 .mqph-chip-input{border:1px dashed #cbd5e1 !important;border-radius:999px !important;background:#fff !important}
-       #mq-pricing-helper-v2 .mqph-chip-input button{border-radius:999px !important;background:#181b22 !important;padding:7px 12px !important}
+       #mq-pricing-helper-v2 .mqph-chip{background:#f8fafc !important;border:1px solid #e2e8f0 !important;color:#26364b !important;border-radius:8px !important;padding:9px 12px !important;box-shadow:0 2px 6px rgba(15,23,42,.025) !important}
+       #mq-pricing-helper-v2 .mqph-chip-input{border:1px dashed #cbd5e1 !important;border-radius:8px !important;background:#fff !important}
+       #mq-pricing-helper-v2 .mqph-chip-input button{border-radius:8px !important;background:#181b22 !important;padding:7px 12px !important}
        #mq-pricing-helper-v2 .mqph-row{padding:14px 20px !important;gap:12px !important;border-bottom:1px solid #edf2f6 !important;min-height:62px !important}
        #mq-pricing-helper-v2 .mqph-row:hover{background:#f9fafb !important}
        #mq-pricing-helper-v2 .mqph-row-name{font-weight:700 !important;color:#172033 !important}
@@ -6643,7 +6643,7 @@ window.mqphGoToWizard = function() {
     const groupOf = c => c.qt ? (qtsOff.has(c.qt) ? '__off' : (qtsAll.some(q => q.id === c.qt) ? c.qt : '__gone')) : '';
     const groupKeys = ['', ...qtsAll.filter(q => !qtsOff.has(q.id)).map(q => q.id), '__gone'];
     const offNames = qtsAll.filter(q => qtsOff.has(q.id)).map(q => q.name);
-    const groupLabel = k => k === '' ? 'Cabinets (Cabinets only &amp; Cabinets + countertops)' : (k === '__gone' ? 'A deleted quote type — not showing anywhere' : '🗂️ ' + mqccEsc(mqccQtName(k)) + ((qtsAll.find(q => q.id === k) || {}).on === false ? ' <span style="font-weight:700;color:#b45309;background:#fffbeb;border:1px solid #fde68a;border-radius:999px;padding:1px 8px;letter-spacing:0;text-transform:none">Off — not on your widget yet</span>' : ''));
+    const groupLabel = k => k === '' ? 'Cabinets (Cabinets only &amp; Cabinets + countertops)' : (k === '__gone' ? 'A deleted quote type — not showing anywhere' : '🗂️ ' + mqccEsc(mqccQtName(k)) + ((qtsAll.find(q => q.id === k) || {}).on === false ? ' <span style="font-weight:700;color:#b45309;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:1px 8px;letter-spacing:0;text-transform:none">Off — not on your widget yet</span>' : ''));
     const blockOf = (c, ci) => {
       const key = c.id;
       const items = mqccItems(c.id);
@@ -6716,7 +6716,7 @@ window.mqphGoToWizard = function() {
             const [bd, bg] = PAL[Math.max(0, qtsAll.filter(x => !qtsOff.has(x.id)).findIndex(x => x.id === k)) % PAL.length];
             const shut = (window._mqccQtShut || (window._mqccQtShut = new Set())).has(k);
             const icon = typeof window.mqQtIconSvg === 'function' ? window.mqQtIconSvg(q.icon || 'grid', 16) : '🗂️';
-            const offTag = q.packEdit ? ' <span style="font-weight:700;font-size:11px;color:#1d4ed8;background:#eff6ff;border:1px solid #bfdbfe;border-radius:999px;padding:1px 8px">✏️ Starter pack copy you\'re editing</span>' : q.on === false ? ' <span style="font-weight:700;font-size:11px;color:#b45309;background:#fffbeb;border:1px solid #fde68a;border-radius:999px;padding:1px 8px">Off — not on your widget yet</span>' : '';
+            const offTag = q.packEdit ? ' <span style="font-weight:700;font-size:11px;color:#1d4ed8;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:1px 8px">✏️ Starter pack copy you\'re editing</span>' : q.on === false ? ' <span style="font-weight:700;font-size:11px;color:#b45309;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:1px 8px">Off — not on your widget yet</span>' : '';
             const bhead = `<div onclick="if(!event.target.closest('button'))mqccQtToggle('${k}')" style="display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;flex-wrap:wrap">
               <span style="width:30px;height:30px;border-radius:8px;background:#fff;border:1px solid ${bd}44;color:${bd};display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">${icon}</span>
               <span style="font-size:16px;font-weight:800;color:#111827">${mqccEsc(mqccQtName(k))}</span>
@@ -7643,11 +7643,11 @@ window.mqphGoToWizard = function() {
       const b = r.body, st = b.step || {};
       const needsMeas = (st.measures || []).length > 0;
       const blocked = needsMeas && !sel;
-      const opts = (st.items || []).slice().sort((x, y) => (x.fields['Sort order'] || 0) - (y.fields['Sort order'] || 0)).slice(0, 6).map(it => `<span style="display:inline-block;font-size:11.5px;background:#f3f4f6;border-radius:999px;padding:3px 9px;margin:0 4px 4px 0;color:#374151">${mqccEsc(it.fields.Name || '')}${' · ' + String(mqccPriceText({ fields: it.fields })).replace(/<span[^>]*>.*?<\/span>/g, '').replace(/ of a removed category$/, '').trim()}</span>`).join('');
+      const opts = (st.items || []).slice().sort((x, y) => (x.fields['Sort order'] || 0) - (y.fields['Sort order'] || 0)).slice(0, 6).map(it => `<span style="display:inline-block;font-size:11.5px;background:#f3f4f6;border-radius:8px;padding:3px 9px;margin:0 4px 4px 0;color:#374151">${mqccEsc(it.fields.Name || '')}${' · ' + String(mqccPriceText({ fields: it.fields })).replace(/<span[^>]*>.*?<\/span>/g, '').replace(/ of a removed category$/, '').trim()}</span>`).join('');
       return `<div style="border:1px solid #e5e7eb;border-radius:12px;padding:12px 14px;margin-bottom:10px;background:#fff">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap">
           <div style="min-width:0;flex:1">
-            <div style="font-size:14px;font-weight:700;color:#111">${mqccEsc(b.name || 'Step')}${b.tradeLabel ? ` <span style="font-size:11px;font-weight:600;color:#8a6510;background:#fbf3df;border-radius:999px;padding:2px 8px;margin-left:4px">${mqccEsc(b.tradeLabel)}</span>` : ''}</div>
+            <div style="font-size:14px;font-weight:700;color:#111">${mqccEsc(b.name || 'Step')}${b.tradeLabel ? ` <span style="font-size:11px;font-weight:600;color:#8a6510;background:#fbf3df;border-radius:8px;padding:2px 8px;margin-left:4px">${mqccEsc(b.tradeLabel)}</span>` : ''}</div>
             ${b.desc ? `<div style="font-size:12.5px;color:#6b7280;margin-top:3px;line-height:1.45">${mqccEsc(b.desc)}</div>` : ''}
             <div style="margin-top:8px">${opts}${(st.items || []).length > 6 ? `<span style="font-size:11.5px;color:#6b7280">+${st.items.length - 6} more</span>` : ''}</div>
             ${needsMeas ? `<div style="font-size:11.5px;color:#6b7280;margin-top:2px">Priced from the measurement${st.measures.length === 1 ? '' : 's'} ${mqccEsc(st.measures.map(m => '“' + m.label + '”').join(', '))} — added to the quote for you if it doesn't have ${st.measures.length === 1 ? 'it' : 'them'}.</div>` : ''}
@@ -8124,7 +8124,7 @@ window.mqphGoToWizard = function() {
           const on = shown && mqccPvPicked(c, it, items);
           const rule = it.showIf ? (mqccPvFind(it.showIf) || {}).it : null;
           const vcur = it.variants && it.variants.length ? mqccPvVcur(it) : '';
-          const control = vcur ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:5px">${it.variants.map(v => { const vq = mqccPvVq(it, v.id), sel = v.id === vcur; return `<button type="button" onclick="mqccPvVar('${it.id}','${v.id}')" style="font:inherit;font-size:11px;font-weight:600;padding:3px 8px;border-radius:999px;cursor:pointer;border:1px solid ${sel ? '#111' : '#d1d5db'};background:${sel ? '#111' : '#fff'};color:${sel ? '#fff' : '#374151'}">${mqccEsc(v.label)}${vq > 0 ? ` <span style="color:${sel ? '#fbbf24' : '#1d4ed8'}">×${vq}</span>` : ''}</button>`; }).join('')}</div><span style="display:inline-flex;align-items:center;gap:8px">${mqccPvStepper(`mqccPvVarQty('${it.id}',-1)`, `mqccPvVarQty('${it.id}',1)`, mqccPvVq(it, vcur), it.unit)}${mqccPvCalcBtn('var:' + it.id, it.unit, it.name)}</span>`
+          const control = vcur ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:5px">${it.variants.map(v => { const vq = mqccPvVq(it, v.id), sel = v.id === vcur; return `<button type="button" onclick="mqccPvVar('${it.id}','${v.id}')" style="font:inherit;font-size:11px;font-weight:600;padding:3px 8px;border-radius:8px;cursor:pointer;border:1px solid ${sel ? '#111' : '#d1d5db'};background:${sel ? '#111' : '#fff'};color:${sel ? '#fff' : '#374151'}">${mqccEsc(v.label)}${vq > 0 ? ` <span style="color:${sel ? '#fbbf24' : '#1d4ed8'}">×${vq}</span>` : ''}</button>`; }).join('')}</div><span style="display:inline-flex;align-items:center;gap:8px">${mqccPvStepper(`mqccPvVarQty('${it.id}',-1)`, `mqccPvVarQty('${it.id}',1)`, mqccPvVq(it, vcur), it.unit)}${mqccPvCalcBtn('var:' + it.id, it.unit, it.name)}</span>`
             : it.how === 'each'
             ? `<span style="display:inline-flex;align-items:center;gap:8px">${mqccPvStepper(`mqccPvQty('${it.id}',-1)`, `mqccPvQty('${it.id}',1)`, mqccPv.qty[it.id] || 0, it.unit)}${mqccPvCalcBtn('qty:' + it.id, it.unit, it.name)}</span>`
             : `<button type="button" onclick="mqccPvToggle('${it.id}')" style="${MQCC_PV_BTN}border:1.5px solid ${on ? '#1d4ed8' : '#d1d5db'};background:${on ? '#1d4ed8' : '#fff'};color:${on ? '#fff' : '#111'}">${on ? '✓ Added' : '+ Add'}</button>`;
