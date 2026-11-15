@@ -11731,6 +11731,7 @@
     s.id = 'mq-fx-styles';
     s.textContent = `
       #midasquote-widget.mq-fx{overflow:clip}
+      @supports not (overflow:clip){#midasquote-widget.mq-fx:not(.mq-fx-full){overflow-x:hidden}}
       #midasquote-widget.mq-fx .mq-tab-bar,
       #midasquote-widget.mq-fx .mq-fx-legend,
       #midasquote-widget.mq-fx .mq-both-divider,
@@ -11774,7 +11775,7 @@
       #mq-fx-chooser{padding:26px 16px 22px;text-align:center;animation:mqFxInNext .4s ease backwards}
       #mq-fx-chooser .mq-fx-ch-title{font-size:25px;line-height:1.2;font-weight:800;color:#111827;margin-bottom:6px;letter-spacing:-.01em}
       #mq-fx-chooser .mq-fx-ch-sub{font-size:15px;color:#4b5563;margin-bottom:20px}
-      #mq-fx-chooser .mq-fx-cards{display:grid;gap:12px;max-width:520px;margin:0 auto}
+      #mq-fx-chooser .mq-fx-cards{display:grid;gap:12px;max-width:520px;margin:0 auto;grid-template-columns:minmax(0,1fr)}
       #mq-fx-chooser .mq-fx-card{display:flex;flex-direction:column;align-items:stretch;gap:0;text-align:left;width:100%;padding:0;overflow:hidden;background:#fff;border:2px solid #e5e7eb;border-radius:16px;cursor:pointer;font-family:inherit;transition:transform .18s,box-shadow .18s;box-shadow:0 3px 10px rgba(0,0,0,.06)}
       #mq-fx-chooser .mq-fx-card-photo{order:2;margin-top:auto;position:relative;display:flex;gap:2px;width:100%;height:118px;background:#fff;overflow:hidden;flex-shrink:0}
       #mq-fx-chooser .mq-fx-card-photo img{position:relative;z-index:1;flex:1 1 0;min-width:0;height:100%;object-fit:cover;display:block;transition:transform .45s ease;box-shadow:inset 0 -56px 44px -34px rgba(0,0,0,.3)}
@@ -11823,7 +11824,15 @@
       #mq-fx-chooser .mq-fx-slide-arrow:not(:disabled):active{transform:scale(.94)}
       #mq-fx-chooser .mq-fx-slide-arrow:disabled{opacity:.28;cursor:default;box-shadow:none;filter:saturate(.4)}
       @media (max-width:699px){
-        #mq-fx-chooser .mq-fx-cards-many{gap:10px}
+        /* 4+ quote types on a phone (Jordan, Nov 2026: the page could be
+           dragged sideways). The list's one column is pinned to the screen
+           width -- without it Safari sized the column to the single-line
+           (nowrap) subtitles below, making the list wider than the phone. */
+        #mq-fx-chooser{max-width:100%;overflow-x:hidden;touch-action:pan-y pinch-zoom}
+        #mq-fx-chooser .mq-fx-slider{display:block;max-width:100%;min-width:0}
+        #mq-fx-chooser .mq-fx-cards-many{gap:10px;grid-template-columns:minmax(0,1fr);width:100%;max-width:100%;overflow:visible}
+        #mq-fx-chooser .mq-fx-cards-many > .mq-fx-cardwrap{min-width:0;max-width:100%}
+        #mq-fx-chooser .mq-fx-cards-many .mq-fx-card{min-width:0;max-width:100%}
         #mq-fx-chooser .mq-fx-cards-many .mq-fx-card{flex-direction:row;align-items:center}
         #mq-fx-chooser .mq-fx-cards-many .mq-fx-card-photo{order:0;margin:8px 0 8px 8px;width:64px;height:64px;flex:0 0 64px;border-radius:10px}
         #mq-fx-chooser .mq-fx-cards-many .mq-fx-card-photo img:not(:nth-of-type(1)){display:none}
