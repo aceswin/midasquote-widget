@@ -2857,6 +2857,8 @@ window.logoutMember = async function () {
 #mq-studio .mq-rich-font-option:hover,#mq-studio .mq-rich-font-option[aria-selected="true"]{background:#f3e8ee}
 #mq-studio .mq-rich-font-name{font:600 12px Arial,sans-serif;white-space:nowrap}
 #mq-studio .mq-rich-font-sample{font-size:25px;font-weight:700;white-space:nowrap;line-height:1.25}
+#mq-studio .mq-rich-shape-thumb{width:64px;height:36px;flex:0 0 auto}
+#mq-studio .mq-rich-shape-option:focus{outline:2px solid #c9a24b;outline-offset:-2px}
   .mq-studio-preview-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-self:stretch;margin-bottom:9px}.mq-studio-preview-toolbar button{flex:1;min-width:140px}.mq-studio-preview-wrap canvas{touch-action:none}.mq-studio-layer-list{display:flex;flex-direction:column;gap:8px;margin:10px 0}.mq-studio-layer-item{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;padding:9px 11px;border:1px solid #d9d2dc;border-radius:10px;background:#fff;color:#322938;font:700 12px/1.3 Arial,sans-serif;cursor:pointer}.mq-studio-layer-item.active{background:#2d2436;color:#fff;border-color:#2d2436}.mq-studio-layer-item.active .mq-layer-name{color:#111!important}.mq-studio-layer-item small{font-weight:400;opacity:.75}.mq-studio-layer-toolbar{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.mq-font-preview-note{display:block;font-size:11px;color:#7a6f80;margin-top:4px}.mq-studio-layer-item{min-height:52px!important;padding:9px 10px!important;gap:10px!important;flex-wrap:nowrap!important;overflow:hidden!important}.mq-studio-layer-item>button:first-child{min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;padding:6px 2px!important;font-size:12px!important}.mq-studio-layer-item>button:not(:first-child){width:33px!important;height:32px!important;min-width:33px!important;flex:0 0 33px!important;padding:5px!important;display:grid!important;place-items:center!important}.mq-studio-preview-wrap{position:relative}.mq-studio-hoverbar{position:absolute;display:none;align-items:center;gap:8px;background:#211a29f5;border:1px solid #ffffff2b;border-radius:10px;padding:6px;z-index:10;box-shadow:0 8px 25px #0005;transform:translate(-50%,-100%);white-space:nowrap;max-width:95%}.mq-studio-hoverbar button{cursor:pointer;border:0;border-radius:8px;background:#fff;color:#291d31;font:700 12px/1.25 Arial,sans-serif!important;padding:10px 14px!important;min-height:36px!important;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center}.mq-studio-hoverbar button:hover{background:#e5cbaa}.mq-studio-layer-controls{margin-top:10px;padding-top:10px;border-top:1px solid #e6dfe7}.mq-studio-layer-section{display:none}.mq-studio-layer-section.show{display:block}.mq-studio-legacy{border-top:1px solid #e7e2e9;padding-top:17px;color:#716a76;font-size:12px}.mq-studio-legacy summary{cursor:pointer;color:#4d4152;font-weight:700}.mq-studio-legacy p{line-height:1.6}
   @media(max-width:1100px){.mq-studio-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.mq-studio-editor-layout{grid-template-columns:1fr}.mq-studio-preview-wrap{position:relative;top:auto}}
   @media(max-width:560px){.mq-studio-hero{padding:22px}.mq-studio-hero-star{display:none}.mq-studio-grid{gap:10px}.mq-studio-thumb{height:135px}.mq-studio-workspace{padding:14px}.mq-studio-editor-top{flex-wrap:wrap}.mq-studio-two-col,.mq-studio-color-grid,.mq-studio-three-col{grid-template-columns:1fr}}
@@ -16685,7 +16687,14 @@ ${mqIsFreePlanShop() ? mqShowroomLockNoteHTML(true) : `      <label class="mq-bt
       const selectors=['shop-font','headline-font','sub-font','cta-font','layer-font'];
       const preferred={'shop-font':'playfair','headline-font':'playfair','sub-font':'montserrat','cta-font':'montserrat','layer-font':'playfair'};
       let activePicker=null;
-      const closePicker=()=>{if(activePicker){activePicker.menu.hidden=true;activePicker.button.setAttribute('aria-expanded','false');activePicker=null;}};
+      // Nov 2026: hovering / arrowing through a picker previews it live on the
+      // design; closing without picking puts the original back.
+      const closePicker=()=>{if(activePicker){const ap=activePicker;activePicker=null;ap.menu.hidden=true;ap.button.setAttribute('aria-expanded','false');if(ap.revert)ap.revert();}};
+      const pickerKeys=(menu,optSel)=>menu.addEventListener('keydown',ev=>{
+        const opts=[...menu.querySelectorAll(optSel)];const i=opts.indexOf(document.activeElement);
+        if(ev.key==='ArrowDown'||ev.key==='ArrowUp'){ev.preventDefault();const n=opts[Math.max(0,Math.min(opts.length-1,(i<0?opts.findIndex(o=>o.getAttribute('aria-selected')==='true'):i)+(ev.key==='ArrowDown'?1:-1)))];if(n){n.focus();n.scrollIntoView({block:'nearest'});}}
+        else if(ev.key==='Enter'&&i>=0){ev.preventDefault();opts[i].click();}
+      });
       selectors.forEach(id=>{
         const select=field(id);if(!select||select.dataset.richFontInstalled)return;
         const current=select.value||preferred[id]||'playfair';
@@ -16703,8 +16712,10 @@ ${mqIsFreePlanShop() ? mqShowroomLockNoteHTML(true) : `      <label class="mq-bt
           item.innerHTML=`<span class="mq-rich-font-name"></span><span class="mq-rich-font-sample">Aa Bb Cc 123</span>`;
           item.querySelector('.mq-rich-font-name').textContent=label;
           item.querySelector('.mq-rich-font-sample').style.fontFamily=fontFace(key);
+          const preview=()=>{if(!activePicker||activePicker.menu!==menu||select.value===key)return;select.value=key;select.dispatchEvent(new Event('input',{bubbles:true}));if(document.fonts?.load)document.fonts.load(`700 28px ${fontFace(key)}`).then(()=>update()).catch(()=>{});};
+          item.addEventListener('mouseenter',preview);item.addEventListener('focus',preview);
           item.addEventListener('click',ev=>{
-            ev.preventDefault();ev.stopPropagation();select.value=key;
+            ev.preventDefault();ev.stopPropagation();select.value=key;if(activePicker&&activePicker.menu===menu)activePicker.revert=null;
             select.dispatchEvent(new Event('input',{bubbles:true}));
             select.dispatchEvent(new Event('change',{bubbles:true}));
             refresh();closePicker();
@@ -16720,8 +16731,11 @@ ${mqIsFreePlanShop() ? mqShowroomLockNoteHTML(true) : `      <label class="mq-bt
         };
         button.addEventListener('click',ev=>{
           ev.preventDefault();ev.stopPropagation();if(activePicker?.button===button){closePicker();return;}closePicker();refresh();
-          menu.hidden=false;button.setAttribute('aria-expanded','true');activePicker={menu,button};
+          const orig=select.value;
+          menu.hidden=false;button.setAttribute('aria-expanded','true');activePicker={menu,button,revert:()=>{if(select.value!==orig){select.value=orig;select.dispatchEvent(new Event('input',{bubbles:true}));}refresh();}};
+          menu.querySelector('.mq-rich-font-option[aria-selected="true"]')?.scrollIntoView({block:'nearest'});
         });
+        pickerKeys(menu,'.mq-rich-font-option');
         select.after(holder);holder.append(button,menu);
         // When the template or layer changes, reflect the newly selected font.
         // Expose a UI-only refresh for programmatic font assignments when switching layers.
@@ -16731,6 +16745,38 @@ ${mqIsFreePlanShop() ? mqShowroomLockNoteHTML(true) : `      <label class="mq-bt
         button.addEventListener('focus',refresh);
         refresh();
       });
+      // Shape picker: same list style, with a small drawing of each shape.
+      (()=>{
+        const select=field('layer-shape');if(!select||select.dataset.richShapeInstalled)return;
+        select.dataset.richShapeInstalled='true';select.classList.add('mq-font-native');
+        const holder=document.createElement('div');holder.className='mq-rich-font-picker';
+        const button=document.createElement('button');button.type='button';button.className='mq-rich-font-trigger';
+        button.setAttribute('aria-haspopup','listbox');button.setAttribute('aria-expanded','false');
+        const menu=document.createElement('div');menu.className='mq-rich-font-menu mq-rich-shape-menu';menu.hidden=true;menu.setAttribute('role','listbox');
+        const thumb=key=>{const c=document.createElement('canvas');c.width=128;c.height=72;c.className='mq-rich-shape-thumb';
+          try{const ctx=c.getContext('2d');const outline=['line','arrow','curve','curvebold','curvethin','curveswoosh','curveloop','underline','check'].includes(key);
+            drawCustomLayer(ctx,{type:'shape',shape:key,x:14,y:10,w:100,h:52,rotation:0,opacity:100,radius:12,fill:'#74465b',stroke:'#74465b',strokeWidth:outline?7:0,shadowBlur:0,shadowX:0,shadowY:0,shadowColor:'#000000'},1,[],false);}catch(e){}
+          return c;};
+        [...select.options].forEach(o=>{
+          const key=o.value;const item=document.createElement('button');item.type='button';item.className='mq-rich-font-option mq-rich-shape-option';item.dataset.shape=key;item.setAttribute('role','option');
+          const name=document.createElement('span');name.className='mq-rich-font-name';name.textContent=o.textContent;
+          item.append(name,thumb(key));
+          const preview=()=>{if(!activePicker||activePicker.menu!==menu||select.value===key)return;select.value=key;select.dispatchEvent(new Event('input',{bubbles:true}));};
+          item.addEventListener('mouseenter',preview);item.addEventListener('focus',preview);
+          item.addEventListener('click',ev=>{ev.preventDefault();ev.stopPropagation();select.value=key;if(activePicker&&activePicker.menu===menu)activePicker.revert=null;select.dispatchEvent(new Event('input',{bubbles:true}));select.dispatchEvent(new Event('change',{bubbles:true}));refresh();closePicker();});
+          menu.appendChild(item);
+        });
+        const refresh=()=>{const key=select.value;const o=[...select.options].find(x=>x.value===key);button.innerHTML='';const n=document.createElement('span');n.textContent=o?o.textContent:key;button.append(n,thumb(key));menu.querySelectorAll('.mq-rich-shape-option').forEach(i=>i.setAttribute('aria-selected',String(i.dataset.shape===key)));};
+        const open=()=>{if(activePicker?.button===button)return;closePicker();refresh();const orig=select.value;menu.hidden=false;button.setAttribute('aria-expanded','true');
+          activePicker={menu,button,revert:()=>{if(select.value!==orig){select.value=orig;select.dispatchEvent(new Event('input',{bubbles:true}));}refresh();}};
+          const cur=menu.querySelector('.mq-rich-shape-option[aria-selected="true"]');if(cur){cur.scrollIntoView({block:'nearest'});cur.focus({preventScroll:true});}};
+        button.addEventListener('click',ev=>{ev.preventDefault();ev.stopPropagation();if(activePicker?.button===button){closePicker();return;}open();});
+        pickerKeys(menu,'.mq-rich-shape-option');
+        select.after(holder);holder.append(button,menu);
+        select._mqRefreshFont=refresh;select._mqOpenPicker=open;
+        select.addEventListener('change',refresh);select.addEventListener('input',refresh);
+        refresh();
+      })();
       if(!root.dataset.fontPickerOutsideInstalled){
         root.dataset.fontPickerOutsideInstalled='true';
         document.addEventListener('pointerdown',ev=>{if(activePicker&&!activePicker.button.parentElement.contains(ev.target))closePicker();});
@@ -16982,7 +17028,7 @@ function renderLayerList(){
 
 function syncLayerControls(){const body=field('layer-controls-body');const layer=currentLayer();const title=field('context-title');if(title)title.textContent=layer?(layer.name||({text:'Text',button:'Button',image:'Image',shape:'Shape'}[layer.type]||'Object'))+' settings':'Select an object';if(!body)return;body.style.display=layer?'':'none';field('layer-empty').style.display=layer?'none':'';root.querySelectorAll('.mq-studio-layer-section').forEach(el=>el.classList.remove('show'));if(!layer)return;field('layer-name').value=layer.name||'';field('layer-place').value=layer.place||'front';field('layer-x').value=Math.round(layer.x||0);field('layer-y').value=Math.round(layer.y||0);field('layer-w').value=Math.round(layer.w||1);field('layer-h').value=Math.round(layer.h||1);field('layer-opacity').value=layer.opacity==null?100:layer.opacity;field('layer-rotation').value=layer.rotation||0;if(field('rotation-number'))field('rotation-number').value=Number(layer.rotation||0).toFixed(1);field('layer-shadow-color').value=layer.shadowColor||'#000000';field('layer-shadow-blur').value=layer.shadowBlur||0;field('layer-shadow-x').value=layer.shadowX||0;field('layer-shadow-y').value=layer.shadowY||0;
   if(layer.type==='text'||layer.type==='button'){field('layer-text-fields').classList.add('show');field('layer-text').value=layer.text||'';field('layer-font').value=layer.font||'playfair';field('layer-font')._mqRefreshFont?.();field('layer-align').value=layer.align||'left';field('layer-color').value=layer.color||'#ffffff';field('layer-size').value=layer.size||56;field('layer-spacing').value=layer.spacing||0;if(field('layer-curve'))field('layer-curve').value=layer.curve||0;if(field('curve-value'))field('curve-value').textContent=(Number(layer.curve)||0)>0?'Arch up · '+layer.curve:(Number(layer.curve)||0)<0?'Arch down · '+Math.abs(layer.curve):'Straight · 0';field('layer-fx').value=layer.fx||'none';if(field('layer-style'))field('layer-style').value='custom';if(field('layer-text-stroke-width'))field('layer-text-stroke-width').value=layer.textStrokeWidth||0;}
-  if(layer.type==='shape'||layer.type==='button'){field('layer-shape-fields').classList.add('show');field('layer-shape').value=layer.shape||'rect';field('layer-radius').value=layer.radius||0;field('layer-fill').value=layer.fill||'#ffffff';field('layer-stroke').value=layer.stroke||'#ffffff';field('layer-stroke-width').value=layer.strokeWidth||0;}
+  if(layer.type==='shape'||layer.type==='button'){field('layer-shape-fields').classList.add('show');field('layer-shape').value=layer.shape||'rect';field('layer-shape')._mqRefreshFont?.();field('layer-radius').value=layer.radius||0;field('layer-fill').value=layer.fill||'#ffffff';field('layer-stroke').value=layer.stroke||'#ffffff';field('layer-stroke-width').value=layer.strokeWidth||0;}
   if(layer.type==='image'){field('layer-image-fields').classList.add('show');field('layer-fit').value=layer.fit||'cover';field('layer-image-radius').value=layer.radius||0;field('layer-image-stroke').value=layer.stroke||'#ffffff';field('layer-image-stroke-width').value=layer.strokeWidth||0;}
   renderLayerList();
 }
@@ -17700,7 +17746,7 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
       });
 if(field('detach'))field('detach').addEventListener('click',()=>{if(mqStudioDetached){mqShowToast('Elements are already independent layers');return;}detachBuiltIns(false);});
 field('add-text-layer').addEventListener('click',()=>addLayer(defaultTextLayer()));
-field('add-shape-layer').addEventListener('click',()=>addLayer(defaultShapeLayer()));
+field('add-shape-layer').addEventListener('click',()=>{addLayer(defaultShapeLayer());requestAnimationFrame(()=>requestAnimationFrame(()=>{const sh=field('layer-shape');sh?.closest('label')?.scrollIntoView({block:'nearest'});sh?._mqOpenPicker?.();}));});
 if(field('add-arrow-layer'))field('add-arrow-layer').addEventListener('click',()=>addLayer(defaultArrowLayer('arrow')));
 if(field('add-doodle-layer'))field('add-doodle-layer').addEventListener('click',()=>addLayer(defaultDoodleLayer('burst')));
 if(field('add-swipe-layer'))field('add-swipe-layer').addEventListener('click',()=>addLayer(defaultBrushSwipeLayer()));
@@ -17765,7 +17811,7 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
       }
       const showPropertyMode=()=>{workspace.classList.remove('mq-studio-canvas-first');workspace.classList.add('mq-studio-property-mode');previewShift=0;preview.style.transform='';requestAnimationFrame(queuePreviewFollow);};
       field('quick-text').addEventListener('click',()=>{const layer=defaultTextLayer();const cv=field('canvas'),unit=cv._mqUnit||1;layer.x=Math.round(Math.max(20,(cv.width/unit-layer.w)/2));layer.y=Math.round(Math.max(20,(cv.height/unit-layer.h)/2));addLayer(layer);editLayerInline(layer);});
-      field('quick-shape').addEventListener('click',()=>{addLayer(defaultShapeLayer());showPropertyMode();});
+      field('quick-shape').addEventListener('click',()=>{addLayer(defaultShapeLayer());showPropertyMode();requestAnimationFrame(()=>requestAnimationFrame(()=>{const sh=field('layer-shape');sh?.closest('label')?.scrollIntoView({block:'nearest'});sh?._mqOpenPicker?.();}));});
       if(field('quick-arrow'))field('quick-arrow').addEventListener('click',()=>{addLayer(defaultArrowLayer('arrow'));showPropertyMode();});
       if(field('quick-doodle'))field('quick-doodle').addEventListener('click',()=>{addLayer(defaultBrushSwipeLayer());showPropertyMode();});
       if(field('quick-bubble'))field('quick-bubble').addEventListener('click',()=>{addLayer(defaultBubbleLayer());showPropertyMode();});
