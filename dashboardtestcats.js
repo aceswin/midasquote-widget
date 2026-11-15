@@ -15197,6 +15197,17 @@ ${mqIsFreePlanShop() ? mqShowroomLockNoteHTML(true) : `      <label class="mq-bt
   }
 
   function roomLinkSummaryText(visibleRooms, rooms, cat) {
+    // A step limited to some project types (its 🗂️ control here, or "Show
+    // this step for…" in the step editor) limits every option in it, so the
+    // option's own summary says what's actually in effect (Nov 2026: options
+    // read "All project types" in a step set to Bathroom renovation only).
+    const stepHidden = (cat && cat !== 'specialty') ? ((window._mqCategoryRooms || {})[cat] || []) : [];
+    if (stepHidden.length && (rooms || []).some(r => stepHidden.includes(r.id))) {
+      const base = (visibleRooms && visibleRooms.length) ? (rooms || []).filter(r => visibleRooms.includes(r.id)) : (rooms || []);
+      const on = base.filter(r => !stepHidden.includes(r.id));
+      if (!on.length) return 'None (its step is hidden for those project types)';
+      return on.map(r => mqRoomLabel(r)).filter(Boolean).join(', ');
+    }
     if (!visibleRooms || !visibleRooms.length) {
       return cat === 'specialty' ? (mqCabShop() ? 'All cabinet types (not Countertops or your own quote types — tick to add)' : 'None yet — tick the project types it’s for') : 'All project types';
     }

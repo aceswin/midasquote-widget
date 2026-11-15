@@ -7025,6 +7025,29 @@ window.mqphGoToWizard = function() {
     if (window._mqShopRecord && window._mqShopRecord.fields) window._mqShopRecord.fields['Category rooms'] = json;
     window._mqCategoryRooms = cr;
     if (window._mqLastFetchTimes) window._mqLastFetchTimes['products'] = 0;
+    // Same as My Products' step 🗂️ control: each option's own project-type
+    // list follows the change, so an option hidden for a project type earlier
+    // comes back when the step is turned on for it again (and vice versa).
+    // Options start out ticked for exactly what the step shows; they can
+    // still be changed one by one in My Products afterwards.
+    const was = new Set(JSON.parse(before)), now = new Set(cr[cid] || []);
+    const all = pick ? pick.all : [];
+    const shown = all.filter(id => was.has(id) && !now.has(id)), hid = all.filter(id => !was.has(id) && now.has(id));
+    if (!all.length || (!shown.length && !hid.length)) return;
+    for (const r of mqccItems(cid)) {
+      let cur = [];
+      try { cur = JSON.parse(r.fields['Visible rooms'] || '[]'); } catch(e) { cur = []; }
+      if (!Array.isArray(cur)) cur = [];
+      const eff = new Set(cur.length ? cur : all);
+      shown.forEach(id => eff.add(id)); hid.forEach(id => eff.delete(id));
+      let list = all.filter(id => eff.has(id));
+      if (!list.length) continue; // shown nowhere: keep its own list (empty would mean "everywhere")
+      if (list.length === all.length) list = [];
+      const next = JSON.stringify(list);
+      if (next === JSON.stringify(cur)) continue;
+      try { await atUpdate(LINE_ITEMS_TABLE, r.id, { 'Visible rooms': next }); r.fields['Visible rooms'] = next; }
+      catch(e) { console.warn('option project types', r.id, e); }
+    }
   }
   window.mqccCatQtChanged = function() {
     const c = mqccEditCat ? mqccCats().find(x => x.id === mqccEditCat) : null;
