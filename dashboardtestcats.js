@@ -3300,12 +3300,18 @@ window.logoutMember = async function () {
       #midasquote-dashboard .mq-top-navigation{position:sticky;top:60px;z-index:84;background:rgba(248,250,252,.94)!important;backdrop-filter:blur(10px);border-bottom:1px solid #e6ebf2;box-shadow:0 4px 12px rgba(15,23,42,.04)}
       #midasquote-dashboard .mq-nav-major{padding:14px clamp(14px,2.6vw,38px) 6px!important;gap:8px!important}
       #midasquote-dashboard .mq-major-tab{border:1px solid #e6ebf2!important;background:#fff!important;color:#475569!important;border-radius:8px!important;padding:10px 16px!important;box-shadow:0 1px 2px rgba(15,23,42,.04)}
-      #midasquote-dashboard .mq-major-tab:hover{background:#f8fafc!important;color:#111827!important;border-color:#d8e0ea!important}
+      #midasquote-dashboard .mq-major-tab{transition:background .15s,border-color .15s,box-shadow .15s,transform .15s,color .15s}
+      #midasquote-dashboard .mq-major-tab:not(.active):hover{background:#fff!important;color:#111827!important;border-color:#e2bf63!important;box-shadow:0 6px 14px rgba(215,164,46,.18)!important;transform:translateY(-1px)}
       #midasquote-dashboard .mq-major-tab.active{background:linear-gradient(180deg,#fff8e7 0%,#fff2ce 100%)!important;border-color:#e7c66b!important;color:#1f2937!important;box-shadow:0 8px 18px rgba(212,175,55,.14)!important}
       #midasquote-dashboard .mq-top-navigation .mq-sidebar{padding:10px clamp(14px,2.6vw,38px) 15px!important;gap:8px!important;scrollbar-width:none}
       #midasquote-dashboard .mq-top-navigation .mq-sidebar::-webkit-scrollbar{display:none}
       #midasquote-dashboard .mq-top-navigation .mq-nav-item{border:1px solid #e4e9f1!important;border-radius:8px!important;padding:9px 14px!important;color:#475569!important;background:#fff!important;box-shadow:0 1px 2px rgba(15,23,42,.03)}
-      #midasquote-dashboard .mq-top-navigation .mq-nav-item:hover{background:#f8fafc!important;border-color:#d7dde7!important;transform:translateY(-1px)}
+      #midasquote-dashboard .mq-top-navigation .mq-nav-item{transition:background .15s,border-color .15s,box-shadow .15s,transform .15s,color .15s}
+      #midasquote-dashboard .mq-top-navigation .mq-nav-item:not(.active):hover{background:#fff!important;border-color:#e2bf63!important;color:#111827!important;box-shadow:0 6px 14px rgba(215,164,46,.18)!important;transform:translateY(-1px)}
+      #midasquote-dashboard .mq-biz-chip{transition:border-color .15s,box-shadow .15s,transform .15s,background .15s}
+      #midasquote-dashboard .mq-biz-chip[aria-pressed="false"]:hover{border-color:#d7a42e!important;background:#fffaf0!important;box-shadow:0 4px 10px rgba(215,164,46,.18);transform:translateY(-1px)}
+      #midasquote-dashboard .mq-biz-chip[aria-pressed="true"]:hover{box-shadow:0 4px 12px rgba(17,17,17,.25);transform:translateY(-1px)}
+      #midasquote-dashboard button[onclick^="mqBizIndustry"]:hover{box-shadow:0 4px 10px rgba(215,164,46,.18);transform:translateY(-1px)}
       #midasquote-dashboard .mq-top-navigation .mq-nav-item.active{background:linear-gradient(180deg,#12151c 0%,#181c24 100%)!important;border-color:#12151c!important;color:#fff!important;box-shadow:0 10px 22px rgba(15,23,42,.12)}
       #midasquote-dashboard .mq-nav-step{width:22px!important;height:22px!important;border-color:#dce2ea!important;background:#f8fafc!important;color:#334155!important}
       #midasquote-dashboard .mq-top-navigation .mq-nav-item.active .mq-nav-step{background:#f7d36e!important;color:#111827!important;border-color:#f7d36e!important}
@@ -17245,7 +17251,22 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
   };
   const mode=buildPath();
   if(blur>0||dx!==0||dy!==0){ctx.shadowColor=layer.shadowColor||'#000000';ctx.shadowBlur=Math.max(8,blur)*k;ctx.shadowOffsetX=dx*k;ctx.shadowOffsetY=dy*k;}
-  if(mode==='fill'){ctx.fillStyle=layer.fill||'#ffffff';ctx.fill();}
+  if(mode==='fill'&&shape==='ribbon'){
+    // Ribbon (Nov 2026): tails sit behind in a darker shade, with an even
+    // darker fold where the front band tucks behind them, so it reads 3D.
+    const base=layer.fill||'#ffffff';
+    const shade=(hex,f)=>{const m=/^#?([0-9a-f]{6})$/i.exec(hex);if(!m)return hex;const n=parseInt(m[1],16);const c=v=>Math.max(0,Math.min(255,Math.round(v*f)));return `rgb(${c(n>>16&255)},${c(n>>8&255)},${c(n&255)})`;};
+    const poly=(pts,col)=>{ctx.beginPath();pts.forEach(([px,py],i)=>i?ctx.lineTo(x+w*px,y+h*py):ctx.moveTo(x+w*px,y+h*py));ctx.closePath();ctx.fillStyle=col;ctx.fill();};
+    poly([[0,.30],[.17,.30],[.17,.76],[0,.76],[.07,.53]],shade(base,.72));
+    poly([[1,.30],[.83,.30],[.83,.76],[1,.76],[.93,.53]],shade(base,.72));
+    clearRawShadow(ctx);
+    poly([[.12,.66],[.17,.66],[.17,.76]],shade(base,.48));
+    poly([[.88,.66],[.83,.66],[.83,.76]],shade(base,.48));
+    poly([[.12,.16],[.88,.16],[.88,.66],[.12,.66]],base);
+    const sheen=ctx.createLinearGradient(0,y+h*.16,0,y+h*.66);sheen.addColorStop(0,'rgba(255,255,255,.14)');sheen.addColorStop(.5,'rgba(255,255,255,0)');sheen.addColorStop(1,'rgba(0,0,0,.10)');
+    ctx.beginPath();ctx.rect(x+w*.12,y+h*.16,w*.76,h*.50);ctx.fillStyle=sheen;ctx.fill();
+  }
+  else if(mode==='fill'){ctx.fillStyle=layer.fill||'#ffffff';ctx.fill();}
   else {ctx.strokeStyle=layer.stroke||layer.fill||'#ffffff';ctx.lineWidth=shape==='check'?Math.max(checkW,(Number(layer.strokeWidth)||0)*k):curveW?curveW*Math.max(.25,(Number(layer.strokeWidth)||12)/12):Math.max(shape==='burst'||shape==='underline'||shape.startsWith('curve')||shape==='sparkle'?6:4,Number(layer.strokeWidth)||0)*k;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke();}
 
   clearRawShadow(ctx);
