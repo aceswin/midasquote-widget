@@ -4729,10 +4729,9 @@ window.logoutMember = async function () {
         </div>
         <div style="border-top:1px dashed #e5e7eb;padding-top:10px">
           <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:6px">📏 Default "How to measure your space" for this project type</label>
-          <textarea id="mq-master-room-measure-text-${idx}" placeholder="Leave blank to use the standard measuring guide. New shops (and any shop that gets this project type added later) start with whatever's here." rows="3" style="width:100%;font-size:12px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;resize:vertical;margin-bottom:6px">${(r.measureText||'').replace(/</g,'&lt;')}</textarea>
+          ${mqGuideToolbarHTML(`mq-master-room-measure-text-${idx}`, !r.forCountertops)}<textarea oninput="mqGuidePv(this)" id="mq-master-room-measure-text-${idx}" placeholder="Leave blank to use the standard measuring guide. New shops (and any shop that gets this project type added later) start with whatever's here." rows="6" style="width:100%;font-size:12.5px;line-height:1.5;padding:9px 11px;border:1px solid #d1d5db;border-radius:0 0 8px 8px;border-top:none;font-family:inherit;resize:vertical;margin-bottom:6px">${(r.measureText||'').replace(/</g,'&lt;')}</textarea>${mqGuidePvHTML(`mq-master-room-measure-text-${idx}`, r.measureText)}
           <div style="margin-bottom:8px">
             <button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqFillDefaultGuide('mq-master-room-measure-text-${idx}','${r.id}')">↺ Use default guide</button>
-            <div style="display:block;margin:8px 0 2px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:8px 11px;font-size:12px;color:#1e3a8a;line-height:1.9"><strong>✍️ Formatting tricks:</strong> <code style="background:#fff;border:1px solid #e5e7eb;border-radius:4px;padding:1px 5px;font-size:11.5px;color:#111;font-family:ui-monospace,Menlo,Consolas,monospace">**text**</code> → <strong>bold</strong> &nbsp;·&nbsp; <code style="background:#fff;border:1px solid #e5e7eb;border-radius:4px;padding:1px 5px;font-size:11.5px;color:#111;font-family:ui-monospace,Menlo,Consolas,monospace">[calc]</code> → calculator icon &nbsp;·&nbsp; <code style="background:#fff;border:1px solid #e5e7eb;border-radius:4px;padding:1px 5px;font-size:11.5px;color:#111;font-family:ui-monospace,Menlo,Consolas,monospace">[corner-img]</code> → corner-cabinets photo &nbsp;·&nbsp; <code style="background:#fff;border:1px solid #e5e7eb;border-radius:4px;padding:1px 5px;font-size:11.5px;color:#111;font-family:ui-monospace,Menlo,Consolas,monospace">[tip]text[/tip]</code> → yellow tip box</div>
           </div>
           <div style="display:flex;gap:8px;align-items:flex-start">
             <div id="mq-master-room-measure-img-preview-${idx}" style="width:56px;height:56px;border-radius:6px;overflow:hidden;flex-shrink:0;background:#f3f4f6;display:flex;align-items:center;justify-content:center;border:1px solid #e5e7eb">
@@ -5526,6 +5525,73 @@ window.logoutMember = async function () {
 
 **Not sure?** Just use your best guess — this is a ballpark estimate!`;
 
+  // ---- "How to measure" editor (Nov 2026): toolbar + live preview ----
+  // Same saved text as before (**bold**, [tip]…[/tip], [calc], [corner-img]),
+  // so the widget needs no change — the buttons just write it for you.
+  function mqGuideCalcIcon() {
+    return '<span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;background:#eff6ff;border:1px solid #93c5fd;border-radius:6px;vertical-align:-6px;margin:0 2px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><rect x="4" y="2" width="16" height="20" rx="2" stroke="#1d4ed8" stroke-width="1.8"/><rect x="6.5" y="4.5" width="11" height="4" rx="0.5" fill="#1d4ed8"/><rect x="6.5" y="11" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="10.7" y="11" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="14.9" y="11" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="6.5" y="15.6" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="10.7" y="15.6" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/><rect x="14.9" y="15.6" width="2.6" height="2.4" rx="0.4" fill="#1d4ed8"/></svg></span>';
+  }
+  // Mirrors the widget's renderSafeGuideText (escape first, then the 4 tags).
+  function mqGuideRender(raw) {
+    let h = String(raw || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    h = h.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    h = h.replace(/\n/g, '<br>');
+    h = h.replace(/\[calc\]/g, mqGuideCalcIcon());
+    h = h.replace(/\[corner-img\]/g, '<img src="https://raw.githubusercontent.com/aceswin/midasquote-widget/main/measure-guides/corner-cabinets.jpg" alt="" style="display:block;max-width:220px;width:100%;border-radius:8px;margin:8px 0"/>');
+    h = h.replace(/\[tip\](.+?)\[\/tip\]/gs, '<div style="background:#fffbeb;border-radius:6px;padding:8px 10px;margin-top:8px;color:#92400e;font-size:12px">💡 $1</div>');
+    return h;
+  }
+  window.mqGuideToolbarHTML = function(taId, corner) {
+    const b = (act, label, title, extra) => `<button type="button" title="${title}" onmousedown="event.preventDefault()" onclick="mqGuideFmt('${taId}','${act}')" style="border:1px solid #e5e7eb;background:#fff;border-radius:6px;padding:4px 9px;font-size:12px;font-weight:600;color:#111;cursor:pointer;line-height:1.3;${extra || ''}">${label}</button>`;
+    return `<div class="mq-guide-tb" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;background:#f9fafb;border:1px solid #d1d5db;border-radius:8px 8px 0 0;padding:6px 8px;margin-top:2px">
+      ${b('bold', '<b>B</b> Bold', 'Make the selected words bold', 'font-weight:400')}
+      ${b('tip', '💡 Tip box', 'Put the selected words in a yellow tip box')}
+      ${b('bullet', '• List', 'Start the selected lines with bullets')}
+      ${b('calc', '🧮 Calculator icon', 'Show the blue calculator icon (customers tap the real one next to each box)')}
+      ${corner ? b('corner', '📷 Corner photo', 'Insert the how-to-measure-corner-cabinets photo') : ''}
+      <span style="font-size:11px;color:#9ca3af;margin-left:auto">Select words, then click</span>
+    </div>`;
+  };
+  window.mqGuidePvHTML = function(taId, text) {
+    return `<div style="margin:8px 0 4px"><div style="font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#6b7280;margin-bottom:4px">👀 How customers see it</div>
+      <div id="${taId}-pv" style="background:#fff;border:1px dashed #d1d5db;border-radius:8px;padding:10px 12px;font-size:13px;line-height:1.55;color:#374151">${(text || '').trim() ? mqGuideRender(text) : '<span style="color:#9ca3af">Nothing yet — type above, or use ↺ Use default guide.</span>'}</div></div>`;
+  };
+  window.mqGuidePv = function(ta) {
+    const pv = document.getElementById(ta.id + '-pv');
+    if (pv) pv.innerHTML = ta.value.trim() ? mqGuideRender(ta.value) : '<span style="color:#9ca3af">Nothing yet — type above, or use ↺ Use default guide.</span>';
+  };
+  window.mqGuideFmt = function(taId, act) {
+    const ta = document.getElementById(taId);
+    if (!ta) return;
+    const v = ta.value; let a = ta.selectionStart, z = ta.selectionEnd;
+    let sel = v.slice(a, z), ins, selFrom, selTo;
+    if (act === 'bold') {
+      // Already bold → un-bold.
+      if (/^\*\*[\s\S]+\*\*$/.test(sel)) { ins = sel.slice(2, -2); selFrom = 0; selTo = ins.length; }
+      else if (v.slice(a - 2, a) === '**' && v.slice(z, z + 2) === '**' && sel) { a -= 2; z += 2; ins = sel; selFrom = 0; selTo = sel.length; }
+      else { const t = sel || 'bold words'; const lead = t.match(/^\s*/)[0], trail = t.match(/\s*$/)[0]; const core = t.trim(); ins = lead + '**' + core + '**' + trail; selFrom = lead.length + 2; selTo = selFrom + core.length; }
+    } else if (act === 'tip') {
+      if (/^\[tip\][\s\S]*\[\/tip\]$/.test(sel)) { ins = sel.slice(5, -6); selFrom = 0; selTo = ins.length; }
+      else { const t = (sel || 'Your tip here').trim(); const before = a > 0 && v[a - 1] !== '\n' ? '\n' : ''; const after = z < v.length && v[z] !== '\n' ? '\n' : ''; ins = before + '[tip]' + t + '[/tip]' + after; selFrom = before.length + 5; selTo = selFrom + t.length; }
+    } else if (act === 'bullet') {
+      // Work on whole lines.
+      a = v.lastIndexOf('\n', a - 1) + 1; const e = v.indexOf('\n', z > a && v[z - 1] === '\n' ? z - 1 : z); z = e < 0 ? v.length : e;
+      sel = v.slice(a, z);
+      const ls = sel.split('\n'); const all = ls.every(l => !l.trim() || /^•\s/.test(l));
+      ins = ls.map(l => !l.trim() ? l : (all ? l.replace(/^•\s/, '') : '• ' + l)).join('\n'); selFrom = 0; selTo = ins.length;
+    } else {
+      const tok = act === 'calc' ? '[calc]' : '[corner-img]';
+      const pad = act === 'corner' ? (a > 0 && v[a - 1] !== '\n' ? '\n' : '') : (a > 0 && !/\s/.test(v[a - 1]) ? ' ' : '');
+      const post = act === 'corner' ? (z < v.length && v[z] !== '\n' ? '\n' : '') : (z < v.length && !/\s/.test(v[z]) ? ' ' : '');
+      ins = pad + tok + post; selFrom = selTo = ins.length;
+    }
+    ta.focus();
+    ta.setRangeText(ins, a, z, 'end');
+    ta.setSelectionRange(a + selFrom, a + selTo);
+    ta.dispatchEvent(new Event('input', { bubbles: true }));
+    ta.dispatchEvent(new Event('change', { bubbles: true }));
+  };
+
   window.mqFillDefaultGuide = function(textareaId, roomId, forCountertops) {
     const ta = el(textareaId);
     if (!ta) return;
@@ -5539,6 +5605,7 @@ window.logoutMember = async function () {
       // (corner-cabinet) one below.
       : (roomId === 'refacing' || roomId === 'repainting' || roomId === 'restaining') ? DEFAULT_MEASURE_GUIDE_TEXT_SQFT
       : DEFAULT_MEASURE_GUIDE_TEXT_GENERAL;
+    ta.dispatchEvent(new Event('input', { bubbles: true }));
   };
 
   // Trade project types (quote types other than cabinets/countertops): the
@@ -6449,10 +6516,9 @@ window.logoutMember = async function () {
             <input type="checkbox" id="mq-room-hidemeasure-${idx}" ${r.hideMeasureGuide?'checked':''} onchange="mqSaveRooms()" style="width:16px;height:16px;flex-shrink:0;accent-color:#1a1a1a"/>
             📏 Hide "How to measure" section <span style="font-weight:400;color:#9ca3af">(for project types that are flat-rate only, with nothing to measure)</span>
           </label>
-            <textarea id="mq-room-measure-text-${idx}" placeholder="${isQt ? 'Your own measuring instructions for this project type. Leave blank (and no images) to skip the How to measure step.' : 'Leave blank to use the standard measuring guide. Fill in to show your own instructions for this project type instead — e.g. how to measure for refacing vs. a full kitchen.'}" rows="3" style="width:100%;font-size:12px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;resize:vertical;margin-bottom:6px">${(r.measureText||'').replace(/</g,'&lt;')}</textarea>
+            ${mqGuideToolbarHTML(`mq-room-measure-text-${idx}`, !isQt && !r.forCountertops)}<textarea oninput="mqGuidePv(this)" id="mq-room-measure-text-${idx}" placeholder="${isQt ? 'Your own measuring instructions for this project type. Leave blank (and no images) to skip the How to measure step.' : 'Leave blank to use the standard measuring guide. Fill in to show your own instructions for this project type instead — e.g. how to measure for refacing vs. a full kitchen.'}" rows="6" style="width:100%;font-size:12.5px;line-height:1.5;padding:9px 11px;border:1px solid #d1d5db;border-radius:0 0 8px 8px;border-top:none;font-family:inherit;resize:vertical;margin-bottom:6px">${(r.measureText||'').replace(/</g,'&lt;')}</textarea>${mqGuidePvHTML(`mq-room-measure-text-${idx}`, r.measureText)}
             <div style="margin-bottom:8px">
               ${isQt ? `<button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqFillPackGuide('mq-room-measure-text-${idx}','${r.id}',this)">↺ Use default guide</button>` : `<button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqFillDefaultGuide('mq-room-measure-text-${idx}','${r.id}',${!!r.forCountertops})">↺ Use default guide</button>`}
-              <div style="display:block;margin:8px 0 2px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:8px 11px;font-size:12px;color:#1e3a8a;line-height:1.9"><strong>✍️ Formatting tricks:</strong> <code style="background:#fff;border:1px solid #e5e7eb;border-radius:4px;padding:1px 5px;font-size:11.5px;color:#111;font-family:ui-monospace,Menlo,Consolas,monospace">**text**</code> → <strong>bold</strong> &nbsp;·&nbsp; <code style="background:#fff;border:1px solid #e5e7eb;border-radius:4px;padding:1px 5px;font-size:11.5px;color:#111;font-family:ui-monospace,Menlo,Consolas,monospace">[calc]</code> → calculator icon &nbsp;·&nbsp; <code style="background:#fff;border:1px solid #e5e7eb;border-radius:4px;padding:1px 5px;font-size:11.5px;color:#111;font-family:ui-monospace,Menlo,Consolas,monospace">[corner-img]</code> → corner-cabinets photo &nbsp;·&nbsp; <code style="background:#fff;border:1px solid #e5e7eb;border-radius:4px;padding:1px 5px;font-size:11.5px;color:#111;font-family:ui-monospace,Menlo,Consolas,monospace">[tip]text[/tip]</code> → yellow tip box</div>
             </div>
             ${isDemo ? mqDemoImageLockedHTML('measuring guide images/videos', r.packMeasure) : `
             <div style="display:flex;gap:8px;align-items:flex-start">
@@ -7467,7 +7533,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   };
   function mqPropSettingsSummary(f) {
     const dep = f['Deposit type'] === 'Flat amount' ? `${CUR()}${f['Deposit value'] || 0} deposit` : `${f['Deposit value'] || 0}% deposit`;
-    return `${f['Size category'] || 'Standard'} · ${dep} · ${f['Tax percent'] || 0}% tax · prices ${f['Show item prices'] === false ? 'hidden' : 'shown'}`;
+    return `${dep} · ${f['Tax percent'] || 0}% tax · prices ${f['Show item prices'] === false ? 'hidden' : 'shown'}`;
   }
 
   // ======================================================================
@@ -8479,7 +8545,6 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           <span id="mq-prop-chevron-${t.id}" style="font-size:11px;color:#6b7280;display:inline-block;transition:transform 0.15s">▶</span>
           <span style="width:14px;height:14px;border-radius:4px;background:${accent};flex-shrink:0"></span>
           <strong id="mq-prop-header-name-${t.id}" style="font-size:14px">${name.replace(/</g,'&lt;')}</strong>
-          <span style="font-size:12px;color:#9ca3af">(${f['Size category']||'Standard'})</span>
           <div style="flex:1"></div>
           <button class="mq-btn mq-btn-sm" onclick="event.stopPropagation();mqPreviewProposalTemplate('${t.id}')" title="Preview with sample data">👁 Preview</button>
           <button class="mq-btn mq-btn-danger mq-btn-sm" onclick="event.stopPropagation();mqDeleteProposalTemplate('${t.id}','${(name||'this template').replace(/'/g,"\\'")}')" title="Delete template">✕</button>
@@ -8493,14 +8558,6 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           <div style="flex:1;min-width:180px">
             <label class="mq-label">Template name</label>
             <input type="text" value="${(f['Template name']||'').replace(/"/g,'&quot;')}" onblur="mqSaveProposalField('${t.id}','Template name',this.value); const h=document.getElementById('mq-prop-header-name-${t.id}'); if(h) h.textContent=this.value||'Untitled';"/>
-          </div>
-          <div style="width:150px">
-            <label class="mq-label">Size category</label>
-            <select onchange="mqSaveProposalField('${t.id}','Size category',this.value)" style="width:100%">
-              <option value="Simple" ${f['Size category']==='Simple'?'selected':''}>Simple</option>
-              <option value="Standard" ${f['Size category']==='Standard'||!f['Size category']?'selected':''}>Standard</option>
-              <option value="Large" ${f['Size category']==='Large'?'selected':''}>Large</option>
-            </select>
           </div>
           <div>
             <label class="mq-label">Accent colour</label>
@@ -8528,7 +8585,6 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         </div>
 
 `,false)}
-        ${mqPropSection(t.id,'help','📖 Cheat sheet','What every tag does — you never need to type them, the buttons above the text box insert them for you.',`<div style="font-size:12px;color:#374151;line-height:1.7">${PROPOSAL_TOKENS_HELP}</div>`,false)}
         </div>
         ${mqPropPreviewColHTML(t)}
         </div>
