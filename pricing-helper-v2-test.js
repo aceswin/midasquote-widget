@@ -6776,7 +6776,14 @@ window.mqphGoToWizard = function() {
               <div style="font-size:11px;color:#6b7280;margin-top:4px;line-height:1.45">Choose which quote type this step appears in.</div>
             </div>
             <div class="mqph-field" id="mqcc-cat-rooms-wrap" style="display:none !important"><label>Show this step for these project types</label>
-              <div id="mqcc-cat-rooms" style="display:flex;flex-wrap:wrap;gap:6px 14px;padding:2px 0"></div>
+              <style>
+                #mqcc-cat-rooms{display:grid !important;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px;padding:2px 0}
+                #mqcc-cat-rooms label.mqcc-room-opt{display:flex !important;align-items:center !important;gap:9px !important;margin:0 !important;padding:9px 12px !important;border:1px solid #e5e7eb !important;border-radius:10px !important;background:#fff !important;cursor:pointer;text-transform:none !important;letter-spacing:0 !important;font-size:13.5px !important;font-weight:600 !important;color:#111827 !important;line-height:1.3 !important;width:auto !important;transition:border-color .15s,background .15s}
+                #mqcc-cat-rooms label.mqcc-room-opt:has(input:checked){border-color:#2563eb !important;background:#eff6ff !important}
+                #mqcc-cat-rooms label.mqcc-room-opt input{width:17px !important;height:17px !important;min-width:17px;margin:0 !important;padding:0 !important;flex:0 0 auto;accent-color:#2563eb}
+                #mqcc-cat-rooms label.mqcc-room-opt span.mqcc-room-off{color:#9ca3af;font-weight:400}
+              </style>
+              <div id="mqcc-cat-rooms"></div>
               <div style="font-size:11px;color:#6b7280;margin-top:5px;line-height:1.45">Applies to every option in this step. Individual options can still be hidden for a project type in <strong>My Products</strong>.</div>
             </div>
             <div class="mqph-field"><label>Category name</label><input type="text" id="mqcc-cat-name" maxlength="60" placeholder="Finishing &amp; extras"/></div>
@@ -6999,8 +7006,7 @@ window.mqphGoToWizard = function() {
     if (rooms.length < 2) { wrap.style.setProperty('display', 'none', 'important'); box.innerHTML = ''; return; }
     const sameQuote = mqccEditCat && (((mqccCats().find(x => x.id === mqccEditCat) || {}).qt || '') === qt);
     const hidden = new Set(sameQuote ? (mqccCatRoomsHidden()[mqccEditCat] || []) : []);
-    box.innerHTML = rooms.map(r => `<label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;font-weight:500">
-        <input type="checkbox" class="mqcc-cat-room" value="${mqccEsc(r.id)}" ${hidden.has(r.id) ? '' : 'checked'} style="width:16px;height:16px"/> ${mqccEsc(r.name || 'Project type')}${r.active === false ? ' <span style="color:#9ca3af;font-weight:400">(off)</span>' : ''}</label>`).join('');
+    box.innerHTML = rooms.map(r => `<label class="mqcc-room-opt"><input type="checkbox" class="mqcc-cat-room" value="${mqccEsc(r.id)}" ${hidden.has(r.id) ? '' : 'checked'}/><span>${mqccEsc(r.name || 'Project type')}${r.active === false ? ' <span class="mqcc-room-off">(off)</span>' : ''}</span></label>`).join('');
     wrap.style.removeProperty('display');
   }
   function mqccCatRoomsRead() {
