@@ -182,11 +182,13 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 
   function showMsg(id, msg, type = 'success') {
     const e = el(id);
+    // Jordan, Nov 2026: nothing on the page may move when a message shows.
+    // The floating toast (overlays everything) carries every message; the
+    // old inline boxes only keep the text and stay hidden.
     if (e) {
       e.textContent = msg;
       e.className = `mq-msg mq-msg-${type}`;
-      e.style.display = 'block';
-      setTimeout(() => { e.style.display = 'none'; }, 3000);
+      e.style.display = 'none';
     }
     mqShowToast(msg, type);
   }
@@ -7507,7 +7509,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const open = body.style.display === 'none';
     body.style.display = open ? 'block' : 'none';
     if (chev) chev.style.transform = open ? 'rotate(90deg)' : 'rotate(0deg)';
-    if (open && key === 'lh' && window.mqPbShowInPreview) window.mqPbShowInPreview(id, 0, 'lh');
+    if (open && key === 'lh' && window.mqPbSetActive) window.mqPbSetActive(id, { sec: 'lh' }, true);
   };
   function mqPropSettingsSummary(f) {
     const dep = f['Deposit type'] === 'Flat amount' ? `${CUR()}${f['Deposit value'] || 0} deposit` : `${f['Deposit value'] || 0}% deposit`;
@@ -7945,7 +7947,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const hi = ev => {
         if (ev.target.closest('button,[draggable] span[title^="Drag"]')) return;
         const row = ev.target.closest('.mq-pb[data-i]');
-        if (row) window.mqPbShowInPreview(id, +row.dataset.i);
+        if (row) window.mqPbSetActive(id, { i: +row.dataset.i }, true);
       };
       box.addEventListener('click', hi);
       box.addEventListener('focusin', hi);
@@ -7955,6 +7957,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       ? blocks.map((b, i) => mqPbBlockHTML(id, b, i, blocks)).join('')
       : `<div style="padding:26px 12px;text-align:center;color:#9ca3af;font-size:13px;border:2px dashed #d1d5db;border-radius:8px">Your proposal is empty.<br>Click or drag a block from above to start.</div>`;
     box.querySelectorAll('textarea').forEach(window.mqPbGrow);
+    if (window._mqPbActive[id]) mqPbApplyActive(id, false);
     if (focusIdx != null) {
       const ta = document.getElementById(`mq-pb-ed-${id}-${focusIdx}`) || document.getElementById(`mq-pb-ed-${id}-${focusIdx}-L`);
       if (ta) ta.focus();
@@ -7980,6 +7983,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     });
     window.mqPbRender(id);
     if (changed) mqPbCommit(id, true);
+    if (!window._mqPbActive[id] && _mqPropBlocks[id].length) window._mqPbActive[id] = { i: 0 };
     setTimeout(() => { if (window.mqRefreshProposalPreview) window.mqRefreshProposalPreview(id); }, 0);
   };
 
@@ -8361,6 +8365,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       }
     } catch (e) {}
     box.innerHTML = mqPropPreviewInnerHTML(t, body, { jump: true });
+    if (window._mqPbActive && window._mqPbActive[id]) setTimeout(() => mqPbApplyActive(id, false), 0);
     if (!box._mqJump) {
       box._mqJump = true;
       box.style.cursor = 'pointer';
@@ -8397,10 +8402,11 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   }
   function mqPbJumpSection(id, key) {
     const body = mqPbOpenSection(id, key);
-    if (body) mqPbFlash(body.parentElement);
+    if (body) body.parentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (key === 'lh') window.mqPbSetActive(id, { sec: 'lh' }, false);
   }
   // Outline the part of the live preview that block i makes, and scroll to it.
-  window.mqPbShowInPreview = function(id, i, sec) {
+  window.mqPbShowInPreview = function(id, i, sec, noScroll) {
     const box = document.getElementById(`mq-prop-preview-${id}`);
     if (!box) return;
     let top, bottom;
@@ -8424,9 +8430,38 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     if (!ov) { ov = document.createElement('div'); ov.className = 'mq-pb-pv-hi'; box.appendChild(ov); }
     ov.style.cssText = `position:absolute;left:8px;right:8px;top:${top - 6}px;height:${bottom - top + 6}px;border:3px solid #e2bf63;background:rgba(226,191,99,.13);border-radius:8px;pointer-events:none;z-index:5;transition:opacity .5s;opacity:1`;
     const target = Math.max(0, top - 30);
-    if (top < box.scrollTop || bottom > box.scrollTop + box.clientHeight) box.scrollTo({ top: target, behavior: 'smooth' });
-    clearTimeout(box._mqHiT);
-    box._mqHiT = setTimeout(() => { ov.style.opacity = '0'; }, 1600);
+    if (!noScroll && (top < box.scrollTop || bottom > box.scrollTop + box.clientHeight)) box.scrollTo({ top: target, behavior: 'smooth' });
+  };
+  // ---- The block being edited stays outlined on BOTH sides (Jordan, Nov
+  // 2026): its row on the left and its spot in the preview. The first
+  // block starts selected so it's obvious the two are connected. ----
+  window._mqPbActive = window._mqPbActive || {};
+  function mqPbActiveCss() {
+    if (document.getElementById('mq-pb-active-css')) return;
+    const st = document.createElement('style'); st.id = 'mq-pb-active-css';
+    st.textContent = '.mq-pb.mq-pb-active{border-color:#e2bf63!important;box-shadow:0 0 0 2px #e2bf63,0 0 0 6px rgba(226,191,99,.22)!important}.mq-pb-sec-active{border-color:#e2bf63!important;box-shadow:0 0 0 2px #e2bf63,0 0 0 6px rgba(226,191,99,.22)!important}';
+    document.head.appendChild(st);
+  }
+  function mqPbApplyActive(id, scrollPreview) {
+    mqPbActiveCss();
+    const a = window._mqPbActive[id];
+    const canvas = document.getElementById(`mq-prop-canvas-${id}`);
+    if (canvas) canvas.querySelectorAll('.mq-pb.mq-pb-active').forEach(r => r.classList.remove('mq-pb-active'));
+    const lhBody = document.getElementById(`mq-prop-sec-body-${id}-lh`);
+    const lhBox = lhBody && lhBody.parentElement;
+    if (lhBox) lhBox.classList.toggle('mq-pb-sec-active', !!(a && a.sec === 'lh'));
+    if (!a) return;
+    if (a.sec) { window.mqPbShowInPreview(id, 0, a.sec, !scrollPreview); return; }
+    const n = (_mqPropBlocks[id] || []).length;
+    if (!n) { const ov = document.querySelector(`#mq-prop-preview-${id} .mq-pb-pv-hi`); if (ov) ov.remove(); return; }
+    if (a.i >= n) a.i = n - 1;
+    const row = canvas && canvas.querySelector(`.mq-pb[data-i="${a.i}"]`);
+    if (row) row.classList.add('mq-pb-active');
+    window.mqPbShowInPreview(id, a.i, null, !scrollPreview);
+  }
+  window.mqPbSetActive = function(id, a, scrollPreview) {
+    window._mqPbActive[id] = a;
+    mqPbApplyActive(id, scrollPreview);
   };
   window.mqPbJump = function(id, i) {
     mqPbOpenSection(id, 'text');
@@ -8435,7 +8470,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     if (!row) { mqPbJumpSection(id, 'text'); return; }
     const pn = document.getElementById(`mq-pb-panel-${id}-${i}`);
     if (pn && pn.style.display === 'none') window.mqPbToggle(id, i);
-    mqPbFlash(row);
+    row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    window.mqPbSetActive(id, { i }, false);
   };
 
   // Inserts a {tag} where the caret is. Tags that are whole blocks (item list,
@@ -18255,9 +18291,19 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
     // stops it. History and browser drafts are switched off while it runs.
     var mqThumbing=false,mqThumbCancel=false,mqThumbRun=0;
     const mqRealThumbs=new Map();
-    const mqRealThumbKey=t=>t.id+'|'+safeColor(color)+'|'+(t.headline||'')+'|'+(t.sub||'');
+    // The shop's photo set is part of the key, so ticking/unticking quote
+    // types (Business info) redraws the gallery with the right photos.
+    const mqStudioPhotoSig=()=>(mqCabShop()?'cab|':'')+mqStudioOwnCovers().join(',');
+    const mqRealThumbKey=t=>t.id+'|'+safeColor(color)+'|'+(t.headline||'')+'|'+(t.sub||'')+'|'+mqStudioPhotoSig();
+    const mqStudioDesignOpen=()=>workspace.style.display==='flex';
+    // Called each time the Marketing page opens (mqNav) — redraws the gallery
+    // if anything it depends on changed since last time.
+    window.mqStudioRefreshGallery=function(){
+      if(mqStudioDesignOpen()||mqThumbing)return;
+      renderGallery(root.querySelector('[data-studio-filter].active')?.dataset.studioFilter||'all');
+    };
     async function mqRenderRealThumbs(){
-      if(mqStudioSelected||mqThumbing)return;
+      if(mqThumbing||mqStudioDesignOpen())return;
       const run=++mqThumbRun;mqThumbCancel=false;
       const tiles=[...grid.querySelectorAll('.mq-studio-tile[data-tid]')];
       const todo=tiles.map(b=>MQ_STUDIO_TEMPLATES.find(x=>x.id===b.dataset.tid)).filter(t=>t&&!mqRealThumbs.has(mqRealThumbKey(t)));
@@ -20257,6 +20303,9 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
       if (socialEl && !socialEl.dataset.loaded && window._mqShopRecord) {
         socialEl.dataset.loaded = 'true';
         initMarketingKit(window._mqShopRecord);
+      } else if (page === 'marketing' && window.mqStudioRefreshGallery) {
+        // Already built this visit: pick up Business info / quote type changes.
+        window.mqStudioRefreshGallery();
       } else if (page === 'embed' && window._mqRawHeaderCode) {
         // Codes already loaded — just refresh the combined display
         window.mqUpdateCombinedEmbed();
