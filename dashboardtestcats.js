@@ -3811,7 +3811,8 @@ window.logoutMember = async function () {
               </div>
             </div>
 
-            <div class="mq-card mq-sr-card">
+            <!-- Retired Nov 2026: the Design Studio covers this now. Kept hidden so code that reads its fields still works. -->
+            <div class="mq-card mq-sr-card" style="display:none!important">
               <div onclick="mqToggleMkSection('graphic')" class="mq-sr-head">
                 <div class="mq-sr-title">🖼️ Social graphic — ready to post</div>
                 <span id="mq-mk-arrow-graphic" class="mq-sr-chev">▼</span>
@@ -3853,7 +3854,8 @@ window.logoutMember = async function () {
               </div>
             </div>
 
-            <div class="mq-card mq-sr-card">
+            <!-- Retired Nov 2026: the Design Studio covers this now. Kept hidden so code that reads its fields still works. -->
+            <div class="mq-card mq-sr-card" style="display:none!important">
               <div onclick="mqToggleMkSection('qrposter')" class="mq-sr-head">
                 <div class="mq-sr-title">🖨️ Printable QR poster</div>
                 <span id="mq-mk-arrow-qrposter" class="mq-sr-chev">▼</span>
@@ -8368,6 +8370,10 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     if (window._mqPbActive && window._mqPbActive[id]) setTimeout(() => mqPbApplyActive(id, false), 0);
     if (!box._mqJump) {
       box._mqJump = true;
+      // Re-place the gold outline whenever the preview appears or changes size
+      // (card opened, window resized, fonts/images loaded).
+      if (window.ResizeObserver) new ResizeObserver(() => { if (window._mqPbActive && window._mqPbActive[id]) mqPbApplyActive(id, false); }).observe(box);
+      box.addEventListener('load', () => { if (window._mqPbActive && window._mqPbActive[id]) mqPbApplyActive(id, false); }, true);
       box.style.cursor = 'pointer';
       box.title = 'Click any part to edit it on the left';
       box.addEventListener('click', ev => window.mqPbJumpFromPreview(id, box, ev));
@@ -8409,6 +8415,9 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   window.mqPbShowInPreview = function(id, i, sec, noScroll) {
     const box = document.getElementById(`mq-prop-preview-${id}`);
     if (!box) return;
+    // Hidden (template card still closed) = nothing has a position yet; the
+    // ResizeObserver below places it once the preview is actually showing.
+    if (!box.offsetParent || !box.offsetHeight) return;
     let top, bottom;
     const offTop = el => { let y = 0; while (el && el !== box) { y += el.offsetTop; el = el.offsetParent; } return y; };
     if (box.style.position !== 'relative') box.style.position = 'relative';
