@@ -17151,7 +17151,7 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
   const dx=Number(layer.shadowX)||0,dy=Number(layer.shadowY)||0;
   const shape=layer.shape||'rect';
   const sw=Math.max(1,Number(layer.strokeWidth)||0)*k;
-  const buildPath=()=>{
+  let checkW=0;const buildPath=()=>{
     ctx.beginPath();
     if(shape==='circle'){ctx.ellipse(x+w/2,y+h/2,w/2,h/2,0,0,Math.PI*2);return 'fill';}
     if(shape==='line'){ctx.moveTo(x,y+h);ctx.lineTo(x+w,y);return 'stroke';}
@@ -17208,7 +17208,12 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
     if(shape==='sparkle'){
       const cx=x+w/2,cy=y+h/2,rx=w*0.38,ry=h*0.38;ctx.moveTo(cx,cy-ry);ctx.lineTo(cx,cy+ry);ctx.moveTo(cx-rx,cy);ctx.lineTo(cx+rx,cy);ctx.moveTo(cx-rx*0.65,cy-ry*0.65);ctx.lineTo(cx+rx*0.65,cy+ry*0.65);ctx.moveTo(cx+rx*0.65,cy-ry*0.65);ctx.lineTo(cx-rx*0.65,cy+ry*0.65);return 'stroke';}
     if(shape==='check'){
-      ctx.moveTo(x+w*0.12,y+h*0.56);ctx.lineTo(x+w*0.38,y+h*0.82);ctx.lineTo(x+w*0.88,y+h*0.20);return 'stroke';}
+      // Nov 2026: a real tick -- square proportions centred in the box (it
+      // used to stretch to the box and the short stroke all but vanished),
+      // bold, with a clear short stroke and a long one.
+      const sq=Math.min(w,h*1.15),ox=x+(w-sq)/2,oy=y+(h-sq/1.15)/2,sh=sq/1.15;
+      ctx.moveTo(ox+sq*0.10,oy+sh*0.55);ctx.lineTo(ox+sq*0.38,oy+sh*0.84);ctx.lineTo(ox+sq*0.90,oy+sh*0.14);
+      checkW=sq*0.15;return 'stroke';}
     if(shape==='heart'){
       const cx=x+w/2,cy=y+h*0.38;ctx.moveTo(cx,y+h*0.92);ctx.bezierCurveTo(x+w*0.08,y+h*0.64,x+w*0.02,y+h*0.26,x+w*0.26,y+h*0.20);ctx.bezierCurveTo(x+w*0.40,y+h*0.16,cx,y+h*0.30,cx,y+h*0.42);ctx.bezierCurveTo(cx,y+h*0.30,x+w*0.60,y+h*0.16,x+w*0.74,y+h*0.20);ctx.bezierCurveTo(x+w*0.98,y+h*0.26,x+w*0.92,y+h*0.64,cx,y+h*0.92);ctx.closePath();return 'fill';}
     if(shape==='burst'){
@@ -17218,7 +17223,7 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
   const mode=buildPath();
   if(blur>0||dx!==0||dy!==0){ctx.shadowColor=layer.shadowColor||'#000000';ctx.shadowBlur=Math.max(8,blur)*k;ctx.shadowOffsetX=dx*k;ctx.shadowOffsetY=dy*k;}
   if(mode==='fill'){ctx.fillStyle=layer.fill||'#ffffff';ctx.fill();}
-  else {ctx.strokeStyle=layer.stroke||layer.fill||'#ffffff';ctx.lineWidth=Math.max(shape==='burst'||shape==='underline'||shape.startsWith('curve')||shape==='sparkle'||shape==='check'?6:4,Number(layer.strokeWidth)||0)*k;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke();}
+  else {ctx.strokeStyle=layer.stroke||layer.fill||'#ffffff';ctx.lineWidth=shape==='check'?Math.max(checkW,(Number(layer.strokeWidth)||0)*k):Math.max(shape==='burst'||shape==='underline'||shape.startsWith('curve')||shape==='sparkle'?6:4,Number(layer.strokeWidth)||0)*k;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke();}
 
   clearRawShadow(ctx);
   if(mode==='fill' && (Number(layer.strokeWidth)||0)>0){buildPath();ctx.strokeStyle=layer.stroke||'#ffffff';ctx.lineWidth=sw;ctx.lineJoin='round';ctx.lineCap='round';ctx.stroke();}
