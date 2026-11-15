@@ -2858,7 +2858,7 @@ window.logoutMember = async function () {
 #mq-studio .mq-rich-font-picker{position:relative;width:100%;min-width:0}
 #mq-studio .mq-rich-font-trigger{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;min-height:50px;padding:10px 12px;border:1px solid #d8d1db;border-radius:10px;background:#fff;color:#2b2230;font:700 13px Arial,sans-serif;cursor:pointer;text-align:left}
 #mq-studio .mq-rich-font-trigger-sample{font-size:25px;font-weight:700;white-space:nowrap;color:#74465b}
-#mq-studio .mq-rich-font-menu{position:absolute;left:0;top:calc(100% + 4px);width:max(270px,100%);max-width:min(350px,calc(100vw - 30px));max-height:340px;overflow:auto;background:white;z-index:999999;border:1px solid #d9d0db;border-radius:12px;box-shadow:0 16px 40px #0004;padding:5px}
+#mq-studio .mq-rich-font-menu{position:absolute;left:0;top:calc(100% + 4px);width:max(270px,100%);max-width:min(350px,calc(100vw - 30px));max-height:340px;overflow:auto;overscroll-behavior:contain;background:white;z-index:999999;border:1px solid #d9d0db;border-radius:12px;box-shadow:0 16px 40px #0004;padding:5px}
 #mq-studio .mq-rich-font-menu[hidden]{display:none!important}
 #mq-studio .mq-rich-font-option{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:9px 12px;border:none;border-radius:8px;background:white;color:#2b2230;text-align:left;cursor:pointer}
 #mq-studio .mq-rich-font-option:hover,#mq-studio .mq-rich-font-option[aria-selected="true"]{background:#f3e8ee}
@@ -3782,7 +3782,7 @@ window.logoutMember = async function () {
 
       <div id="mq-studio-layer-shape-fields" class="mq-studio-layer-section">
         <div class="mq-studio-two-col">
-          <label>Shape<select id="mq-studio-layer-shape"><option value="rect">Rectangle</option><option value="circle">Circle / ellipse</option><option value="line">Line</option><option value="arrow">Arrow</option><option value="curve">Curved arrow · flowing</option><option value="curvebold">Curved arrow · chunky</option><option value="curvethin">Curved arrow · fine point-down</option><option value="curveswoosh">Curved arrow · wavy swoosh</option><option value="curveloop">Curved arrow · loop-de-loop</option><option value="burst">Burst / rays</option><option value="brush">Brush swipe</option><option value="underline">Doodle underline</option><option value="bubble">Speech bubble · rounded</option><option value="bubbleoval">Speech bubble · oval</option><option value="bubblecloud">Thought bubble · cloud</option><option value="bubblecomic">Speech bubble · comic</option><option value="bubblehand">Speech bubble · hand-drawn</option><option value="bubbleburst">Speech bubble · shout</option><option value="starburst">Sticker burst</option><option value="sparkle">Sparkle</option><option value="check">Checkmark</option><option value="heart">Heart</option><option value="star">Star</option><option value="seal">Seal badge</option><option value="ribbon">Ribbon banner</option><option value="pricetag">Price tag</option><option value="handcircle">Hand-drawn circle</option></select></label>
+          <label>Shape<select id="mq-studio-layer-shape"><option value="rect">Rectangle</option><option value="circle">Circle / ellipse</option><option value="line">Line</option><option value="arrow">Arrow</option><option value="curve">Curved arrow · flowing</option><option value="curvebold">Curved arrow · chunky</option><option value="curvethin">Curved arrow · fine</option><option value="curveswoosh">Curved arrow · wavy swoosh</option><option value="curveloop">Curved arrow · loop-de-loop</option><option value="burst">Burst / rays</option><option value="brush">Brush swipe</option><option value="underline">Doodle underline</option><option value="bubble">Speech bubble · rounded</option><option value="bubbleoval">Speech bubble · oval</option><option value="bubblecloud">Thought bubble · cloud</option><option value="bubblecomic">Speech bubble · comic</option><option value="bubblehand">Speech bubble · hand-drawn</option><option value="bubbleburst">Speech bubble · shout</option><option value="starburst">Sticker burst</option><option value="sparkle">Sparkle</option><option value="check">Checkmark</option><option value="heart">Heart</option><option value="star">Star</option><option value="seal">Seal badge</option><option value="ribbon">Ribbon banner</option><option value="pricetag">Price tag</option><option value="handcircle">Hand-drawn circle</option></select></label>
           <label>Corner radius<input id="mq-studio-layer-radius" type="range" min="0" max="120" value="16"></label>
         </div>
         <div class="mq-studio-two-col">
@@ -16721,6 +16721,10 @@ ${mqIsFreePlanShop() ? mqShowroomLockNoteHTML(true) : `      <label class="mq-bt
       const selectors=['shop-font','headline-font','sub-font','cta-font','layer-font'];
       const preferred={'shop-font':'playfair','headline-font':'playfair','sub-font':'montserrat','cta-font':'montserrat','layer-font':'playfair'};
       let activePicker=null;
+      // Previewing a shape/font can show or hide settings above the open list,
+      // which shoved the list (and the spot under the mouse) out of view.
+      // Run the preview, then scroll the panel back so the list stays put.
+      const mqPickerHold=(menu,fn)=>{const t0=menu.getBoundingClientRect().top;fn();let d=menu.getBoundingClientRect().top-t0;if(Math.abs(d)<1)return;let p=menu.parentElement;while(p&&p!==document.body&&Math.abs(d)>=1){const oy=getComputedStyle(p).overflowY;if((oy==='auto'||oy==='scroll')&&p.scrollHeight>p.clientHeight){const b=p.scrollTop;p.scrollTop=b+d;d-=p.scrollTop-b;}p=p.parentElement;}if(Math.abs(d)>=1)window.scrollBy(0,d);};
       // Nov 2026: hovering / arrowing through a picker previews it live on the
       // design; closing without picking puts the original back.
       const closePicker=()=>{if(activePicker){const ap=activePicker;activePicker=null;ap.menu.hidden=true;ap.button.setAttribute('aria-expanded','false');if(ap.revert)ap.revert();}};
@@ -16746,7 +16750,7 @@ ${mqIsFreePlanShop() ? mqShowroomLockNoteHTML(true) : `      <label class="mq-bt
           item.innerHTML=`<span class="mq-rich-font-name"></span><span class="mq-rich-font-sample">Aa Bb Cc 123</span>`;
           item.querySelector('.mq-rich-font-name').textContent=label;
           item.querySelector('.mq-rich-font-sample').style.fontFamily=fontFace(key);
-          const preview=()=>{if(!activePicker||activePicker.menu!==menu||select.value===key)return;select.value=key;select.dispatchEvent(new Event('input',{bubbles:true}));if(document.fonts?.load)document.fonts.load(`700 28px ${fontFace(key)}`).then(()=>update()).catch(()=>{});};
+          const preview=()=>{if(!activePicker||activePicker.menu!==menu||select.value===key)return;select.value=key;mqPickerHold(menu,()=>select.dispatchEvent(new Event('input',{bubbles:true})));if(document.fonts?.load)document.fonts.load(`700 28px ${fontFace(key)}`).then(()=>update()).catch(()=>{});};
           item.addEventListener('mouseenter',preview);item.addEventListener('focus',preview);
           item.addEventListener('click',ev=>{
             ev.preventDefault();ev.stopPropagation();select.value=key;if(activePicker&&activePicker.menu===menu)activePicker.revert=null;
@@ -16795,7 +16799,7 @@ ${mqIsFreePlanShop() ? mqShowroomLockNoteHTML(true) : `      <label class="mq-bt
           const key=o.value;const item=document.createElement('button');item.type='button';item.className='mq-rich-font-option mq-rich-shape-option';item.dataset.shape=key;item.setAttribute('role','option');
           const name=document.createElement('span');name.className='mq-rich-font-name';name.textContent=o.textContent;
           item.append(name,thumb(key));
-          const preview=()=>{if(!activePicker||activePicker.menu!==menu||select.value===key)return;select.value=key;select.dispatchEvent(new Event('input',{bubbles:true}));};
+          const preview=()=>{if(!activePicker||activePicker.menu!==menu||select.value===key)return;select.value=key;mqPickerHold(menu,()=>select.dispatchEvent(new Event('input',{bubbles:true})));};
           item.addEventListener('mouseenter',preview);item.addEventListener('focus',preview);
           item.addEventListener('click',ev=>{ev.preventDefault();ev.stopPropagation();select.value=key;if(activePicker&&activePicker.menu===menu)activePicker.revert=null;select.dispatchEvent(new Event('input',{bubbles:true}));select.dispatchEvent(new Event('change',{bubbles:true}));refresh();closePicker();});
           menu.appendChild(item);
@@ -17185,6 +17189,12 @@ function drawCurvedStudioText(ctx,layer,x,y,w,h,size,k){
     ctx.restore();cursor+=widths[i];
   });
 }
+// Rotate handle (Nov 2026): a round ↻ just off the selected object's
+// bottom-right corner (kept inside the canvas so it can always be grabbed).
+function mqRotHandlePos(r,W,H,k,cv){const ds=Math.max(k,cv&&cv.clientWidth?cv.width/cv.clientWidth:k);const off=24*ds,rad=13*ds;let hx=r[0]+r[2]+off,hy=r[1]+r[3]+off;if(hx>W-rad-4*k)hx=r[0]+r[2]-off;if(hy>H-rad-4*k)hy=r[1]+r[3]-off;return {x:hx,y:hy,r:rad};}
+function mqDrawRotHandle(ctx,r,k){const p=mqRotHandlePos(r,ctx.canvas.width,ctx.canvas.height,k,ctx.canvas);k=p.r/13;ctx.save();ctx.setLineDash([]);ctx.shadowColor='rgba(0,0,0,.25)';ctx.shadowBlur=6*k;ctx.shadowOffsetY=2*k;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle='#ffffff';ctx.fill();ctx.shadowColor='transparent';ctx.lineWidth=2*k;ctx.strokeStyle='#38bdf8';ctx.stroke();
+  const a0=-Math.PI*0.15,a1=Math.PI*1.35,ar=p.r*.52;ctx.beginPath();ctx.arc(p.x,p.y,ar,a0,a1);ctx.lineWidth=2.6*k;ctx.strokeStyle='#1f2937';ctx.lineCap='round';ctx.stroke();
+  const tx=p.x+Math.cos(a0)*ar,ty=p.y+Math.sin(a0)*ar,hl=p.r*.42;ctx.beginPath();ctx.moveTo(tx+hl*Math.cos(a0-2.1),ty+hl*Math.sin(a0-2.1));ctx.lineTo(tx,ty);ctx.lineTo(tx+hl*Math.cos(a0-0.6),ty+hl*Math.sin(a0-0.6));ctx.stroke();ctx.restore();}
 function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y=(layer.y||0)*k,w=Math.max(1,(layer.w||1)*k),h=Math.max(1,(layer.h||1)*k),rot=(layer.rotation||0)*Math.PI/180;ctx.save();ctx.globalAlpha=Math.max(0,Math.min(1,(layer.opacity==null?100:layer.opacity)/100));ctx.translate(x+w/2,y+h/2);ctx.rotate(rot);ctx.translate(-(x+w/2),-(y+h/2));applyRawShadow(ctx,layer.shadowColor,layer.shadowBlur,layer.shadowX,layer.shadowY,k);let region=[x,y,w,h];if(layer.type==='shape'){
   const blur=Math.max(0,Number(layer.shadowBlur)||0);
   const dx=Number(layer.shadowX)||0,dy=Number(layer.shadowY)||0;
@@ -17333,7 +17343,7 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
   ctx.restore();
   if((layer.strokeWidth||0)>0){ctx.strokeStyle=layer.stroke||'#ffffff';ctx.lineWidth=(layer.strokeWidth||0)*k;ctx.beginPath();ctx.roundRect(x,y,w,h,radius);ctx.stroke();}
 }else if(layer.type==='button'){ctx.fillStyle=layer.fill||'#f2e1ca';ctx.beginPath();ctx.roundRect(x,y,w,h,Math.min(w/2,h/2,(layer.radius??12)*k));ctx.fill();if((layer.strokeWidth||0)>0){ctx.strokeStyle=layer.stroke||'#ffffff';ctx.lineWidth=layer.strokeWidth*k;ctx.stroke();}clearRawShadow(ctx);ctx.fillStyle=layer.color||'#292234';let size=Math.max(8,(layer.size||24))*k;const space=(layer.spacing||0)*k;const label=String(layer.text||'');ctx.font=font(size,layer.font||'montserrat',700);while(size>9*k && textWidthWithSpacing(ctx,label,space)>w-18*k){size-=k;ctx.font=font(size,layer.font||'montserrat',700);}drawSpacedTextFx(ctx,label,x+w/2,y+h/2+size*.35,space,'center',layer.fx||'none',layer.shadowColor||'#000000',k,layer);if((layer.textStrokeWidth||0)>0){ctx.lineWidth=(layer.textStrokeWidth||0)*k;ctx.strokeStyle=layer.stroke||'#ffffff';ctx.textAlign='center';ctx.textBaseline='alphabetic';ctx.strokeText(label,x+w/2,y+h/2+size*.35);}}else if(layer.type==='text'){const size=Math.max(8,(layer.size||56))*k;if(Math.abs(Number(layer.curve)||0)>0){clearRawShadow(ctx);drawCurvedStudioText(ctx,layer,x,y,w,h,size,k);region=[x,y,w,h];}else{ctx.font=font(size,layer.font||'playfair',700);ctx.fillStyle=layer.color||'#ffffff';const lines=wrap(ctx,String(layer.text||''),w,10,(layer.spacing||0)*k);const lineHeight=size*1.18;const align=layer.align||'left';const tx=align==='left'?x:align==='center'?x+w/2:x+w;drawWrappedLinesFx(ctx,lines,tx,y+size,lineHeight,(layer.spacing||0)*k,align,layer.fx||'none',layer.shadowColor||'#000000',k,layer);if((layer.textStrokeWidth||0)>0){ctx.lineWidth=(layer.textStrokeWidth||0)*k;ctx.strokeStyle=layer.stroke||'#ffffff';ctx.textAlign=align;ctx.textBaseline='alphabetic';lines.forEach((line,i)=>ctx.strokeText(line,tx,y+size+i*lineHeight));}region=[x,y,w,Math.max(h,lines.length*lineHeight+size*.2)];}}
-  clearRawShadow(ctx);ctx.restore();regions.push({id:layer.id,rect:region});if(highlight){ctx.save();ctx.strokeStyle='#38bdf8';ctx.lineWidth=3*k;ctx.setLineDash([12*k,7*k]);ctx.strokeRect(region[0],region[1],region[2],region[3]);ctx.setLineDash([]);[[region[0],region[1]],[region[0]+region[2],region[1]],[region[0],region[1]+region[3]],[region[0]+region[2],region[1]+region[3]]].forEach(([hx,hy])=>{ctx.fillStyle='#fff';ctx.fillRect(hx-9*k,hy-9*k,18*k,18*k);ctx.strokeRect(hx-9*k,hy-9*k,18*k,18*k)});ctx.restore();}}
+  clearRawShadow(ctx);ctx.restore();regions.push({id:layer.id,rect:region});if(highlight){ctx.save();ctx.strokeStyle='#38bdf8';ctx.lineWidth=3*k;ctx.setLineDash([12*k,7*k]);ctx.strokeRect(region[0],region[1],region[2],region[3]);ctx.setLineDash([]);[[region[0],region[1]],[region[0]+region[2],region[1]],[region[0],region[1]+region[3]],[region[0]+region[2],region[1]+region[3]]].forEach(([hx,hy])=>{ctx.fillStyle='#fff';ctx.fillRect(hx-9*k,hy-9*k,18*k,18*k);ctx.strokeRect(hx-9*k,hy-9*k,18*k,18*k)});ctx.restore();if(!layer.locked)mqDrawRotHandle(ctx,region,k);}}
     function drawHeadlineWithEmphasis(ctx,lines,x,y,lineHeight,spacing,align,effect,effectColor,k,phrase,phraseColor){
       phrase=String(phrase||'').trim();
       if(!phrase){drawWrappedLinesFx(ctx,lines,x,y,lineHeight,spacing,align,effect,effectColor,k);return;}
@@ -17944,7 +17954,7 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
       });
       const clampField=(id,val)=>{const el=field(id);if(!el)return;const min=Number(el.min||-9999),max=Number(el.max||9999);el.value=String(Math.round(clamp(val,min,max)));};
       const canvasPoint=e=>{const rect=canvas.getBoundingClientRect();return {x:(e.clientX-rect.left)*(canvas.width/rect.width),y:(e.clientY-rect.top)*(canvas.height/rect.height)}};
-      const regionAt=pt=>{const custom=(canvas._mqCustomLayerRegions||[]).slice().reverse();for(const item of custom){const layer=mqStudioCustomLayers.find(l=>l.id===item.id);if(!layer||layer.hidden||layer.locked)continue;const r=item.rect;const radius=18*(canvas._mqUnit||1);if(layer.id===mqStudioSelectedLayerId){const corners=[['nw',r[0],r[1]],['ne',r[0]+r[2],r[1]],['sw',r[0],r[1]+r[3]],['se',r[0]+r[2],r[1]+r[3]]];for(const [side,x,y] of corners){if(Math.abs(pt.x-x)<radius&&Math.abs(pt.y-y)<radius)return 'resize:'+item.id+':'+side}}if(pt.x>=r[0]&&pt.x<=r[0]+r[2]&&pt.y>=r[1]&&pt.y<=r[1]+r[3])return 'layer:'+item.id;}if(mqStudioDetached)return null;const regions=canvas._mqRegions||{};const order=['cta','url','headline','sub','brand'];for(const key of order){const r=regions[key];if(!r)continue; if(pt.x>=r[0]&&pt.x<=r[0]+r[2]&&pt.y>=r[1]&&pt.y<=r[1]+r[3])return key;}return null;};
+      const regionAt=pt=>{const custom=(canvas._mqCustomLayerRegions||[]).slice().reverse();for(const item of custom){const layer=mqStudioCustomLayers.find(l=>l.id===item.id);if(!layer||layer.hidden||layer.locked)continue;const r=item.rect;const radius=18*(canvas._mqUnit||1);if(layer.id===mqStudioSelectedLayerId){const rh=mqRotHandlePos(r,canvas.width,canvas.height,canvas._mqUnit||1,canvas);if(Math.hypot(pt.x-rh.x,pt.y-rh.y)<rh.r*1.35)return 'rotate:'+item.id;const corners=[['nw',r[0],r[1]],['ne',r[0]+r[2],r[1]],['sw',r[0],r[1]+r[3]],['se',r[0]+r[2],r[1]+r[3]]];for(const [side,x,y] of corners){if(Math.abs(pt.x-x)<radius&&Math.abs(pt.y-y)<radius)return 'resize:'+item.id+':'+side}}if(pt.x>=r[0]&&pt.x<=r[0]+r[2]&&pt.y>=r[1]&&pt.y<=r[1]+r[3])return 'layer:'+item.id;}if(mqStudioDetached)return null;const regions=canvas._mqRegions||{};const order=['cta','url','headline','sub','brand'];for(const key of order){const r=regions[key];if(!r)continue; if(pt.x>=r[0]&&pt.x<=r[0]+r[2]&&pt.y>=r[1]&&pt.y<=r[1]+r[3])return key;}return null;};
       // Fixed selected-object toolbar. Never follows the pointer or overlaps the art.
       const hoverbar=field('hoverbar');
       const actionHost=preview.querySelector('.mq-studio-preview-tip');
@@ -17995,6 +18005,12 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
         const part=regionAt(canvasPoint(e));
         if(!part){studioPointerActive=false;mqStudioSelectedLayerId=null;syncLayerControls();update();syncFixedActions();return;}
         const pt=canvasPoint(e);
+        if(part.startsWith('rotate:')){
+          const layerId=part.slice(7);const layer=mqStudioCustomLayers.find(l=>l.id===layerId);const item=(canvas._mqCustomLayerRegions||[]).find(i=>i.id===layerId);if(!layer||!item)return;
+          const cx=item.rect[0]+item.rect[2]/2,cy=item.rect[1]+item.rect[3]/2;
+          drag={part,kind:'rotate',layerId,cx,cy,startAng:Math.atan2(pt.y-cy,pt.x-cx),startRot:Number(layer.rotation)||0,rect:canvas.getBoundingClientRect(),canvasW:canvas.width,canvasH:canvas.height};
+          canvas.setPointerCapture(e.pointerId);canvas.style.cursor='grabbing';e.preventDefault();return;
+        }
         if(part.startsWith('resize:')){
           const [,layerId,corner]=part.split(':');const layer=mqStudioCustomLayers.find(l=>l.id===layerId);if(!layer)return;
           drag={part,kind:'resize',layerId,corner,start:pt,vals:{x:layer.x,y:layer.y,w:layer.w,h:layer.h}};
@@ -18011,7 +18027,14 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
         }
         syncFixedActions();update();canvas.setPointerCapture(e.pointerId);canvas.style.cursor='grabbing';e.preventDefault();
       });
-      canvas.addEventListener('pointermove',e=>{const pt=drag?.rect?{x:(e.clientX-drag.rect.left)*(drag.canvasW/drag.rect.width),y:(e.clientY-drag.rect.top)*(drag.canvasH/drag.rect.height)}:canvasPoint(e);const hover=drag?null:regionAt(pt);canvas.style.cursor=drag?'grabbing':hover?.startsWith('resize:')?'nwse-resize':(hover?'grab':'default');if(!drag)return; if(drag.startClient && !drag.wasMoved){if(Math.hypot(e.clientX-drag.startClient.x,e.clientY-drag.startClient.y)<7)return;drag.wasMoved=true;}
+      canvas.addEventListener('pointermove',e=>{const pt=drag?.rect?{x:(e.clientX-drag.rect.left)*(drag.canvasW/drag.rect.width),y:(e.clientY-drag.rect.top)*(drag.canvasH/drag.rect.height)}:canvasPoint(e);const hover=drag?null:regionAt(pt);canvas.style.cursor=drag?'grabbing':hover?.startsWith('rotate:')?'grab':hover?.startsWith('resize:')?'nwse-resize':(hover?'grab':'default');if(!drag)return; if(drag.startClient && !drag.wasMoved){if(Math.hypot(e.clientX-drag.startClient.x,e.clientY-drag.startClient.y)<7)return;drag.wasMoved=true;}
+        if(drag.kind==='rotate'){const layer=mqStudioCustomLayers.find(l=>l.id===drag.layerId);if(!layer)return;
+          let rot=drag.startRot+(Math.atan2(pt.y-drag.cy,pt.x-drag.cx)-drag.startAng)*180/Math.PI;
+          rot=((rot+180)%360+360)%360-180;
+          if(e.shiftKey)rot=Math.round(rot/15)*15;else{for(const snap of [-180,-90,0,90,180])if(Math.abs(rot-snap)<3){rot=snap;break;}}
+          if(rot===-180)rot=180;layer.rotation=Math.round(rot*10)/10;
+          if(field('layer-rotation'))field('layer-rotation').value=layer.rotation;if(field('rotation-number'))field('rotation-number').value=layer.rotation.toFixed(1);
+          update();return;}
         if(drag.kind==='resize'){const layer=mqStudioCustomLayers.find(l=>l.id===drag.layerId);if(!layer)return;const dx=pt.x-drag.start.x,dy=pt.y-drag.start.y;const w=drag.corner.includes('w')?drag.vals.w-dx:drag.vals.w+dx;const h=drag.corner.includes('n')?drag.vals.h-dy:drag.vals.h+dy;layer.w=Math.round(Math.max(25,w));layer.h=Math.round(Math.max(25,h));layer.x=Math.round(drag.corner.includes('w')?drag.vals.x+drag.vals.w-layer.w:drag.vals.x);layer.y=Math.round(drag.corner.includes('n')?drag.vals.y+drag.vals.h-layer.h:drag.vals.y);update();return;}
         if(String(drag.part).startsWith('layer:')){const layer=mqStudioCustomLayers.find(l=>l.id===drag.layerId);if(!layer)return;
           let x=(drag.vals.x||0)+(pt.x-drag.start.x),y=(drag.vals.y||0)+(pt.y-drag.start.y);mqStudioGuide=null;
