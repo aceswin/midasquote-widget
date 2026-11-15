@@ -7832,6 +7832,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       <button type="button" ${mdp} class="mq-btn mq-btn-sm" title="Underline" onclick="mqPbFmt('${id}',${i},'underline','${sd}')"><u>U</u></button>
       <input type="color" id="mq-pb-tc-${id}-${i}${sd}" value="#dc2626" title="Text colour — pick a colour, then it's applied to the selected text" onmousedown="mqPbSaveSel('${id}',${i},'${sd}')" onchange="mqPbFmt('${id}',${i},'color','${sd}')" style="width:26px;height:24px;padding:1px;border:1px solid #d1d5db;border-radius:4px;cursor:pointer"/>
       <button type="button" ${mdp} class="mq-btn mq-btn-sm" title="Colour the selected text with this colour" onclick="mqPbFmt('${id}',${i},'color','${sd}')"><span style="color:#dc2626;font-weight:700">A</span> Text colour</button>
+      <span style="font-size:11.5px;color:#9ca3af;line-height:1.3">Highlight the words you want to change first</span>
     </div>`;
   }
   function mqPbEditorHTML(id, i, side, markup, style, ph) {
@@ -17213,7 +17214,27 @@ function syncLayerControls(){const body=field('layer-controls-body');const layer
   if(layer.type==='text'||layer.type==='button'||shapeText){field('layer-text-fields').classList.add('show');field('layer-text').value=layer.text||'';field('layer-font').value=layer.font||'playfair';field('layer-font')._mqRefreshFont?.();field('layer-align').value=layer.align||'left';field('layer-color').value=layer.color||(layer.type==='shape'?'#1a1a1a':'#ffffff');field('layer-size').value=layer.size||(layer.type==='shape'?40:56);field('layer-spacing').value=layer.spacing||0;if(field('layer-curve'))field('layer-curve').value=layer.curve||0;if(field('curve-value'))field('curve-value').textContent=(Number(layer.curve)||0)>0?'Arch up · '+layer.curve:(Number(layer.curve)||0)<0?'Arch down · '+Math.abs(layer.curve):'Straight · 0';field('layer-fx').value=layer.fx||'none';if(field('layer-style'))field('layer-style').value='custom';if(field('layer-text-stroke-width'))field('layer-text-stroke-width').value=layer.textStrokeWidth||0;}
   if(layer.type==='shape'||layer.type==='button'){field('layer-shape-fields').classList.add('show');field('layer-shape').value=layer.shape||'rect';field('layer-shape')._mqRefreshFont?.();field('layer-radius').value=layer.radius||0;field('layer-fill').value=layer.fill||'#ffffff';field('layer-stroke').value=layer.stroke||'#ffffff';field('layer-stroke-width').value=layer.strokeWidth||0;}
   if(layer.type==='image'){field('layer-image-fields').classList.add('show');field('layer-fit').value=layer.fit||'cover';field('layer-image-radius').value=layer.radius||0;field('layer-image-stroke').value=layer.stroke||'#ffffff';field('layer-image-stroke-width').value=layer.strokeWidth||0;}
+  mqStudioMarkNA(layer);
   renderLayerList();
+}
+// Settings that do nothing for the selected object fade out (Jordan, Nov
+// 2026) — e.g. Text curve on a shape. Hover says why.
+function mqStudioMarkNA(layer){
+  if(!document.getElementById('mq-studio-na-css')){const st=document.createElement('style');st.id='mq-studio-na-css';st.textContent='#mq-studio label.mq-studio-na{opacity:.38;filter:grayscale(1);cursor:not-allowed}#mq-studio label.mq-studio-na *{cursor:not-allowed!important}';document.head.appendChild(st);}
+  const shape=layer&&layer.type==='shape'?(field('layer-shape')?.value||layer.shape||'rect'):'';
+  const strokeShape=!!shape&&!mqShapeTakesText(shape);
+  const na={};
+  if(layer&&layer.type==='shape'){
+    na['layer-curve']=na['layer-align']=na['layer-style']=na['layer-text-stroke-width']='Text on a shape is always straight and centred';
+    if(!['rect','bubble','bubblecomic','bubblehand'].includes(shape))na['layer-radius']='Only rectangles and rounded speech bubbles have corners';
+    if(strokeShape&&layer.stroke)na['layer-fill']='Lines and arrows use the Stroke colour';
+  }
+  if(layer&&layer.type==='button'){na['layer-curve']='Button text is always straight';na['layer-align']='Button text is always centred';}
+  ['layer-curve','layer-align','layer-style','layer-text-stroke-width','layer-radius','layer-fill'].forEach(id=>{
+    const inp=field(id);const lab=inp&&inp.closest('label');if(!lab)return;
+    const why=na[id];lab.classList.toggle('mq-studio-na',!!why);inp.disabled=!!why;
+    if(why)lab.title="Doesn't apply here — "+why;else if(lab.title&&lab.title.startsWith("Doesn't apply"))lab.removeAttribute('title');
+  });
 }
 function applyLayerControls(){const layer=currentLayer();if(!layer)return;layer.name=field('layer-name').value||layer.name;layer.place=field('layer-place').value;layer.x=Number(field('layer-x').value)||0;layer.y=Number(field('layer-y').value)||0;layer.w=Math.max(1,Number(field('layer-w').value)||1);layer.h=Math.max(1,Number(field('layer-h').value)||1);layer.opacity=Number(field('layer-opacity').value)||0;layer.rotation=Number(field('layer-rotation').value)||0;layer.shadowColor=field('layer-shadow-color').value;layer.shadowBlur=Number(field('layer-shadow-blur').value)||0;layer.shadowX=Number(field('layer-shadow-x').value)||0;layer.shadowY=Number(field('layer-shadow-y').value)||0;const shapeTextNow=layer.type==='shape'&&mqShapeTakesText(field('layer-shape').value);if(layer.type==='shape'){field('layer-text-fields')?.classList.toggle('show',shapeTextNow);if(field('shape-text-note'))field('shape-text-note').style.display=shapeTextNow?'':'none';}if(layer.type==='text'||layer.type==='button'||shapeTextNow){layer.text=field('layer-text').value;layer.font=field('layer-font').value;layer.align=field('layer-align').value;layer.color=field('layer-color').value;layer.size=Number(field('layer-size').value)||56;layer.spacing=Number(field('layer-spacing').value)||0;layer.curve=Number(field('layer-curve')?.value||0)||0;if(field('curve-value'))field('curve-value').textContent=layer.curve>0?'Arch up · '+layer.curve:layer.curve<0?'Arch down · '+Math.abs(layer.curve):'Straight · 0';layer.fx=field('layer-fx').value;layer.textStrokeWidth=Number(field('layer-text-stroke-width')?.value||0)||0;}if(layer.type==='shape'||layer.type==='button'){layer.shape=field('layer-shape').value;layer.radius=Number(field('layer-radius').value)||0;layer.fill=field('layer-fill').value;layer.stroke=field('layer-stroke').value;layer.strokeWidth=Number(field('layer-stroke-width').value)||0;}if(layer.type==='image'){layer.fit=field('layer-fit').value;layer.radius=Number(field('layer-image-radius').value)||0;layer.stroke=field('layer-image-stroke').value;layer.strokeWidth=Number(field('layer-image-stroke-width').value)||0;}renderLayerList();}
 function deleteStudioLayer(id){
@@ -18000,6 +18021,7 @@ if(field('add-oval-bubble'))field('add-oval-bubble').addEventListener('click',()
 if(field('add-chunky-arrow'))field('add-chunky-arrow').addEventListener('click',()=>{const l=defaultArrowLayer('curvebold');l.name='Chunky curved arrow';addLayer(l);});
 field('add-frame-layer').addEventListener('click',()=>addLayer(defaultFrameLayer()));
 field('add-image-layer-btn').addEventListener('click',()=>field('add-image-layer-input').click());
+['layer-shape','layer-stroke'].forEach(id=>{const f=field(id);if(f){f.addEventListener('input',()=>mqStudioMarkNA(currentLayer()));f.addEventListener('change',()=>mqStudioMarkNA(currentLayer()));}});
 if(field('layer-style'))field('layer-style').addEventListener('change',()=>{const layer=currentLayer();if(!layer||!(layer.type==='text'||layer.type==='button'))return;const preset=field('layer-style').value;const presets={custom:null,luxury:{font:'abril',size:64,spacing:0,fx:'soft',textStrokeWidth:0,color:'#fff8ef'},bold:{font:'anton',size:74,spacing:1,fx:'strong',textStrokeWidth:0,color:'#ffffff'},marker:{font:'marker',size:54,spacing:0,fx:'none',textStrokeWidth:0,color:'#111111'},story:{font:'spartan',size:68,spacing:1,fx:'strong',textStrokeWidth:0,color:'#ffffff'},caption:{font:'manrope',size:34,spacing:0,fx:'soft',textStrokeWidth:0,color:'#ffffff'},sticker:{font:'anton',size:82,spacing:1,fx:'none',textStrokeWidth:6,color:'#111111'},handwritten:{font:'caveat',size:66,spacing:0,fx:'soft',textStrokeWidth:0,color:'#ffffff'}};const cfg=presets[preset];if(!cfg)return;Object.assign(layer,cfg);syncLayerControls();update();});
       if(field('direct-image-btn'))field('direct-image-btn').addEventListener('click',()=>field('direct-image-input').click());
       field('photo-quick').addEventListener('click',()=>field('photo').click());
