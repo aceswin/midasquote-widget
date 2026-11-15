@@ -3174,6 +3174,9 @@ window.logoutMember = async function () {
 #mq-page-marketing .mq-creative-choice>span:nth-child(2){flex:1;min-width:0}
 #mq-page-marketing .mq-creative-choice strong{display:block;font-size:14px;line-height:1.3}
 #mq-page-marketing .mq-creative-choice small{display:block;font-size:11px;color:#776d79;line-height:1.45;margin-top:6px}
+#mq-page-marketing .mq-creative-choice.active{background:#2d2436;border-color:#2d2436;color:#fff;box-shadow:0 8px 22px #2d243633}
+#mq-page-marketing .mq-creative-choice.active small{color:#d9cfdc}
+#mq-page-marketing .mq-creative-choice.active:hover,#mq-page-marketing .mq-creative-choice.active:focus-visible{background:#3a2f45;border-color:#3a2f45}
 #mq-page-marketing .mq-creative-emoji{font-size:25px;flex:0 0 auto}
 #mq-page-marketing .mq-studio-mobile-notice{display:none;border:1px solid #e0cf9c;border-radius:12px;background:#fff8e9;color:#5d4826;padding:14px 15px;font-size:13px;line-height:1.55;margin:0 0 16px}
 #mq-page-marketing .mq-studio-mobile-notice button{display:inline-block;border:1px solid #aa873a;border-radius:8px;padding:8px 11px;background:#fff;color:#5a4110;font-weight:700;margin:10px 0 0;cursor:pointer}
@@ -3732,6 +3735,7 @@ window.logoutMember = async function () {
         <label>Opacity <input id="mq-studio-layer-opacity" type="range" min="0" max="100" value="100"></label>
         <label>Rotation <span style="display:flex;gap:5px;align-items:center;margin-top:6px"><button type="button" id="mq-studio-rotation-minus" title="Rotate counterclockwise by 1 degree; Shift-click for 0.1 degree" style="padding:7px 11px;min-height:36px;flex:0 0 auto">↶</button><input id="mq-studio-layer-rotation" type="range" min="-180" max="180" step="0.1" value="0" style="min-width:45px;flex:1"><button type="button" id="mq-studio-rotation-plus" title="Rotate clockwise by 1 degree; Shift-click for 0.1 degree" style="padding:7px 11px;min-height:36px;flex:0 0 auto">↷</button></span><span style="display:flex;align-items:center;gap:5px;margin-top:5px"><input id="mq-studio-rotation-number" type="number" min="-180" max="180" step="0.1" value="0" style="max-width:96px;min-height:35px;padding:5px 8px"><span>degrees · Shift-click arrows = 0.1°</span></span></label>
       </div>
+      <div id="mq-studio-flip-row" style="display:none;gap:8px;margin-top:8px"><button type="button" id="mq-studio-flip-x" class="mq-studio-muted-btn" style="flex:1" title="Mirror left ↔ right">⇋ Flip left / right</button><button type="button" id="mq-studio-flip-y" class="mq-studio-muted-btn" style="flex:1" title="Mirror up ↕ down">⇅ Flip up / down</button></div>
       <div class="mq-studio-two-col">
         <label>Shadow colour<input id="mq-studio-layer-shadow-color" type="color" value="#000000"></label>
         <label>Shadow blur <input id="mq-studio-layer-shadow-blur" type="range" min="0" max="60" value="0"></label>
@@ -3742,6 +3746,7 @@ window.logoutMember = async function () {
       </div>
 
       <div id="mq-studio-layer-text-fields" class="mq-studio-layer-section">
+        <div id="mq-studio-shape-text-note" style="display:none;font-size:12px;color:#6f6475;line-height:1.45;margin:0 0 6px">✍️ Optional — type here to put text on this shape (e.g. <strong>20% OFF</strong>). Press Enter for a second line.</div>
         <label>Text content<textarea id="mq-studio-layer-text"></textarea></label>
         <div class="mq-studio-two-col">
           <label>Font<select id="mq-studio-layer-font"></select></label>
@@ -3764,7 +3769,7 @@ window.logoutMember = async function () {
 
       <div id="mq-studio-layer-shape-fields" class="mq-studio-layer-section">
         <div class="mq-studio-two-col">
-          <label>Shape<select id="mq-studio-layer-shape"><option value="rect">Rectangle</option><option value="circle">Circle / ellipse</option><option value="line">Line</option><option value="arrow">Arrow</option><option value="curve">Curved arrow · flowing</option><option value="curvebold">Curved arrow · chunky</option><option value="curvethin">Curved arrow · fine point-down</option><option value="curveswoosh">Curved arrow · wavy swoosh</option><option value="curveloop">Curved arrow · loop-de-loop</option><option value="burst">Burst / rays</option><option value="brush">Brush swipe</option><option value="underline">Doodle underline</option><option value="bubble">Speech bubble · rounded</option><option value="bubbleoval">Speech bubble · oval</option><option value="bubblecloud">Thought bubble · cloud</option><option value="bubblecomic">Speech bubble · comic</option><option value="bubblehand">Speech bubble · hand-drawn</option><option value="bubbleburst">Speech bubble · shout</option><option value="starburst">Sticker burst</option><option value="sparkle">Sparkle</option><option value="check">Checkmark</option><option value="heart">Heart</option></select></label>
+          <label>Shape<select id="mq-studio-layer-shape"><option value="rect">Rectangle</option><option value="circle">Circle / ellipse</option><option value="line">Line</option><option value="arrow">Arrow</option><option value="curve">Curved arrow · flowing</option><option value="curvebold">Curved arrow · chunky</option><option value="curvethin">Curved arrow · fine point-down</option><option value="curveswoosh">Curved arrow · wavy swoosh</option><option value="curveloop">Curved arrow · loop-de-loop</option><option value="burst">Burst / rays</option><option value="brush">Brush swipe</option><option value="underline">Doodle underline</option><option value="bubble">Speech bubble · rounded</option><option value="bubbleoval">Speech bubble · oval</option><option value="bubblecloud">Thought bubble · cloud</option><option value="bubblecomic">Speech bubble · comic</option><option value="bubblehand">Speech bubble · hand-drawn</option><option value="bubbleburst">Speech bubble · shout</option><option value="starburst">Sticker burst</option><option value="sparkle">Sparkle</option><option value="check">Checkmark</option><option value="heart">Heart</option><option value="star">Star</option><option value="seal">Seal badge</option><option value="ribbon">Ribbon banner</option><option value="pricetag">Price tag</option><option value="handcircle">Hand-drawn circle</option></select></label>
           <label>Corner radius<input id="mq-studio-layer-radius" type="range" min="0" max="120" value="16"></label>
         </div>
         <div class="mq-studio-two-col">
@@ -16754,8 +16759,8 @@ ${mqIsFreePlanShop() ? mqShowroomLockNoteHTML(true) : `      <label class="mq-bt
         button.setAttribute('aria-haspopup','listbox');button.setAttribute('aria-expanded','false');
         const menu=document.createElement('div');menu.className='mq-rich-font-menu mq-rich-shape-menu';menu.hidden=true;menu.setAttribute('role','listbox');
         const thumb=key=>{const c=document.createElement('canvas');c.width=128;c.height=72;c.className='mq-rich-shape-thumb';
-          try{const ctx=c.getContext('2d');const outline=['line','arrow','curve','curvebold','curvethin','curveswoosh','curveloop','underline','check'].includes(key);
-            drawCustomLayer(ctx,{type:'shape',shape:key,x:14,y:10,w:100,h:52,rotation:0,opacity:100,radius:12,fill:'#74465b',stroke:'#74465b',strokeWidth:/^curve/.test(key)?12:outline?7:0,shadowBlur:0,shadowX:0,shadowY:0,shadowColor:'#000000'},1,[],false);}catch(e){}
+          try{const ctx=c.getContext('2d');const outline=['line','arrow','curve','curvebold','curvethin','curveswoosh','curveloop','underline','check','handcircle'].includes(key);
+            drawCustomLayer(ctx,{type:'shape',shape:key,x:14,y:10,w:100,h:52,rotation:0,opacity:100,radius:12,fill:'#74465b',stroke:'#74465b',strokeWidth:/^curve|handcircle/.test(key)?12:outline?7:0,shadowBlur:0,shadowX:0,shadowY:0,shadowColor:'#000000'},1,[],false);}catch(e){}
           return c;};
         [...select.options].forEach(o=>{
           const key=o.value;const item=document.createElement('button');item.type='button';item.className='mq-rich-font-option mq-rich-shape-option';item.dataset.shape=key;item.setAttribute('role','option');
@@ -16807,6 +16812,8 @@ let mqStudioLayerCounter=1;
 const layerUid=()=>`lyr_${Date.now().toString(36)}_${(mqStudioLayerCounter++).toString(36)}`;
 const cloneObj=o=>JSON.parse(JSON.stringify(o));
 function defaultTextLayer(){return {id:layerUid(),type:'text',name:`Text ${mqStudioLayerCounter}`,place:'front',x:120,y:120,w:420,h:140,rotation:0,opacity:100,shadowColor:'#000000',shadowBlur:0,shadowX:0,shadowY:0,text:'New text',font:'playfair',align:'left',color:'#ffffff',size:56,spacing:0,fx:'soft'}}
+// Filled shapes can carry text; line/arrow/doodle shapes can't.
+function mqShapeTakesText(shape){return !['line','curve','curvebold','curvethin','curveswoosh','curveloop','underline','check','burst','sparkle','handcircle'].includes(shape||'rect');}
 function defaultShapeLayer(){return {id:layerUid(),type:'shape',name:`Shape ${mqStudioLayerCounter}`,place:'front',x:150,y:150,w:260,h:160,rotation:0,opacity:100,shadowColor:'#000000',shadowBlur:0,shadowX:0,shadowY:0,shape:'rect',radius:16,fill:'#ffffff',stroke:'#ffffff',strokeWidth:0}}
 function defaultArrowLayer(kind='arrow'){return {id:layerUid(),type:'shape',name:kind==='curve'?'Curved arrow':'Arrow',place:'front',x:170,y:240,w:260,h:180,rotation:0,opacity:100,shadowColor:'#000000',shadowBlur:12,shadowX:0,shadowY:6,shape:kind,radius:20,fill:'#ffffff',stroke:'#ffffff',strokeWidth:12}}
 function defaultDoodleLayer(kind='burst'){return {id:layerUid(),type:'shape',name:kind==='underline'?'Underline doodle':'Doodle',place:'front',x:200,y:160,w:240,h:140,rotation:0,opacity:100,shadowColor:'#000000',shadowBlur:0,shadowX:0,shadowY:0,shape:kind,radius:20,fill:'#ffffff',stroke:'#ffffff',strokeWidth:10}}
@@ -17027,12 +17034,15 @@ function renderLayerList(){
 }
 
 function syncLayerControls(){const body=field('layer-controls-body');const layer=currentLayer();const title=field('context-title');if(title)title.textContent=layer?(layer.name||({text:'Text',button:'Button',image:'Image',shape:'Shape'}[layer.type]||'Object'))+' settings':'Select an object';if(!body)return;body.style.display=layer?'':'none';field('layer-empty').style.display=layer?'none':'';root.querySelectorAll('.mq-studio-layer-section').forEach(el=>el.classList.remove('show'));if(!layer)return;field('layer-name').value=layer.name||'';field('layer-place').value=layer.place||'front';field('layer-x').value=Math.round(layer.x||0);field('layer-y').value=Math.round(layer.y||0);field('layer-w').value=Math.round(layer.w||1);field('layer-h').value=Math.round(layer.h||1);field('layer-opacity').value=layer.opacity==null?100:layer.opacity;field('layer-rotation').value=layer.rotation||0;if(field('rotation-number'))field('rotation-number').value=Number(layer.rotation||0).toFixed(1);field('layer-shadow-color').value=layer.shadowColor||'#000000';field('layer-shadow-blur').value=layer.shadowBlur||0;field('layer-shadow-x').value=layer.shadowX||0;field('layer-shadow-y').value=layer.shadowY||0;
-  if(layer.type==='text'||layer.type==='button'){field('layer-text-fields').classList.add('show');field('layer-text').value=layer.text||'';field('layer-font').value=layer.font||'playfair';field('layer-font')._mqRefreshFont?.();field('layer-align').value=layer.align||'left';field('layer-color').value=layer.color||'#ffffff';field('layer-size').value=layer.size||56;field('layer-spacing').value=layer.spacing||0;if(field('layer-curve'))field('layer-curve').value=layer.curve||0;if(field('curve-value'))field('curve-value').textContent=(Number(layer.curve)||0)>0?'Arch up · '+layer.curve:(Number(layer.curve)||0)<0?'Arch down · '+Math.abs(layer.curve):'Straight · 0';field('layer-fx').value=layer.fx||'none';if(field('layer-style'))field('layer-style').value='custom';if(field('layer-text-stroke-width'))field('layer-text-stroke-width').value=layer.textStrokeWidth||0;}
+  const shapeText=layer.type==='shape'&&mqShapeTakesText(layer.shape);
+  if(field('shape-text-note'))field('shape-text-note').style.display=shapeText?'':'none';
+  if(field('flip-row'))field('flip-row').style.display=(layer.type==='shape'||layer.type==='image')?'flex':'none';
+  if(layer.type==='text'||layer.type==='button'||shapeText){field('layer-text-fields').classList.add('show');field('layer-text').value=layer.text||'';field('layer-font').value=layer.font||'playfair';field('layer-font')._mqRefreshFont?.();field('layer-align').value=layer.align||'left';field('layer-color').value=layer.color||(layer.type==='shape'?'#1a1a1a':'#ffffff');field('layer-size').value=layer.size||(layer.type==='shape'?40:56);field('layer-spacing').value=layer.spacing||0;if(field('layer-curve'))field('layer-curve').value=layer.curve||0;if(field('curve-value'))field('curve-value').textContent=(Number(layer.curve)||0)>0?'Arch up · '+layer.curve:(Number(layer.curve)||0)<0?'Arch down · '+Math.abs(layer.curve):'Straight · 0';field('layer-fx').value=layer.fx||'none';if(field('layer-style'))field('layer-style').value='custom';if(field('layer-text-stroke-width'))field('layer-text-stroke-width').value=layer.textStrokeWidth||0;}
   if(layer.type==='shape'||layer.type==='button'){field('layer-shape-fields').classList.add('show');field('layer-shape').value=layer.shape||'rect';field('layer-shape')._mqRefreshFont?.();field('layer-radius').value=layer.radius||0;field('layer-fill').value=layer.fill||'#ffffff';field('layer-stroke').value=layer.stroke||'#ffffff';field('layer-stroke-width').value=layer.strokeWidth||0;}
   if(layer.type==='image'){field('layer-image-fields').classList.add('show');field('layer-fit').value=layer.fit||'cover';field('layer-image-radius').value=layer.radius||0;field('layer-image-stroke').value=layer.stroke||'#ffffff';field('layer-image-stroke-width').value=layer.strokeWidth||0;}
   renderLayerList();
 }
-function applyLayerControls(){const layer=currentLayer();if(!layer)return;layer.name=field('layer-name').value||layer.name;layer.place=field('layer-place').value;layer.x=Number(field('layer-x').value)||0;layer.y=Number(field('layer-y').value)||0;layer.w=Math.max(1,Number(field('layer-w').value)||1);layer.h=Math.max(1,Number(field('layer-h').value)||1);layer.opacity=Number(field('layer-opacity').value)||0;layer.rotation=Number(field('layer-rotation').value)||0;layer.shadowColor=field('layer-shadow-color').value;layer.shadowBlur=Number(field('layer-shadow-blur').value)||0;layer.shadowX=Number(field('layer-shadow-x').value)||0;layer.shadowY=Number(field('layer-shadow-y').value)||0;if(layer.type==='text'||layer.type==='button'){layer.text=field('layer-text').value;layer.font=field('layer-font').value;layer.align=field('layer-align').value;layer.color=field('layer-color').value;layer.size=Number(field('layer-size').value)||56;layer.spacing=Number(field('layer-spacing').value)||0;layer.curve=Number(field('layer-curve')?.value||0)||0;if(field('curve-value'))field('curve-value').textContent=layer.curve>0?'Arch up · '+layer.curve:layer.curve<0?'Arch down · '+Math.abs(layer.curve):'Straight · 0';layer.fx=field('layer-fx').value;layer.textStrokeWidth=Number(field('layer-text-stroke-width')?.value||0)||0;}if(layer.type==='shape'||layer.type==='button'){layer.shape=field('layer-shape').value;layer.radius=Number(field('layer-radius').value)||0;layer.fill=field('layer-fill').value;layer.stroke=field('layer-stroke').value;layer.strokeWidth=Number(field('layer-stroke-width').value)||0;}if(layer.type==='image'){layer.fit=field('layer-fit').value;layer.radius=Number(field('layer-image-radius').value)||0;layer.stroke=field('layer-image-stroke').value;layer.strokeWidth=Number(field('layer-image-stroke-width').value)||0;}renderLayerList();}
+function applyLayerControls(){const layer=currentLayer();if(!layer)return;layer.name=field('layer-name').value||layer.name;layer.place=field('layer-place').value;layer.x=Number(field('layer-x').value)||0;layer.y=Number(field('layer-y').value)||0;layer.w=Math.max(1,Number(field('layer-w').value)||1);layer.h=Math.max(1,Number(field('layer-h').value)||1);layer.opacity=Number(field('layer-opacity').value)||0;layer.rotation=Number(field('layer-rotation').value)||0;layer.shadowColor=field('layer-shadow-color').value;layer.shadowBlur=Number(field('layer-shadow-blur').value)||0;layer.shadowX=Number(field('layer-shadow-x').value)||0;layer.shadowY=Number(field('layer-shadow-y').value)||0;const shapeTextNow=layer.type==='shape'&&mqShapeTakesText(field('layer-shape').value);if(layer.type==='shape'){field('layer-text-fields')?.classList.toggle('show',shapeTextNow);if(field('shape-text-note'))field('shape-text-note').style.display=shapeTextNow?'':'none';}if(layer.type==='text'||layer.type==='button'||shapeTextNow){layer.text=field('layer-text').value;layer.font=field('layer-font').value;layer.align=field('layer-align').value;layer.color=field('layer-color').value;layer.size=Number(field('layer-size').value)||56;layer.spacing=Number(field('layer-spacing').value)||0;layer.curve=Number(field('layer-curve')?.value||0)||0;if(field('curve-value'))field('curve-value').textContent=layer.curve>0?'Arch up · '+layer.curve:layer.curve<0?'Arch down · '+Math.abs(layer.curve):'Straight · 0';layer.fx=field('layer-fx').value;layer.textStrokeWidth=Number(field('layer-text-stroke-width')?.value||0)||0;}if(layer.type==='shape'||layer.type==='button'){layer.shape=field('layer-shape').value;layer.radius=Number(field('layer-radius').value)||0;layer.fill=field('layer-fill').value;layer.stroke=field('layer-stroke').value;layer.strokeWidth=Number(field('layer-stroke-width').value)||0;}if(layer.type==='image'){layer.fit=field('layer-fit').value;layer.radius=Number(field('layer-image-radius').value)||0;layer.stroke=field('layer-image-stroke').value;layer.strokeWidth=Number(field('layer-image-stroke-width').value)||0;}renderLayerList();}
 function deleteStudioLayer(id){
  const target=mqStudioCustomLayers.find(l=>l.id===id);if(!target)return;
  mqStudioCustomLayers=mqStudioCustomLayers.filter(l=>l.id!==id);
@@ -17151,6 +17161,7 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
   const dx=Number(layer.shadowX)||0,dy=Number(layer.shadowY)||0;
   const shape=layer.shape||'rect';
   const sw=Math.max(1,Number(layer.strokeWidth)||0)*k;
+  const flipped=layer.flipX||layer.flipY;if(flipped){ctx.save();ctx.translate(x+w/2,y+h/2);ctx.scale(layer.flipX?-1:1,layer.flipY?-1:1);ctx.translate(-(x+w/2),-(y+h/2));}
   let checkW=0,curveW=0;const buildPath=()=>{
     ctx.beginPath();
     if(shape==='circle'){ctx.ellipse(x+w/2,y+h/2,w/2,h/2,0,0,Math.PI*2);return 'fill';}
@@ -17221,6 +17232,11 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
       const sq=Math.min(w,h*1.15),ox=x+(w-sq)/2,oy=y+(h-sq/1.15)/2,sh=sq/1.15;
       ctx.moveTo(ox+sq*0.10,oy+sh*0.55);ctx.lineTo(ox+sq*0.38,oy+sh*0.84);ctx.lineTo(ox+sq*0.90,oy+sh*0.14);
       checkW=sq*0.15;return 'stroke';}
+    if(shape==='star'){const cx=x+w/2,cy=y+h*.55,rx=w*.5,ry=h*.55;for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,rr=i%2?.45:1;const px=cx+Math.cos(a)*rx*rr,py=cy+Math.sin(a)*ry*rr;if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);}ctx.closePath();return 'fill';}
+    if(shape==='seal'){const cx=x+w/2,cy=y+h/2,n=18;for(let i=0;i<=n*8;i++){const a=i*Math.PI*2/(n*8),rf=.92+.08*Math.cos(n*a);const px=cx+Math.cos(a)*w*.5*rf,py=cy+Math.sin(a)*h*.5*rf;if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);}ctx.closePath();return 'fill';}
+    if(shape==='ribbon'){const P=[[.12,.16],[.88,.16],[.88,.30],[1,.30],[.93,.53],[1,.76],[.84,.76],[.84,.66],[.16,.66],[.16,.76],[0,.76],[.07,.53],[0,.30],[.12,.30]];P.forEach(([px,py],i)=>i?ctx.lineTo(x+w*px,y+h*py):ctx.moveTo(x+w*px,y+h*py));ctx.closePath();return 'fill';}
+    if(shape==='pricetag'){const rr=Math.min(w,h)*.10;ctx.moveTo(x,y+h*.5);ctx.lineTo(x+w*.22,y+h*.08);ctx.lineTo(x+w-rr,y+h*.08);ctx.quadraticCurveTo(x+w,y+h*.08,x+w,y+h*.08+rr);ctx.lineTo(x+w,y+h*.92-rr);ctx.quadraticCurveTo(x+w,y+h*.92,x+w-rr,y+h*.92);ctx.lineTo(x+w*.22,y+h*.92);ctx.closePath();const hr=Math.min(w,h)*.07;ctx.moveTo(x+w*.17+hr,y+h*.5);ctx.arc(x+w*.17,y+h*.5,hr,0,Math.PI*2,true);return 'fill';}
+    if(shape==='handcircle'){const cx=x+w/2,cy=y+h/2,tilt=-.08;for(let i=0;i<=90;i++){const t=i/76,a=-2.6+t*Math.PI*2,rx=w*.45*(1+.07*t+.03*Math.sin(t*7)),ry=h*.42*(1-.10*t+.04*Math.sin(t*5+1));const ex=Math.cos(a)*rx,ey=Math.sin(a)*ry;const px=cx+ex*Math.cos(tilt)-ey*Math.sin(tilt),py=cy+ex*Math.sin(tilt)+ey*Math.cos(tilt);if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);}curveW=Math.min(w,h)*.06;return 'stroke';}
     if(shape==='heart'){
       const cx=x+w/2,cy=y+h*0.38;ctx.moveTo(cx,y+h*0.92);ctx.bezierCurveTo(x+w*0.08,y+h*0.64,x+w*0.02,y+h*0.26,x+w*0.26,y+h*0.20);ctx.bezierCurveTo(x+w*0.40,y+h*0.16,cx,y+h*0.30,cx,y+h*0.42);ctx.bezierCurveTo(cx,y+h*0.30,x+w*0.60,y+h*0.16,x+w*0.74,y+h*0.20);ctx.bezierCurveTo(x+w*0.98,y+h*0.26,x+w*0.92,y+h*0.64,cx,y+h*0.92);ctx.closePath();return 'fill';}
     if(shape==='burst'){
@@ -17234,6 +17250,22 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
 
   clearRawShadow(ctx);
   if(mode==='fill' && (Number(layer.strokeWidth)||0)>0){buildPath();ctx.strokeStyle=layer.stroke||'#ffffff';ctx.lineWidth=sw;ctx.lineJoin='round';ctx.lineCap='round';ctx.stroke();}
+  if(flipped)ctx.restore();
+  // Text on a shape (Nov 2026): centred in the shape's "body", shrinks to fit.
+  if(mode==='fill'&&String(layer.text||'').trim()){
+    const lines=String(layer.text).split('\n').map(t=>t.trim()).filter(Boolean);
+    const box={ribbon:[.16,.16,.68,.50],pricetag:[.28,.08,.68,.84],bubble:[.08,.07,.84,.70],bubbleoval:[.12,.10,.76,.66],bubblecloud:[.14,.12,.72,.62],bubblecomic:[.08,.07,.84,.70],bubblehand:[.08,.07,.84,.70],bubbleburst:[.2,.2,.6,.52],seal:[.16,.16,.68,.68],starburst:[.2,.2,.6,.6],star:[.3,.36,.4,.36],heart:[.2,.22,.6,.42],circle:[.14,.14,.72,.72]}[shape]||[.06,.08,.88,.84];
+    let bx=x+w*box[0],by=y+h*box[1],bw=w*box[2],bh=h*box[3];
+    if(layer.flipX&&shape==='pricetag')bx=x+w*(1-box[0]-box[2]);
+    if(layer.flipY&&/^bubble/.test(shape))by=y+h*(1-box[1]-box[3]);
+    const space=(layer.spacing||0)*k,wt=700,fk=layer.font||'montserrat';
+    let size=Math.max(8,(layer.size||40))*k;ctx.font=font(size,fk,wt);
+    const fits=()=>lines.every(t=>textWidthWithSpacing(ctx,t,space)<=bw)&&size*1.15*lines.length<=bh;
+    while(size>9*k&&!fits()){size-=k;ctx.font=font(size,fk,wt);}
+    ctx.fillStyle=layer.color||'#1a1a1a';
+    const lh=size*1.15,top=by+bh/2-lh*lines.length/2;
+    lines.forEach((t,i)=>drawSpacedTextFx(ctx,t,bx+bw/2,top+lh*i+lh*.5+size*.35,space,'center',layer.fx||'none',layer.shadowColor||'#000000',k));
+  }
 }else if(layer.type==='image'&&layer.fullBleed&&!layer.image&&!layer.dataUrl&&!highlight){
   /* Removed background photo: show the design colour, not a placeholder. */
 }else if(layer.type==='image'){
@@ -17251,6 +17283,7 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
     ctx.fillStyle=layer.fill||'#ffffff';ctx.fill();ctx.restore();
   }
   ctx.save();ctx.beginPath();ctx.roundRect(x,y,w,h,radius);ctx.clip();
+  if(layer.flipX||layer.flipY){ctx.translate(x+w/2,y+h/2);ctx.scale(layer.flipX?-1:1,layer.flipY?-1:1);ctx.translate(-(x+w/2),-(y+h/2));}
   if(layer.image && layer.image.complete && layer.image.naturalWidth){drawImageFit(ctx,layer.image,x,y,w,h,layer.fit||'cover');}
   else if(layer.projectPhoto){ctx.fillStyle=layer.fill||'#e9d9c8';ctx.fillRect(x,y,w,h);ctx.fillStyle='rgba(255,255,255,.16)';ctx.fillRect(x+w*.12,y+h*.14,w*.76,h*.72);}
   ctx.restore();
@@ -17685,7 +17718,11 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
       }
 
       field('quick-size').addEventListener('change',()=>{field('size').value=field('quick-size').value;update();});
-      root.querySelectorAll('[data-studio-filter]').forEach(btn=>btn.addEventListener('click',()=>{root.querySelectorAll('[data-studio-filter]').forEach(b=>b.classList.toggle('active',b===btn));renderGallery(btn.dataset.studioFilter)}));
+      // Creative hub cards show which one you're in (Design Studio by default;
+      // Yard Sign Templates / QR Promotions when those filters are picked).
+      const syncCreative=f=>{const id=f==='yard'?'mq-creative-open-yard':f==='qr'?'mq-creative-open-qr':'mq-creative-open-design';document.querySelectorAll('#mq-page-marketing .mq-creative-choice').forEach(c=>{const on=c.id===id;c.classList.toggle('active',on);c.setAttribute('aria-pressed',String(on));});};
+      root.querySelectorAll('[data-studio-filter]').forEach(btn=>btn.addEventListener('click',()=>{root.querySelectorAll('[data-studio-filter]').forEach(b=>b.classList.toggle('active',b===btn));renderGallery(btn.dataset.studioFilter);syncCreative(btn.dataset.studioFilter)}));
+      syncCreative(root.querySelector('[data-studio-filter].active')?.dataset.studioFilter||'all');
       ['shop-name','shop-font','shop-color','shop-scale','shop-spacing','shop-x','shop-y','logo-scale','composition','focal','finish','overlay','accent','accent-color','headline','emphasis','emphasis-color','subline','cta','color','size','headline-font','sub-font','cta-font','align','headline-color','sub-color','cta-bg','cta-color','headline-fx','sub-fx','brand-fx','cta-fx','url-fx','fx-color','fx-blur','fx-distance','fx-angle','fx-outline','headline-fill','gradient-end','headline-back','back-color','back-opacity','headline-scale','sub-scale','cta-scale','headline-spacing','sub-spacing','content-x','content-y','cta-x','cta-y','url-text','url-x','url-y','url-color','url-scale'].forEach(id=>{
         const evt = ['headline-scale','sub-scale','cta-scale','headline-spacing','sub-spacing','content-x','content-y','cta-x','cta-y','color','headline-color','sub-color','cta-bg','cta-color'].includes(id) ? 'input' : 'input';
         field(id).addEventListener(evt,update);
@@ -17758,6 +17795,7 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
       });
 if(field('detach'))field('detach').addEventListener('click',()=>{if(mqStudioDetached){mqShowToast('Elements are already independent layers');return;}detachBuiltIns(false);});
 field('add-text-layer').addEventListener('click',()=>addLayer(defaultTextLayer()));
+['x','y'].forEach(ax=>{const b=field('flip-'+ax);if(b)b.addEventListener('click',()=>{const l=currentLayer();if(!l||l.locked)return;const key=ax==='x'?'flipX':'flipY';l[key]=!l[key];update();});});
 field('add-shape-layer').addEventListener('click',()=>{addLayer(defaultShapeLayer());requestAnimationFrame(()=>requestAnimationFrame(()=>{const sh=field('layer-shape');sh?.closest('label')?.scrollIntoView({block:'nearest'});sh?._mqOpenPicker?.();}));});
 if(field('add-arrow-layer'))field('add-arrow-layer').addEventListener('click',()=>addLayer(defaultArrowLayer('arrow')));
 if(field('add-doodle-layer'))field('add-doodle-layer').addEventListener('click',()=>addLayer(defaultDoodleLayer('burst')));
