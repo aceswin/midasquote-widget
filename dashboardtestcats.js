@@ -1746,7 +1746,7 @@ window.logoutMember = async function () {
             <div class="mq-page-title">Business info</div>
             <div class="mq-page-sub">What you do, plus the info that appears on your widget and in emails to customers</div>
             ${mqTrainingVideoBlockHTML('shop')}
-            <div id="mq-shop-msg"></div>
+            <div id="mq-shop-msg" style="display:none!important"></div>
 
             <div class="mq-card" id="mq-biz-card">
               <div class="mq-card-title" onclick="mqToggleShopSection('biz')" style="cursor:pointer;user-select:none;flex-wrap:wrap">
@@ -11819,8 +11819,9 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const qts = mqQuoteTypesOf(shopRec.fields);
     const isOn = t => t.id === 'cabinetry' ? biz.cab : (t.id === 'countertops' ? biz.ct : biz.trades.includes(t.id));
     const chip = t => {
-      const on = isOn(t);
-      return `<button type="button" class="mq-biz-chip" data-mq-biz="${t.id}" aria-pressed="${on}" onclick="mqBizToggle('${t.id}')" style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;font-family:inherit;padding:5px 11px;border-radius:999px;cursor:pointer;${on ? 'background:#1a1a1a;color:#fff;border:1.5px solid #1a1a1a' : 'background:#fff;color:#374151;border:1.5px solid #d1d5db'}"><span style="width:13px;height:13px;border-radius:3px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;line-height:1;${on ? 'background:#d7a42e;color:#1a1a1a' : 'border:1.5px solid #9ca3af'}">${on ? '✓' : ''}</span>${mqEscHtml(t.label)}</button>`;
+      const pend = window._mqBizBusy && window._mqBizBusy[t.id];
+      const on = pend ? pend.on : isOn(t);
+      return `<button type="button" class="mq-biz-chip" data-mq-biz="${t.id}" aria-pressed="${on}" onclick="mqBizToggle('${t.id}')" style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;font-family:inherit;padding:5px 11px;border-radius:999px;cursor:pointer;${on ? 'background:#1a1a1a;color:#fff;border:1.5px solid #1a1a1a' : 'background:#fff;color:#374151;border:1.5px solid #d1d5db'}"><span style="width:13px;height:13px;border-radius:3px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;line-height:1;${pend ? 'font-size:11px' : on ? 'background:#d7a42e;color:#1a1a1a' : 'border:1.5px solid #9ca3af'}">${pend ? '⏳' : on ? '✓' : ''}</span>${mqEscHtml(t.label)}${pend ? `<span class="mq-biz-chip-wait" style="font-size:11px;font-weight:500;opacity:.8">${pend.on ? 'Setting up…' : 'Saving…'}</span>` : ''}</button>`;
     };
     // Industry first, then its trades in groups (groups with nothing ticked
     // start folded once anything is ticked, so the list stays short).
@@ -11915,7 +11916,36 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     try { await mqSaveTabsCfg({ business: { trades: biz.trades, off: biz.off, industry: id } }); window.mqRenderBizTypes(); }
     catch(e) { showMsg('mq-shop-msg', 'Error saving.', 'error'); }
   };
-  window.mqBizToggle = async function(id) {
+  // Nov 2026 (Jordan): a tick used to take a few seconds to show (save +
+  // starter pack first), so it got clicked twice. Now the chip flips at once
+  // and says "Setting up…", repeat clicks on a busy chip are ignored, and
+  // ticks run one after another so two quick ticks can't trip each other up.
+  window._mqBizBusy = window._mqBizBusy || {};
+  window.mqBizToggle = function(id) {
+    if (window._mqBizBusy[id]) return;
+    const chip = document.querySelector(`.mq-biz-chip[data-mq-biz="${id}"]`);
+    const nowOn = chip ? chip.getAttribute('aria-pressed') !== 'true' : true;
+    window._mqBizBusy[id] = { on: nowOn };
+    if (chip) {
+      chip.setAttribute('aria-pressed', String(nowOn));
+      chip.style.background = nowOn ? '#1a1a1a' : '#fff';
+      chip.style.color = nowOn ? '#fff' : '#374151';
+      chip.style.borderColor = nowOn ? '#1a1a1a' : '#d1d5db';
+      chip.style.opacity = '.85'; chip.style.cursor = 'progress';
+      const box = chip.querySelector('span');
+      if (box) { box.textContent = '⏳'; box.style.border = '0'; box.style.background = 'transparent'; box.style.fontSize = '11px'; }
+      const lab = document.createElement('span'); lab.className = 'mq-biz-chip-wait'; lab.textContent = nowOn ? 'Setting up…' : 'Saving…';
+      lab.style.cssText = 'font-size:11px;font-weight:500;opacity:.8';
+      chip.appendChild(lab);
+    }
+    const run = (window._mqBizQ || Promise.resolve()).catch(() => {}).then(() => mqBizToggleRun(id));
+    window._mqBizQ = run;
+    return run.finally(() => {
+      delete window._mqBizBusy[id];
+      try { mqRenderBizTypes(); } catch(e) {}
+    });
+  };
+  async function mqBizToggleRun(id) {
     const shopRec = window._mqShopRecord;
     if (!shopRec) return;
     const cfg = mqTabsCfgOf(shopRec.fields);
@@ -12004,7 +12034,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       mqApplyEstimatorTabScopeToPricing();
       mqApplyEstimatorTabScopeToSpecialty();
     } catch(e) { showMsg('mq-shop-msg', 'Error saving.', 'error'); }
-  };
+  }
 
   // ── Trades catalog + starter packs (Oct 2026) ──
   // Lives on the MASTER_TEMPLATE shop's 'Custom categories' field (unused on
