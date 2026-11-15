@@ -7638,6 +7638,20 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     return out;
   }
 
+  // Same as mqPbSerialize, but each block starts with an invisible marker so
+  // the live preview knows which block every bit came from (click-to-jump).
+  function mqPbSerializeMarked(blocks) {
+    let out = '', prev = null;
+    blocks.forEach((b, i) => {
+      const s = mqPbBlockText(b);
+      if (!s) return;
+      if (prev !== null) out += (b.tight && mqPbPlainLike(b) && mqPbPlainLike(prev)) ? '\n' : '\n\n';
+      out += '\uE000' + i + '\uE001' + s;
+      prev = b;
+    });
+    return out;
+  }
+
   function mqPbNew(tok) {
     if (tok === '@text') return { type: 'text', text: '', bg: null, border: null };
     if (tok === '@cols') return { type: 'cols', l: '', r: '' };
@@ -7836,7 +7850,12 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           ${tightBox}
         </div>`;
     } else if (b.type === 'items') {
-      panel = `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:12.5px;color:#4b5563">Style:</span>${sel(MQ_PB_ITEMS, b.tok)}${tightBox}</div>`;
+      // Corner roundness for the coloured list (Jordan, Nov 2026). Saved with
+      // the template's letterhead settings, so no new Airtable field.
+      const tpl = (window._mqProposalTemplatesCache || []).find(x => x.id === id);
+      const rad = tpl ? mqLhParse(tpl.fields['Letterhead settings']).itemsRadius : 10;
+      const corners = b.tok === 'items' ? `<span style="${small};display:inline-flex;align-items:center;gap:6px">Corners <select onchange="mqLhSet('${id}','itemsRadius',+this.value,true)" style="width:auto;font-size:12.5px">${[[0,'Square'],[4,'Slightly round'],[10,'Round (default)'],[16,'Rounder'],[24,'Very round']].map(([v,l]) => `<option value="${v}" ${(+rad) === v ? 'selected' : ''}>${l}</option>`).join('')}${[0,4,10,16,24].includes(+rad) ? '' : `<option value="${+rad}" selected>${+rad}px</option>`}</select></span>` : '';
+      panel = `<div style="display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap"><span style="font-size:12.5px;color:#4b5563">Style:</span>${sel(MQ_PB_ITEMS, b.tok)}${corners}${tightBox}</div>`;
     } else if (b.type === 'totals') {
       panel = `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:12.5px;color:#4b5563">Style:</span>${sel(MQ_PB_TOTALS, b.tok)}${tightBox}</div>`;
     } else if (tightBox) {
@@ -7905,6 +7924,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     });
     window.mqPbRender(id);
     if (changed) mqPbCommit(id, true);
+    setTimeout(() => { if (window.mqRefreshProposalPreview) window.mqRefreshProposalPreview(id); }, 0);
   };
 
   window.mqPbSet = function(id, i, key, val, rerender) {
@@ -8273,7 +8293,64 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const t = (window._mqProposalTemplatesCache || []).find(x => x.id === id);
     if (!box || !t) return;
     const ta = document.getElementById(`mq-prop-body-${id}`);
-    box.innerHTML = mqPropPreviewInnerHTML(t, ta ? ta.value : null);
+    let body = ta ? ta.value : null;
+    // Click-to-jump (Jordan, Nov 2026): when the blocks match the saved text,
+    // render with block markers so a click finds its block in the editor.
+    try {
+      const blocks = _mqPropBlocks[id];
+      if (blocks && blocks.length) {
+        const marked = mqPbSerializeMarked(blocks);
+        const norm = x => String(x || '').replace(/\s+/g, ' ').trim();
+        if (norm(marked.replace(/\uE000\d+\uE001/g, '')) === norm(body == null ? t.fields['Body'] : body)) body = marked;
+      }
+    } catch (e) {}
+    box.innerHTML = mqPropPreviewInnerHTML(t, body, { jump: true });
+    if (!box._mqJump) {
+      box._mqJump = true;
+      box.style.cursor = 'pointer';
+      box.title = 'Click any part to edit it on the left';
+      box.addEventListener('click', ev => window.mqPbJumpFromPreview(id, box, ev));
+    }
+  };
+  window.mqPbJumpFromPreview = function(id, box, ev) {
+    if (ev.target.closest('a,button,input,select,textarea')) return;
+    if (ev.target.closest('[data-pb-sec="lh"]')) { mqPbJumpSection(id, 'lh'); return; }
+    const marks = [...box.querySelectorAll('[data-pb-i]')];
+    if (!marks.length) { mqPbJumpSection(id, 'text'); return; }
+    // The block whose marker sits last at-or-above the click (markers are
+    // zero-size and mark the top-left of each block).
+    let best = null;
+    for (const m of marks) {
+      const r = m.getBoundingClientRect();
+      if (r.top <= ev.clientY + 2) best = m; else break;
+    }
+    window.mqPbJump(id, +((best || marks[0]).dataset.pbI));
+  };
+  function mqPbFlash(el) {
+    if (!el) return;
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.style.transition = 'box-shadow .25s';
+    el.style.boxShadow = '0 0 0 3px #e2bf63, 0 0 0 7px rgba(226,191,99,.25)';
+    clearTimeout(el._mqFlashT);
+    el._mqFlashT = setTimeout(() => { el.style.boxShadow = ''; }, 1600);
+  }
+  function mqPbOpenSection(id, key) {
+    const body = document.getElementById(`mq-prop-sec-body-${id}-${key}`);
+    if (body && body.style.display === 'none') window.mqToggleProposalSection(id, key);
+    return body;
+  }
+  function mqPbJumpSection(id, key) {
+    const body = mqPbOpenSection(id, key);
+    if (body) mqPbFlash(body.parentElement);
+  }
+  window.mqPbJump = function(id, i) {
+    mqPbOpenSection(id, 'text');
+    const canvas = document.getElementById(`mq-prop-canvas-${id}`);
+    const row = canvas && canvas.querySelector(`.mq-pb[data-i="${i}"]`);
+    if (!row) { mqPbJumpSection(id, 'text'); return; }
+    const pn = document.getElementById(`mq-pb-panel-${id}-${i}`);
+    if (pn && pn.style.display === 'none') window.mqPbToggle(id, i);
+    mqPbFlash(row);
   };
 
   // Inserts a {tag} where the caret is. Tags that are whole blocks (item list,
@@ -8600,20 +8677,21 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
-  function mqPropBuildItemsHtml(lines, showPrices, accent) {
+  function mqPropBuildItemsHtml(lines, showPrices, accent, radius) {
+      const R = Math.max(0, Math.min(40, radius == null || radius === '' || isNaN(+radius) ? 10 : +radius));
     const rows = lines.map((l, i) => showPrices ? `
       <tr style="background:${i%2===0?'#ffffff':'#fafafa'};page-break-inside:avoid;break-inside:avoid">
         <td style="padding:12px 14px;border-bottom:1px solid #eee">${mqPropEscapeHtml(l.label)}</td>
         <td style="padding:12px 14px;border-bottom:1px solid #eee;text-align:right;white-space:nowrap;font-weight:600">${CUR()}${l.cost.toFixed(2)}</td>
       </tr>` : `
       <tr style="background:${i%2===0?'#ffffff':'#fafafa'};page-break-inside:avoid;break-inside:avoid"><td style="padding:12px 14px;border-bottom:1px solid #eee">${mqPropEscapeHtml(l.label)}</td></tr>`).join('');
-    return `<table style="width:100%;border-collapse:collapse;margin:12px 0;border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.08)">
+    return `<div style="margin:12px 0;border-radius:${R}px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.08)"><table style="width:100%;border-collapse:collapse;margin:0">
       <thead><tr style="background:${accent}">
         <th style="text-align:left;font-size:12px;color:#fff;text-transform:uppercase;letter-spacing:0.04em;padding:12px 14px;font-weight:700">Item</th>
         ${showPrices ? `<th style="text-align:right;font-size:12px;color:#fff;text-transform:uppercase;letter-spacing:0.04em;padding:12px 14px;font-weight:700">Price</th>` : ''}
       </tr></thead>
       <tbody>${rows}</tbody>
-    </table>`;
+    </table></div>`;
   }
 
   function mqPropBuildItemsPlainHtml(lines, showPrices) {
@@ -8769,9 +8847,13 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const paragraphs = textWithPlaceholders.split(/\n{2,}/);
     const selfContainedTokens = new Set(['{items}', '{items_plain}', '{items_plain_light}', '{items_header}', '{totals_box}', '{totals_plain}', '{signature_line}', '{hr}']);
     let html = paragraphs.map(para => {
-      const trimmed = para.trim();
-      if (/^\u0000BOX\d+\u0000$/.test(trimmed)) return trimmed;
-      if (selfContainedTokens.has(trimmed)) return mqPropFormatTextChunk(para);
+      // Live preview only: invisible "block N starts here" markers (see
+      // mqPbSerializeMarked) — peeled off before the whole-block checks.
+      const trimmed0 = para.trim();
+      const mk = (trimmed0.match(/^(?:\uE000\d+\uE001)+/) || [''])[0];
+      const trimmed = trimmed0.slice(mk.length);
+      if (/^\u0000BOX\d+\u0000$/.test(trimmed)) return mk + trimmed;
+      if (selfContainedTokens.has(trimmed)) return mk + mqPropFormatTextChunk(trimmed);
       return `<div style="page-break-inside:avoid;break-inside:avoid;margin-bottom:16px">${mqPropFormatTextChunk(para)}</div>`;
     }).join('');
 
@@ -8801,6 +8883,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       '{break}': '<div style="height:20px"></div>',
     };
     for (const [token, val] of Object.entries(replacements)) html = html.split(token).join(val);
+    if (html.indexOf('\uE000') >= 0) html = html.replace(/\uE000(\d+)\uE001/g, '<span data-pb-i="$1"></span>');
     return html;
   }
 
@@ -8811,7 +8894,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // Defaults reproduce the original fixed header exactly, so templates that have
   // never touched the new settings render exactly as before.
   function mqLhDefaults() {
-    return { layout: 'split', logo: true, logoSize: 60, logoBeside: false, nameOn: true, nameSize: 18, cityPhone: true, lines: '', title: 'Proposal', date: true, rule: 3, footer: '', footerAlign: 'center', footerRule: true };
+    return { layout: 'split', logo: true, logoSize: 60, logoBeside: false, nameOn: true, nameSize: 18, cityPhone: true, lines: '', title: 'Proposal', date: true, rule: 3, footer: '', footerAlign: 'center', footerRule: true, itemsRadius: 10 };
   }
   function mqLhParse(raw) {
     let o = {};
@@ -8863,7 +8946,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const depositAmt = f['Deposit type'] === 'Flat amount' ? (f['Deposit value'] || 0) : total * ((f['Deposit value'] || 0) / 100);
     const showPrices = f['Show item prices'] !== false;
 
-    const itemsHtml = mqPropBuildItemsHtml(sampleLines, showPrices, accent);
+    const itemsHtml = mqPropBuildItemsHtml(sampleLines, showPrices, accent, mqLhParse(f['Letterhead settings']).itemsRadius);
     const itemsPlainHtml = mqPropBuildItemsPlainHtml(sampleLines, showPrices);
     const itemsPlainLightHtml = mqPropBuildItemsPlainLightHtml(sampleLines, showPrices);
     const itemsHeaderHtml = mqPropBuildItemsHeaderHtml(showPrices, accent);
@@ -8884,11 +8967,12 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     return { accent, dateStr, renderedBodyHtml };
   }
 
-  function mqPropPreviewInnerHTML(t, bodyOverride) {
+  function mqPropPreviewInnerHTML(t, bodyOverride, opts) {
     const shop = (window._mqShopRecord || {}).fields || {};
     const P = mqPropSampleParts(t, bodyOverride);
     const lh = mqLhParse(t.fields['Letterhead settings']);
-    return mqLhHeaderHtml(shop, P.accent, lh, P.dateStr, mqPropEscapeHtml, false) + P.renderedBodyHtml + mqLhFooterHtml(lh, mqPropEscapeHtml);
+    if (!opts || !opts.jump) return mqLhHeaderHtml(shop, P.accent, lh, P.dateStr, mqPropEscapeHtml, false) + P.renderedBodyHtml + mqLhFooterHtml(lh, mqPropEscapeHtml);
+    return `<div data-pb-sec="lh">${mqLhHeaderHtml(shop, P.accent, lh, P.dateStr, mqPropEscapeHtml, false)}</div>` + P.renderedBodyHtml + `<div data-pb-sec="lh">${mqLhFooterHtml(lh, mqPropEscapeHtml)}</div>`;
   }
 
   // Shows exactly what this template will actually produce in MidasQuote

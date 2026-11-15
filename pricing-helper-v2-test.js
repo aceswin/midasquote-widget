@@ -6644,7 +6644,7 @@ window.mqphGoToWizard = function() {
     const groupKeys = ['', ...qtsAll.filter(q => !qtsOff.has(q.id)).map(q => q.id), '__gone'];
     const offNames = qtsAll.filter(q => qtsOff.has(q.id)).map(q => q.name);
     const groupLabel = k => k === '' ? 'Cabinets (Cabinets only &amp; Cabinets + countertops)' : (k === '__gone' ? 'A deleted quote type — not showing anywhere' : '🗂️ ' + mqccEsc(mqccQtName(k)) + ((qtsAll.find(q => q.id === k) || {}).on === false ? ' <span style="font-weight:700;color:#b45309;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:1px 8px;letter-spacing:0;text-transform:none">Off — not on your widget yet</span>' : ''));
-    const blockOf = (c, ci) => {
+    const blockOf = (c, ci, stepNo) => {
       const key = c.id;
       const items = mqccItems(c.id);
       const chips = [
@@ -6685,7 +6685,7 @@ window.mqphGoToWizard = function() {
       return `<div class="mqph-cat-block" data-mq-cat="${key}" style="margin:0 0 12px !important">
         <div class="mqph-cat-header" onclick="mqphToggleCategory('${key}')" style="cursor:pointer;gap:10px">
           <span style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0">
-            <span class="mqph-cat-title"><span id="mqph-cat-arrow-${key}" style="display:inline-block;margin-right:6px;transition:transform 0.2s;font-size:12px">▶</span>${mqccEsc(c.name)} <span style="font-size:12px;font-weight:400;color:#9ca3af;text-transform:none;letter-spacing:0">(${items.length})</span></span>
+            <span class="mqph-cat-title"><span id="mqph-cat-arrow-${key}" style="display:inline-block;margin-right:6px;transition:transform 0.2s;font-size:12px">▶</span>${stepNo ? `<span class="mqcc-step-no" title="Customers answer this step ${stepNo === 1 ? 'first' : 'in this order'} — use ↑ ↓ to change it" style="display:inline-block;vertical-align:2px;margin-right:8px;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#fff;background:#111827;border-radius:6px;padding:3px 7px">Step ${stepNo}</span>` : ''}${mqccEsc(c.name)} <span style="font-size:12px;font-weight:400;color:#9ca3af;text-transform:none;letter-spacing:0">(${items.length})</span></span>
             ${chips}
           </span>
           <span style="display:flex;gap:6px;flex-shrink:0" onclick="event.stopPropagation()">
@@ -6723,7 +6723,7 @@ window.mqphGoToWizard = function() {
               <span style="font-size:12px;color:#6b7280">${list.length} step${list.length === 1 ? '' : 's'}</span>${offTag}
               <span style="margin-left:auto;display:inline-flex;gap:10px;align-items:center"><button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="window._mqccNewCatQt='${k}';mqccOpenCat(null)">+ New step</button><span class="mqcc-qt-shut-lab" style="font-size:12px;font-weight:600;color:${bd}">${shut ? 'Show ▸' : 'Hide ▾'}</span></span>
             </div>`;
-            const body = list.length ? list.map(c => blockOf(c, cats.indexOf(c))).join('') : `<div style="font-size:12px;color:#6b7280;margin-top:10px">No steps yet — this quote won't show on your widget until it has at least one.</div>`;
+            const body = list.length ? list.map((c, i) => blockOf(c, cats.indexOf(c), i + 1)).join('') : `<div style="font-size:12px;color:#6b7280;margin-top:10px">No steps yet — this quote won't show on your widget until it has at least one.</div>`;
             return `<div data-mqcc-group="${k}" style="border:1.5px solid ${bd}55;border-left:5px solid ${bd};background:${bg};border-radius:16px;padding:12px 14px 10px;margin:14px 0">${bhead}<div class="mqcc-qt-body" style="${shut ? 'display:none;' : ''}margin-top:6px">${body}</div></div>`;
           }
           if (!list.length) return '';
