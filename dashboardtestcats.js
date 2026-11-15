@@ -12433,6 +12433,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const quotes = mqPackQuotes(body);
     if (!quotes.length) { showMsg(msgId, 'Couldn’t load that starter pack right now. Refresh and try again.', 'error'); return; }
     const names = [];
+    window._mqPackShort = 0;
     try {
       for (let k = 0; k < quotes.length; k++) names.push(await mqApplyPackQuote(t, quotes[k], opts, k));
     } catch(e) {
@@ -12441,6 +12442,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       return;
     }
     const list = names.map(n => '"' + n + '"').join(' and ');
+    if (window._mqPackShort) { showMsg(msgId, `⚠️ ${list} added, but ${window._mqPackShort} option${window._mqPackShort === 1 ? '' : 's'} couldn't be saved (Airtable was busy). Use "↺ Restore from starter pack" on the Pricing tab to add ${window._mqPackShort === 1 ? 'it' : 'them'}.`, 'error'); return; }
     if (opts.edit) { showMsg(msgId, `✓ ${list} ${names.length > 1 ? 'are' : 'is'} open in your shop to edit — switched off on your widget, so customers never see ${names.length > 1 ? 'them' : 'it'}.`); if (window.mqTradeAdminRender) window.mqTradeAdminRender(); }
     else showMsg(msgId, `✓ ${list} added and set up: ${mqTradePackSummary(mqPackSum(quotes))}. Check the prices on the Pricing tab — they're starting points.`);
   }
@@ -12452,6 +12454,16 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const run = (window._mqPackApplyQ || Promise.resolve()).catch(() => {}).then(() => mqApplyPackQuoteRun(...args));
     window._mqPackApplyQ = run;
     return run;
+  }
+  // A busy moment at Airtable shouldn't cost a pack its options (Jordan's
+  // Renovations, Nov 2026, came out 9 of 39): each option gets two more tries.
+  async function mqPackCreate(table, fields) {
+    for (let k = 0; k < 3; k++) {
+      try { const r = await atCreate(table, fields); if (r && r.id) return r; }
+      catch (e) { if (k === 2) { console.warn('pack option not created', fields && fields.Name, e); return null; } }
+      await new Promise(r => setTimeout(r, 1200 * (k + 1)));
+    }
+    return null;
   }
   async function mqApplyPackQuoteRun(t, pack, opts, idx) {
     const shopRec = window._mqShopRecord;
@@ -12474,8 +12486,9 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         if (fields['Visible rooms'] !== undefined) fields['Visible rooms'] = mapRooms(fields['Visible rooms']);
         const c = mqJsonObj(fields['Custom pricing'], null);
         if (c && c.pctCc && catMap[c.pctCc]) { c.pctCc = catMap[c.pctCc]; fields['Custom pricing'] = JSON.stringify(c); }
-        const rec = await atCreate(CONFIG.LINE_ITEMS_TABLE, fields);
+        const rec = await mqPackCreate(CONFIG.LINE_ITEMS_TABLE, fields);
         if (rec && rec.id) { itemMap[it.id] = rec.id; created.push({ id: rec.id, fields }); }
+        else window._mqPackShort = (window._mqPackShort || 0) + 1;
       }
       // "Show only if" / "price from" links between options
       for (const r of created) {
@@ -12535,6 +12548,92 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     } catch(e) { throw e; }
   }
   window.mqApplyTradePack = mqApplyTradePack;
+
+  // ── Restore missing options from the starter pack (Nov 2026) ──
+  // For a quote that came from a starter pack: puts back any option a step
+  // is missing (matched by step name, in order, and option name), with its
+  // photo, and re-links "Only if" rules that lost their option. Never
+  // changes or removes anything that's already there.
+  function mqQtPackTrade(qtId) {
+    const q = mqQuoteTypesOf(((window._mqShopRecord || {}).fields) || {}).find(x => x.id === qtId);
+    if (!q || q.packEdit || !q.trade) return null;
+    const t = (typeof mqTradeEntries === 'function' ? mqTradeEntries() : []).find(x => x.id === q.trade);
+    return t && mqTradeHasPack(t) ? { q, t } : null;
+  }
+  window.mqQtPackRestorable = qtId => {
+    // The business-type list loads with Business info; on a fresh page the
+    // Pricing tab may draw first, so load it and redraw once it's here.
+    if (!window._mqTradeCatalogLoaded && !window._mqTradeCatLoading) {
+      window._mqTradeCatLoading = true;
+      mqLoadTradeCatalog().then(() => { if ((window._mqTradeCatalog || []).length && window.mqccRerenderAll) window.mqccRerenderAll(); }).catch(() => {}).finally(() => { window._mqTradeCatLoading = false; });
+    }
+    try { return !!mqQtPackTrade(qtId); } catch (e) { return false; }
+  };
+  window.mqRestoreQtFromPack = async function(qtId, btn) {
+    const hit = mqQtPackTrade(qtId);
+    const shopRec = window._mqShopRecord;
+    if (!hit || !shopRec) return;
+    const { q, t } = hit;
+    const say = (m, type) => { if (window.mqccMsg) window.mqccMsg(m, type === 'error'); else showMsg('mq-shop-msg', m, type); };
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Checking…'; }
+    const done = () => { if (btn) { btn.disabled = false; btn.textContent = '↺ Restore from starter pack'; } };
+    try {
+      const quotes = mqPackQuotes(await mqTradePackLoad(t));
+      const nm = s => String(s || '').trim().toLowerCase();
+      const pq = quotes.find(x => nm(x.qt && x.qt.name) === nm(q.packName || q.name))
+        || quotes.find(x => nm(q.name).startsWith(nm(x.qt && x.qt.name)))
+        || quotes[q.packIdx || 0] || quotes[0];
+      if (!pq) { say('Couldn\u2019t load the starter pack right now.', 'error'); return done(); }
+      const f = shopRec.fields;
+      let cats = mqJsonObj(f['Custom categories'], []); if (!Array.isArray(cats)) cats = [];
+      const mine = cats.filter(c => c && c.qt === qtId);
+      const used = new Set(), catMap = {};
+      (pq.cats || []).forEach(pc => { const sc = mine.find(c => !used.has(c.id) && nm(c.name) === nm(pc.name)); if (sc) { used.add(sc.id); catMap[pc.id] = sc.id; } });
+      const rooms = (window._mqRooms || mqJsonObj(f['Room types'], [])).filter(r => r && r.forQt === qtId);
+      const roomMap = {}; (pq.rooms || []).forEach(pr => { const r = rooms.find(x => nm(x.name) === nm(pr.name)); if (r) roomMap[pr.id] = r.id; });
+      const li = await atGet(CONFIG.LINE_ITEMS_TABLE, `FIND("${f['Shop token']}", ARRAYJOIN({Shop token (lookup)}))`);
+      const itemMap = {}, todo = [];
+      (pq.items || []).forEach(it => {
+        const sc = catMap[it.fields.Category];
+        if (!sc) return;
+        const have = li.find(r => r.fields && r.fields['Category'] === sc && nm(r.fields['Name']) === nm(it.fields['Name']));
+        if (have) itemMap[it.id] = have.id; else todo.push(it);
+      });
+      const fixIf = (pq.cats || []).filter(pc => pc.showIf && catMap[pc.id] && !(cats.find(c => c.id === catMap[pc.id]) || {}).showIf);
+      if (!todo.length && !fixIf.length) { say(`✓ "${q.name}" already has everything from the starter pack.`); return done(); }
+      if (!confirm(`Add ${todo.length} missing option${todo.length === 1 ? '' : 's'} back to "${q.name}" from the starter pack${fixIf.length ? `, and reconnect ${fixIf.length} "Only if" rule${fixIf.length === 1 ? '' : 's'}` : ''}?\n\nYour existing options, prices and photos stay exactly as they are.`)) return done();
+      if (btn) btn.textContent = `⏳ Adding ${todo.length}…`;
+      const created = []; let failed = 0;
+      for (const it of todo) {
+        const fields = Object.assign({}, it.fields, { shop: [shopRec.id], Category: catMap[it.fields.Category] });
+        if (fields['Visible rooms'] !== undefined) fields['Visible rooms'] = JSON.stringify(mqRoomIdsOf(fields['Visible rooms']).map(id => roomMap[id]).filter(Boolean));
+        const c = mqJsonObj(fields['Custom pricing'], null);
+        if (c && c.pctCc && catMap[c.pctCc]) { c.pctCc = catMap[c.pctCc]; fields['Custom pricing'] = JSON.stringify(c); }
+        const rec = await mqPackCreate(CONFIG.LINE_ITEMS_TABLE, fields);
+        if (rec && rec.id) { itemMap[it.id] = rec.id; created.push({ id: rec.id, fields }); } else failed++;
+      }
+      for (const r of created) {
+        const c = mqJsonObj(r.fields['Custom pricing'], null);
+        if (!c) continue;
+        let ch = false;
+        if (c.showIf && itemMap[c.showIf]) { c.showIf = itemMap[c.showIf]; ch = true; }
+        if (c.src && itemMap[c.src]) { c.src = itemMap[c.src]; ch = true; }
+        if (ch) { try { await atUpdate(CONFIG.LINE_ITEMS_TABLE, r.id, { 'Custom pricing': JSON.stringify(c) }); } catch (e) {} }
+      }
+      let relinked = 0;
+      cats = cats.map(c => { const pc = fixIf.find(x => catMap[x.id] === c.id); if (pc && itemMap[pc.showIf]) { relinked++; return Object.assign({}, c, { showIf: itemMap[pc.showIf] }); } return c; });
+      const upd = {};
+      if (relinked) upd['Custom categories'] = JSON.stringify(cats);
+      const ph = mqJsonObj(f['Photos'], {}); let phCh = false;
+      Object.keys(pq.photos || {}).forEach(k => { for (const pc in catMap) { const pre = 'li_' + pc + '_'; if (k.startsWith(pre)) { const nk = 'li_' + catMap[pc] + '_' + k.slice(pre.length); if (!ph[nk]) { ph[nk] = pq.photos[k]; phCh = true; } } } });
+      if (phCh) upd['Photos'] = JSON.stringify(ph);
+      if (Object.keys(upd).length) { await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, upd); Object.assign(shopRec.fields, upd); }
+      if (window._mqLastFetchTimes) Object.keys(window._mqLastFetchTimes).forEach(k => { window._mqLastFetchTimes[k] = 0; });
+      if (window.mqphReload) await window.mqphReload();
+      say(failed ? `⚠️ Added ${created.length}, but ${failed} couldn't be saved (Airtable was busy) — click Restore again in a minute.` : `✓ "${q.name}": ${created.length} option${created.length === 1 ? '' : 's'} added back${relinked ? `, ${relinked} "Only if" rule${relinked === 1 ? '' : 's'} reconnected` : ''}. Check the prices — they're the starter pack's.`, failed ? 'error' : 'success');
+    } catch (e) { console.error('restore from pack', e); say('Couldn\u2019t restore right now — please try again.', 'error'); }
+    done();
+  };
 
   // ── Admin card: Templates (Admin) → 🧭 Business types & starter packs ──
   window.mqTradeAdminRender = async function() {
@@ -12603,6 +12702,9 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         <div style="font-size:13px;font-weight:700;color:#111">♻️ Restore my project types</div>
         <div style="font-size:12px;color:#6b7280;line-height:1.5">Lost project types on quote types you'd already saved into a starter pack? This puts them back (with their photos and measuring text) from the pack. It only adds missing ones.</div>
         <div><button type="button" class="mq-btn mq-btn-secondary mq-btn-sm" onclick="mqRestoreRoomsFromPacks()">Restore from starter packs</button></div>
+        <div style="font-size:13px;font-weight:700;color:#111;margin-top:8px">🧹 Stranded options</div>
+        <div style="font-size:12px;color:#6b7280;line-height:1.5">Options in this shop whose step was removed. They show nowhere, they just clutter the data. This deletes them.</div>
+        <div><button type="button" class="mq-btn mq-btn-secondary mq-btn-sm" onclick="mqCleanStrandedOptions()">Clean up stranded options</button></div>
         <div style="font-size:13px;font-weight:700;color:#111;margin-top:8px">📦 Import starter packs</div>
         <div style="font-size:12px;color:#6b7280;line-height:1.5">Load a starter-packs file (e.g. one Claude made). Each business type in it gets that pack. Business types that already have a pack are skipped unless you tick Replace.</div>
         <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
@@ -12826,6 +12928,22 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // Removes one of this shop's quote types completely: its project types,
   // its steps and their options, specialty items only used by it, and their
   // saved photos/settings. (Admin: clearing a starter-pack edit copy.)
+  // Deletes records one at a time at a pace Airtable accepts (~4/s), retrying
+  // a refused one a few times. Never throws; returns the ones it couldn't delete.
+  async function mqPacedDelete(table, recs) {
+    const failed = [];
+    const wait = ms => new Promise(r => setTimeout(r, ms));
+    for (const r of recs || []) {
+      let ok = false;
+      for (let t = 0; t < 4 && !ok; t++) {
+        try { await atDelete(table, r.id); ok = true; }
+        catch (e) { if (/\b404\b|NOT_FOUND|not found/i.test(String(e && e.message))) { ok = true; break; } await wait(900 * (t + 1)); }
+      }
+      if (!ok) failed.push(r);
+      await wait(230);
+    }
+    return failed;
+  }
   async function mqQtPurge(qtId) {
     const shopRec = window._mqShopRecord;
     if (!shopRec) return;
@@ -12835,7 +12953,11 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const catIds = new Set((Array.isArray(cats) ? cats : []).filter(c => c && c.qt === qtId).map(c => c.id));
     const tok = f['Shop token'];
     const li = await atGet(CONFIG.LINE_ITEMS_TABLE, `FIND("${tok}", ARRAYJOIN({Shop token (lookup)}))`);
-    for (const r of li.filter(r => catIds.has(r.fields['Category']))) await atDelete(CONFIG.LINE_ITEMS_TABLE, r.id);
+    // Paced, retried, and never stops halfway (Nov 2026): a single refused
+    // delete used to abort here, leaving a quote with its steps but most of
+    // its options gone (Jordan's Renovations).
+    const liFailed = await mqPacedDelete(CONFIG.LINE_ITEMS_TABLE, li.filter(r => catIds.has(r.fields['Category'])));
+    if (liFailed.length) console.warn('mqQtPurge: options that could not be deleted (left as stranded options)', liFailed.map(r => r.id));
     const specGone = new Set();
     if (roomIds.size) {
       const sp = await atGet(CONFIG.SPECIALTY_TABLE, `FIND("${tok}", ARRAYJOIN({Shop token (lookup)}))`);
@@ -12844,7 +12966,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         if (!ids.some(id => roomIds.has(id))) continue;
         const rest = ids.filter(id => !roomIds.has(id));
         if (rest.length) await atUpdate(CONFIG.SPECIALTY_TABLE, r.id, { 'Visible rooms': JSON.stringify(rest) });
-        else { await atDelete(CONFIG.SPECIALTY_TABLE, r.id); specGone.add(r.id); }
+        else { if (!(await mqPacedDelete(CONFIG.SPECIALTY_TABLE, [r])).length) specGone.add(r.id); }
       }
     }
     const gone = k => [...catIds].some(c => k.startsWith('li_' + c + '_')) || [...specGone].some(sid => k === 'spec_' + sid || k.startsWith('spec_' + sid + '_v'));
@@ -13004,6 +13126,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     return list.some(it => { const raw = it.visibleRooms; let v = []; try { v = typeof raw === 'string' ? JSON.parse(raw || '[]') : (raw || []); } catch(e) { v = []; } return Array.isArray(v) && v.some(id => ids.includes(id)); });
   }
   window.mqRenderQuoteTypes = function() {
+    // The "↺ Reset to starter pack" links need the starter-pack list.
+    if (!window._mqTradeCatalogLoaded && !window._mqQtCatWait) { window._mqQtCatWait = true; mqLoadTradeCatalog().then(() => { window._mqQtCatWait = false; window.mqRenderQuoteTypes(); }).catch(() => { window._mqQtCatWait = false; }); }
     const list = el('mq-qt-list');
     const shopRec = window._mqShopRecord;
     if (!list || !shopRec) return;
@@ -13039,6 +13163,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
             <a href="#" onclick="event.preventDefault();mqQtOpenInRooms('${q.id}')" style="color:#1d4ed8;font-weight:600;text-decoration:none">Set up in Project types →</a>
             ${editing === q.id ? '' : `<a href="#" onclick="event.preventDefault();mqQtRename('${q.id}')" style="color:#374151;text-decoration:none">Rename</a>`}
             <label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;color:#374151"><input type="checkbox" ${q.proOnly ? 'checked' : ''} onchange="mqQtSetPro('${q.id}',this.checked)" style="width:14px;height:14px;accent-color:#1a1a1a"/> Pro only</label>
+            ${mqQtPackFor(q) ? `<a href="#" onclick="event.preventDefault();mqQtResetToPack('${q.id}')" style="color:#92400e;text-decoration:none" title="Wipe this quote and set it up fresh from MidasQuote's starter pack">↺ Reset to starter pack</a>` : ''}
             <a href="#" onclick="event.preventDefault();mqQtDelete('${q.id}')" style="color:#b91c1c;text-decoration:none">Delete</a>
           </div>
         </div>
@@ -13169,6 +13294,58 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     if (!name) { if (inp) inp.focus(); return; }
     window._mqQtEditing = '';
     mqQtUpdate(id, { name }, `✓ Renamed to "${name}".`);
+  };
+  // ---- ↺ Reset to starter pack (Nov 2026) ----
+  // The business type this quote came from, if it has a starter pack.
+  function mqQtPackFor(q) {
+    if (!q || !q.trade || q.packEdit) return null;
+    const t = mqTradeEntries().find(x => x.id === q.trade);
+    return t && mqTradeHasPack(t) ? t : null;
+  }
+  window.mqQtHasPack = function(qtId) {
+    try { return !!mqQtPackFor(mqQuoteTypesOf(window._mqShopRecord.fields).find(x => x.id === qtId)); } catch (e) { return false; }
+  };
+  window.mqQtResetToPack = async function(qtId) {
+    const shopRec = window._mqShopRecord;
+    const q = mqQuoteTypesOf(shopRec.fields).find(x => x.id === qtId);
+    const t = mqQtPackFor(q);
+    if (!q || !t) return;
+    let quotes = [];
+    try { quotes = mqPackQuotes(await mqTradePackLoad(t)); } catch (e) { quotes = []; }
+    const norm = s => String(s || '').toLowerCase().replace(/\s+\d+$/, '').trim();
+    let k = quotes.findIndex(x => norm(x.qt && x.qt.name) === norm(q.name));
+    if (k < 0 && quotes.length === 1) k = 0;
+    if (k < 0) { showMsg('mq-shop-msg', `Couldn't find "${q.name}" in the ${t.label} starter pack.`, 'error'); return; }
+    const pk = quotes[k];
+    if (!confirm(`Reset "${q.name}" to MidasQuote's starter pack?\n\nThis deletes this quote's project types, steps, options and their photos, and sets it up fresh: ${mqTradePackSummary(mqPackSum([pk]))}.\n\nAnything you changed in this quote is lost. It takes a minute.`)) return;
+    const wasOn = q.on !== false, wasPro = !!q.proOnly;
+    showMsg('mq-shop-msg', `Resetting "${q.name}"… this takes about a minute — keep this tab open.`);
+    try {
+      await mqQtPurge(qtId);
+      const before = new Set(mqQuoteTypesOf(shopRec.fields).map(x => x.id));
+      await mqApplyPackQuote(t, pk, { auto: true }, k);
+      const qts = mqQuoteTypesOf(shopRec.fields);
+      const fresh = qts.find(x => !before.has(x.id));
+      if (fresh) { fresh.on = wasOn; if (wasPro) fresh.proOnly = true; await mqSaveTabsCfg({ quoteTypes: qts }); }
+      mqRenderQuoteTypes();
+      if (window._mqLastFetchTimes) Object.keys(window._mqLastFetchTimes).forEach(x => { window._mqLastFetchTimes[x] = 0; });
+      showMsg('mq-shop-msg', `✓ "${(fresh && fresh.name) || q.name}" reset from the starter pack. Check its prices on the Pricing tab.`);
+      try { if (typeof window.mqphReload === 'function') window.mqphReload(); } catch (e) {}
+    } catch (e) { console.error('reset to pack', e); showMsg('mq-shop-msg', 'Something went wrong part-way. Refresh and check Pricing — you can run Reset again.', 'error'); }
+  };
+  // ---- 🧹 Options left behind with no step (admin tool, Nov 2026) ----
+  window.mqCleanStrandedOptions = async function() {
+    const shopRec = window._mqShopRecord; if (!shopRec) return;
+    const f = shopRec.fields;
+    const cats = mqJsonObj(f['Custom categories'], []);
+    const ids = new Set((Array.isArray(cats) ? cats : []).map(c => c && c.id));
+    const li = await atGet(CONFIG.LINE_ITEMS_TABLE, `FIND("${f['Shop token']}", ARRAYJOIN({Shop token (lookup)}))`);
+    const lost = li.filter(r => /^cc_/.test(r.fields['Category'] || '') && !ids.has(r.fields['Category']));
+    if (!lost.length) { showMsg('mq-templates-msg', '✓ No stranded options — nothing to clean up.'); return; }
+    if (!confirm(`Delete ${lost.length} option${lost.length === 1 ? '' : 's'} whose step no longer exists?\n\nThey don't show anywhere (no step), e.g.: ${lost.slice(0, 6).map(r => r.fields['Name']).join(', ')}${lost.length > 6 ? '…' : ''}\n\nThis can't be undone.`)) return;
+    showMsg('mq-templates-msg', `Cleaning up ${lost.length} stranded options… keep this tab open.`);
+    const failed = await mqPacedDelete(CONFIG.LINE_ITEMS_TABLE, lost);
+    showMsg('mq-templates-msg', failed.length ? `Deleted ${lost.length - failed.length} of ${lost.length} — run it again for the rest.` : `✓ Deleted ${lost.length} stranded options.`, failed.length ? 'error' : 'success');
   };
   window.mqQtDelete = async function(id) {
     const shopRec = window._mqShopRecord;
