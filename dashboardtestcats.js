@@ -910,12 +910,90 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   // first loads their dashboard. Tracked on the shop record itself in
   // Airtable (not localStorage), so it correctly stays dismissed even if
   // they log in from a different device or browser later.
+  // Step 1 for a brand-new shop (Nov 2026, Jordan): "What do you quote?".
+  // A new shop used to start as a cabinet + countertop shop by default; now
+  // it starts with nothing ticked (built-in quotes switched off, so the
+  // widget shows "online quotes coming soon") and must tick at least one
+  // trade before carrying on. Ticking runs the normal Business info ticks
+  // (starter packs set themselves up). Only shops that have never saved
+  // their ticks see this -- existing shops have long since seen the welcome
+  // pop-up anyway, so nothing changes for them.
   window.mqShowWelcomeModal = function() {
+    const sr = window._mqShopRecord;
+    const b = sr && mqBizOf(sr.fields);
+    const picked = b && b.set && (b.cab || b.ct || b.trades.length > 0);
+    if (sr && !sr.fields['Welcome popup seen'] && !picked && !window._mqWelcomePicked) return mqWelcomePickStep();
+    mqWelcomeInfoStep();
+  };
+  function mqWelcomeModalEl() {
     let modal = document.getElementById('mq-welcome-modal');
     if (!modal) {
       modal = document.createElement('div');
       modal.id = 'mq-welcome-modal';
-      modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:100001;display:flex;align-items:center;justify-content:center;padding:1.5rem';
+      modal.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:100001;display:flex;align-items:center;justify-content:center;padding:1.5rem;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif";
+      document.body.appendChild(modal);
+    }
+    return modal;
+  }
+  async function mqWelcomePickStep() {
+    const modal = mqWelcomeModalEl();
+    modal.innerHTML = `
+      <div style="background:#fff;border-radius:16px;max-width:760px;width:100%;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(0,0,0,0.25);overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+        <div style="padding:1.6rem 1.8rem .6rem;text-align:center">
+          <div style="font-size:36px;margin-bottom:6px">👋</div>
+          <div style="font-size:21px;font-weight:800;color:#111;margin-bottom:6px">Welcome! What do you quote?</div>
+          <div style="font-size:14px;color:#4b5563;line-height:1.55">Tick everything your business quotes. Each one comes with a ready-made quote you can tweak. You can change this any time in <strong>Business info</strong>.</div>
+        </div>
+        <div id="mq-welcome-pick" style="overflow-y:auto;padding:.6rem 1.8rem 1rem;flex:1;min-height:120px"><div class="mq-loading" style="padding:2rem;text-align:center;color:#6b7280">Loading…</div></div>
+        <div style="padding:1rem 1.8rem 1.4rem;border-top:1px solid #f1f5f9;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+          <span id="mq-welcome-pick-note" style="font-size:12.5px;color:#6b7280;flex:1;min-width:180px">Pick at least one to continue.</span>
+          <button id="mq-welcome-pick-go" onclick="mqWelcomePickDone()" disabled style="padding:12px 22px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;opacity:.4">Continue →</button>
+        </div>
+      </div>`;
+    modal.style.display = 'flex';
+    // Wait for the Business info card to exist, then borrow its tick list.
+    for (let i = 0; i < 60 && !(document.getElementById('mq-biz-chips') && window._mqShopRecord); i++) await new Promise(r => setTimeout(r, 250));
+    const chips = document.getElementById('mq-biz-chips'), trades = document.getElementById('mq-biz-trades'), host = document.getElementById('mq-welcome-pick');
+    if (!chips || !host) { window._mqWelcomePicked = true; return mqWelcomeInfoStep(); }
+    // Blank slate: the built-in cabinet/countertop quotes start switched off.
+    try {
+      if (!mqBizOf(window._mqShopRecord.fields).set) await mqSaveTabsCfg({ hidden: ['both','cabinets','countertops'], business: { trades: [], off: ['cabinetry', 'countertops'] } });
+    } catch(e) { console.warn('welcome blank slate', e); }
+    host.innerHTML = '';
+    host.appendChild(chips);
+    if (trades) host.appendChild(trades);
+    try { await mqLoadTradeCatalog(); } catch(e) {}
+    // Every group open here, so all the trades can be seen at once.
+    window._mqBizGrpOpen = new Proxy({}, { get: (o, k) => (k in o ? o[k] : true), has: () => true });
+    window.mqRenderBizTypes();
+    window.mqWelcomeSync();
+  }
+  window.mqWelcomeSync = function() {
+    const go = document.getElementById('mq-welcome-pick-go'), note = document.getElementById('mq-welcome-pick-note');
+    if (!go || !window._mqShopRecord) return;
+    const b = mqBizOf(window._mqShopRecord.fields);
+    const ok = b.set && (b.cab || b.ct || b.trades.length > 0);
+    go.disabled = !ok; go.style.opacity = ok ? '1' : '.4';
+    if (note) note.textContent = ok ? '✓ Your quotes are set up. Tick more or carry on.' : 'Pick at least one to continue.';
+  };
+  window.mqWelcomePickDone = function() {
+    const b = window._mqShopRecord && mqBizOf(window._mqShopRecord.fields);
+    if (!b || !(b.set && (b.cab || b.ct || b.trades.length))) return;
+    // Put the tick list back on Business info.
+    const body = document.getElementById('mq-shopsec-biz-body');
+    const chips = document.getElementById('mq-biz-chips'), trades = document.getElementById('mq-biz-trades');
+    if (body && chips) { body.appendChild(chips); if (trades) body.appendChild(trades); }
+    window._mqBizGrpOpen = {};
+    window._mqWelcomePicked = true;
+    try { window.mqRenderBizTypes(); } catch(e) {}
+    mqWelcomeInfoStep();
+  };
+  function mqWelcomeInfoStep() {
+    let modal = document.getElementById('mq-welcome-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'mq-welcome-modal';
+      modal.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:100001;display:flex;align-items:center;justify-content:center;padding:1.5rem;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif";
       document.body.appendChild(modal);
     }
     modal.innerHTML = `
@@ -929,7 +1007,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
           <br><br>
           Want the bigger picture instead? <strong style="color:#2563eb">📖 Help guide</strong> in the sidebar covers every part of the dashboard in one place, organized by topic — good for a first read-through before you dive in.
           <br><br>
-          Only offer some of what MidasQuote can quote? In Business info → <strong>🗂️ Quote types</strong>, you can turn off whichever quote types don't apply to you — a countertops-only shop, for example, can turn off <strong style="color:#2563eb">Full project quote</strong> and <strong style="color:#2563eb">Cabinets only</strong>, so customers only ever see the Countertops tab.
+          Start doing something new? Tick it any time in Business info → <strong>🧭 What does your business do?</strong> and its ready-made quote is added. <strong>🗂️ Quote types</strong> right below lets you switch any quote off without deleting it.
           <br><br>
           Take your time exploring — there's no rush, and almost everything here autosaves as you go.
           <br><br>
@@ -11768,7 +11846,11 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     chips.style.display = 'block';
     if (!document.getElementById('mq-biz-css')) {
       const st = document.createElement('style'); st.id = 'mq-biz-css';
-      st.textContent = '#mq-biz-grps{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:6px;align-items:start}#mq-biz-grps .mq-biz-grp-open{grid-column:1/-1}';
+      st.textContent = '#mq-biz-grps{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;align-items:start}'
+        + '#mq-biz-grps .mq-biz-grp{background:#fff !important;border:1px solid #cfd6df !important;border-radius:10px !important;box-shadow:0 1px 2px rgba(15,23,42,.05);transition:background .15s,border-color .15s,box-shadow .15s}'
+        + '#mq-biz-grps .mq-biz-grp:not(.mq-biz-grp-open):hover{background:#fffbf0 !important;border-color:#d7a42e !important}'
+        + '#mq-biz-grps .mq-biz-grp-open{grid-column:1/-1;background:#fffbf0 !important;border:1.5px solid #d7a42e !important;box-shadow:0 2px 10px rgba(215,164,46,.15)}'
+        + '#mq-biz-grps .mq-biz-grp-open > button{border-bottom:1px solid #f1e3bd !important;margin-bottom:10px;background:#fbf3df !important;border-radius:9px 9px 0 0 !important;color:#6b4f0c !important}';
       document.head.appendChild(st);
     }
     chips.innerHTML = `<div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;margin-bottom:10px"><span style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#6b7280;margin-right:2px">Industry</span>${MQ_INDUSTRIES.map(x => { const on = x.id === ind.id; return `<button type="button" onclick="mqBizIndustry('${x.id}')" aria-pressed="${on}" style="font-size:12.5px;font-weight:600;font-family:inherit;padding:5px 11px;border-radius:999px;cursor:pointer;${on ? 'background:#fbf3df;color:#8a6510;border:1.5px solid #d7a42e' : 'background:#fff;color:#374151;border:1.5px solid #d1d5db'}">${on ? '✓ ' : ''}${mqEscHtml(x.label)}</button>`; }).join('')}<span style="font-size:11.5px;color:#9ca3af">More industries coming soon</span></div>
@@ -11795,11 +11877,14 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         <span>${right}</span>
       </div>`;
     });
-    const nothing = !biz.cab && !biz.ct && !qts.some(q => q.on !== false && !q.proOnly);
+    const inWelcome = !!(document.getElementById('mq-welcome-pick') && document.getElementById('mq-welcome-pick').contains(tradesEl));
+    const nothing = !inWelcome && !biz.cab && !biz.ct && !qts.some(q => q.on !== false && !q.proOnly);
     if (!window._mqBizCardFolded) {
       window._mqBizCardFolded = true;
+      // Stays open until the shop has saved its own ticks -- a brand-new
+      // shop only has the cabinet defaults, which may not be its trade.
       const needsQuote = mqBizTradeList(biz.trades).some(t => !t.builtIn && isOn(t) && !mqQtsOfTrade(t, qts).length);
-      if (!nothing && !needsQuote && all.some(isOn)) {
+      if (biz.set && !nothing && !needsQuote && all.some(isOn)) {
         const b = el('mq-shopsec-biz-body'), c = el('mq-shopsec-biz-chevron');
         if (b) b.style.display = 'none'; if (c) c.style.transform = 'rotate(0deg)';
       }
@@ -11807,7 +11892,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     // Countertops ticked but nothing priced yet -> say so.
     const ctNoPricing = biz.ct && Array.isArray(window._mqCtItems) && !window._mqCtItems.some(r => r.fields && r.fields['Active'] !== false);
     tradesEl.innerHTML = rows.join('') + (ctNoPricing ? `<div style="font-size:12.5px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:8px 10px;margin:4px 0 6px;line-height:1.5">Countertops is ticked, but you have no countertop pricing yet — <a href="#" onclick="event.preventDefault();mqGoTo('pricing')" style="color:#1d4ed8;font-weight:600">set it up on the Pricing tab →</a></div>` : '') + (nothing ? `<div style="font-size:12.5px;color:#b45309;margin-top:4px">Your widget has no quotes to show yet. Add a quote type for your trade.</div>` : '')
-      + ((!biz.cab || !biz.ct) ? `<div style="font-size:12px;color:#6b7280;margin-top:6px;line-height:1.5">${!biz.cab && !biz.ct ? 'Built-in cabinet and countertop pricing is hidden' : (!biz.cab ? 'Built-in cabinet pricing is hidden' : 'Built-in countertop pricing is hidden')} on the Pricing, My products and Project types tabs, and the matching built-in quote is hidden in MidasQuote Pro too. Nothing is deleted. Tick it again any time to bring it back.</div>` : '');
+      + ((!biz.cab || !biz.ct) && biz.set && !inWelcome ? `<div style="font-size:12px;color:#6b7280;margin-top:6px;line-height:1.5">${!biz.cab && !biz.ct ? 'Built-in cabinet and countertop pricing is hidden' : (!biz.cab ? 'Built-in cabinet pricing is hidden' : 'Built-in countertop pricing is hidden')} on the Pricing, My products and Project types tabs, and the matching built-in quote is hidden in MidasQuote Pro too. Nothing is deleted. Tick it again any time to bring it back.</div>` : '');
+    if (window.mqWelcomeSync) window.mqWelcomeSync();
   };
   window.mqBizGrpToggle = function(id) {
     const box = document.querySelector(`[data-mq-bizgrp="${id}"]`);
