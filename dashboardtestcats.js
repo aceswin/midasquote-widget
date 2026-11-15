@@ -1907,23 +1907,30 @@ window.logoutMember = async function () {
                 📩 Leads &amp; consultations
               </div>
               <div id="mq-shopsec-leads-body" style="display:none">
-              <div class="mq-field" style="margin-bottom:1rem">
-                <label class="mq-label">Lead notify email</label>
-                <input type="email" id="mq-shop-email"/>
-                <span class="mq-hint">Where new lead notifications go</span>
+              <div style="border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px 4px;margin-bottom:14px;background:#fff">
+                <div style="font-size:13.5px;font-weight:700;color:#111;margin-bottom:2px">📨 Where new leads go</div>
+                <div style="font-size:12px;color:#6b7280;margin-bottom:10px">Your inbox for lead notifications — customers never see this address.</div>
+                <div class="mq-field" style="margin-bottom:.8rem">
+                  <label class="mq-label">Lead notify email</label>
+                  <input type="email" id="mq-shop-email"/>
+                </div>
               </div>
+              <div id="mq-shop-consult-group" style="border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px 4px;margin-bottom:1.5rem;background:#fff;transition:border-color .15s,box-shadow .15s">
+              <div style="font-size:13.5px;font-weight:700;color:#111;margin-bottom:2px">📅 Your "Book a consultation" button</div>
+              <div style="font-size:12px;color:#6b7280;margin-bottom:10px">Where customers go when they tap <strong>Book a consultation</strong> or <strong>Ask a question</strong> on your widget. Fill in <strong>one</strong> of these two.</div>
               <div id="mq-shop-consult-warning" class="mq-msg-error" style="display:none;margin-bottom:1rem;padding:10px 14px;border-radius:8px;font-size:13px">
-                ⚠️ Please fill in at least one — a consultation link or a consultation email. Without one, customers just get sent to your quote form instead when they click "Ask a question" or "Book a consultation."
+                ⚠️ Fill in at least one below — a link or an email. Without one, customers who tap "Book a consultation" or "Ask a question" just get sent back to your quote form.
               </div>
               <div class="mq-field" style="margin-bottom:1rem">
                 <label class="mq-label">"Book a consultation" link <span style="font-weight:400;color:#9ca3af">(choose this or the email below)</span></label>
                 <input type="url" id="mq-shop-consult-link" placeholder="https://yoursite.com/contact" oninput="mqCheckConsultFields()"/>
                 <span class="mq-hint">If set, the widget's "Book a consultation" button opens this page in a new tab instead of the default contact form</span>
               </div>
-              <div class="mq-field" style="margin-bottom:1.5rem">
+              <div class="mq-field" style="margin-bottom:.8rem">
                 <label class="mq-label">Or, consultation email <span style="font-weight:400;color:#9ca3af">(choose this or the link above)</span></label>
                 <input type="email" id="mq-shop-consult-email" placeholder="sales@yourshop.com" oninput="mqCheckConsultFields()"/>
-                <span class="mq-hint">Used only if no link is set above — opens a pre-filled email instead. At least one of these two fields is required.</span>
+                <span class="mq-hint">Used only if no link is set above — opens a pre-filled email instead.</span>
+              </div>
               </div>
               <div class="mq-toggle-row" style="margin-bottom:0">
                 <div>
@@ -5052,6 +5059,8 @@ window.logoutMember = async function () {
       const warning = el('mq-shop-consult-warning');
       const needsWarning = !link && !email;
       if (warning) warning.style.display = needsWarning ? 'block' : 'none';
+      const grp = el('mq-shop-consult-group');
+      if (grp) { grp.style.borderColor = needsWarning ? '#fca5a5' : '#e5e7eb'; grp.style.boxShadow = needsWarning ? '0 0 0 3px #fee2e2' : 'none'; grp.style.background = needsWarning ? '#fffafa' : '#fff'; }
       if (needsWarning) window.mqOpenShopSection('leads');
     };
     window.mqCheckConsultFields();
@@ -8229,14 +8238,28 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // The live preview lives in its own column NEXT TO all the sections (text,
   // letterhead, settings, cheat sheet) so it stays in view while any of them
   // is being edited.
+  // Nov 2026: it stays pinned just below the dashboard's sticky menu bar
+  // (whose height changes as it wraps) and fits the screen, so its top is
+  // always reachable while editing far down the left column.
+  function mqStickTopSync() {
+    const nav = document.querySelector('#midasquote-dashboard .mq-top-navigation');
+    const b = nav ? nav.getBoundingClientRect().bottom : 0;
+    document.documentElement.style.setProperty('--mq-stick-top', Math.max(12, Math.round(b) + 12) + 'px');
+  }
+  if (!window._mqStickTopBound) {
+    window._mqStickTopBound = true;
+    window.addEventListener('resize', mqStickTopSync, { passive: true });
+    window.addEventListener('scroll', () => { if (!window._mqStickRaf) window._mqStickRaf = requestAnimationFrame(() => { window._mqStickRaf = 0; mqStickTopSync(); }); }, { passive: true });
+  }
   function mqPropPreviewColHTML(t) {
     const id = t.id;
-    return `      <div style="min-width:0;position:sticky;top:8px">
+    setTimeout(mqStickTopSync, 0);
+    return `      <div style="min-width:0;position:sticky;top:var(--mq-stick-top,220px);align-self:start">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px">
           <span style="font-size:11.5px;font-weight:700;color:#374151">Live preview <span style="font-weight:400;color:#9ca3af">(sample customer &amp; items)</span></span>
           <button class="mq-btn mq-btn-sm" onclick="mqPreviewProposalTemplate('${id}')">👁 Full size</button>
         </div>
-        <div id="mq-prop-preview-${id}" style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,0.06);padding:22px 20px;max-height:640px;overflow:auto;zoom:0.78;color:#111;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif">${mqPropPreviewInnerHTML(t, null)}</div>
+        <div id="mq-prop-preview-${id}" style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,0.06);padding:22px 20px;max-height:calc((100vh - var(--mq-stick-top,220px) - 56px) / 0.78);min-height:320px;overflow:auto;zoom:0.78;color:#111;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif">${mqPropPreviewInnerHTML(t, null)}</div>
       </div>`;
   }
 
