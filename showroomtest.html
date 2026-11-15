@@ -1,0 +1,1273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Our Products & Materials</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --brand: #1a1a1a; --white: #ffffff;
+      --gray-50: #fafaf8; --gray-100: #f0efeb; --gray-200: #e2e0d9; --gray-300: #cfccc3; --gray-400: #9e9b92; --gray-600: #5c5a54; --gray-900: #1a1917;
+      --ink: #1a1917;
+      --col: 960px;                 /* the one centered column everything lines up to */
+      --gutter: max(1.5rem, calc((100% - var(--col)) / 2));
+      --header-h: 60px;
+    }
+    html { scroll-behavior: auto; }
+    body { font-family: 'Inter', -apple-system, 'Segoe UI', sans-serif; background: var(--gray-50); color: var(--ink); -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+
+    /* ONE slim sticky bar: shop on the left, section links on the right.
+       Frosted so photos scroll softly behind it instead of a hard white strip. */
+    .sr-header { position: sticky; top: 0; z-index: 100; display: flex; align-items: center; gap: 24px; min-height: var(--header-h); padding: 0 var(--gutter); background: rgba(250,250,248,0.86); -webkit-backdrop-filter: saturate(180%) blur(14px); backdrop-filter: saturate(180%) blur(14px); border-bottom: 1px solid rgba(0,0,0,0.07); }
+    .sr-shop-info { display: flex; align-items: center; gap: 11px; flex-shrink: 0; min-width: 0; }
+    .sr-shop-logo { width: 30px; height: 30px; border-radius: 7px; background: var(--brand); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px; font-weight: 600; flex-shrink: 0; overflow: hidden; }
+    .sr-shop-logo img { width: 100%; height: 100%; object-fit: cover; }
+    /* A real uploaded logo isn't forced into that square — shown at its
+       natural aspect ratio, so a wide or tall logo doesn't get cropped.
+       Only the no-logo "first letter" placeholder uses the square. */
+    .sr-shop-logo.sr-shop-logo-real { width: auto; max-width: 140px; height: 30px; background: none; border-radius: 0; }
+    .sr-shop-logo.sr-shop-logo-real img { width: auto; height: auto; max-width: 140px; max-height: 30px; object-fit: contain; }
+    .sr-shop-name { font-size: 13.5px; font-weight: 600; color: var(--ink); letter-spacing: -0.01em; line-height: 1.2; }
+    .sr-shop-city { font-size: 11px; color: var(--gray-400); line-height: 1.3; }
+    .sr-back { font-size: 12.5px; color: var(--gray-600); text-decoration: none; flex-shrink: 0; margin-left: 4px; }
+    .sr-back:hover { color: var(--ink); }
+
+    /* Section jump-links live INSIDE the bar (right side) */
+    .sr-nav { flex: 1; min-width: 0; display: flex; justify-content: flex-end; align-self: stretch; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+    .sr-nav::-webkit-scrollbar { display: none; }
+    .sr-header.sr-nav-only .sr-nav { justify-content: flex-start; }
+    .sr-nav-item { display: flex; align-items: center; padding: 0 13px; font-size: 12.5px; font-weight: 500; color: var(--gray-600); white-space: nowrap; border-bottom: 2px solid transparent; transition: color 0.15s, border-color 0.15s; text-decoration: none; cursor: pointer; }
+    .sr-nav-item:hover { color: var(--ink); }
+    .sr-nav-item.active { color: var(--ink); border-bottom-color: var(--brand); }
+
+    /* Quiet title block instead of a full-width colour banner */
+    .sr-hero { padding: 4.25rem var(--gutter) 1.75rem; }
+    .sr-hero-eyebrow { display: flex; align-items: center; gap: 10px; font-size: 11px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gray-400); margin-bottom: 1.1rem; }
+    .sr-hero-eyebrow::before { content: ''; width: 26px; height: 2px; background: var(--brand); border-radius: 2px; }
+    .sr-hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(27px, 3.8vw, 38px); font-weight: 600; line-height: 1.12; letter-spacing: -0.015em; color: var(--ink); margin-bottom: 0.9rem; max-width: 720px; }
+    .sr-hero p { font-size: 14.5px; color: var(--gray-600); max-width: 520px; line-height: 1.7; }
+
+    /* Project-type filter: small quiet text-pills in the same column */
+    .sr-filter-bar { padding: 0.6rem var(--gutter) 0; display: flex; gap: 6px; flex-wrap: wrap; }
+    .sr-filter-chip { padding: 6px 14px; border-radius: 999px; border: 1px solid var(--gray-200); background: transparent; color: var(--gray-600); font-size: 12px; font-weight: 500; font-family: inherit; cursor: pointer; white-space: nowrap; transition: color 0.15s, border-color 0.15s, background 0.15s; }
+    .sr-filter-chip:hover { border-color: var(--ink); color: var(--ink); }
+    .sr-filter-chip.active { background: var(--ink); border-color: var(--ink); color: #fff; }
+
+    .sr-content { max-width: calc(var(--col) + 3rem); margin: 0 auto; padding: 2.75rem 1.5rem 5rem; }
+    .sr-section { margin-bottom: 3.5rem; scroll-margin-top: calc(var(--header-h) + 18px); }
+    .sr-section-header { margin-bottom: 1.5rem; }
+    .sr-section-eyebrow { font-size: 10.5px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gray-400); margin-bottom: 7px; }
+    .sr-section-title { font-family: 'Playfair Display', serif; font-size: 25px; font-weight: 600; letter-spacing: -0.01em; color: var(--ink); margin-bottom: 6px; }
+    .sr-section-desc { font-size: 13.5px; color: var(--gray-600); line-height: 1.65; max-width: 520px; }
+
+    /* Photo-led cards: no box — the photo IS the card, caption underneath */
+    .sr-grid, .sr-spec-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(196px, 1fr)); gap: 26px 18px; }
+    .sr-card, .sr-spec-card { background: none; border: 0; border-radius: 0; overflow: visible; }
+    .sr-card-img { position: relative; width: 100%; aspect-ratio: 4 / 5; border-radius: 10px; overflow: hidden;
+      /* layered drop shadow: a tight contact shadow + a long soft one, so the photo floats off the page */
+      box-shadow: 0 2px 4px rgba(24,20,10,0.10), 0 10px 20px -6px rgba(24,20,10,0.24), 0 26px 46px -16px rgba(24,20,10,0.32);
+      transition: transform 0.35s cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 0.35s ease; background: var(--gray-100); display: flex; align-items: center; justify-content: center; font-size: 22px; color: var(--gray-300); }
+    /* soft shimmer until the photo has loaded, then it fades in over it */
+    .sr-card-img.sr-ph { background: linear-gradient(100deg, var(--gray-100) 30%, #f7f6f2 50%, var(--gray-100) 70%); background-size: 220% 100%; animation: srShimmer 1.4s linear infinite; }
+    @keyframes srShimmer { from { background-position: 120% 0; } to { background-position: -120% 0; } }
+    .sr-card-img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; cursor: zoom-in; opacity: 0; transform: scale(1); transition: opacity 0.45s ease, transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1); }
+    .sr-card-img img.sr-in { opacity: 1; }
+    .sr-card-img::after { content: ''; position: absolute; inset: 0; border-radius: 10px; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05); pointer-events: none; }
+    @media (hover: hover) {
+      .sr-card:hover .sr-card-img { transform: translateY(-4px); box-shadow: 0 3px 6px rgba(24,20,10,0.10), 0 18px 30px -8px rgba(24,20,10,0.28), 0 40px 70px -20px rgba(24,20,10,0.42); }
+      .sr-card:hover .sr-card-img img.sr-in { transform: scale(1.045); }
+      .sr-card:hover .sr-card-name { color: #000; }
+    }
+    .sr-card-body { padding: 10px 2px 0; }
+    .sr-card-name { font-size: 13px; font-weight: 500; color: var(--ink); line-height: 1.4; letter-spacing: -0.005em; transition: color 0.15s; }
+    .sr-card-desc { font-size: 12px; color: var(--gray-600); line-height: 1.5; }
+    .sr-loading { text-align: center; padding: 4rem 2rem; color: var(--gray-400); font-size: 13px; }
+    .sr-empty { text-align: center; padding: 3rem 2rem; color: var(--gray-400); font-size: 13px; border: 1px dashed var(--gray-200); border-radius: 12px; }
+    .sr-divider { height: 1px; background: var(--gray-200); margin: 3rem 0; opacity: 0.7; }
+    .sr-footer { padding: 2rem var(--gutter); text-align: center; font-size: 11.5px; color: var(--gray-400); letter-spacing: 0.02em; }
+    .sr-footer a { color: var(--gray-600); text-decoration: none; }
+    .sr-footer a:hover { color: var(--ink); }
+
+    /* Embedded in a shop's own page: no frosted tint, not sticky, fully transparent footer
+       — the page just blends into whatever it's sitting on. */
+    .sr-embedded .sr-header { position: static; background: transparent; -webkit-backdrop-filter: none; backdrop-filter: none; }
+
+    /* Lightbox */
+    #sr-lightbox { transition: opacity 0.22s ease; opacity: 0; }
+    #sr-lb-img { transition: opacity 0.22s ease; }
+    #sr-lb-count { color: rgba(255,255,255,0.55); font-size: 12px; letter-spacing: 0.08em; font-variant-numeric: tabular-nums; }
+
+    /* Lightbox prev/next arrows: pinned OUTSIDE the widest a zoomed photo
+       can ever get (the img's own 75vw max-width), not hugging the current
+       photo's actual edges — otherwise a portrait photo pulls both buttons
+       in narrow and a landscape one pushes them back out, so someone
+       clicking through several photos quickly has to keep re-aiming for a
+       moving target. `right:50%`/`left:50%` anchor each button to
+       #sr-lb-photowrap's own horizontal CENTER (which stays screen-
+       centered regardless of the photo's actual rendered width, since the
+       photo itself is always centered) rather than to its edges, and
+       `translate()`'s offset moves it a FIXED distance from there.
+       37.5vw is exactly half of the img's 75vw cap, so on a screen wide
+       enough, the button sits just past where even the widest possible
+       photo could reach, then 30px further for breathing room — same
+       math as before. The `min(..., 50vw - 30px)` NEW as of 2026-09-12:
+       on a narrow phone/tablet, 37.5vw alone can be wider than the screen
+       itself (previously handled by a separate mobile override that
+       hugged the photo's own edges instead — which meant the buttons
+       still moved as photo aspect ratio changed, just now within a
+       smaller range, which is exactly the "still jumps around on mobile"
+       Jordan reported). `min()` picks whichever is smaller: the desktop-
+       style "just past the photo" distance, or a flat 30px-from-the-
+       actual-screen-edge distance — so on any screen too narrow for the
+       first number to fit, the buttons fall back to sitting a constant
+       30px from the true edge, which (unlike the old per-photo edge-hug)
+       never moves as the photo's own width changes. One rule now covers
+       desktop, tablet, and mobile with no breakpoint needed. */
+    #sr-lb-prev, #sr-lb-next { position: absolute; top: 50%; }
+    #sr-lb-prev { right: 50%; left: auto; transform: translate(calc(-1 * min(37.5vw + 30px, 50vw - 30px)), -50%); }
+    #sr-lb-next { left: 50%; right: auto; transform: translate(min(37.5vw + 30px, 50vw - 30px), -50%); }
+    /* STANDALONE arrows (children of the veil itself): pinned to the screen's
+       vertical centre and a fixed distance from each edge — identical for every
+       photo shape. (Embedded keeps the rules above, inside a fixed-height stage.) */
+    #sr-lightbox > #sr-lb-prev { left: 22px; right: auto; top: 50%; transform: translateY(-50%); }
+    #sr-lightbox > #sr-lb-next { right: 22px; left: auto; top: 50%; transform: translateY(-50%); }
+    #sr-lightbox > #sr-lb-prev:hover, #sr-lightbox > #sr-lb-next:hover { transform: translateY(-50%) scale(1.06); }
+    @media (max-width: 700px) {
+      #sr-lightbox > #sr-lb-prev { left: 10px; }
+      #sr-lightbox > #sr-lb-next { right: 10px; }
+      .sr-header { flex-wrap: wrap; gap: 0 12px; padding-top: 10px; padding-bottom: 0; }
+      .sr-shop-info { order: 1; }
+      .sr-back { order: 2; margin-left: auto; }
+      .sr-nav { order: 3; flex: 0 0 100%; justify-content: flex-start; min-height: 40px; margin-top: 6px; }
+      .sr-header.sr-nav-only { padding-top: 0; }
+      .sr-hero { padding-top: 2.75rem; }
+      .sr-content { padding: 2rem 1.25rem 4rem; }
+      .sr-grid, .sr-spec-grid { grid-template-columns: repeat(2, 1fr); gap: 20px 12px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .sr-card-img, .sr-card-img img, #sr-lightbox, #sr-lb-img { transition: none; }
+      .sr-card-img.sr-ph { animation: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="sr-header" id="sr-header">
+    <div class="sr-shop-info" id="sr-shop-info">
+      <div class="sr-shop-logo" id="sr-logo">?</div>
+      <div>
+        <div class="sr-shop-name" id="sr-shop-name">Loading...</div>
+        <div class="sr-shop-city" id="sr-shop-city"></div>
+      </div>
+    </div>
+    <nav class="sr-nav" id="sr-nav"></nav>
+    <a href="javascript:window.close()" class="sr-back" id="sr-close-link">← Close</a>
+  </div>
+
+  <div class="sr-hero" id="sr-hero">
+    <div class="sr-hero-eyebrow">Products & Materials</div>
+    <h1 id="sr-hero-title">Our Product Catalogue</h1>
+    <p id="sr-hero-sub">Browse the materials, door styles, and specialty options we offer. Have questions? Get in touch for a full consultation.</p>
+  </div>
+
+  <div class="sr-filter-bar" id="sr-filter-bar"></div>
+
+  <div class="sr-content" id="sr-content">
+    <div class="sr-loading">Loading your showroom...</div>
+  </div>
+
+  <div class="sr-footer">
+    Powered by <a href="https://www.midasquote.com" target="_blank">MidasQuote</a>
+  </div>
+
+  <script>
+    // Same proxy Worker the widget and dashboard use — holds the real
+    // Airtable token server-side. This page used to call Airtable directly
+    // with a hardcoded token, which meant anyone could read it straight out
+    // of View Source on a fully public, unauthenticated page. Never again.
+    const CONFIG = { PROXY_WORKER: 'https://midasquote-airtable-proxy.jordan132001.workers.dev' };
+
+    // Embeddable-on-a-page support, added 2026-09-10. This page has always
+    // worked as its own standalone tab (shop's "Open showroom ↗" button /
+    // copy-paste link) — that's untouched. This block ONLY adds support for
+    // ALSO dropping it into an <iframe> on a shop's own site (dashboard.js's
+    // Showroom tab hands out that iframe snippet). No height is ever picked
+    // by the shop — instead this page measures its own rendered height and
+    // posts it up to the parent page, which resizes the iframe to match, so
+    // it always looks like a normal part of the page instead of a fixed box
+    // with its own scrollbar. Standalone mode (window.self === window.top)
+    // is completely unaffected — every line below is a no-op there.
+    const MQ_SR_EMBEDDED = window.self !== window.top;
+    if (MQ_SR_EMBEDDED) {
+      // Jordan: "for showrom showing on embeedede paghes, i want the
+      // background fulltransparent.. right now it has a slight bit of
+      // color. i need it to just blend into whatever page its on" -- the
+      // page's own cream body background (--gray-50) was always meant for
+      // the standalone tab/popup view, where it reads as this page's own
+      // branded background. Embedded in an <iframe> on the shop's own
+      // site, that same cream tint showed through every gap and margin as
+      // a mismatched box sitting on top of the host page's real
+      // background instead of blending into it. Set here, synchronously,
+      // the same way and at the same moment as the header/nav/hero/filter-
+      // bar pre-hiding just below, so it's never visible even for a
+      // moment. Cards, the header bar, the hero banner, etc. all keep
+      // their own explicit white/brand backgrounds -- only the page's
+      // outer background (what shows through between/around them) goes
+      // transparent. Standalone mode is completely untouched.
+      document.documentElement.style.background = 'transparent';
+      document.body.style.background = 'transparent';
+      // CSS hook: transparent/non-sticky header etc. while embedded (see .sr-embedded rules).
+      document.documentElement.classList.add('sr-embedded');
+      // "← Close" only makes sense as its own tab (window.close() silently
+      // does nothing otherwise) — hide it immediately, don't wait on init().
+      const closeLink = document.getElementById('sr-close-link');
+      if (closeLink) closeLink.style.display = 'none';
+      // Shop info / nav / hero / filter bar all start hidden too, right
+      // here, synchronously — added 2026-09-10, Jordan: "it shows a
+      // question mark and loading and the box where a logo would go for a
+      // split second and if i have the hero section turned off it also
+      // shows for a second... anyway to not let any of the hidden parts
+      // show at all unless they are unhidden?" The real embedDisplay
+      // settings only arrive after init()'s shop-data fetch resolves (a
+      // real network round trip), so a section the shop actually turned
+      // OFF was genuinely on screen — the "?" logo placeholder,
+      // "Loading...", the hero banner — for however long that fetch took.
+      // Pre-hiding all four immediately, before any fetch even starts,
+      // then having init() explicitly reveal only the ones the shop left
+      // ON (see the embedDisplay block below, and renderFilterBar() for
+      // the filter bar specifically) guarantees a hidden section is NEVER
+      // visible, not even for a moment. The tradeoff: a section the shop
+      // left ON is also briefly invisible during that same fetch — no
+      // worse than the "Loading your showroom..." wait already happening
+      // in the content area below. Standalone mode is untouched — none of
+      // this runs there, so nothing about the popup/direct-link view
+      // changes.
+      ['sr-header', 'sr-shop-info', 'sr-nav', 'sr-hero', 'sr-filter-bar'].forEach(id => {
+        const elToHide = document.getElementById(id);
+        if (elToHide) elToHide.style.display = 'none';
+      });
+    }
+    function mqSrReportHeight() {
+      if (!MQ_SR_EMBEDDED) return;
+      try { window.parent.postMessage({ type: 'midasquote-showroom-height', height: document.documentElement.scrollHeight }, '*'); } catch(e) {}
+    }
+    if (MQ_SR_EMBEDDED) {
+      // ResizeObserver catches every reason the page's height can change —
+      // initial render, switching the filter/nav, and images loading in
+      // asynchronously after the shop's photos resolve — without needing a
+      // manual mqSrReportHeight() call wired into each of those individually.
+      if (window.ResizeObserver) {
+        new ResizeObserver(mqSrReportHeight).observe(document.documentElement);
+      } else {
+        // Old-browser fallback — no ResizeObserver support.
+        window.addEventListener('resize', mqSrReportHeight);
+        setInterval(mqSrReportHeight, 800);
+      }
+      window.addEventListener('load', mqSrReportHeight);
+    }
+
+    // Fallback project types — only used if a shop has never customized
+    // "Room types" at all, matching the same default list the widget and
+    // dashboard fall back to.
+    const DEFAULT_ROOM_TYPES = [
+      { id:'kitchen', name:'Kitchen' }, { id:'bathroom', name:'Bathroom' },
+      { id:'laundry', name:'Laundry room' }, { id:'garage', name:'Garage' },
+      { id:'commercial', name:'Commercial' }, { id:'other', name:'Other' },
+      { id:'refacing', name:'Refacing' }, { id:'repainting', name:'Repainting' },
+      { id:'restaining', name:'Restaining' },
+    ];
+
+    const SPECIALTY_ICONS = {
+      'tall': '📦', 'appliance': '🔌', 'blind': '↩️', 'garbage': '🗑️',
+      'toe': '👟', 'lazy': '🔄', 'wine': '🍷', 'spice': '🧂',
+      'pull': '📥', 'pot': '🍳', 'pantry': '🥫', 'desk': '🖥️',
+      'glass': '🪟', 'light': '💡', 'crown': '👑',
+    };
+    function getIcon(name) {
+      const lower = (name || '').toLowerCase();
+      for (const [k, v] of Object.entries(SPECIALTY_ICONS)) { if (lower.includes(k)) return v; }
+      return '⭐';
+    }
+
+    // Same key format the dashboard's My Products tab and the widget both
+    // use for saved photos — must match exactly or photos won't be found.
+    function photoKeyFor(cat, name) {
+      const baseName = (name||'').replace(/\s*—\s*(uppers|bases|some drawers|mostly drawers|with doors|no doors)\s*$/i,'').trim();
+      const norm = baseName.replace(/[^a-z0-9]/gi,'_').toLowerCase();
+      return `li_${cat}_${norm}`;
+    }
+
+    function parseVisibleRooms(fieldsObj) {
+      try { return fieldsObj['Visible rooms'] ? JSON.parse(fieldsObj['Visible rooms']) : []; }
+      catch(e) { return []; }
+    }
+
+    // The category's own hidden list is now a hard ceiling, not just a
+    // fallback default an item can quietly override — changed 2026-09-17
+    // per Jordan: the category-level 🗂️ control on My Products is meant to
+    // be the master switch per project type, so an item can still use its
+    // own explicit setting to be MORE restrictive than its category, but
+    // never less. Same rule now enforced identically in widget.js's and
+    // widgetpro.js's own effectiveVisibleRooms — see their comments for
+    // the full rationale. Empty array = visible for every project type,
+    // EXCEPT the one sentinel case below.
+    function effectiveVisibleRooms(itemExplicitRooms, category, categoryRooms, allRoomIds) {
+      const hiddenForCategory = categoryRooms[category] || [];
+      if (itemExplicitRooms && itemExplicitRooms.length) {
+        if (!hiddenForCategory.length) return itemExplicitRooms;
+        const filtered = itemExplicitRooms.filter(id => !hiddenForCategory.includes(id));
+        // Every one of the item's own explicitly-chosen project types is
+        // one the category now hides -- returning [] here would flip
+        // meaning under this page's "empty = everywhere" convention (the
+        // opposite of intended), so a sentinel id that can never match a
+        // real project type keeps it correctly hidden everywhere instead.
+        return filtered.length ? filtered : ['__none__'];
+      }
+      if (!hiddenForCategory.length) return [];
+      return allRoomIds.filter(id => !hiddenForCategory.includes(id));
+    }
+
+    // The set of photos the currently-open lightbox can swipe through
+    // (all zoomable photos within the SAME category grid as whichever
+    // photo was clicked — see mqLightbox below) plus which one of them
+    // is currently showing. Module-level since mqLightbox and
+    // mqLightboxNav both need to read/update it across separate calls.
+    let LB_ITEMS = [];
+    let LB_INDEX = -1;
+
+    // "3 / 12" counter under the caption — blank when there's only one photo.
+    function mqLightboxUpdateCount() {
+      const c = document.getElementById('sr-lb-count');
+      if (c) c.textContent = LB_ITEMS.length > 1 ? `${LB_INDEX + 1} / ${LB_ITEMS.length}` : '';
+    }
+    let LB_SWAP_TOKEN = 0;
+    function mqLightboxShowIndex(i) {
+      if (!LB_ITEMS.length) return;
+      LB_INDEX = ((i % LB_ITEMS.length) + LB_ITEMS.length) % LB_ITEMS.length;
+      const item = LB_ITEMS[LB_INDEX];
+      const img = document.getElementById('sr-lb-img');
+      const token = ++LB_SWAP_TOKEN;
+      // Quick cross-fade: fade the old photo out, swap the source, fade the new one in.
+      img.style.opacity = '0';
+      setTimeout(() => {
+        if (token !== LB_SWAP_TOKEN) return; // a newer click already took over
+        img.onload = () => { if (token === LB_SWAP_TOKEN) img.style.opacity = '1'; };
+        img.src = item.src;
+        if (img.complete) img.style.opacity = '1';
+      }, 110);
+      document.getElementById('sr-lb-label').textContent = item.label;
+      mqLightboxUpdateCount();
+      // Warm the neighbours so the next click is instant.
+      [LB_INDEX - 1, LB_INDEX + 1].forEach(j => { const n = LB_ITEMS[(j + LB_ITEMS.length) % LB_ITEMS.length]; if (n) { const pre = new Image(); pre.src = n.src; } });
+    }
+    function mqLightboxClose() {
+      const lb = document.getElementById('sr-lightbox');
+      if (!lb || lb.style.display === 'none') return;
+      lb.style.opacity = '0';
+      clearTimeout(lb._hideTimer);
+      lb._hideTimer = setTimeout(() => { lb.style.display = 'none'; }, 230);
+    }
+    window.mqLightboxClose = mqLightboxClose;
+    // Moves the two arrow buttons to whichever parent suits the current mode:
+    // the lightbox veil itself (standalone — pinned to the real screen) or the
+    // photo stage (embedded — see the fixed-height stage note in mqLightbox).
+    function mqLbPlaceArrows(toScreen) {
+      const lb = document.getElementById('sr-lightbox');
+      const stage = document.getElementById('sr-lb-photowrap');
+      const host = toScreen ? lb : stage;
+      if (!host) return;
+      ['sr-lb-prev', 'sr-lb-next'].forEach(id => {
+        const b = document.getElementById(id);
+        if (b && b.parentNode !== host) host.appendChild(b);
+      });
+    }
+    // Keyboard: Esc closes, ← / → browse — only while the lightbox is actually open.
+    document.addEventListener('keydown', e => {
+      const lb = document.getElementById('sr-lightbox');
+      if (!lb || lb.style.display !== 'block' || lb.style.opacity === '0') return;
+      if (e.key === 'Escape') { e.preventDefault(); mqLightboxClose(); }
+      else if (e.key === 'ArrowLeft' && LB_ITEMS.length > 1) { e.preventDefault(); mqLightboxNav(-1); }
+      else if (e.key === 'ArrowRight' && LB_ITEMS.length > 1) { e.preventDefault(); mqLightboxNav(1); }
+    });
+    function mqLightboxNav(delta) {
+      mqLightboxShowIndex(LB_INDEX + delta);
+    }
+    window.mqLightboxNav = mqLightboxNav;
+
+    function mqLightbox(src, label, evt) {
+      let lb = document.getElementById('sr-lightbox');
+      if (!lb) {
+        lb = document.createElement('div');
+        lb.id = 'sr-lightbox';
+        lb.style.cssText = 'display:none;background:rgba(12,12,12,0.9);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);z-index:9999;cursor:zoom-out';
+        // Clicking ANYWHERE on the veil closes it (including the empty
+        // dark space around the photo, not just the photo itself) — the
+        // "×" button below is a second, more obvious way to do the same
+        // thing for anyone who doesn't notice the "click anywhere" hint.
+        lb.onclick = () => mqLightboxClose();
+        lb.innerHTML = `
+          <div id="sr-lb-inner" style="display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1rem;padding:1.5rem">
+            <div id="sr-lb-photowrap" style="position:relative;max-width:100%;display:flex;align-items:center;justify-content:center">
+              <div id="sr-lb-imgwrap" style="position:relative;max-width:100%;display:inline-block">
+                <img id="sr-lb-img" style="display:block;max-width:75vw;max-height:60vh;object-fit:contain;border-radius:10px;box-shadow:0 0 0 1px rgba(255,255,255,0.08), 0 30px 80px -10px rgba(0,0,0,0.7), 0 10px 30px rgba(0,0,0,0.45)"/>
+                <button type="button" aria-label="Close" onclick="event.stopPropagation();mqLightboxClose()" style="position:absolute;top:-14px;right:-14px;width:30px;height:30px;border-radius:50%;background:#fff;border:none;box-shadow:0 2px 10px rgba(0,0,0,0.35);font-size:18px;line-height:1;color:#111;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">×</button>
+              </div>
+              <button type="button" id="sr-lb-prev" aria-label="Previous photo" onclick="event.stopPropagation();mqLightboxNav(-1)" style="display:none;width:36px;height:36px;border-radius:50%;background:#fff;border:none;box-shadow:0 2px 10px rgba(0,0,0,0.35);font-size:20px;line-height:1;color:#111;cursor:pointer;align-items:center;justify-content:center;padding:0">‹</button>
+              <button type="button" id="sr-lb-next" aria-label="Next photo" onclick="event.stopPropagation();mqLightboxNav(1)" style="display:none;width:36px;height:36px;border-radius:50%;background:#fff;border:none;box-shadow:0 2px 10px rgba(0,0,0,0.35);font-size:20px;line-height:1;color:#111;cursor:pointer;align-items:center;justify-content:center;padding:0">›</button>
+            </div>
+            <div id="sr-lb-label" style="color:#fff;font-size:15px;font-weight:500;text-align:center"></div>
+            <div id="sr-lb-count"></div>
+            <div style="color:rgba(255,255,255,0.4);font-size:12px">Click anywhere or press Esc to close</div>
+          </div>`;
+        document.body.appendChild(lb);
+        // Swipe left/right on the photo itself moves to the next/previous
+        // one in the same category — the arrow buttons above cover
+        // desktop clicks (and are tappable on mobile too); this adds the
+        // natural drag gesture on top for touch devices. A plain
+        // horizontal-distance threshold, ignoring the vertical axis, so
+        // an accidental diagonal drag doesn't misfire.
+        const photowrap = document.getElementById('sr-lb-photowrap');
+        let touchStartX = null, touchStartY = null;
+        photowrap.addEventListener('touchstart', e => {
+          if (!e.touches || !e.touches.length) return;
+          touchStartX = e.touches[0].clientX;
+          touchStartY = e.touches[0].clientY;
+        }, { passive: true });
+        photowrap.addEventListener('touchend', e => {
+          if (touchStartX === null || !e.changedTouches || !e.changedTouches.length) return;
+          const dx = e.changedTouches[0].clientX - touchStartX;
+          const dy = e.changedTouches[0].clientY - touchStartY;
+          touchStartX = null; touchStartY = null;
+          if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
+            mqLightboxNav(dx < 0 ? 1 : -1);
+          }
+        });
+      }
+      // Build the swipeable set from every other zoomable photo in the
+      // SAME category grid as the one just clicked (Box Materials stays
+      // separate from Door Styles, Specialty Items from Countertops,
+      // etc.) rather than every photo on the whole page, so swiping
+      // never jumps between unrelated sections. Falls back to just this
+      // one photo (no arrows/swipe shown) if there's no click event to
+      // find the grid from, or it's the only photo in it.
+      const grid = (evt && evt.currentTarget && evt.currentTarget.closest)
+        ? evt.currentTarget.closest('.sr-grid, .sr-spec-grid')
+        : null;
+      if (grid) {
+        const imgs = Array.from(grid.querySelectorAll('img[onclick*="mqLightbox("]'));
+        LB_ITEMS = imgs.map(im => ({ src: im.src, label: im.getAttribute('alt') || '' }));
+        LB_INDEX = Math.max(0, imgs.indexOf(evt.currentTarget));
+      } else {
+        LB_ITEMS = [{ src, label }];
+        LB_INDEX = 0;
+      }
+      const showNav = LB_ITEMS.length > 1;
+      const prevBtn = document.getElementById('sr-lb-prev');
+      const nextBtn = document.getElementById('sr-lb-next');
+      if (prevBtn) prevBtn.style.display = showNav ? 'flex' : 'none';
+      if (nextBtn) nextBtn.style.display = showNav ? 'flex' : 'none';
+      const img = document.getElementById('sr-lb-img');
+      LB_SWAP_TOKEN++;           // cancel any half-finished cross-fade from before
+      img.style.opacity = '1';
+      img.src = src;
+      document.getElementById('sr-lb-label').textContent = label;
+      mqLightboxUpdateCount();
+      const inner = document.getElementById('sr-lb-inner');
+      // Standalone (a popped-open tab, or the direct showroom link) has a
+      // real scrollable window, so a normal `position:fixed;inset:0`
+      // overlay covers whatever's currently on screen, same as any other
+      // lightbox — clicking anywhere on it (it fills the whole visible
+      // window) already closes it, and the CSS `max-height:60vh` on the
+      // image itself is measuring a real viewport, so it just works.
+      // Embedded via <iframe> is different in TWO ways that both matter
+      // here: this page has no scrollbar of its own — the iframe is
+      // resized (see MQ_SR_EMBEDDED below) to be exactly as tall as ALL
+      // of its content, so the shop's own page is what scrolls, never
+      // this document. That means (1) "fixed" positioning pins to the
+      // IFRAME'S OWN (huge) content box, not to whatever portion of it
+      // the customer is actually looking at — fixed by anchoring the
+      // photo near the customer's own click instead of using `fixed` at
+      // all; and (2), easy to miss: `vh` itself is measuring that same
+      // huge content height in here, NOT the customer's actual screen —
+      // so a `max-height:60vh` cap that behaves perfectly in standalone
+      // mode can still render a genuinely oversized image in embedded
+      // mode on a long showroom page, however small the percentage
+      // looks. `window.screen.height` is a real device measurement,
+      // unaffected by this document's own height, so it's used instead
+      // to size the embedded zoom to something that actually fits a
+      // real screen.
+      if (MQ_SR_EMBEDDED && evt && evt.currentTarget) {
+        const screenH = (window.screen && window.screen.height) || 900;
+        const capPx = Math.max(280, Math.round(screenH * 0.5));
+        img.style.maxHeight = capPx + 'px';
+        // EMBEDDED: the arrows stay inside the photo "stage", and the stage is a
+        // FIXED height (the same cap every photo is limited to) with the photo
+        // centred in it — so the arrows' vertical centre is the same for a
+        // tall portrait photo as for a wide landscape one, instead of riding
+        // up and down with each photo's own height.
+        mqLbPlaceArrows(false);
+        const stage = document.getElementById('sr-lb-photowrap');
+        if (stage) stage.style.height = capPx + 'px';
+        const rect = evt.currentTarget.getBoundingClientRect();
+        const scrollY = window.pageYOffset || document.documentElement.scrollTop || 0;
+        // Center the zoom on the clicked photo's own vertical midpoint
+        // (roughly — nudged up a bit for the label/hint text below the
+        // image) rather than starting right below it, so with a real,
+        // screen-sized cap now in place it opens centered on roughly
+        // where the customer is already looking instead of running off
+        // the bottom of the screen.
+        const clickMidY = scrollY + rect.top + (rect.height / 2);
+        const anchorTop = Math.max(0, clickMidY - (capPx / 2) - 40);
+        const fullHeight = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight);
+        lb.style.position = 'absolute';
+        lb.style.top = '0';
+        lb.style.left = '0';
+        lb.style.right = '0';
+        lb.style.bottom = '';
+        lb.style.height = fullHeight + 'px';
+        if (inner) {
+          inner.style.position = 'absolute';
+          inner.style.top = anchorTop + 'px';
+          inner.style.left = '0';
+          inner.style.right = '0';
+          inner.style.height = '';
+        }
+      } else {
+        img.style.maxHeight = '';
+        // STANDALONE: the arrows are pinned to the screen itself (vertical centre,
+        // fixed distance from the left/right edge) — nothing about the current
+        // photo's size or shape can move them.
+        mqLbPlaceArrows(true);
+        const stage = document.getElementById('sr-lb-photowrap');
+        if (stage) stage.style.height = '';
+        lb.style.position = 'fixed';
+        lb.style.top = '0';
+        lb.style.left = '0';
+        lb.style.right = '0';
+        lb.style.bottom = '0';
+        lb.style.height = '';
+        if (inner) {
+          inner.style.position = '';
+          inner.style.top = '';
+          inner.style.left = '';
+          inner.style.right = '';
+          inner.style.height = '100%';
+        }
+      }
+      clearTimeout(lb._hideTimer);
+      lb.style.display = 'block';
+      // two frames so the browser registers display:block before fading in
+      requestAnimationFrame(() => requestAnimationFrame(() => { lb.style.opacity = '1'; }));
+    }
+    window.mqLightbox = mqLightbox;
+
+    // Category display config — id (for nav/scroll anchors), plus the
+    // eyebrow/title/description shown above each section's grid.
+    const CAT_CONFIG = {
+      material:     { id:'box-materials',   eyebrow:'Cabinet construction', title:'Box Materials',        desc:'The box is the structural core of every cabinet. We offer the following materials.' },
+      door:         { id:'door-styles',     eyebrow:'Cabinet doors',        title:'Door Styles',          desc:'The door is the face of your kitchen. Choose a style that fits your aesthetic.' },
+      drawer:       { id:'drawer-configs',  eyebrow:'Cabinet drawers',      title:'Drawer Configurations',desc:'Drawer box options that affect function and durability.' },
+      countertop:   { id:'countertops',     eyebrow:'Surfaces',             title:'Countertop Materials',  desc:'We supply and install a range of countertop materials to suit every style and budget.' },
+      trim_crown:   { id:'crown-moulding',  eyebrow:'Finishing touches',    title:'Crown Moulding',        desc:'Crown moulding styles to top off your upper cabinets.' },
+      trim_valance: { id:'valance',         eyebrow:'Finishing touches',    title:'Valance',               desc:'Valance options to complete the look beneath your upper cabinets.' },
+      tall_cabinet: { id:'tall-cabinets',   eyebrow:'Extra storage',        title:'Tall Cabinets',         desc:'Pantry units, oven cabinets, and other tall storage options for your kitchen.' },
+    };
+
+    let CURRENT_FILTER = 'all';
+    let SHOWROOM_DATA = null; // cached once loaded, re-used every time the filter changes
+
+    // HTML-attribute-safe escaping for the `alt` text added to each
+    // zoomable photo below — mqLightboxNav reads that `alt` back (via
+    // getAttribute, not the JS-string-escaped `safeName` used in the
+    // onclick itself) to know each photo's label while swiping through
+    // a category, so it needs its own, separately-correct escaping.
+    // Photo fade-in: each card shows a soft shimmer until its photo has
+    // loaded, then the photo fades in over it (see .sr-ph / .sr-in in the CSS).
+    // A photo that fails to load just drops the shimmer and shows the plain
+    // grey tile — same "hide the broken image" behaviour as before.
+    function mqImgIn(img) { img.classList.add('sr-in'); if (img.parentNode) img.parentNode.classList.remove('sr-ph'); }
+    function mqImgFail(img) { img.style.display = 'none'; if (img.parentNode) img.parentNode.classList.remove('sr-ph'); }
+    window.mqImgIn = mqImgIn; window.mqImgFail = mqImgFail;
+
+    function escHtml(s) {
+      return String(s == null ? '' : s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    function itemCard(name, photoKey, photos) {
+      const photoUrl = photos[photoKey];
+      const safeName = (name||'').replace(/'/g, "\\'");
+      const imgHtml = photoUrl
+        ? `<img src="${photoUrl}" alt="${escHtml(name)}" loading="lazy" onclick="mqLightbox('${photoUrl}','${safeName}',event)" onload="mqImgIn(this)" onerror="mqImgFail(this)">`
+        : '📷';
+      return `<div class="sr-card"><div class="sr-card-img${photoUrl ? ' sr-ph' : ''}">${imgHtml}</div><div class="sr-card-body"><div class="sr-card-name">${name}</div></div></div>`;
+    }
+
+    // Showcase items (from the dashboard's "Showroom" tab) aren't tied to
+    // pricing at all — unlike itemCard() above, this always renders once an
+    // item exists, showing the 📷 placeholder if no photo has been added
+    // yet, rather than hiding the item entirely. That's deliberate: a shop
+    // owner adding these one at a time wants confirmation the item saved,
+    // even before they've gotten around to a photo.
+    function customItemCard(item) {
+      const photoUrl = item.photo || '';
+      const safeName = (item.name||'').replace(/'/g, "\\'");
+      const imgHtml = photoUrl
+        ? `<img src="${photoUrl}" alt="${escHtml(item.name)}" loading="lazy" onclick="mqLightbox('${photoUrl}','${safeName}',event)" onload="mqImgIn(this)" onerror="mqImgFail(this)">`
+        : '📷';
+      // Name is optional on this kind of item — skip the name row entirely
+      // rather than showing an empty line when a shop hasn't named it yet.
+      const nameHtml = (item.name||'').trim() ? `<div class="sr-card-body"><div class="sr-card-name">${item.name}</div></div>` : '';
+      return `<div class="sr-card"><div class="sr-card-img${photoUrl ? ' sr-ph' : ''}">${imgHtml}</div>${nameHtml}</div>`;
+    }
+
+    function itemVisible(visibleRooms) {
+      if (CURRENT_FILTER === 'all') return true;
+      return !visibleRooms.length || visibleRooms.includes(CURRENT_FILTER);
+    }
+
+    function renderFilterBar() {
+      const bar = document.getElementById('sr-filter-bar');
+      const { roomTypes } = SHOWROOM_DATA;
+      // In "Build my own" mode there are no priced categories left to
+      // filter by project type — custom categories ignore this filter
+      // entirely (see buildShowroomSections) — so the whole bar is just
+      // dead weight; hide it rather than show chips that do nothing.
+      const mode = (SHOWROOM_DATA.catSettings && SHOWROOM_DATA.catSettings.mode === 'custom') ? 'custom' : 'default';
+      // Embedded-only filter-bar toggle — checked here (rather than
+      // alongside the logo/nav/hero toggles in init()) because this
+      // function re-runs every time the filter changes (mqSetFilter), so a
+      // one-time style.display set in init() wouldn't survive that.
+      const embedHideFilterBar = MQ_SR_EMBEDDED && SHOWROOM_DATA.catSettings && SHOWROOM_DATA.catSettings.embedDisplay && SHOWROOM_DATA.catSettings.embedDisplay.filterBar === false;
+      const layoutOff = srHasLayout() && (SHOWROOM_DATA.catSettings.srFilterBar === false || !srLayoutUsesPricing());
+      if ((!srHasLayout() && mode === 'custom') || layoutOff || !roomTypes.length || embedHideFilterBar) { bar.style.display = 'none'; return; }
+      bar.style.display = 'flex';
+      const chips = [{ id: 'all', name: 'All' }, ...roomTypes];
+      bar.innerHTML = chips.map(r => `<button class="sr-filter-chip${CURRENT_FILTER===r.id?' active':''}" onclick="mqSetFilter('${r.id}')">${r.name}</button>`).join('');
+    }
+
+    window.mqSetFilter = function(id) {
+      CURRENT_FILTER = id;
+      renderFilterBar();
+      renderShowroom();
+    };
+
+    // Keeps the sticky header + sticky nav sized correctly for whatever's
+    // actually on screen right now — the header's height isn't a fixed
+    // number (a long shop name can wrap to two lines on a narrow screen,
+    // a real uploaded logo can be taller/shorter than the placeholder
+    // square), so this measures both bars live instead of trusting the
+    // CSS fallback values. Also drives .sr-section's scroll-margin-top so
+    // clicking a nav tab lands the section right below both sticky bars
+    // instead of hidden underneath them.
+    function syncStickyOffsets() {
+      const header = document.getElementById('sr-header');
+      // The section nav now lives INSIDE the header bar, so one measurement covers both.
+      if (header) document.documentElement.style.setProperty('--header-h', header.offsetHeight + 'px');
+    }
+    window.addEventListener('resize', syncStickyOffsets);
+    // The web font can swap in after first paint and nudge text height —
+    // re-measure once it's actually loaded so the sticky offset stays exact.
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(syncStickyOffsets);
+
+    // Rebuilds the top nav from whichever sections actually rendered this
+    // time (changes as the filter changes), rather than a fixed list —
+    // otherwise a filtered-out category would leave a dead link behind.
+    function updateNav() {
+      const sections = [...document.querySelectorAll('.sr-section')];
+      const nav = document.getElementById('sr-nav');
+      if (!sections.length) { nav.innerHTML = ''; return; }
+      nav.innerHTML = sections.map((s, i) => {
+        const title = s.querySelector('.sr-section-title')?.textContent || s.id;
+        return `<a class="sr-nav-item${i===0?' active':''}" href="#${s.id}">${title}</a>`;
+      }).join('');
+      wireNav();
+      syncStickyOffsets();
+    }
+
+    function wireNav() {
+      document.querySelectorAll('.sr-nav-item').forEach(link => {
+        link.addEventListener('click', e => {
+          e.preventDefault();
+          document.querySelectorAll('.sr-nav-item').forEach(l => l.classList.remove('active'));
+          link.classList.add('active');
+          const target = document.querySelector(link.getAttribute('href'));
+          if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+      });
+    }
+
+    window.addEventListener('scroll', () => {
+      const sections = [...document.querySelectorAll('.sr-section')];
+      if (!sections.length) return;
+      let current = sections[0].id;
+      sections.forEach(s => { if (window.scrollY >= s.offsetTop - 150) current = s.id; });
+      document.querySelectorAll('.sr-nav-item').forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#' + current));
+    });
+
+    // Builds one descriptor per possible section — priced/specialty AND
+    // custom — regardless of the shop's rename/hide/reorder settings.
+    // Filtering (hidden categories) and ordering happen in one place after,
+    // so every kind of section goes through the exact same pipeline instead
+    // of three separate ad-hoc blocks.
+    function buildShowroomSections() {
+      const { photos, hidden, categoryItems, specs, customCategories } = SHOWROOM_DATA;
+      const settings = SHOWROOM_DATA.catSettings || { order: [], names: {}, hidden: {}, mode: 'default' };
+      const mode = settings.mode === 'custom' ? 'custom' : 'default';
+      const sections = [];
+
+      // Priced categories only appear in 'default' mode — in 'custom' mode
+      // this shop has deliberately replaced them with their own categories
+      // below, so showing both would defeat the point of picking "Build my
+      // own" in the first place.
+      if (mode === 'default') {
+        Object.entries(CAT_CONFIG).forEach(([cat, cfg]) => {
+          const items = categoryItems[cat] || [];
+          const visibleItems = items.filter(it => !hidden[it.photoKey] && photos[it.photoKey] && itemVisible(it.visibleRooms));
+          if (!visibleItems.length) return;
+          sections.push({ key: cat, html: `<div class="sr-section" id="${cfg.id}">
+            <div class="sr-section-header">
+              <div class="sr-section-eyebrow">${cfg.eyebrow}</div>
+              <div class="sr-section-title">${settings.names[cat] || cfg.title}</div>
+              <div class="sr-section-desc">${cfg.desc}</div>
+            </div>
+            <div class="sr-grid">${visibleItems.map(it => itemCard(it.name, it.photoKey, photos)).join('')}</div>
+          </div>` });
+        });
+      }
+
+      const byoOn = k => !!(settings.byoShow || {})[k];
+      {
+        (SHOWROOM_DATA.pricedCustom || []).filter(cat => mode === 'default' || byoOn(cat.id)).forEach(cat => {
+          const visibleItems = cat.items.filter(it => !hidden[it.photoKey] && photos[it.photoKey] && itemVisible(it.visibleRooms));
+          if (!visibleItems.length) return;
+          sections.push({ key: cat.id, html: `<div class="sr-section" id="cc-${cat.id}">
+            <div class="sr-section-header">
+              <div class="sr-section-eyebrow">Options</div>
+              <div class="sr-section-title">${escHtml(settings.names[cat.id] || cat.name)}</div>
+              ${cat.description ? `<div class="sr-section-desc">${escHtml(cat.description)}</div>` : ''}
+            </div>
+            <div class="sr-grid">${visibleItems.map(it => itemCard(it.name, it.photoKey, photos)).join('')}</div>
+          </div>` });
+        });
+      }
+
+      // Specialty Items: always in Default style; in Build My Own only if the
+      // shop turned them on there (hidden by default, Jordan Oct 25).
+      const visibleSpecs = (mode === 'custom' && !byoOn('specialty')) ? [] : specs.filter(s => !hidden[s.photoKey] && photos[s.photoKey] && itemVisible(s.visibleRooms));
+      if (visibleSpecs.length) {
+        sections.push({ key: 'specialty', html: `<div class="sr-section" id="specialty">
+          <div class="sr-section-header">
+            <div class="sr-section-eyebrow">Add-ons & upgrades</div>
+            <div class="sr-section-title">${settings.names['specialty'] || 'Specialty Items'}</div>
+            <div class="sr-section-desc">Customize your kitchen with functional upgrades and specialty cabinet features.</div>
+          </div>
+          <div class="sr-spec-grid">${visibleSpecs.map(s => {
+            const photoUrl = photos[s.photoKey];
+            const emoji = getIcon(s.name);
+            return `<div class="sr-card sr-spec-card">
+              <div class="sr-card-img${photoUrl ? ' sr-ph' : ''}">${photoUrl ? `<img src="${photoUrl}" alt="${escHtml(s.name)}" loading="lazy" onclick="mqLightbox('${photoUrl}','${s.name.replace(/'/g,"\\'")}',event)" onload="mqImgIn(this)" onerror="mqImgFail(this)"/>` : emoji}</div>
+              <div class="sr-card-body"><div class="sr-card-name">${s.name}</div></div>
+            </div>`;
+          }).join('')}</div>
+        </div>` });
+      }
+
+      // Custom showcase categories (dashboard's Showroom tab) — only appear
+      // in 'custom' mode. Independent of pricing and project types, so
+      // their items always show regardless of CURRENT_FILTER (moot anyway
+      // in this mode, since the filter bar itself is hidden — see
+      // renderFilterBar).
+      if (mode === 'custom') {
+        (customCategories || []).filter(c => (c.items||[]).length).forEach(cat => {
+          sections.push({ key: cat.id, html: `<div class="sr-section" id="custom-${cat.id}">
+            <div class="sr-section-header">
+              <div class="sr-section-eyebrow">Showcase</div>
+              <div class="sr-section-title">${settings.names[cat.id] || cat.name || ''}</div>
+            </div>
+            <div class="sr-grid">${(cat.items||[]).map(customItemCard).join('')}</div>
+          </div>` });
+        });
+      }
+
+      return sections;
+    }
+
+    // ---- Showroom builder (Nov 2026) ----
+    // A shop that saved a layout on the dashboard's Showroom tab gets exactly
+    // that list of categories. Shops that never did keep the old rendering
+    // below, untouched.
+    function srHasLayout() { return !!(SHOWROOM_DATA.catSettings && Array.isArray(SHOWROOM_DATA.catSettings.layout)); }
+    function srProductIndex() {
+      if (SHOWROOM_DATA._idx) return SHOWROOM_DATA._idx;
+      const idx = {};
+      Object.entries(SHOWROOM_DATA.categoryItems || {}).forEach(([cat, items]) => items.forEach(it => { idx[it.photoKey] = it; }));
+      (SHOWROOM_DATA.specs || []).forEach(it => { idx[it.photoKey] = it; });
+      (SHOWROOM_DATA.pricedCustom || []).forEach(c => c.items.forEach(it => { idx[it.photoKey] = it; }));
+      return (SHOWROOM_DATA._idx = idx);
+    }
+    function srLayoutUsesPricing() {
+      return (SHOWROOM_DATA.catSettings.layout || []).some(e => e.k === 'p' || (e.k === 'o' && ((SHOWROOM_DATA.customCategories || []).find(c => c.id === e.id) || { items: [] }).items.some(i => i && i.ref)));
+    }
+    function srSection(id, eyebrow, title, desc, inner, gridClass) {
+      return `<div class="sr-section" id="${id}">
+            <div class="sr-section-header">
+              <div class="sr-section-eyebrow">${eyebrow}</div>
+              <div class="sr-section-title">${escHtml(title)}</div>
+              ${desc ? `<div class="sr-section-desc">${escHtml(desc)}</div>` : ''}
+            </div>
+            <div class="${gridClass || 'sr-grid'}">${inner}</div>
+          </div>`;
+    }
+    function srSpecCard(s, photos) {
+      const photoUrl = photos[s.photoKey];
+      return `<div class="sr-card sr-spec-card">
+              <div class="sr-card-img${photoUrl ? ' sr-ph' : ''}">${photoUrl ? `<img src="${photoUrl}" alt="${escHtml(s.name)}" loading="lazy" onclick="mqLightbox('${photoUrl}','${String(s.name).replace(/'/g, "\\'")}',event)" onload="mqImgIn(this)" onerror="mqImgFail(this)">` : getIcon(s.name)}</div>
+              <div class="sr-card-body"><div class="sr-card-name">${s.name}</div></div>
+            </div>`;
+    }
+    function srLayoutSections() {
+      const { photos, hidden, categoryItems, specs, customCategories, pricedCustom } = SHOWROOM_DATA;
+      const layout = SHOWROOM_DATA.catSettings.layout || [];
+      const okItem = it => !hidden[it.photoKey] && photos[it.photoKey] && itemVisible(it.visibleRooms);
+      const out = [];
+      layout.forEach(e => {
+        if (!e) return;
+        if (e.k === 'p') {
+          const cfg = CAT_CONFIG[e.key];
+          if (cfg) {
+            const items = (categoryItems[e.key] || []).filter(okItem);
+            if (items.length) out.push(srSection(cfg.id, cfg.eyebrow, e.name || cfg.title, e.desc || cfg.desc, items.map(it => itemCard(it.name, it.photoKey, photos)).join('')));
+          } else if (e.key === 'specialty') {
+            const items = (specs || []).filter(okItem);
+            if (items.length) out.push(srSection('specialty', 'Add-ons & upgrades', e.name || 'Specialty Items', e.desc || 'Customize your kitchen with functional upgrades and specialty cabinet features.', items.map(s => srSpecCard(s, photos)).join(''), 'sr-spec-grid'));
+          } else {
+            const c = (pricedCustom || []).find(x => x.id === e.key);
+            if (!c) return;
+            const items = c.items.filter(okItem);
+            if (items.length) out.push(srSection('cc-' + c.id, 'Options', e.name || c.name, e.desc || c.description, items.map(it => itemCard(it.name, it.photoKey, photos)).join('')));
+          }
+        } else if (e.k === 'o') {
+          const c = (customCategories || []).find(x => x.id === e.id);
+          if (!c) return;
+          const idx = srProductIndex();
+          const cards = (c.items || []).map(it => {
+            if (!it) return '';
+            if (it.ref) { const p = idx[it.ref]; return (p && photos[p.photoKey] && itemVisible(p.visibleRooms)) ? itemCard(p.name, p.photoKey, photos) : ''; }
+            return customItemCard(it);
+          }).filter(Boolean);
+          if (cards.length) out.push(srSection('custom-' + c.id, 'Showcase', e.name || c.name || '', e.desc || '', cards.join('')));
+        }
+      });
+      return out;
+    }
+
+    function renderShowroom() {
+      if (srHasLayout()) {
+        let html = srLayoutSections().join('<div class="sr-divider"></div>');
+        if (!html) html = CURRENT_FILTER === 'all'
+          ? '<div class="sr-empty" style="padding:4rem;text-align:center">This showroom is being set up — check back soon.</div>'
+          : '<div class="sr-empty" style="padding:4rem;text-align:center">Nothing to show for this project type yet.</div>';
+        document.getElementById('sr-content').innerHTML = html;
+        document.querySelectorAll('.sr-card-img.sr-ph img').forEach(im => { if (im.complete && im.naturalWidth) mqImgIn(im); });
+        updateNav();
+        return;
+      }
+      const settings = SHOWROOM_DATA.catSettings || { order: [], names: {}, hidden: {} };
+      // In Build My Own, Specialty Items / custom pricing categories were
+      // already chosen by byoShow in buildShowroomSections.
+      const byoKey = k => k === 'specialty' || /^cc_/.test(k);
+      const visible = buildShowroomSections().filter(s => (settings.mode === 'custom' && byoKey(s.key)) || !settings.hidden[s.key]);
+      const order = Array.isArray(settings.order) ? settings.order : [];
+      // Stable sort: anything not in the saved order keeps its original
+      // relative position, appended after everything that IS ordered.
+      visible.sort((a, b) => {
+        const ai = order.indexOf(a.key), bi = order.indexOf(b.key);
+        if (ai === -1 && bi === -1) return 0;
+        if (ai === -1) return 1;
+        if (bi === -1) return -1;
+        return ai - bi;
+      });
+
+      let html = visible.map(s => s.html).join('<div class="sr-divider"></div>');
+
+      if (!html) {
+        html = CURRENT_FILTER === 'all'
+          ? '<div class="sr-empty" style="padding:4rem;text-align:center">Visit your dashboard → Showroom or My Products tab to set up your showroom.</div>'
+          : '<div class="sr-empty" style="padding:4rem;text-align:center">Nothing to show for this project type yet.</div>';
+      }
+      document.getElementById('sr-content').innerHTML = html;
+      // Cached photos can finish loading before their onload is attached — catch those.
+      document.querySelectorAll('.sr-card-img.sr-ph img').forEach(im => { if (im.complete && im.naturalWidth) mqImgIn(im); });
+      updateNav();
+    }
+
+    // Prevent a slow/stalled API request from leaving the public Showroom stuck
+    // on "Loading your showroom..." forever. A retry also helps with brief
+    // network / Worker hiccups without requiring visitors to clear browser data.
+    async function mqSrFetchShopData(shopToken) {
+      const endpoint = `${CONFIG.PROXY_WORKER}/shop-data?shop=${encodeURIComponent(shopToken)}`;
+      let lastError;
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 12000);
+        try {
+          const response = await fetch(endpoint, {
+            cache: 'no-store',
+            signal: controller.signal,
+            headers: { 'Accept': 'application/json' }
+          });
+          if (!response.ok) {
+            const error = new Error(`Shop data server returned ${response.status}`);
+            error.retryable = response.status === 429 || response.status >= 500;
+            throw error;
+          }
+          const data = await response.json();
+          if (!data || typeof data !== 'object') throw new Error('Invalid shop data response');
+          return data;
+        } catch (error) {
+          lastError = error;
+          console.warn(`Showroom data request ${attempt + 1} failed:`, error);
+          if (attempt === 1 || error.retryable === false) break;
+          // Short pause before one retry. AbortError includes timeouts.
+          await new Promise(resolve => setTimeout(resolve, 500));
+        } finally {
+          clearTimeout(timeoutId);
+        }
+      }
+      throw new Error('The showroom could not reach its data server. Please try again.');
+    }
+
+    async function init() {
+      const shop_token = new URLSearchParams(window.location.search).get('shop');
+      if (!shop_token) { document.getElementById('sr-content').innerHTML = '<div class="sr-empty">No shop specified.</div>'; return; }
+
+      // cache: 'no-store' -- matches widget.js's own shop-data fetch. Without
+      // this, a browser could serve a stale cached copy of this response
+      // (e.g. right after a pricing/product fix is deployed to the proxy
+      // worker), showing outdated items until the cache naturally expires.
+      const payload = await mqSrFetchShopData(shop_token);
+      if (payload.error || !payload.shop) { document.getElementById('sr-content').innerHTML = '<div class="sr-empty">Shop not found.</div>'; return; }
+
+      const shop = payload.shop.fields;
+      let photos = {};        try { photos = shop['Photos'] ? JSON.parse(shop['Photos']) : {}; } catch(e) {}
+      let hidden = {};        try { hidden = shop['Hidden'] ? JSON.parse(shop['Hidden']) : {}; } catch(e) {}
+      let categoryRooms = {}; try { categoryRooms = shop['Category rooms'] ? JSON.parse(shop['Category rooms']) : {}; } catch(e) {}
+      // Independent showcase categories/items added from the dashboard's
+      // Showroom tab — not tied to pricing, so no dedupe/room-filter logic
+      // applies to these the way it does to material/door/etc. below.
+      let customCategories = []; try { customCategories = shop['Showroom categories'] ? JSON.parse(shop['Showroom categories']) : []; } catch(e) { customCategories = []; }
+      if (!Array.isArray(customCategories)) customCategories = [];
+      // Display order / showroom-only name overrides / whole-category hides
+      // for EVERY category (priced, specialty, and custom alike) — set from
+      // the dashboard's Showroom tab. Keyed by category key: the fixed
+      // priced/specialty keys ('material','door',...,'specialty') or a
+      // custom category's own id.
+      // mode: 'default' shows the priced categories below (the classic
+      // showroom); 'custom' shows only this shop's own categories instead.
+      // Specialty Items show in both — set from the dashboard's Showroom
+      // tab "Showroom style" choice. Missing/invalid always falls back to
+      // 'default', so nothing changes for a shop that's never touched this.
+      let catSettings = { order: [], names: {}, hidden: {}, mode: 'default', customSubheading: '' };
+      try {
+        const raw = shop['Showroom category settings'] ? JSON.parse(shop['Showroom category settings']) : {};
+        catSettings = {
+          order:  Array.isArray(raw.order) ? raw.order : [],
+          names:  (raw.names  && typeof raw.names  === 'object') ? raw.names  : {},
+          hidden: (raw.hidden && typeof raw.hidden === 'object') ? raw.hidden : {},
+          // Build My Own only: Specialty Items and custom pricing categories
+          // are hidden unless the shop turned them on (see dashboard
+          // mqShowroomToggleHideCat). Default style uses `hidden` instead.
+          byoShow: (raw.byoShow && typeof raw.byoShow === 'object') ? raw.byoShow : {},
+          mode:   raw.mode === 'custom' ? 'custom' : 'default',
+          layout: Array.isArray(raw.layout) ? raw.layout : undefined,
+          heroKind: raw.heroKind === 'materials' ? 'materials' : (raw.heroKind === 'catalogue' ? 'catalogue' : undefined),
+          heroSub: typeof raw.heroSub === 'string' ? raw.heroSub : '',
+          srFilterBar: typeof raw.srFilterBar === 'boolean' ? raw.srFilterBar : undefined,
+          // Build-My-Own-only subheading override, set on the dashboard's
+          // Showroom tab. Blank/missing means "use the built-in default
+          // line below" — Default mode's subheading is never editable.
+          customSubheading: typeof raw.customSubheading === 'string' ? raw.customSubheading : '',
+          // Embedded-only show/hide switches (shop info/nav/hero/filter
+          // bar) — added 2026-09-10, set from the dashboard's Showroom
+          // tab's "🧩 Embed on a page" card. `shopInfo` covers the logo AND
+          // the shop name/city beside it as one combined block — it used
+          // to be logo-only, widened same day per Jordan: "include the
+          // removal of the shop name and number as part of the logo
+          // remove... like a shop info remove." Deliberately scoped to
+          // the <iframe> embed ONLY (see MQ_SR_EMBEDDED usage below) — the
+          // standalone popup tab/link this page also serves always shows
+          // all four, unchanged. Any key not explicitly `false` defaults
+          // to shown, so a shop that's never touched these sees no change.
+          embedDisplay: (raw.embedDisplay && typeof raw.embedDisplay === 'object') ? {
+            shopInfo: raw.embedDisplay.shopInfo !== false,
+            nav: raw.embedDisplay.nav !== false,
+            hero: raw.embedDisplay.hero !== false,
+            filterBar: raw.embedDisplay.filterBar !== false,
+          } : { shopInfo: true, nav: true, hero: true, filterBar: true },
+        };
+      } catch(e) {}
+      let roomTypes = [];
+      try { roomTypes = shop['Room types'] ? JSON.parse(shop['Room types']) : []; } catch(e) { roomTypes = []; }
+      if (!Array.isArray(roomTypes) || !roomTypes.length) roomTypes = DEFAULT_ROOM_TYPES;
+      roomTypes = roomTypes.filter(r => r.active !== false); // draft project types stay hidden here too
+      const allRoomIds = roomTypes.map(r => r.id);
+
+      const brand = shop['Brand colour'] || '#1a1a1a';
+      document.documentElement.style.setProperty('--brand', brand);
+      // (The hero used to be filled with the brand colour — it's now a quiet
+      // title block, so the brand colour only shows as a small accent line.)
+
+      const logoEl = document.getElementById('sr-logo');
+      if (shop['Logo URL']) {
+        logoEl.classList.add('sr-shop-logo-real');
+        logoEl.innerHTML = `<img src="${shop['Logo URL']}" alt="logo"/>`;
+      } else {
+        logoEl.classList.remove('sr-shop-logo-real');
+        logoEl.style.background = brand;
+        logoEl.textContent = (shop['Shop name'] || 'S')[0].toUpperCase();
+      }
+      document.getElementById('sr-shop-name').textContent = shop['Shop name'] || '';
+      document.getElementById('sr-shop-city').textContent = [shop['City'], shop['Province/State']].filter(Boolean).join(', ');
+
+      // Embedded-only display toggles — added 2026-09-10, per Jordan's ask
+      // to be able to strip shop info/nav/hero down for a shop whose own
+      // page already has its own header/nav and doesn't want a second one
+      // stacked on top. `sr-shop-info` is hidden as ONE block (logo + name
+      // + city together) rather than just the logo — widened same day per
+      // Jordan's follow-up ask, since those three always sit together as
+      // one visual unit; hiding just the logo would've left an orphaned
+      // name/city line behind. Deliberately gated on MQ_SR_EMBEDDED: the
+      // standalone popup tab/link this same page also serves always shows
+      // all three, unchanged — see catSettings.embedDisplay's parse above
+      // and dashboard.js's "🧩 Embed on a page" card for where these get
+      // set. The filter-bar toggle lives inside renderFilterBar() instead,
+      // since that function already re-runs on every filter click.
+      //
+      // These three now REVEAL rather than hide — as of 2026-09-10, later
+      // same day, the pre-hide block up near MQ_SR_EMBEDDED's own
+      // definition already hid all of shop-info/nav/hero/filter-bar
+      // synchronously before this fetch even started (see the comment
+      // there for why: a section that's OFF must never flash visible
+      // during the load itself). So by the time execution reaches here,
+      // every one of these is already `display:none` — this block's job
+      // is now to explicitly un-hide whichever ones the shop actually left
+      // ON, by clearing the inline override back to '' so each element's
+      // normal CSS `display` (flex, from its own class rule) takes over
+      // again. Anything left OFF simply never gets touched here, so it
+      // stays exactly as hidden as it's been since before the fetch.
+      if (MQ_SR_EMBEDDED) {
+        const infoBox = document.getElementById('sr-shop-info');
+        if (infoBox) infoBox.style.display = catSettings.embedDisplay.shopInfo === false ? 'none' : '';
+        const navBar = document.getElementById('sr-nav');
+        if (navBar) navBar.style.display = catSettings.embedDisplay.nav === false ? 'none' : '';
+        const heroBox = document.getElementById('sr-hero');
+        if (heroBox) heroBox.style.display = catSettings.embedDisplay.hero === false ? 'none' : '';
+        // The slim top bar now holds BOTH shop info and the section links, so it
+        // only shows if at least one of those two is on (it used to leave an
+        // empty white strip behind when both were off). With only the links on,
+        // they start from the left edge instead of the right.
+        const infoOn = catSettings.embedDisplay.shopInfo !== false;
+        const navOn = catSettings.embedDisplay.nav !== false;
+        const headerBar = document.getElementById('sr-header');
+        if (headerBar) {
+          headerBar.style.display = (infoOn || navOn) ? '' : 'none';
+          headerBar.classList.toggle('sr-nav-only', !infoOn);
+        }
+      }
+      syncStickyOffsets(); // header height depends on the real shop name/logo just set above
+      // Builder layout: title style + optional line saved with it.
+      const srKind = Array.isArray(catSettings.layout) ? (catSettings.heroKind || 'catalogue') : (catSettings.mode === 'custom' ? 'catalogue' : 'materials');
+      const srMaterialsSub = 'Browse the materials, door styles, and specialty options we offer. Have questions? Get in touch for a full consultation.';
+      const srCatalogueSub = 'Browse some of our past projects and features. Have questions? Get in touch for a full consultation.';
+      if (Array.isArray(catSettings.layout)) {
+        document.getElementById('sr-hero-title').textContent = srKind === 'materials' ? `${shop['Shop name'] || 'Our'} Materials & Options` : `${shop['Shop name'] || 'Our'} Product Catalogue`;
+        document.getElementById('sr-hero-sub').textContent = catSettings.heroSub || (srKind === 'materials' ? srMaterialsSub : srCatalogueSub);
+        document.title = srKind === 'materials' ? `${shop['Shop name'] || 'Products'} — Materials & Options` : `${shop['Shop name'] || 'Products'} — Product Catalogue`;
+      } else {
+      document.getElementById('sr-hero-title').textContent = catSettings.mode === 'custom'
+        ? `${shop['Shop name'] || 'Our'} Product Catalogue`
+        : `${shop['Shop name'] || 'Our'} Materials & Options`;
+      // Default mode's subheading names specific priced category types, so
+      // it stays fixed — not editable, since it needs to stay accurate to
+      // what Default mode actually shows. Build My Own's categories could
+      // be anything, so the shop owner can override this one from the
+      // dashboard's Showroom tab; blank/unset falls back to this same
+      // generic line the dashboard shows as its placeholder.
+      document.getElementById('sr-hero-sub').textContent = catSettings.mode === 'custom'
+        ? (catSettings.customSubheading || 'Browse some of our past projects and features. Have questions? Get in touch for a full consultation.')
+        : 'Browse the materials, door styles, and specialty options we offer. Have questions? Get in touch for a full consultation.';
+      document.title = catSettings.mode === 'custom'
+        ? `${shop['Shop name'] || 'Products'} — Product Catalogue`
+        : `${shop['Shop name'] || 'Products'} — Materials & Options`;
+      }
+
+      const lineItems = (payload.lineItems || []).filter(r => r.fields);
+      const byCategory = cat => lineItems.filter(r => r.fields['Category'] === cat).map(r => r.fields);
+
+      // Materials dedupe by base name (uppers/bases share one photo/listing) —
+      // same rule the widget uses.
+      const rawMaterials = byCategory('material');
+      const matSeen = new Set();
+      const dedupedMaterials = rawMaterials.reduce((acc, m) => {
+        const baseName = (m['Name']||'').replace(/\s*—\s*(uppers|bases).*$/i, '').trim();
+        if (!matSeen.has(baseName)) { matSeen.add(baseName); acc.push({ ...m, _baseName: baseName }); }
+        return acc;
+      }, []);
+
+      // Drawer configs dedupe by base name too (some/mostly drawers variants
+      // share one listing), same rule the widget uses for its drawer picker.
+      const rawDrawers = byCategory('drawer');
+      const drawerSeen = new Set();
+      const dedupedDrawers = rawDrawers.reduce((acc, d) => {
+        const baseName = (d['Name']||'').replace(/\s*—\s*(some|mostly) drawers\s*$/i, '').trim();
+        if (!drawerSeen.has(baseName)) { drawerSeen.add(baseName); acc.push({ ...d, _baseName: baseName }); }
+        return acc;
+      }, []);
+
+      // Only real countertop materials — same filter the widget uses to
+      // exclude backsplash-option and cutout-option sub-records.
+      const rawCountertops = byCategory('countertop').filter(item => {
+        const desc = item['Description'] || '';
+        return desc.includes('type:material') || (!desc.includes('type:backsplash') && !desc.includes('type:cutout'));
+      });
+
+      const rawTrim = byCategory('trim');
+      const rawTallCab = byCategory('tall_cabinet').filter(item => item['Active'] !== false);
+
+      function buildEntries(records, cat, nameKey) {
+        return records.map(r => ({
+          name: r[nameKey] || r['Name'],
+          photoKey: photoKeyFor(cat, r[nameKey] || r['Name']),
+          visibleRooms: effectiveVisibleRooms(parseVisibleRooms(r), cat, categoryRooms, allRoomIds),
+        }));
+      }
+
+      const categoryItems = {
+        material:     buildEntries(dedupedMaterials, 'material', '_baseName'),
+        door:         buildEntries(byCategory('door'), 'door', 'Name'),
+        drawer:       buildEntries(dedupedDrawers, 'drawer', '_baseName'),
+        countertop:   buildEntries(rawCountertops, 'countertop', 'Name'),
+        trim_crown:   buildEntries(rawTrim.filter(t => (t['Trim type']||'crown') === 'crown'), 'trim_crown', 'Name'),
+        trim_valance: buildEntries(rawTrim.filter(t => t['Trim type'] === 'valance'), 'trim_valance', 'Name'),
+        tall_cabinet: buildEntries(rawTallCab, 'tall_cabinet', 'Name'),
+      };
+      // Built-in cabinet steps a shop switched off (Pricing tab) aren't on its
+      // widget, so their products don't show here either.
+      try {
+        const tcfg = shop['Hidden widget tabs'] ? JSON.parse(shop['Hidden widget tabs']) : null;
+        const boff = (tcfg && Array.isArray(tcfg.builtinOff)) ? tcfg.builtinOff : [];
+        const offMap = { materials: ['material'], doors: ['door'], drawers: ['drawer'], trim: ['trim_crown', 'trim_valance'], tallcabs: ['tall_cabinet'] };
+        boff.forEach(k => (offMap[k] || []).forEach(cat => { categoryItems[cat] = []; }));
+      } catch(e) {}
+
+      // A specialty item with variants (e.g. "New Doors/Drawer fronts" —
+      // MDF Shaker / MDF Bevel Shaker / Maple Shaker / Oak Shaker) doesn't
+      // have one photo of its own -- each variant gets its own, keyed
+      // 'spec_<id>_v<variantId>' (see mqParseVariants/specPhotoKey in
+      // dashboard.js, which use this exact same convention for that item's
+      // own thumbnail everywhere else in the dashboard). This page used to
+      // always look for a photo/hidden-state at the plain 'spec_<id>' key
+      // regardless of variants -- a key that's never set for a variants
+      // item at all -- so visibleSpecs' `photos[s.photoKey]` check below
+      // always came up empty and the item never showed here at all, no
+      // matter what any variant's own "Hide from showroom" checkbox said
+      // (Jordan, after checking every variant's "Hide from showroom" box
+      // was OFF in My Products: "these doors all show that they are not
+      // hidden from showroom... now look at my showroom... specialty items
+      // arent showing those doors").
+      //
+      // A first pass fixed that by representing the whole item with just
+      // its first variant's photo -- which got the item showing again, but
+      // Jordan then pointed out it collapsed all 4 variants down to one
+      // card: "well that a hair better but its only showing the first one
+      // from the list of items you see that should be there from tose
+      // variants" -- he wants what My Products already shows: one card PER
+      // VARIANT (MDF Shaker, MDF Bevel Shaker, Maple Shaker, Oak Shaker all
+      // separately), not one card for the item as a whole.
+      //
+      // So a variants item now flatMaps into one spec entry per variant
+      // instead of one entry for the item -- each named "<item name> —
+      // <variant label>", exactly like each variant's own card is already
+      // labeled in My Products/the Specialty Items table (`${itemName} —
+      // ${v.label || 'Variant'}`) -- and each keyed to ITS OWN photo/hidden
+      // state (spec_<id>_v<variantId>), not just the first one. That also
+      // means each variant's own "Hide from showroom" checkbox now
+      // correctly controls just that one variant's card, instead of one
+      // checkbox (the first variant's) gating the entire item.
+      const specs = (payload.specialty || []).flatMap(r => {
+        let variants = [];
+        try {
+          const v = JSON.parse(r.fields['Variants'] || '[]');
+          variants = (Array.isArray(v) ? v : []).map((variant, vi) => ({ ...variant, id: variant.id || ('i' + vi) }));
+        } catch(e) { variants = []; }
+        const itemName = r.fields['Item name'] || r.fields['Special Items'] || '';
+        const visibleRooms = effectiveVisibleRooms(parseVisibleRooms(r.fields), 'specialty', categoryRooms, allRoomIds);
+        if (!variants.length) {
+          return [{ name: itemName, photoKey: 'spec_' + r.id, visibleRooms }];
+        }
+        return variants.map(v => ({
+          name: `${itemName} — ${(v.label || '').trim() || 'Variant'}`,
+          photoKey: 'spec_' + r.id + '_v' + v.id,
+          visibleRooms,
+        }));
+      });
+
+      // Custom pricing categories (dashboard Pricing tab → ✨ Custom pricing
+      // categories) are priced items like doors or materials, so they show
+      // here the same way: one card per option (and per variant), photo key
+      // li_<category id>_<name>[_v<variant id>], hidden/project-type rules
+      // from My Products. Pro-only categories/options stay off the public
+      // showroom.
+      let pricedCustom = [];
+      try { pricedCustom = shop['Custom categories'] ? JSON.parse(shop['Custom categories']) : []; } catch(e) { pricedCustom = []; }
+      // A category of one of the shop's own quote types shows only while that
+      // quote type exists, is on and isn't Pro only.
+      let liveQts = [];
+      try { const t = shop['Hidden widget tabs'] ? JSON.parse(shop['Hidden widget tabs']) : null; liveQts = (t && Array.isArray(t.quoteTypes) ? t.quoteTypes : []).filter(q => q && q.on !== false && !q.proOnly).map(q => q.id); } catch(e) { liveQts = []; }
+      pricedCustom = (Array.isArray(pricedCustom) ? pricedCustom : [])
+        .filter(c => c && typeof c.id === 'string' && /^cc_[a-z0-9]+$/i.test(c.id) && !c.proOnly && (!c.qt || liveQts.includes(c.qt)))
+        .map(c => ({
+          id: c.id, name: String(c.name || ''), description: String(c.description || ''),
+          items: lineItems.filter(r => r.fields['Category'] === c.id && r.fields['Active'] !== false).flatMap(r => {
+            let cfg = {}; try { cfg = JSON.parse(r.fields['Custom pricing'] || '{}') || {}; } catch(e) { cfg = {}; }
+            if (cfg.proOnly) return [];
+            const name = (r.fields['Name'] || '').trim();
+            const key = photoKeyFor(c.id, name);
+            const visibleRooms = effectiveVisibleRooms(parseVisibleRooms(r.fields), c.id, categoryRooms, allRoomIds);
+            const vars = Array.isArray(cfg.variants) ? cfg.variants.filter(v => v && v.id && String(v.label || '').trim()) : [];
+            // Photos kept on the option itself (cfg.ph) count too.
+            const ph = (cfg.ph && typeof cfg.ph === 'object') ? cfg.ph : {};
+            if (!photos[key] && ph['']) photos[key] = ph[''];
+            vars.forEach(v => { if (!photos[key + '_v' + v.id] && ph['v' + v.id]) photos[key + '_v' + v.id] = ph['v' + v.id]; });
+            return [{ name, photoKey: key, visibleRooms }].concat(vars.map(v => ({ name: `${name} — ${String(v.label).trim()}`, photoKey: key + '_v' + v.id, visibleRooms })));
+          }),
+        }));
+
+      SHOWROOM_DATA = { photos, hidden, categoryItems, specs, categoryRooms, allRoomIds, roomTypes, customCategories, catSettings, pricedCustom };
+      renderFilterBar();
+      renderShowroom();
+    }
+
+    init().catch(err => {
+      console.error('Showroom error:', err);
+      const content = document.getElementById('sr-content');
+      content.innerHTML = '<div class="sr-empty" role="alert"><p style="margin-bottom:16px">The showroom could not load right now. Please check your connection and try again.</p><button id="sr-retry" type="button" style="border:1px solid #b69b62;border-radius:8px;padding:11px 19px;background:#fff;color:#211e1a;font:600 13px Inter,sans-serif;cursor:pointer">Try again</button></div>';
+      document.getElementById('sr-retry').addEventListener('click', () => {
+        content.innerHTML = '<div class="sr-loading">Loading your showroom...</div>';
+        init().catch(retryErr => {
+          console.error('Showroom retry failed:', retryErr);
+          content.innerHTML = '<div class="sr-empty" role="alert">The showroom is temporarily unavailable. Please try again shortly.</div>';
+          mqSrReportHeight();
+        });
+      });
+      mqSrReportHeight();
+    });
+  </script>
+</body>
+</html>

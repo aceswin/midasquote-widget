@@ -677,37 +677,23 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     showroom: {
       title: 'Showroom',
       body: `
-        <p>This tab only shows the categories relevant to whichever showroom style is currently active, so it always matches what's actually live on your showroom page.</p>
+        <p>Build your showroom one category at a time — your categories show on the page top to bottom, in the order you set here.</p>
 
-        <h4 style="font-size:12px;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:0.03em;margin:16px 0 8px">🎭 Showroom style</h4>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Default showroom</div>
-          <p style="margin:0">Shows your priced categories (Box Materials, Door Styles, etc.) plus Specialty Items (the classic setup).</p>
+        <h4 style="font-size:12px;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:0.03em;margin:16px 0 8px">🛠️ Building it</h4>
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0"><div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">➕ Add from Pricing</div>
+          <p style="margin:0">Brings in a whole priced category (door styles, a custom step, Specialty Items…). It stays linked: any product you give a photo in Pricing / My Products shows up on its own. Use 🚫 Remove from showroom on a single product to take it off the page only — ↺ Bring back puts it back.</p>
         </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Build my own</div>
-          <p style="margin:0">Allows you to create custom categories like "Kitchens," "Commercial work," etc., plus Specialty Items on the page (optional).</p>
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0"><div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">➕ New category</div>
+          <p style="margin:0">A category that's all yours — past projects, before &amp; afters, finishes, your team. Upload your own photos, and use 🔗 Add products from Pricing to pull in any product with its photo (its name and photo keep following Pricing).</p>
         </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <p style="margin:0">Switching between Default and Build My Own is instant and reversible — flip back any time and nothing you've built in either mode is lost.</p>
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0"><div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">✏️ Rename · 📝 Description · ▲▼</div>
+          <p style="margin:0">Rename any category for the showroom only (your pricing and widget never change), add an optional line under its title, and use the arrows to set the order.</p>
         </div>
-
-        <h4 style="font-size:12px;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:0.03em;margin:18px 0 8px">🗂️ Managing categories</h4>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Showroom subheading</div>
-          <p style="margin:0">The line under your shop name on the showroom page ("Browse the materials, door styles..." by default) is fixed for Default showroom, since it's describing your actual priced categories. While Build My Own is active, a <strong>Showroom subheading</strong> box appears right below the style picker so you can write your own — leave it blank to use the built-in "Browse some of our past projects and features..." line instead.</p>
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0"><div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">✕ Remove / 🗑️ Delete</div>
+          <p style="margin:0">Removing a Pricing category only takes it off the showroom — add it back any time. Deleting one of your own categories deletes its photos too. Your own categories you took off earlier are listed under Add from Pricing so you can bring them back.</p>
         </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">✏️ Rename &amp; 🚫 Hide category</div>
-          <p style="margin:0">Use these buttons to rename or hide entire categories.</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">"+ New category"</div>
-          <p style="margin:0">Adds a fully independent category with its own items — no pricing, no project types, nothing to configure. Add, rename, and delete those as much as you want; "Delete category" there is permanent since there's no pricing record backing it. Drag the ⠿ handle on any item in a custom category to reorder its photos.</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Reordering</div>
-          <p style="margin:0">Use the ▲▼ arrows on any category to change the order it appears in on your showroom page. Priced and custom categories can be mixed together in any order (this ordering applies within whichever style is currently active).</p>
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0"><div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Line under your title &amp; project-type buttons</div>
+          <p style="margin:0">Write your own line under the showroom title, and choose whether customers see the project-type buttons that filter your Pricing products.</p>
         </div>
 
         <h4 style="font-size:12px;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:0.03em;margin:18px 0 8px">🔗 Preview &amp; sharing</h4>
@@ -2592,42 +2578,25 @@ window.logoutMember = async function () {
             </div>
 
             <div class="mq-card mq-sr-card">
-              <div onclick="mqToggleShowroomSection('style')" class="mq-sr-head">
-                <div class="mq-sr-title">🎭 Showroom style</div>
-                <span id="mq-sr-arrow-style" class="mq-sr-chev">▼</span>
-              </div>
-              <div id="mq-sr-body-style" class="mq-sr-body" style="display:none">
-              <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Choose how your showroom page looks. Specialty Items show either way — everything else depends on which one's picked.</p>
-              <div style="display:flex;gap:12px;flex-wrap:wrap">
-                <div id="mq-showroom-mode-default" onclick="mqShowroomSetMode('default')" class="mq-sr-pick">
-                  <div style="font-size:13px;font-weight:600;margin-bottom:3px">🏭 Default showroom</div>
-                  <div style="font-size:12px;color:#6b7280">Your regular priced categories (Box Materials, Door Styles, etc.) plus Specialty Items — the classic MidasQuote showroom.</div>
-                </div>
-                <div id="mq-showroom-mode-custom" onclick="mqShowroomSetMode('custom')" class="mq-sr-pick">
-                  <div style="font-size:13px;font-weight:600;margin-bottom:3px">🎨 Build my own</div>
-                  <div style="font-size:12px;color:#6b7280">Only your custom categories below plus Specialty Items. Your regular priced categories are hidden from the showroom — and from this tab too, so it stays uncluttered — but nothing about them is deleted; pick Default above any time to bring them right back. The project-type filter at the top of your showroom is hidden too, since there'd be nothing left for it to filter.</div>
-                </div>
-              </div>
-              <div id="mq-showroom-mode-note" style="font-size:12px;color:#6b7280;margin-top:10px"></div>
-              <div id="mq-showroom-subhead-wrap" style="display:none;margin-top:16px;padding-top:16px;border-top:1px solid #e5e7eb">
-                <label class="mq-label">Showroom subheading (Build My Own only)</label>
-                <p style="font-size:12px;color:#6b7280;margin:2px 0 8px">Shown under your shop name on your showroom page while Build My Own is active. Your Default-style subheading isn't editable — leave this blank to use the default shown below.</p>
-                <input type="text" id="mq-showroom-subhead-input" maxlength="160" placeholder="Browse some of our past projects and features. Have questions? Get in touch for a full consultation." style="width:100%;margin-bottom:8px"/>
-                <button class="mq-btn mq-btn-sm" onclick="mqSaveShowroomSubheading()">Save</button>
-              </div>
-              </div>
-            </div>
-
-            <div class="mq-card mq-sr-card">
               <div onclick="mqToggleShowroomSection('categories')" class="mq-sr-head">
-                <div class="mq-sr-title">📦 Your categories</div>
-                <span id="mq-sr-arrow-categories" class="mq-sr-chev">▼</span>
+                <div class="mq-sr-title">🛠️ Build your showroom</div>
+                <span id="mq-sr-arrow-categories" class="mq-sr-chev">▲</span>
               </div>
-              <div id="mq-sr-body-categories" class="mq-sr-body" style="display:none">
-              <p id="mq-showroom-cats-intro" style="font-size:13px;color:#6b7280;margin-bottom:1rem">Use the ▲▼ arrows to reorder. Every change saves right away — no separate "Save" button on this tab.</p>
+              <div id="mq-sr-body-categories" class="mq-sr-body" style="display:block">
+              <p id="mq-showroom-cats-intro" style="font-size:13px;color:#6b7280;margin:0 0 12px;line-height:1.55">Your showroom is made of categories, shown top to bottom. <strong>Add from Pricing</strong> brings in a whole priced category — its products and photos stay linked, so anything new you add in Pricing shows up by itself. <strong>New category</strong> is all yours: past projects, finishes, anything — upload your own photos and pull in products from Pricing. Every change saves right away.</p>
+              <div class="mq-srb-addbar" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+                <button class="mq-btn mq-btn-primary" onclick="mqSrbOpenAdd()">➕ Add from Pricing</button>
+                <button class="mq-btn" onclick="mqSrbNewCat()">➕ New category</button>
+              </div>
               <div id="mq-showroom-cats"><div class="mq-loading">Loading...</div></div>
-              <div id="mq-showroom-addcat-note" style="font-size:12px;color:#6b7280;display:none"></div>
-              <button id="mq-showroom-addcat-btn" class="mq-btn mq-btn-primary" style="margin-top:12px" onclick="mqAddShowroomCategory()">+ New category</button>
+              <div id="mq-showroom-subhead-wrap" style="margin-top:18px;padding-top:14px;border-top:1px solid #e5e7eb">
+                <label class="mq-label">Line under your showroom title <span style="font-weight:400;color:#9ca3af">(optional)</span></label>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+                  <input type="text" id="mq-showroom-subhead-input" maxlength="160" placeholder="" style="flex:1;min-width:220px"/>
+                  <button class="mq-btn mq-btn-sm" onclick="mqSaveShowroomSubheading()">Save</button>
+                </div>
+                <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:#4b5563;margin-top:10px;cursor:pointer"><input type="checkbox" id="mq-srb-filterbar" onchange="mqSrbSetFilterBar(this.checked)" style="width:16px;height:16px;accent-color:#1a1a1a"/> Show project-type buttons (e.g. "Kitchen · Bathroom") so customers can filter products from Pricing</label>
+              </div>
               </div>
             </div>
 
@@ -4955,6 +4924,14 @@ window.logoutMember = async function () {
       if (hiddenChanged) {
         await atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Hidden': JSON.stringify(shopHidden) });
         shopRecord.fields['Hidden'] = JSON.stringify(shopHidden);
+      }
+      // Brand-new shops start with an empty showroom builder (Jordan, Nov 2026).
+      if (!shopRecord.fields['Showroom category settings']) {
+        try {
+          const srInit = JSON.stringify({ layout: [], layoutV: 1, heroKind: 'catalogue' });
+          await atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Showroom category settings': srInit });
+          shopRecord.fields['Showroom category settings'] = srInit;
+        } catch (e) {}
       }
       await atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Templates seeded': true });
       shopRecord.fields['Templates seeded'] = true;
@@ -13325,6 +13302,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // Highlights whichever showroom-style card is active and updates the
   // note underneath — called on load and every time the mode changes.
   function mqShowroomRenderModeUI() {
+    return; // Showroom styles were replaced by the builder (Nov 2026).
     const mode = (window._mqShowroomSettings && window._mqShowroomSettings.mode === 'custom') ? 'custom' : 'default';
     const defCard = el('mq-showroom-mode-default');
     const curCard = el('mq-showroom-mode-custom');
@@ -13472,9 +13450,409 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const input = el('mq-showroom-subhead-input');
     if (!input) return;
     window._mqShowroomSettings = window._mqShowroomSettings || { order: [], names: {}, hidden: {} };
-    window._mqShowroomSettings.customSubheading = input.value.trim();
-    try { await mqSaveShowroomSettings(); showMsg('mq-showroom-msg', '✓ Subheading saved.'); window.mqRefreshShowroomPreview(); }
+    mqSrbEnsureSaved();
+    window._mqShowroomSettings.heroSub = input.value.trim();
+    try { await mqSaveShowroomSettings(); showMsg('mq-showroom-msg', '✓ Saved.'); window.mqRefreshShowroomPreview(); }
     catch(e) { showMsg('mq-showroom-msg', 'Error saving — please try again.', 'error'); }
+  };
+
+  // ============================================================
+  // SHOWROOM BUILDER (Jordan, Nov 2026) — one "Build your showroom" list
+  // replaces the Default / Build-my-own styles.
+  //
+  // Stored in "Showroom category settings" as:
+  //   layout:   [{ k:'p', key, name?, desc? }   ← a Pricing category, linked
+  //              { k:'o', id,  name?, desc? }]  ← one of the shop's own
+  //                                               ("Showroom categories")
+  //   layoutV:  1
+  //   heroKind: 'materials' | 'catalogue'  (title on the showroom page)
+  //   heroSub:  optional line under the title
+  //   srFilterBar: false to hide the project-type buttons
+  // Own categories' items: { id, name, photo } (uploaded) or
+  // { id, ref: <photo key> } (a product pulled from Pricing — its name and
+  // photo always follow Pricing).
+  //
+  // A shop that has never saved a layout gets one worked out from its old
+  // settings (mqSrLegacyLayout — same function in showroom.html), so its
+  // showroom looks exactly the same; nothing is written until it changes
+  // something. Brand-new shops start with an empty layout.
+  // ============================================================
+  const MQ_SR_BUILTIN_KEYS = ['material','door','drawer','hinge','countertop','trim_crown','trim_valance','tall_cabinet'];
+  function mqSrLegacyLayout(raw, pricedCustomIds, ownIds) {
+    raw = raw || {};
+    const order = Array.isArray(raw.order) ? raw.order : [];
+    const names = (raw.names && typeof raw.names === 'object') ? raw.names : {};
+    const hidden = (raw.hidden && typeof raw.hidden === 'object') ? raw.hidden : {};
+    const byo = (raw.byoShow && typeof raw.byoShow === 'object') ? raw.byoShow : {};
+    const pricedKeys = MQ_SR_BUILTIN_KEYS.concat(pricedCustomIds || [], ['specialty']);
+    const all = pricedKeys.concat(ownIds || []);
+    const saved = order.filter(k => all.includes(k));
+    const full = saved.concat(all.filter(k => !saved.includes(k)));
+    const isOwn = k => (ownIds || []).includes(k);
+    const keep = raw.mode === 'custom'
+      ? full.filter(k => isOwn(k) ? !hidden[k] : ((k === 'specialty' || /^cc_/.test(k)) && byo[k]))
+      : full.filter(k => !isOwn(k) && !hidden[k]);
+    return keep.map(k => isOwn(k) ? { k: 'o', id: k, name: names[k] || '' } : { k: 'p', key: k, name: names[k] || '' });
+  }
+  function mqSrbOwnIds() { return (window._mqShowroomCats || []).map(c => c.id); }
+  // The layout in use right now (saved one, or worked out from old settings).
+  function mqSrbLayout() {
+    const st = window._mqShowroomSettings || {};
+    if (Array.isArray(st.layout)) return st.layout;
+    // Categories with nothing in them can't show anything on the page, so
+    // they're left out of the list (adds no visible change to the showroom).
+    const byCat = window._mqShowroomByCategory || {};
+    return mqSrLegacyLayout(st, mqShowroomPricedCustomIds(), mqSrbOwnIds()).filter(e => e.k !== 'p'
+      || (e.key === 'specialty' ? (window._mqShowroomSpecItems || []).length > 0
+        : (e.key !== 'hinge' && (/^cc_/.test(e.key) || (byCat[e.key] || []).length > 0))));
+  }
+  function mqSrbHeroKind() {
+    const st = window._mqShowroomSettings || {};
+    if (st.heroKind) return st.heroKind;
+    if (Array.isArray(st.layout)) return 'catalogue';
+    return st.mode === 'custom' ? 'catalogue' : 'materials';
+  }
+  function mqSrbFilterBarOn() {
+    const st = window._mqShowroomSettings || {};
+    if (typeof st.srFilterBar === 'boolean') return st.srFilterBar;
+    if (Array.isArray(st.layout)) return true;
+    return st.mode !== 'custom';
+  }
+  // First change: freeze the worked-out layout + page title so nothing shifts.
+  function mqSrbEnsureSaved() {
+    const st = window._mqShowroomSettings || (window._mqShowroomSettings = { order: [], names: {}, hidden: {} });
+    if (!Array.isArray(st.layout)) {
+      st.heroKind = mqSrbHeroKind();
+      if (typeof st.srFilterBar !== 'boolean') st.srFilterBar = mqSrbFilterBarOn();
+      if (st.mode === 'custom' && st.customSubheading && !st.heroSub) st.heroSub = st.customSubheading;
+      st.layout = mqSrbLayout().map(e => Object.assign({}, e));
+      st.layoutV = 1;
+    }
+    return st.layout;
+  }
+  async function mqSrbSave(msg) {
+    try {
+      await mqSaveShowroomSettings();
+      if (msg) showMsg('mq-showroom-msg', msg);
+      window.mqRefreshShowroomPreview && window.mqRefreshShowroomPreview();
+    } catch (e) { showMsg('mq-showroom-msg', 'Error saving — please try again.', 'error'); }
+  }
+  const mqSrbEsc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+  // Which Pricing categories this shop can put on its showroom.
+  function mqSrbPricedOptions() {
+    const f = (window._mqShopRecord || {}).fields || {};
+    let cab = true, ct = true;
+    try { const b = mqBizOf(f); if (b && b.set) { cab = !!b.cab; ct = !!b.ct; } } catch (e) {}
+    let boff = [];
+    try { const t = JSON.parse(f['Hidden widget tabs'] || 'null'); boff = (t && Array.isArray(t.builtinOff)) ? t.builtinOff : []; } catch (e) {}
+    const offMap = { materials: ['material'], doors: ['door'], drawers: ['drawer'], trim: ['trim_crown', 'trim_valance'], tallcabs: ['tall_cabinet'] };
+    const off = new Set(); boff.forEach(k => (offMap[k] || []).forEach(c => off.add(c)));
+    const byCat = window._mqShowroomByCategory || {};
+    const out = [];
+    MQ_SR_BUILTIN_KEYS.filter(k => k !== 'hinge').forEach(k => {
+      if (off.has(k)) return;
+      if (k === 'countertop' ? !ct : !cab) return;
+      if (!(byCat[k] || []).length) return;
+      out.push(k);
+    });
+    mqShowroomPricedCustomIds().forEach(k => out.push(k));
+    if ((window._mqShowroomSpecItems || []).length) out.push('specialty');
+    return out;
+  }
+  // Every product with a photo, grouped by category — for "pull products in".
+  function mqSrbAllProducts() {
+    const photos = window._mqShowroomPhotos || {};
+    const keys = mqSrbPricedOptions();
+    return keys.map(catKey => {
+      let items = [];
+      if (catKey === 'specialty') {
+        items = (window._mqShowroomSpecItems || []).flatMap(r => {
+          const nm = r.fields['Item name'] || '';
+          const vs = mqParseVariants(r);
+          if (!vs.length) return photos['spec_' + r.id] ? [{ itemKey: 'spec_' + r.id, name: nm, photo: photos['spec_' + r.id] }] : [];
+          return vs.flatMap(v => { const k = 'spec_' + r.id + '_v' + v.id; return photos[k] ? [{ itemKey: k, name: `${nm} — ${(v.label || '').trim() || 'Variant'}`, photo: photos[k] }] : []; });
+        });
+      } else {
+        items = ((window._mqShowroomByCategory || {})[catKey] || []).flatMap(it => {
+          const k = `li_${catKey}_${it.baseName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}`;
+          const own = photos[k] ? [{ itemKey: k, name: it.baseName, photo: photos[k] }] : [];
+          return own.concat((it.variants || []).flatMap(v => photos[k + '_v' + v.id] ? [{ itemKey: k + '_v' + v.id, name: `${it.baseName} — ${String(v.label).trim()}`, photo: photos[k + '_v' + v.id] }] : []));
+        });
+      }
+      return { catKey, catName: mqShowroomDefaultCatName(catKey), items };
+    }).filter(g => g.items.length);
+  }
+  function mqSrbProductByKey(key) {
+    for (const g of mqSrbAllProducts()) { const it = g.items.find(i => i.itemKey === key); if (it) return Object.assign({ catName: g.catName }, it); }
+    return null;
+  }
+  // Priced items that were removed from the showroom (Hidden), for "bring back".
+  function mqSrbHiddenCountFor(catKey) {
+    const hiddenItems = window._mqShowroomHiddenItems || {};
+    const g = mqSrbAllProducts().find(x => x.catKey === catKey);
+    return g ? g.items.filter(i => hiddenItems[i.itemKey]).map(i => i.itemKey) : [];
+  }
+
+  function mqSrbEntryTitle(e) {
+    if (e.k === 'p') return e.name || mqShowroomDefaultCatName(e.key);
+    const c = (window._mqShowroomCats || []).find(x => x.id === e.id);
+    return e.name || (c && c.name) || 'Untitled';
+  }
+
+  function mqSrbRefCardHTML(catId, item) {
+    const p = mqSrbProductByKey(item.ref);
+    const gone = !p;
+    return `<div class="mq-showroom-item-card" data-item-id="${item.id}" style="background:#f5f9ff;border:1px solid #cfe0f7;border-radius:8px;padding:.5rem;transition:opacity 0.15s">
+      <div class="mq-showroom-drag-handle" title="Drag to reorder" style="cursor:grab;text-align:center;color:#b0b0b0;font-size:13px;line-height:1;margin:-2px 0 4px;user-select:none">⠿</div>
+      ${gone ? `<div style="width:100%;height:84px;background:#f3f2ee;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#9ca3af;text-align:center;margin-bottom:6px">Not in Pricing any more (or no photo) — hidden on your showroom</div>`
+        : `<img src="${mqSrbEsc(p.photo)}" style="width:100%;height:84px;object-fit:contain;background:#f3f2ee;border-radius:6px;margin-bottom:6px;display:block" onerror="this.style.display='none'"/>`}
+      <div style="font-size:12px;font-weight:600;color:#111;line-height:1.3;margin-bottom:3px">${gone ? 'Removed product' : mqSrbEsc(p.name)}</div>
+      <div style="font-size:10.5px;color:#1d4ed8;margin-bottom:6px">🔗 From ${gone ? 'Pricing' : mqSrbEsc(p.catName.replace(/^\S+\s/, ''))}</div>
+      <button class="mq-btn mq-btn-sm" style="width:100%;font-size:10.5px;color:#dc2626" onclick="mqDeleteShowroomItem('${catId}','${item.id}')">Remove</button>
+    </div>`;
+  }
+
+  function renderShowroomCats() {
+    const wrap = el('mq-showroom-cats');
+    if (!wrap) return;
+    const layout = mqSrbLayout();
+    const fb = el('mq-srb-filterbar'); if (fb) fb.checked = mqSrbFilterBarOn();
+    const sub = el('mq-showroom-subhead-input');
+    if (sub) {
+      const st = window._mqShowroomSettings || {};
+      sub.placeholder = mqSrbHeroKind() === 'materials' ? 'Browse the materials, door styles, and specialty options we offer. Have questions? Get in touch for a full consultation.' : 'Browse some of our past projects and features. Have questions? Get in touch for a full consultation.';
+      if (document.activeElement !== sub) sub.value = st.heroSub || (Array.isArray(st.layout) ? '' : (st.mode === 'custom' ? (st.customSubheading || '') : ''));
+    }
+    if (!layout.length) {
+      wrap.innerHTML = `<div style="border:2px dashed #d1d5db;border-radius:14px;padding:26px 20px;text-align:center;background:#fafafa">
+        <div style="font-size:30px;margin-bottom:6px">🏬</div>
+        <div style="font-size:16px;font-weight:800;color:#111;margin-bottom:6px">Your showroom is empty — let's fill it</div>
+        <div style="font-size:13px;color:#6b7280;line-height:1.6;max-width:520px;margin:0 auto 14px">Start with <strong>Add from Pricing</strong> to show the products you already sell, with their photos. Or make a <strong>New category</strong> for anything else — past projects, before &amp; afters, finishes, your team — and add your own photos. You can mix both, and pull single products from Pricing into your own categories too.</div>
+        <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap"><button class="mq-btn mq-btn-primary" onclick="mqSrbOpenAdd()">➕ Add from Pricing</button><button class="mq-btn" onclick="mqSrbNewCat()">➕ New category</button></div>
+      </div>`;
+      return;
+    }
+    const customById = {}; (window._mqShowroomCats || []).forEach(c => { customById[c.id] = c; });
+    wrap.innerHTML = layout.map((e, idx) => {
+      const ek = e.k === 'p' ? e.key : e.id;
+      const upBtn = `<button class="mq-btn" ${idx === 0 ? 'disabled' : ''} onclick="mqSrbMove(${idx},-1)" title="Move up">▲</button>`;
+      const downBtn = `<button class="mq-btn" ${idx === layout.length - 1 ? 'disabled' : ''} onclick="mqSrbMove(${idx},1)" title="Move down">▼</button>`;
+      const title = mqSrbEntryTitle(e);
+      const chip = e.k === 'p'
+        ? `<span style="font-size:10.5px;font-weight:700;color:#1d4ed8;background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:1px 7px">🔗 From Pricing</span>`
+        : `<span style="font-size:10.5px;font-weight:700;color:#7c3aed;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:6px;padding:1px 7px">🎨 Your category</span>`;
+      const descLine = e.desc ? `<div style="font-size:12px;color:#6b7280;margin:-4px 0 10px">“${mqSrbEsc(e.desc)}”</div>` : '';
+      let body = '', count = 0;
+      if (e.k === 'p') {
+        const items = mqShowroomVisibleItemsFor(e.key);
+        count = items.length;
+        const hid = mqSrbHiddenCountFor(e.key);
+        body = `<p class="mq-sr-note">Linked to Pricing — new products with a photo show up here on their own. Removing one only takes it off your showroom.</p>
+          <div class="mq-sr-grid">${items.length ? items.map(it => `
+            <div class="mq-sr-thumb">
+              <img src="${mqSrbEsc(it.photo)}" onerror="this.style.display='none'"/>
+              <div class="mq-sr-name">${mqSrbEsc(it.name)}</div>
+              <button class="mq-btn mq-btn-sm" style="color:#dc2626" onclick="mqShowroomHideItem('${it.itemKey.replace(/'/g, "\\'")}')">🚫 Remove from showroom</button>
+            </div>`).join('') : '<div style="grid-column:1/-1;font-size:12px;color:#9ca3af">Nothing with a photo here yet — add photos on the My Products tab and they appear here.</div>'}</div>
+          ${hid.length ? `<button class="mq-btn mq-btn-sm" style="margin-top:8px" onclick="mqSrbUnhide('${ek}')">↺ Bring back ${hid.length} removed item${hid.length === 1 ? '' : 's'}</button>` : ''}`;
+      } else {
+        const cat = customById[e.id] || { id: e.id, items: [] };
+        count = (cat.items || []).length;
+        body = `<div id="mq-showroom-grid-${cat.id}" class="mq-sr-grid" style="margin-bottom:10px">
+            ${(cat.items || []).map(item => item.ref ? mqSrbRefCardHTML(cat.id, item) : mqShowroomItemCardHTML(cat.id, item)).join('') || '<div style="grid-column:1/-1;font-size:12px;color:#9ca3af">Empty — add your own photos, or pull in products from Pricing.</div>'}
+          </div>
+          ${(cat.items || []).length > 1 ? '<p class="mq-sr-note">Drag any card\'s ⠿ handle to reorder it.</p>' : ''}
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            ${mqIsFreePlanShop() ? mqShowroomLockNoteHTML(false) : `<label class="mq-btn mq-btn-sm mq-btn-primary" style="cursor:pointer;display:inline-block">📤 Add your own photos<input type="file" accept="image/*" multiple style="display:none" onchange="mqBulkAddShowroomItems('${cat.id}', this.files); this.value=''"/></label>`}
+            <button class="mq-btn mq-btn-sm" onclick="mqSrbOpenPull('${cat.id}')">🔗 Add products from Pricing</button>
+          </div>`;
+      }
+      const collapsed = mqShowroomIsCollapsed(ek, false);
+      return `<div class="mq-card mq-sr-cat" data-srb-idx="${idx}">
+        <div class="mq-sr-cathead">
+          <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:120px">
+            <div class="mq-sr-reorder">${upBtn}${downBtn}</div>
+            <div style="display:flex;align-items:center;gap:8px;cursor:pointer;min-width:0;flex-wrap:wrap" onclick="mqShowroomToggleCat('${ek}')">
+              <span id="mq-showroom-cat-arrow-${ek}" style="display:inline-block;flex-shrink:0;transition:transform 0.2s;font-size:12px;color:#9ca3af;transform:rotate(${collapsed ? 0 : 90}deg)">▶</span>
+              <span style="font-size:14px;font-weight:700;color:#111">${mqSrbEsc(title)} <span style="font-size:12px;font-weight:400;color:#9ca3af">(${count})</span></span>
+              ${chip}
+            </div>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap">
+            <button class="mq-btn mq-btn-sm" onclick="mqSrbRename(${idx})">✏️ Rename</button>
+            <button class="mq-btn mq-btn-sm" onclick="mqSrbDesc(${idx})">📝 ${e.desc ? 'Edit description' : 'Add description'}</button>
+            <button class="mq-btn mq-btn-sm" style="color:#dc2626" onclick="mqSrbRemove(${idx})">${e.k === 'p' ? '✕ Remove' : '🗑️ Delete'}</button>
+          </div>
+        </div>
+        <div id="mq-showroom-cat-body-${ek}" class="mq-sr-catbody" style="display:${collapsed ? 'none' : 'block'}">${descLine}${body}</div>
+      </div>`;
+    }).join('');
+
+    const shopToken = (window._mqShopRecord && window._mqShopRecord.fields['Shop token']) || 'unknown-shop';
+    wrap.querySelectorAll('input[type="file"][id^="mq-showroom-upload-"]').forEach(fileInput => {
+      const key = fileInput.id.replace('mq-showroom-upload-', '');
+      mqWireUploadButton(null, 'mq-showroom-upload-' + key, 'mq-showroom-upload-status-' + key, 'mq-showroom-url-' + key, shopToken, 'showroom', (url) => { mqSaveShowroomItemPhoto(key, url); });
+    });
+    mqWireShowroomItemDrag();
+  }
+
+  window.mqSrbMove = function(idx, dir) {
+    const L = mqSrbEnsureSaved();
+    const j = idx + dir;
+    if (j < 0 || j >= L.length) return;
+    [L[idx], L[j]] = [L[j], L[idx]];
+    renderShowroomCats(); mqSrbSave();
+  };
+  window.mqSrbRename = function(idx) {
+    const L = mqSrbEnsureSaved(); const e = L[idx]; if (!e) return;
+    const cur = mqSrbEntryTitle(e);
+    const v = prompt(e.k === 'p' ? 'Showroom name for this category (your pricing and widget are unaffected):' : 'Rename category:', cur);
+    if (v == null) return;
+    const name = v.trim(); if (!name || name === cur) return;
+    if (e.k === 'o') { const c = (window._mqShowroomCats || []).find(x => x.id === e.id); if (c) { c.name = name; delete e.name; mqSaveShowroomCategories().catch(() => {}); } }
+    else e.name = name;
+    renderShowroomCats(); mqSrbSave('✓ Renamed.');
+  };
+  window.mqSrbDesc = function(idx) {
+    const L = mqSrbEnsureSaved(); const e = L[idx]; if (!e) return;
+    const v = prompt('A short line shown under this category\'s title on your showroom (leave empty for none' + (e.k === 'p' ? ' — Pricing categories then use their standard line' : '') + '):', e.desc || '');
+    if (v == null) return;
+    const d = v.trim().slice(0, 220);
+    if (d) e.desc = d; else delete e.desc;
+    renderShowroomCats(); mqSrbSave('✓ Description saved.');
+  };
+  window.mqSrbRemove = async function(idx) {
+    const L = mqSrbEnsureSaved(); const e = L[idx]; if (!e) return;
+    if (e.k === 'p') {
+      L.splice(idx, 1); renderShowroomCats(); mqSrbSave('✓ Removed from your showroom — add it back any time with Add from Pricing.');
+      return;
+    }
+    const c = (window._mqShowroomCats || []).find(x => x.id === e.id);
+    const n = c ? (c.items || []).length : 0;
+    if (!confirm(`Delete "${mqSrbEntryTitle(e)}"?${n ? ` Its ${n} item${n === 1 ? '' : 's'} go with it.` : ''} This can't be undone.`)) return;
+    L.splice(idx, 1);
+    window._mqShowroomCats = (window._mqShowroomCats || []).filter(x => x.id !== e.id);
+    renderShowroomCats();
+    try { await mqSaveShowroomCategories(); } catch (err) {}
+    mqSrbSave('✓ Category deleted.');
+  };
+  window.mqSrbUnhide = async function(catKey) {
+    const keys = mqSrbHiddenCountFor(catKey);
+    if (!keys.length) return;
+    const shopRec = window._mqShopRecord;
+    keys.forEach(k => { delete window._mqShowroomHiddenItems[k]; });
+    renderShowroomCats();
+    try {
+      await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Hidden': JSON.stringify(window._mqShowroomHiddenItems) });
+      shopRec.fields['Hidden'] = JSON.stringify(window._mqShowroomHiddenItems);
+      showMsg('mq-showroom-msg', '✓ Back on your showroom.'); window.mqRefreshShowroomPreview();
+    } catch (e) { showMsg('mq-showroom-msg', 'Error saving — please try again.', 'error'); }
+  };
+  window.mqSrbSetFilterBar = function(on) {
+    mqSrbEnsureSaved();
+    window._mqShowroomSettings.srFilterBar = !!on;
+    mqSrbSave(on ? '✓ Project-type buttons shown.' : '✓ Project-type buttons hidden.');
+  };
+  window.mqSrbNewCat = async function() {
+    const v = prompt('Name your new category — e.g. "Recent projects", "Before & after", "Finishes":');
+    if (v == null) return;
+    const name = v.trim(); if (!name) return;
+    const L = mqSrbEnsureSaved();
+    window._mqShowroomCats = window._mqShowroomCats || [];
+    const id = mqGenShowroomId('cat');
+    window._mqShowroomCats.push({ id, name, items: [] });
+    L.push({ k: 'o', id });
+    window._mqShowroomCollapsed = window._mqShowroomCollapsed || {}; window._mqShowroomCollapsed[id] = false;
+    renderShowroomCats();
+    try { await mqSaveShowroomCategories(); } catch (e) {}
+    await mqSrbSave(`✓ "${name}" added — now add photos or pull in products.`);
+    const card = document.querySelector(`#mq-showroom-cats [data-srb-idx="${L.length - 1}"]`);
+    if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
+
+  // ---- small modal used by "Add from Pricing" and "Add products" ----
+  function mqSrbModal(title, inner, footer) {
+    let ov = document.getElementById('mq-srb-modal');
+    if (ov) ov.remove();
+    ov = document.createElement('div');
+    ov.id = 'mq-srb-modal';
+    ov.style.cssText = 'position:fixed;inset:0;background:rgba(17,17,17,.45);z-index:100000;display:flex;align-items:center;justify-content:center;padding:16px';
+    ov.innerHTML = `<div style="background:#fff;border-radius:16px;max-width:720px;width:100%;max-height:86vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.25);font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid #eee"><div style="font-size:16px;font-weight:800;color:#111">${title}</div><button class="mq-btn mq-btn-sm" onclick="document.getElementById('mq-srb-modal').remove()">✕</button></div>
+      <div style="overflow:auto;padding:14px 18px;flex:1">${inner}</div>
+      ${footer ? `<div style="padding:12px 18px;border-top:1px solid #eee;display:flex;justify-content:flex-end;gap:8px">${footer}</div>` : ''}
+    </div>`;
+    ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
+    // Inside the dashboard so its fonts and button styles apply.
+    (document.getElementById('midasquote-dashboard') || document.body).appendChild(ov);
+    return ov;
+  }
+  window.mqSrbOpenAdd = function() {
+    const L = mqSrbLayout();
+    const inP = new Set(L.filter(e => e.k === 'p').map(e => e.key));
+    const inO = new Set(L.filter(e => e.k === 'o').map(e => e.id));
+    const opts = mqSrbPricedOptions().filter(k => !inP.has(k));
+    const saved = (window._mqShowroomCats || []).filter(c => !inO.has(c.id));
+    const photos = window._mqShowroomPhotos || {};
+    const row = (onclick, title, sub, thumb) => `<button onclick="${onclick}" style="display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:10px 12px;margin-bottom:8px;cursor:pointer;font-family:inherit" onmouseover="this.style.borderColor='#e2bf63'" onmouseout="this.style.borderColor='#e5e7eb'">
+        <span style="width:46px;height:46px;border-radius:8px;background:#f3f2ee ${thumb ? `url('${mqSrbEsc(thumb)}') center/cover` : ''};flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px">${thumb ? '' : '🗂️'}</span>
+        <span style="flex:1;min-width:0"><span style="display:block;font-size:14px;font-weight:700;color:#111">${title}</span><span style="display:block;font-size:12px;color:#6b7280;margin-top:2px">${sub}</span></span>
+        <span style="font-size:13px;font-weight:700;color:#1d4ed8">＋ Add</span></button>`;
+    let inner = '';
+    if (opts.length) {
+      inner += `<div style="font-size:11px;font-weight:800;letter-spacing:.06em;color:#6b7280;text-transform:uppercase;margin-bottom:8px">From your Pricing</div>`;
+      inner += opts.map(k => {
+        const vis = mqShowroomVisibleItemsFor(k);
+        return row(`mqSrbAddPriced('${k}')`, mqSrbEsc(mqShowroomDefaultCatName(k)), vis.length ? `${vis.length} product${vis.length === 1 ? '' : 's'} with photos — stays linked, new ones appear by themselves` : 'No photos yet — products appear once they have a photo (My Products tab)', vis[0] && vis[0].photo);
+      }).join('');
+    } else inner += `<div style="font-size:13px;color:#6b7280;margin-bottom:12px">Every Pricing category is already on your showroom.</div>`;
+    if (saved.length) {
+      inner += `<div style="font-size:11px;font-weight:800;letter-spacing:.06em;color:#6b7280;text-transform:uppercase;margin:14px 0 8px">Your saved categories (not on your showroom right now)</div>`;
+      inner += saved.map(c => { const first = (c.items || []).find(i => i.photo); return row(`mqSrbAddOwn('${c.id}')`, mqSrbEsc(c.name || 'Untitled'), `${(c.items || []).length} item${(c.items || []).length === 1 ? '' : 's'}`, first && first.photo); }).join('');
+    }
+    inner += `<div style="margin-top:14px;padding:12px;border:1px dashed #d1d5db;border-radius:10px;font-size:12.5px;color:#4b5563;line-height:1.5">Want something that isn't in Pricing? <a href="#" onclick="event.preventDefault();document.getElementById('mq-srb-modal').remove();mqSrbNewCat()" style="color:#1d4ed8;font-weight:700">➕ Make a new category</a> — upload any photos you like.</div>`;
+    mqSrbModal('➕ Add to your showroom', inner);
+  };
+  window.mqSrbAddPriced = function(key) {
+    const L = mqSrbEnsureSaved();
+    if (!L.some(e => e.k === 'p' && e.key === key)) L.push({ k: 'p', key });
+    window._mqShowroomCollapsed = window._mqShowroomCollapsed || {}; window._mqShowroomCollapsed[key] = false;
+    document.getElementById('mq-srb-modal')?.remove();
+    renderShowroomCats();
+    mqSrbSave(`✓ ${mqShowroomDefaultCatName(key).replace(/^\S+\s/, '')} added.`);
+  };
+  window.mqSrbAddOwn = function(id) {
+    const L = mqSrbEnsureSaved();
+    if (!L.some(e => e.k === 'o' && e.id === id)) L.push({ k: 'o', id });
+    document.getElementById('mq-srb-modal')?.remove();
+    renderShowroomCats(); mqSrbSave('✓ Added back to your showroom.');
+  };
+  window.mqSrbOpenPull = function(catId) {
+    const cat = (window._mqShowroomCats || []).find(c => c.id === catId);
+    if (!cat) return;
+    const have = new Set((cat.items || []).filter(i => i.ref).map(i => i.ref));
+    const groups = mqSrbAllProducts();
+    if (!groups.length) { mqSrbModal('🔗 Add products from Pricing', '<div style="font-size:13px;color:#6b7280;line-height:1.6">None of your Pricing products have photos yet. Add photos on the <strong>My Products</strong> tab, then come back here.</div>'); return; }
+    const inner = `<div style="font-size:12.5px;color:#6b7280;margin-bottom:12px">Tick the products to show in <strong>${mqSrbEsc(cat.name || 'this category')}</strong>. Their names and photos stay in sync with Pricing.</div>` + groups.map(g => `
+      <div style="margin-bottom:14px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><div style="font-size:13px;font-weight:800;color:#111">${mqSrbEsc(g.catName)}</div><a href="#" style="font-size:12px;color:#1d4ed8" onclick="event.preventDefault();this.closest('div').parentElement.querySelectorAll('input[type=checkbox]:not(:disabled)').forEach(x=>x.checked=true)">Tick all</a></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px">${g.items.map(it => `<label style="display:block;border:1px solid #e5e7eb;border-radius:10px;padding:6px;cursor:${have.has(it.itemKey) ? 'default' : 'pointer'};background:${have.has(it.itemKey) ? '#f9fafb' : '#fff'};position:relative">
+        <input type="checkbox" class="mq-srb-pick" value="${mqSrbEsc(it.itemKey)}" ${have.has(it.itemKey) ? 'checked disabled' : ''} style="position:absolute;top:10px;left:10px;width:16px;height:16px;accent-color:#1a1a1a"/>
+        <img src="${mqSrbEsc(it.photo)}" style="width:100%;height:76px;object-fit:cover;border-radius:6px;display:block;background:#f3f2ee"/>
+        <div style="font-size:11.5px;font-weight:600;color:#111;margin-top:5px;line-height:1.3">${mqSrbEsc(it.name)}${have.has(it.itemKey) ? ' <span style="color:#9ca3af;font-weight:400">· added</span>' : ''}</div></label>`).join('')}</div></div>`).join('');
+    mqSrbModal('🔗 Add products from Pricing', inner, `<button class="mq-btn" onclick="document.getElementById('mq-srb-modal').remove()">Cancel</button><button class="mq-btn mq-btn-primary" onclick="mqSrbPullDone('${catId}')">Add selected</button>`);
+  };
+  window.mqSrbPullDone = async function(catId) {
+    const cat = (window._mqShowroomCats || []).find(c => c.id === catId);
+    const picks = [...document.querySelectorAll('#mq-srb-modal .mq-srb-pick:checked:not(:disabled)')].map(x => x.value);
+    document.getElementById('mq-srb-modal')?.remove();
+    if (!cat || !picks.length) return;
+    mqSrbEnsureSaved();
+    cat.items = cat.items || [];
+    picks.forEach(k => cat.items.push({ id: mqGenShowroomId('item'), ref: k }));
+    renderShowroomCats();
+    try { await mqSaveShowroomCategories(); showMsg('mq-showroom-msg', `✓ ${picks.length} product${picks.length === 1 ? '' : 's'} added.`); window.mqRefreshShowroomPreview(); await mqSaveShowroomSettings(); }
+    catch (e) { showMsg('mq-showroom-msg', 'Error saving — please try again.', 'error'); }
   };
 
   async function initShowroomTab(shopRecord) {
@@ -13515,6 +13893,12 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       // to buttonUrl instead — see mqShowroomSetButtonTarget /
       // mqSaveShowroomButtonUrl below, and widget.js/widgetpro.js's own
       // read of this same field for how the button actually uses it.
+      // Showroom builder (Nov 2026) — see the SHOWROOM BUILDER notes above.
+      layout: Array.isArray(settingsRaw.layout) ? settingsRaw.layout.filter(e => e && (e.k === 'p' ? typeof e.key === 'string' : (e.k === 'o' && typeof e.id === 'string'))) : undefined,
+      layoutV: settingsRaw.layoutV || undefined,
+      heroKind: settingsRaw.heroKind === 'materials' || settingsRaw.heroKind === 'catalogue' ? settingsRaw.heroKind : undefined,
+      heroSub: typeof settingsRaw.heroSub === 'string' ? settingsRaw.heroSub : undefined,
+      srFilterBar: typeof settingsRaw.srFilterBar === 'boolean' ? settingsRaw.srFilterBar : undefined,
       buttonTarget: settingsRaw.buttonTarget === 'own_page' ? 'own_page' : 'popup',
       buttonUrl: typeof settingsRaw.buttonUrl === 'string' ? settingsRaw.buttonUrl : '',
       // Embedded-only show/hide switches for logo/nav/hero/filter bar — see
@@ -13562,7 +13946,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     if (embedCopyBtn) embedCopyBtn.onclick = () => mqCopyText(showroomEmbedCode, embedCopyBtn);
 
     const frame = el('mq-showroom-preview-frame');
-    if (frame) frame.src = showroomUrl + '&_r=' + Date.now();
+    if (frame) frame.src = mqShowroomPreviewUrl(showroomUrl) + '&_r=' + Date.now();
 
     const wrap = el('mq-showroom-cats');
     if (wrap) wrap.innerHTML = '<div class="mq-loading">Loading your products...</div>';
@@ -13611,7 +13995,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     return `<div class="mq-sr-locknote" style="background:#f9fafb;border:1px dashed #d1d5db;border-radius:8px;padding:${compact?'6px 8px':'8px 10px'};font-size:${compact?'10.5':'12'}px;color:#6b7280;line-height:1.45;${compact?'margin-bottom:6px':'display:inline-block;max-width:520px'}">${compact ? '🔒 Photo uploads are a paid feature.' : MQ_SHOWROOM_LOCK_MSG}</div>`;
   }
 
-  function renderShowroomCats() {
+  function renderShowroomCatsLegacy() {
     const wrap = el('mq-showroom-cats');
     if (!wrap) return;
     const order = mqShowroomFullOrder();
@@ -14033,8 +14417,14 @@ ${mqIsFreePlanShop() ? mqShowroomLockNoteHTML(true) : `      <label class="mq-bt
   window.mqRefreshShowroomPreview = function() {
     const frame = el('mq-showroom-preview-frame');
     const base = window._mqShowroomUrl;
-    if (frame && base) frame.src = base + '&_r=' + Date.now();
+    if (frame && base) frame.src = mqShowroomPreviewUrl(base) + '&_r=' + Date.now();
   };
+  // The test dashboard (a "...test..." file name) previews showroomtest.html,
+  // so a new showroom page can be tried before it goes live. Shared links and
+  // the embed code always use the real showroom.html.
+  function mqShowroomPreviewUrl(url) {
+    return /test/i.test(MQ_DASHBOARD_SCRIPT_URL.split('/').pop() || '') ? url.replace('/showroom.html', '/showroomtest.html') : url;
+  }
 
   window.mqToggleFinancing = async function() {
     const shopRec = window._mqShopRecord;
