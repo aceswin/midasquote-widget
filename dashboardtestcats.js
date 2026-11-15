@@ -3764,7 +3764,7 @@ window.logoutMember = async function () {
 
       <div id="mq-studio-layer-shape-fields" class="mq-studio-layer-section">
         <div class="mq-studio-two-col">
-          <label>Shape<select id="mq-studio-layer-shape"><option value="rect">Rectangle</option><option value="circle">Circle / ellipse</option><option value="line">Line</option><option value="arrow">Arrow</option><option value="curve">Curved arrow · flowing</option><option value="curvebold">Curved arrow · chunky</option><option value="curvethin">Curved arrow · fine</option><option value="curveswoosh">Curved arrow · swoosh</option><option value="curveloop">Curved arrow · loop</option><option value="burst">Burst / rays</option><option value="brush">Brush swipe</option><option value="underline">Doodle underline</option><option value="bubble">Speech bubble · rounded</option><option value="bubbleoval">Speech bubble · oval</option><option value="bubblecloud">Thought bubble · cloud</option><option value="bubblecomic">Speech bubble · comic</option><option value="bubblehand">Speech bubble · hand-drawn</option><option value="bubbleburst">Speech bubble · shout</option><option value="starburst">Sticker burst</option><option value="sparkle">Sparkle</option><option value="check">Checkmark</option><option value="heart">Heart</option></select></label>
+          <label>Shape<select id="mq-studio-layer-shape"><option value="rect">Rectangle</option><option value="circle">Circle / ellipse</option><option value="line">Line</option><option value="arrow">Arrow</option><option value="curve">Curved arrow · flowing</option><option value="curvebold">Curved arrow · chunky</option><option value="curvethin">Curved arrow · fine point-down</option><option value="curveswoosh">Curved arrow · wavy swoosh</option><option value="curveloop">Curved arrow · loop-de-loop</option><option value="burst">Burst / rays</option><option value="brush">Brush swipe</option><option value="underline">Doodle underline</option><option value="bubble">Speech bubble · rounded</option><option value="bubbleoval">Speech bubble · oval</option><option value="bubblecloud">Thought bubble · cloud</option><option value="bubblecomic">Speech bubble · comic</option><option value="bubblehand">Speech bubble · hand-drawn</option><option value="bubbleburst">Speech bubble · shout</option><option value="starburst">Sticker burst</option><option value="sparkle">Sparkle</option><option value="check">Checkmark</option><option value="heart">Heart</option></select></label>
           <label>Corner radius<input id="mq-studio-layer-radius" type="range" min="0" max="120" value="16"></label>
         </div>
         <div class="mq-studio-two-col">
@@ -16755,7 +16755,7 @@ ${mqIsFreePlanShop() ? mqShowroomLockNoteHTML(true) : `      <label class="mq-bt
         const menu=document.createElement('div');menu.className='mq-rich-font-menu mq-rich-shape-menu';menu.hidden=true;menu.setAttribute('role','listbox');
         const thumb=key=>{const c=document.createElement('canvas');c.width=128;c.height=72;c.className='mq-rich-shape-thumb';
           try{const ctx=c.getContext('2d');const outline=['line','arrow','curve','curvebold','curvethin','curveswoosh','curveloop','underline','check'].includes(key);
-            drawCustomLayer(ctx,{type:'shape',shape:key,x:14,y:10,w:100,h:52,rotation:0,opacity:100,radius:12,fill:'#74465b',stroke:'#74465b',strokeWidth:outline?7:0,shadowBlur:0,shadowX:0,shadowY:0,shadowColor:'#000000'},1,[],false);}catch(e){}
+            drawCustomLayer(ctx,{type:'shape',shape:key,x:14,y:10,w:100,h:52,rotation:0,opacity:100,radius:12,fill:'#74465b',stroke:'#74465b',strokeWidth:/^curve/.test(key)?12:outline?7:0,shadowBlur:0,shadowX:0,shadowY:0,shadowColor:'#000000'},1,[],false);}catch(e){}
           return c;};
         [...select.options].forEach(o=>{
           const key=o.value;const item=document.createElement('button');item.type='button';item.className='mq-rich-font-option mq-rich-shape-option';item.dataset.shape=key;item.setAttribute('role','option');
@@ -17151,7 +17151,7 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
   const dx=Number(layer.shadowX)||0,dy=Number(layer.shadowY)||0;
   const shape=layer.shape||'rect';
   const sw=Math.max(1,Number(layer.strokeWidth)||0)*k;
-  let checkW=0;const buildPath=()=>{
+  let checkW=0,curveW=0;const buildPath=()=>{
     ctx.beginPath();
     if(shape==='circle'){ctx.ellipse(x+w/2,y+h/2,w/2,h/2,0,0,Math.PI*2);return 'fill';}
     if(shape==='line'){ctx.moveTo(x,y+h);ctx.lineTo(x+w,y);return 'stroke';}
@@ -17161,23 +17161,30 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
     if(shape==='arrow'){
       const shaft=Math.max(h*0.20,sw*1.6),mid=y+h*0.56,head=w*0.24;ctx.moveTo(x,mid-shaft/2);ctx.lineTo(x+w-head,mid-shaft/2);ctx.lineTo(x+w-head,mid-h*0.18);ctx.lineTo(x+w,mid);ctx.lineTo(x+w-head,mid+h*0.18);ctx.lineTo(x+w-head,mid+shaft/2);ctx.lineTo(x,mid+shaft/2);ctx.closePath();return 'fill';}
     if(['curve','curvebold','curvethin','curveswoosh','curveloop'].includes(shape)){
-      // A single continuous outlined path. The head is integrated at the end
-      // instead of being a separate disconnected stroke.
-      const thick=shape==='curvebold'?.105:shape==='curvethin'?.025:shape==='curveswoosh'?.075:.055;
-      const cy=shape==='curveloop'?.64:.68;
-      ctx.moveTo(x+w*.12,y+h*.88);
-      if(shape==='curveloop') ctx.bezierCurveTo(x-w*.04,y+h*.12,x+w*.40,y-h*.04,x+w*.52,y+h*.36);
-      else ctx.bezierCurveTo(x+w*.06,y+h*.13,x+w*.55,y+h*.08,x+w*.77,y+h*.32);
-      const endX=shape==='curveloop'?.82:.91;
-      const endY=shape==='curveloop'?.19:.28;
-      // The path makes the shaft; arrowhead joins at its tip on the same path.
-      const tipX=x+w*endX,tipY=y+h*endY;
-      const neckX=x+w*(shape==='curveloop'?.52:.77),neckY=y+h*(shape==='curveloop'?.36:.32);
-      ctx.lineTo(tipX,tipY);
-      const ang=Math.atan2(tipY-neckY,tipX-neckX),hlen=Math.min(w,h)*(shape==='curvebold'?.25:.21),spread=.72;
-      ctx.moveTo(tipX-hlen*Math.cos(ang-spread),tipY-hlen*Math.sin(ang-spread));
-      ctx.lineTo(tipX,tipY);
-      ctx.lineTo(tipX-hlen*Math.cos(ang+spread),tipY-hlen*Math.sin(ang+spread));
+      // Nov 2026: five genuinely different curved arrows (they used to share
+      // one path). Each has its own thickness, scaled to its size; the
+      // layer's line thickness (default 12) scales it up or down.
+      const S=Math.min(w,h),X=f=>x+w*f,Y=f=>y+h*f;
+      const head=(tx,ty,fx,fy,len,spread)=>{const ang=Math.atan2(ty-fy,tx-fx);ctx.moveTo(tx-len*Math.cos(ang-spread),ty-len*Math.sin(ang-spread));ctx.lineTo(tx,ty);ctx.lineTo(tx-len*Math.cos(ang+spread),ty-len*Math.sin(ang+spread));};
+      if(shape==='curve'){            // flowing: classic arc up and over
+        ctx.moveTo(X(.08),Y(.90));ctx.bezierCurveTo(X(.10),Y(.25),X(.55),Y(.06),X(.90),Y(.30));
+        head(X(.90),Y(.30),X(.55),Y(.06),S*.24,.62);curveW=S*.06;
+      }else if(shape==='curvebold'){  // chunky: short, fat, big head
+        ctx.moveTo(X(.16),Y(.86));ctx.quadraticCurveTo(X(.22),Y(.30),X(.70),Y(.36));
+        head(X(.78),Y(.37),X(.40),Y(.28),S*.38,.80);ctx.moveTo(X(.70),Y(.36));ctx.lineTo(X(.78),Y(.37));curveW=S*.15;
+      }else if(shape==='curvethin'){  // fine: long thin sweep that dips down to point
+        ctx.moveTo(X(.04),Y(.30));ctx.bezierCurveTo(X(.40),Y(.02),X(.86),Y(.10),X(.88),Y(.84));
+        head(X(.88),Y(.84),X(.86),Y(.10),S*.18,.50);curveW=S*.022;
+      }else if(shape==='curveswoosh'){// swoosh: wavy S zig-zag to the right
+        ctx.moveTo(X(.04),Y(.70));ctx.bezierCurveTo(X(.20),Y(.10),X(.34),Y(.10),X(.44),Y(.50));
+        ctx.bezierCurveTo(X(.54),Y(.92),X(.70),Y(.86),X(.92),Y(.32));
+        head(X(.92),Y(.32),X(.70),Y(.86),S*.24,.62);curveW=S*.065;
+      }else{                          // loop: one hand-drawn curl, then right
+        ctx.moveTo(X(.04),Y(.78));ctx.bezierCurveTo(X(.30),Y(.82),X(.52),Y(.60),X(.48),Y(.32));
+        ctx.bezierCurveTo(X(.45),Y(.06),X(.22),Y(.10),X(.26),Y(.36));
+        ctx.bezierCurveTo(X(.30),Y(.62),X(.66),Y(.66),X(.94),Y(.40));
+        head(X(.94),Y(.40),X(.66),Y(.66),S*.22,.62);curveW=S*.05;
+      }
       return 'stroke';}
     if(shape==='underline'){
       ctx.moveTo(x+w*0.04,y+h*0.65);ctx.quadraticCurveTo(x+w*0.30,y+h*0.94,x+w*0.52,y+h*0.70);ctx.quadraticCurveTo(x+w*0.72,y+h*0.48,x+w*0.96,y+h*0.62);return 'stroke';}
@@ -17223,7 +17230,7 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
   const mode=buildPath();
   if(blur>0||dx!==0||dy!==0){ctx.shadowColor=layer.shadowColor||'#000000';ctx.shadowBlur=Math.max(8,blur)*k;ctx.shadowOffsetX=dx*k;ctx.shadowOffsetY=dy*k;}
   if(mode==='fill'){ctx.fillStyle=layer.fill||'#ffffff';ctx.fill();}
-  else {ctx.strokeStyle=layer.stroke||layer.fill||'#ffffff';ctx.lineWidth=shape==='check'?Math.max(checkW,(Number(layer.strokeWidth)||0)*k):Math.max(shape==='burst'||shape==='underline'||shape.startsWith('curve')||shape==='sparkle'?6:4,Number(layer.strokeWidth)||0)*k;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke();}
+  else {ctx.strokeStyle=layer.stroke||layer.fill||'#ffffff';ctx.lineWidth=shape==='check'?Math.max(checkW,(Number(layer.strokeWidth)||0)*k):curveW?curveW*Math.max(.25,(Number(layer.strokeWidth)||12)/12):Math.max(shape==='burst'||shape==='underline'||shape.startsWith('curve')||shape==='sparkle'?6:4,Number(layer.strokeWidth)||0)*k;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke();}
 
   clearRawShadow(ctx);
   if(mode==='fill' && (Number(layer.strokeWidth)||0)>0){buildPath();ctx.strokeStyle=layer.stroke||'#ffffff';ctx.lineWidth=sw;ctx.lineJoin='round';ctx.lineCap='round';ctx.stroke();}
