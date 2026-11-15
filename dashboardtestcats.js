@@ -16741,9 +16741,19 @@ ${mqIsFreePlanShop() ? mqShowroomLockNoteHTML(true) : `      <label class="mq-bt
   // Starter photos: our cover photos are all cabinets and counters, so a
   // shop that doesn't do cabinetry gets its own quote types' project type
   // cover photos instead (or none -- they add their own).
+  // Only photos from project types of quote types the shop actually offers
+  // (switched on + trade still ticked on Business info) — Jordan, Nov 2026.
   function mqStudioOwnCovers() {
-    return [...new Set((window._mqRooms || []).filter(r => r && r.forQt && r.active !== false && r.coverImage).map(r => r.coverImage))];
+    let live = null;
+    try {
+      const f = (window._mqShopRecord || {}).fields || {};
+      const cfg = mqTabsCfgOf(f);
+      const off = window.mqQtsNotOffered ? window.mqQtsNotOffered(f) : new Set();
+      live = new Set((cfg.quoteTypes || []).filter(q => q && q.on !== false && !off.has(q.id)).map(q => q.id));
+    } catch (e) { live = null; }
+    return [...new Set((window._mqRooms || []).filter(r => r && r.forQt && r.active !== false && r.coverImage && (!live || live.has(r.forQt))).map(r => r.coverImage))];
   }
+  window.mqStudioOwnCovers = mqStudioOwnCovers;
   let mqStudioPhoto=null, mqStudioLogo=null, mqStudioSelected=null;
   const mqStudioIsYard=t=>!!t && t.category==='yard';
   const mqStudioNeedsQr=t=>!!t && (t.category==='qr' || ['yardscan','yardshowroom'].includes(t.id));
@@ -20062,7 +20072,7 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
       if (helperContainer && !helperContainer.dataset.loaded) {
         helperContainer.dataset.loaded = 'true';
         const script = document.createElement('script');
-        script.src = 'https://widget.midasquote.com/pricing-helper-v2-test.js';
+        script.src = 'https://widget.midasquote.com/pricing-helper-v2.js';
         script.onload = function() {
           window.mqph2Init(window._mqShopRecord, window._mqPricingRecord);
         };
