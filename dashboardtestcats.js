@@ -3798,7 +3798,6 @@ window.logoutMember = async function () {
                   <div class="mq-studio-preview-wrap"><div class="mq-studio-format-bar" role="group" aria-label="Design canvas size"><label for="mq-studio-quick-size">Canvas format</label><select id="mq-studio-quick-size"><option value="square">Square post · 1080 × 1080</option><option value="portrait">Portrait feed · 1080 × 1350</option><option value="story">Story / Reel · 1080 × 1920</option><option value="poster">Poster · 1080 × 1620</option><option value="landscape">Yard sign · 1620 × 1080</option></select><span id="mq-studio-format-dimensions">1080 × 1080 px</span><button type="button" id="mq-studio-quick-download" class="mq-btn mq-btn-primary" style="padding:12px 20px!important;min-height:44px!important;background:#211d23!important;color:#fff!important;border-radius:10px!important;font-weight:700!important;white-space:nowrap">↓ Download PNG</button></div><div class="mq-studio-quick-colors" aria-label="Design colours"><span>DESIGN COLOURS</span><label>Background <input type="color" id="mq-studio-quick-brand" value="#56314b" title="Main design colour"></label><label>Photo frame <input type="color" id="mq-studio-quick-surface" value="#e9d9c8" title="Secondary panels and photo framing"></label><label>Accent <input type="color" id="mq-studio-quick-accent" value="#d9be97" title="Accent detail"></label><button type="button" id="mq-studio-reset-colors" class="mq-studio-muted-btn" title="Restore the shop's starting colours">Reset colours</button></div><div class="mq-studio-preview-toolbar"><button type="button" id="mq-studio-photo-quick" class="mq-studio-muted-btn">🖼 Change background image</button><button type="button" id="mq-studio-photo-remove-quick" class="mq-studio-muted-btn" title="Remove the background image">✕ Remove background image</button><button type="button" id="mq-studio-direct-image-btn" class="mq-studio-muted-btn">＋ Add movable image</button><button type="button" id="mq-studio-delete-selected" class="mq-studio-muted-btn" title="Delete selected text, button, shape, or image">✕ Delete selected</button><input id="mq-studio-direct-image-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none"><input id="mq-studio-auto-photo-target" type="file" accept="image/png,image/jpeg,image/webp,image/gif" style="display:none"></div><div class="mq-studio-preview-tip" data-mq-gen="Photos come from your own project types. Use &lt;strong&gt;Change background image&lt;/strong&gt; to show your own work. Drag items or use corner handles to resize.">Starter photos are examples from MidasQuote project types. Click an image and choose Replace to use your own work. Drag items or use corner handles to resize.</div><div id="mq-studio-hoverbar" class="mq-studio-hoverbar"><button type="button" data-action="edit">✎ Edit</button><button type="button" data-action="duplicate">⧉ Duplicate</button><button type="button" data-action="replace">▧ Replace</button><button type="button" data-action="delete">✕ Delete</button></div><canvas id="mq-studio-canvas" width="1080" height="1080" aria-label="Live marketing graphic preview"></canvas><div class="mq-history-toolbar" role="group" aria-label="Design history and saved draft"><button type="button" id="mq-studio-undo" disabled title="Undo (Ctrl+Z)">↶ Undo</button><button type="button" id="mq-studio-redo" disabled title="Redo (Ctrl+Y / Ctrl+Shift+Z)">↷ Redo</button><button type="button" id="mq-studio-quick-save" title="Save this design in this browser">Save draft</button><button type="button" id="mq-studio-quick-load" title="Load the saved design for this template">Load draft</button><span class="mq-history-status" id="mq-studio-history-status" aria-live="polite">Ready</span></div><p>Live preview · The downloaded image exports at full resolution</p></div>
                 </div>
               </div>
-              <details class="mq-studio-legacy"><summary>Original marketing tools & specialty designers <span>⌄</span></summary><p>All your original marketing tools are still available below, including advanced poster controls, standalone QR codes, social captions, and printable materials.</p></details>
             </section>
             <div class="mq-card mq-sr-card">
               <div onclick="mqToggleMkSection('social')" class="mq-sr-head">
@@ -4544,7 +4543,17 @@ window.logoutMember = async function () {
   async function ensureSpecialtyDefaults(shopRecord) {
     const shopToken = shopRecord.fields['Shop token'];
     const existing = await atGet(CONFIG.SPECIALTY_TABLE, `FIND("${shopToken}", ARRAYJOIN({Shop token (lookup)}))`);
-    if (existing.length > 0) return existing;
+    // These 4 are cabinet items (Jordan, Nov 2026): only a shop that offers
+    // Cabinetry gets them — not a brand-new shop that hasn't picked what it
+    // quotes yet, and not a flooring/painting shop. They're added later if
+    // the shop ticks Cabinetry (see mqBizToggleRun). Only when it has no
+    // cabinet specialty item (one with no project types ticked) yet.
+    let biz = { set: false, cab: true };
+    try { biz = mqBizOf(shopRecord.fields); } catch (e) {}
+    if (!shopRecord.fields['Welcome popup seen'] && !biz.set) return existing;
+    if (biz.set && !biz.cab) return existing;
+    const isCabItem = r => { try { const v = JSON.parse(r.fields['Visible rooms'] || '[]'); return !Array.isArray(v) || !v.length; } catch (e) { return true; } };
+    if (existing.some(isCabItem)) return existing;
     // New shop — create default list
     const created = [];
     for (const item of DEFAULT_SPECIALTY_ITEMS) {
@@ -4561,7 +4570,7 @@ window.logoutMember = async function () {
         if (rec?.id) created.push(rec);
       } catch(e) { console.warn('Failed to create default specialty item:', item.name, e); }
     }
-    return created.sort((a,b) => (a.fields['Sort order']||0)-(b.fields['Sort order']||0));
+    return existing.concat(created).sort((a,b) => (a.fields['Sort order']||0)-(b.fields['Sort order']||0));
   }
 
   // Refacing/Repainting/Restaining come with these specialty items pre-built,
@@ -5216,10 +5225,16 @@ window.logoutMember = async function () {
     // as checkbox options at all, same as the cabinet-only categories.
     if (cat === 'specialty') {
       const { countertopsOnly, cabinetsOnly } = mqComputeTabScope((window._mqShopRecord || {}).fields);
-      if (countertopsOnly && cabinetsOnly) return allRooms.filter(r => r.forQt);
-      if (countertopsOnly) return allRooms.filter(r => r.forCountertops || r.forQt);
-      if (cabinetsOnly) return allRooms.filter(r => !r.forCountertops);
-      return allRooms; // specialty items can go in any quote, the shop's own quote types too
+      // Only quote types the shop actually offers (Jordan, Nov 2026): a
+      // quote whose trade is unticked on Business info, or that no longer
+      // exists, doesn't offer its project types here.
+      const f = (window._mqShopRecord || {}).fields || {};
+      const qts = mqQuoteTypesOf(f), off = window.mqQtsNotOffered ? window.mqQtsNotOffered(f) : new Set();
+      const qtOk = r => !r.forQt || (qts.some(q => q.id === r.forQt) && !off.has(r.forQt));
+      if (countertopsOnly && cabinetsOnly) return allRooms.filter(r => r.forQt && qtOk(r));
+      if (countertopsOnly) return allRooms.filter(r => (r.forCountertops || r.forQt) && qtOk(r));
+      if (cabinetsOnly) return allRooms.filter(r => !r.forCountertops && qtOk(r));
+      return allRooms.filter(qtOk); // specialty items can go in any quote, the shop's own quote types too
     }
     // Countertops: a quote type's project types too (for its "Need
     // countertops too?" step) while the business offers countertops.
@@ -9165,9 +9180,9 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     let savedPhotos = {};
     try { savedPhotos = shopRecord.fields['Photos'] ? JSON.parse(shopRecord.fields['Photos']) : {}; } catch(e) {}
     savedPhotos = Object.assign(window.mqCcPhotosFromItems(window._mqLineItems || []), savedPhotos);
-    const rooms = window._mqRooms || defaultRoomTypes();
+    const rooms = roomsForCategory('specialty');
     const roomOptions = rooms.map(r => `<option value="${r.id}">${mqEscHtml(mqRoomLabel(r))}</option>`).join('');
-    container.innerHTML = `
+    container.innerHTML = `${mqSpecGroupBarHTML()}
       <div class="mq-spec-filter-toolbar" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;padding:10px 12px;background:#f9fafb;border-radius:8px">
         <div style="flex:1;min-width:160px">
           <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:4px">Filter by project type</label>
@@ -10101,6 +10116,58 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   };
 
   // Same pure view filter, for the Specialty Items tab's table specifically.
+  // ---- Specialty Items grouped by quote type (Jordan, Nov 2026) ----
+  // One tab per quote the shop offers (Cabinets, Countertops, each of its own
+  // quote types). An item belongs to a quote through the project types it's
+  // ticked for; an item with none ticked is a cabinet item (as before).
+  function mqSpecGroups() {
+    const f = (window._mqShopRecord || {}).fields || {};
+    const all = window._mqRooms || defaultRoomTypes();
+    const offered = roomsForCategory('specialty');
+    const out = [];
+    const cabRooms = offered.filter(r => !r.forQt && !r.forCountertops);
+    if (cabRooms.length) out.push({ id: '__cab', name: 'Cabinets', icon: '🗄️', rooms: cabRooms.map(r => r.id), cab: true });
+    const ctRooms = offered.filter(r => r.forCountertops && !r.forQt);
+    if (ctRooms.length) out.push({ id: '__ct', name: 'Countertops', icon: '🪨', rooms: ctRooms.map(r => r.id) });
+    const off = window.mqQtsNotOffered ? window.mqQtsNotOffered(f) : new Set();
+    mqQuoteTypesOf(f).filter(q => !off.has(q.id)).forEach(q => {
+      const rs = all.filter(r => r.forQt === q.id).map(r => r.id);
+      if (rs.length) out.push({ id: q.id, name: q.name, icon: '', rooms: rs });
+    });
+    return out;
+  }
+  function mqSpecGroupsOfRooms(rooms) {
+    const gs = mqSpecGroups();
+    if (!rooms || !rooms.length) return gs.filter(g => g.cab).map(g => g.id);
+    return gs.filter(g => g.rooms.some(id => rooms.includes(id))).map(g => g.id);
+  }
+  function mqSpecGroupBarHTML() {
+    const gs = mqSpecGroups();
+    if (gs.length < 2) { window._mqSpecGroup = gs.length === 1 ? gs[0].id : ''; return ''; }
+    const specs = window._mqSpecRecords || [];
+    const count = id => specs.filter(r => { let rs = []; try { rs = JSON.parse(r.fields['Visible rooms'] || '[]'); } catch (e) {} return !id || mqSpecGroupsOfRooms(rs).includes(id); }).length;
+    if (window._mqSpecGroup === undefined || (window._mqSpecGroup && !gs.some(g => g.id === window._mqSpecGroup))) window._mqSpecGroup = (gs.find(g => count(g.id) > 0) || gs[0]).id;
+    const cur = window._mqSpecGroup;
+    const chip = (id, label) => `<button type="button" onclick="mqSpecPickGroup('${id}')" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;border:1px solid ${cur === id ? '#1a1a1a' : '#e5e7eb'};background:${cur === id ? '#1a1a1a' : '#fff'};color:${cur === id ? '#fff' : '#374151'};font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">${label} <span style="font-weight:500;opacity:.7">${count(id)}</span></button>`;
+    return `<div id="mq-spec-groupbar" style="margin-bottom:12px">
+      <div style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#6b7280;margin-bottom:6px">Quote</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">${gs.map(g => chip(g.id, `${g.icon ? g.icon + ' ' : ''}${mqEscHtml(g.name)}`)).join('')}${chip('', 'All')}</div>
+      <div style="font-size:12px;color:#6b7280;margin-top:6px">${cur ? `Items in <strong>${mqEscHtml((gs.find(g => g.id === cur) || {}).name || '')}</strong>. <strong>+ New item</strong> adds one to this quote.` : 'Every item, for every quote.'}</div>
+    </div>`;
+  }
+  window.mqSpecPickGroup = function(id) {
+    window._mqSpecGroup = id;
+    const bar = document.getElementById('mq-spec-groupbar');
+    if (bar) bar.outerHTML = mqSpecGroupBarHTML();
+    window.mqFilterSpecTable();
+  };
+  // Project types a new item should start with, given the open quote tab.
+  function mqSpecNewItemRooms() {
+    const gs = mqSpecGroups();
+    const g = gs.find(x => x.id === window._mqSpecGroup) || (gs.some(x => x.cab) ? null : gs[0]);
+    if (!g || g.cab) return null; // cabinet item = no project types ticked (as before)
+    return g.rooms;
+  }
   window.mqFilterSpecTable = function() {
     const roomFilter = el('mq-spec-tab-filter-room')?.value || '';
     const categoryFilter = el('mq-spec-tab-filter-category')?.value || '';
@@ -10134,9 +10201,23 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const name = row.getAttribute('data-name') || '';
       const searchMatch = !searchFilter || name.includes(searchFilter);
       const proOnlyMatch = !proOnlyFilter || row.getAttribute('data-proonly') === '1';
-      const show = roomMatch && categoryMatch && searchMatch && proOnlyMatch;
+      const grp = window._mqSpecGroup || '';
+      const inGroups = mqSpecGroupsOfRooms(rooms);
+      const groupMatch = !grp || inGroups.includes(grp);
+      const show = roomMatch && categoryMatch && searchMatch && proOnlyMatch && groupMatch;
       row.style.display = show ? '' : 'none';
       if (show) visibleCount++;
+      // "Also in Painting" when an item is shared with another quote.
+      const cell = row.querySelector('td:nth-child(2)') || row.querySelector('td');
+      if (cell) {
+        let tag = cell.querySelector('.mq-spec-also');
+        const others = grp ? inGroups.filter(g => g !== grp) : [];
+        const names = others.map(g => (mqSpecGroups().find(x => x.id === g) || {}).name).filter(Boolean);
+        if (names.length) {
+          if (!tag) { tag = document.createElement('div'); tag.className = 'mq-spec-also'; tag.style.cssText = 'font-size:11px;color:#7c3aed;margin-top:4px;font-weight:600'; cell.appendChild(tag); }
+          tag.textContent = '↔ Also in ' + names.join(', ');
+        } else if (tag) tag.remove();
+      }
     });
     // Belt and suspenders on top of the fix above: any variant panel that
     // happened to be open closes on every filter change, and its pill's
@@ -10152,7 +10233,12 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       pill.textContent = pill.textContent.replace(/[▾▴]\s*$/, '▾');
     });
     const emptyMsg = document.getElementById('mq-spec-tab-filter-empty');
-    if (emptyMsg) emptyMsg.style.display = visibleCount === 0 ? 'block' : 'none';
+    if (emptyMsg) {
+      emptyMsg.style.display = visibleCount === 0 ? 'block' : 'none';
+      const g = window._mqSpecGroup ? mqSpecGroups().find(x => x.id === window._mqSpecGroup) : null;
+      const filtered = el('mq-spec-tab-filter-room')?.value || el('mq-spec-tab-filter-category')?.value || el('mq-spec-tab-filter-search')?.value || el('mq-spec-tab-filter-proonly')?.checked;
+      emptyMsg.textContent = g && !filtered ? `No specialty items for ${g.name} yet — click + New item to add one.` : 'No specialty items match that filter.';
+    }
   };
 
   // Pure view filter — doesn't touch any saved data, just shows/hides cards
@@ -12259,6 +12345,10 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       await mqSaveTabsCfg({ hidden, quoteTypes, business: { trades: biz.trades, off } });
       mqSyncTabToggles(hidden);
       let seeded = false;
+      if (cab && id === 'cabinetry') {
+        // Ticking Cabinetry brings the starter cabinet specialty items if the shop has none.
+        try { const specs = await ensureSpecialtyDefaults(shopRec); if (el('mq-spec-list')) renderSpecialty(specs, shopRec); } catch (e) {}
+      }
       if (ct && id === 'countertops') {
         seeded = await mqEnsureCountertopDefaults(shopRec);
         if (seeded && window._mqRooms) { window._mqRooms = [...window._mqRooms, ...defaultCountertopRoomTypes()]; }
@@ -16230,9 +16320,12 @@ ${mqIsFreePlanShop() ? mqShowroomLockNoteHTML(true) : `      <label class="mq-bt
   }
 
   function roomLinkDisclosure(itemId, visibleRoomsJson) {
-    const rooms = roomsForCategory('specialty');
     let visibleRooms = [];
     try { visibleRooms = visibleRoomsJson ? JSON.parse(visibleRoomsJson) : []; } catch(e) { visibleRooms = []; }
+    // Offered project types, plus any this item already has ticked (so it
+    // can still be unticked after its quote was switched off).
+    const offered = roomsForCategory('specialty');
+    const rooms = offered.concat((window._mqRooms || []).filter(r => visibleRooms.includes(r.id) && !offered.includes(r)));
     const summary = roomLinkSummaryText(visibleRooms, rooms, 'specialty');
     // A project type the Specialty Items category itself hides (if/when
     // that control ever gets exposed the same way the pricing categories'
@@ -17133,14 +17226,15 @@ ${mqIsFreePlanShop() ? mqShowroomLockNoteHTML(true) : `      <label class="mq-bt
       // so a brand new item always lands unambiguously first, even if
       // other items also happen to be sitting at 0 already.
       const minSort = existing.length ? Math.min(0, ...existing.map(r => r.fields['Sort order'] || 0)) : 0;
-      const created = await atCreate(CONFIG.SPECIALTY_TABLE, {
+      const startRooms = mqSpecNewItemRooms();
+      const created = await atCreate(CONFIG.SPECIALTY_TABLE, Object.assign({
         'Item name': 'New item',
         'Shop': [shopRec.id],
         'Price': 0,
         'Active': true,
         'Per linear foot': false,
         'Sort order': minSort - 1,
-      });
+      }, startRooms ? { 'Visible rooms': JSON.stringify(startRooms) } : {}));
       const specs = await loadSpecialty(shopRec.fields['Shop token']);
       renderSpecialty(specs, shopRec);
       showMsg('mq-spec-msg', '✓ Item added at the top — edit the name and price below.');
@@ -19142,12 +19236,13 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
     const embedCode = `<div style="text-align:center">\n  <div id="midasquote-widget"></div>\n  <script src="https://widget.midasquote.com/widget.js?shop=${token}"></script>\n</div>`;
 
     function buildSocialPosts(quoteLink) {
+      // Generic for every trade (Jordan, Nov 2026) — no cabinet/kitchen talk.
       return [
-        `🛠️ Now you can get an instant cabinet quote right from our website! No phone calls, no waiting around — just answer a few quick questions and get your ballpark price in under 5 minutes. Try it now → ${quoteLink}`,
-        `Tired of waiting days for a quote? We just made it instant. ⚡ Get a real price range on your kitchen project in 5 minutes — right from your phone. ${quoteLink}`,
+        `🛠️ You can now get an instant quote right from our website! No phone calls, no waiting around — just answer a few quick questions and see your ballpark price in minutes. Try it now → ${quoteLink}`,
+        `Tired of waiting days for a quote? We just made it instant. ⚡ Get a real price range on your next project in a few minutes — right from your phone. ${quoteLink}`,
         `We just upgraded how we quote projects. Instead of waiting for a callback, you can now get an instant estimate online — anytime, day or night. Give it a try: ${quoteLink}`,
-        `Know your price before you even call. Get an instant cabinet estimate here → ${quoteLink}`,
-        `Hey homeowners! If you're planning a kitchen remodel, we just made getting a price way easier. Try our new instant quote tool — no obligation, just real numbers: ${quoteLink}`,
+        `Know your price before you even call. Get an instant estimate here → ${quoteLink}`,
+        `Hey homeowners! Planning a project around the house? We just made getting a price way easier. Try our new instant quote tool — no obligation, just real numbers: ${quoteLink}`,
       ];
     }
 
