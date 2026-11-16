@@ -12643,6 +12643,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const ctOk = mqBizOf(shopRec.fields).ct;
       const q = { id: qtId, name, on: !opts.edit, proOnly: false, sub: pack.qt.sub || '', icon: pack.qt.icon || t.icon || 'grid', trade: t.id };
       if (opts.edit) { q.packEdit = true; q.packName = pack.qt.name || name; q.packIdx = idx || 0; }
+      else if ((pack.specs || []).length) q.packSpecsSeen = (pack.specs || []).map(sx => String((sx.fields || {})['Item name'] || '').trim().toLowerCase()).filter(Boolean);
       if (pack.qt.countertops && ctOk) { try { await mqCtTickRooms(Object.values(roomMap)); } catch(e) {} }
       if (Array.isArray(pack.qt.measures) && pack.qt.measures.length) q.measures = pack.qt.measures;
       if (pack.qt.measGuide) q.measGuide = true;
@@ -12709,7 +12710,9 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const qRooms = rooms.map(r => r.id);
     const sp = window._mqSpecRecords || await atGet(CONFIG.SPECIALTY_TABLE, `FIND("${f['Shop token']}", ARRAYJOIN({Shop token (lookup)}))`);
     const haveSpec = n => sp.some(r => nm(r.fields['Item name']) === nm(n) && mqRoomIdsOf(r.fields['Visible rooms']).some(id => qRooms.includes(id)));
-    const specTodo = qRooms.length ? (pq.specs || []).filter(sx => sx && sx.fields && !haveSpec(sx.fields['Item name'])) : [];
+    // Never re-add one the shop was already given and later deleted.
+    const seen = new Set((q.packSpecsSeen || []).map(nm));
+    const specTodo = qRooms.length ? (pq.specs || []).filter(sx => sx && sx.fields && !haveSpec(sx.fields['Item name']) && !seen.has(nm(sx.fields['Item name']))) : [];
     return { q, t, pq, cats, catMap, roomMap, itemMap, todo, fixIf, specTodo, qRooms, shopRec, f };
   }
   // Pricing tab: the Restore button only shows when something is missing
@@ -12736,6 +12739,44 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     }
     if (changed && window.mqccRerenderAll) window.mqccRerenderAll();
   }
+  async function mqMarkPackSpecsSeen(qtId, list) {
+    const names = list.map(sx => String((sx.fields || {})['Item name'] || '').trim().toLowerCase()).filter(Boolean);
+    const qts = mqQuoteTypesOf(window._mqShopRecord.fields).map(q => q.id !== qtId ? q : Object.assign({}, q, { packSpecsSeen: [...new Set([...(q.packSpecsSeen || []), ...names])] }));
+    await mqSaveTabsCfg({ quoteTypes: qts });
+  }
+  // Shops get their quotes' starter-pack specialty items without lifting a
+  // finger (Jordan, Nov 2026): once per dashboard visit, any pack-made quote
+  // the shop offers quietly gets the pack's specialty items it hasn't been
+  // given yet — in the pack's state (the samples are switched off, so
+  // customers see nothing until the shop turns one on). Remembered per quote,
+  // so an item the shop deletes never comes back.
+  async function mqAutoAddPackSpecs() {
+    if (window._mqAutoSpecsDone) return;
+    window._mqAutoSpecsDone = true;
+    try {
+      await mqLoadTradeCatalog();
+      const f = window._mqShopRecord.fields;
+      const off = window.mqQtsNotOffered ? window.mqQtsNotOffered(f) : new Set();
+      const ids = mqQuoteTypesOf(f).filter(q => !off.has(q.id) && mqQtPackTrade(q.id)).map(q => q.id);
+      let added = 0;
+      for (const id of ids) {
+        const plan = await mqQtPackPlan(id, []);
+        if (!plan || !plan.specTodo.length) continue;
+        for (const sx of plan.specTodo) {
+          const mapped = mqRoomIdsOf(sx.fields['Visible rooms']).map(r => plan.roomMap[r]).filter(Boolean);
+          const rec = await mqPackCreate(CONFIG.SPECIALTY_TABLE, Object.assign({}, sx.fields, { Shop: [window._mqShopRecord.id], 'Visible rooms': JSON.stringify(mapped.length ? mapped : plan.qRooms) }));
+          if (rec && rec.id) added++;
+        }
+        await mqMarkPackSpecsSeen(id, plan.specTodo);
+      }
+      if (added) {
+        const specs = await loadSpecialty(f['Shop token']);
+        window._mqSpecRecords = specs;
+        if (el('mq-spec-list')) renderSpecialty(specs, window._mqShopRecord);
+      }
+    } catch (e) { console.warn('auto pack specialty items', e); }
+  }
+  window.mqAutoAddPackSpecs = mqAutoAddPackSpecs;
   window.mqRestoreQtFromPack = async function(qtId, btn) {
     const say = (m, type) => { if (window.mqccMsg) window.mqccMsg(m, type === 'error'); else showMsg('mq-shop-msg', m, type); };
     if (btn) { btn.disabled = true; btn.textContent = '⏳ Checking…'; }
@@ -12775,6 +12816,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         const rec = await mqPackCreate(CONFIG.SPECIALTY_TABLE, fields);
         if (rec && rec.id) specAdded++; else failed++;
       }
+      if (specTodo.length) await mqMarkPackSpecsSeen(qtId, specTodo);
       if (specAdded) { try { const specs = await loadSpecialty(f['Shop token']); window._mqSpecRecords = specs; if (el('mq-spec-list')) renderSpecialty(specs, shopRec); } catch (e) {} }
       let relinked = 0;
       cats = cats.map(c => { const pc = fixIf.find(x => catMap[x.id] === c.id); if (pc && itemMap[pc.showIf]) { relinked++; return Object.assign({}, c, { showIf: itemMap[pc.showIf] }); } return c; });
@@ -20499,6 +20541,8 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
     el('mq-leads-table').innerHTML = renderLeads(window._mqLeads, null, true);
 
     const specs = await ensureSpecialtyDefaults(shopRecord);
+    // Starter-pack specialty items for existing quotes, quietly, after load.
+    setTimeout(() => { if (window.mqAutoAddPackSpecs) window.mqAutoAddPackSpecs(); }, 4000);
     renderSpecialty(specs, shopRecord);
 
     // Load line items for My Products tab
