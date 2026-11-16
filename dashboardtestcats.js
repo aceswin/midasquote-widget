@@ -10141,18 +10141,33 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     if (!rooms || !rooms.length) return gs.filter(g => g.cab).map(g => g.id);
     return gs.filter(g => g.rooms.some(id => rooms.includes(id))).map(g => g.id);
   }
+  // 'in' = belongs to a quote the shop offers; 'parked' = its quote is
+  // switched off (cabinet items while Cabinetry is unticked, a trade that's
+  // unticked…) — hidden everywhere, back as soon as it's ticked again;
+  // 'orphan' = every project type it was ticked for has been deleted.
+  function mqSpecItemClass(rooms) {
+    if (mqSpecGroupsOfRooms(rooms).length) return 'in';
+    if (!rooms || !rooms.length) return 'parked';
+    const all = window._mqRooms || [];
+    return rooms.some(id => all.some(r => r.id === id)) ? 'parked' : 'orphan';
+  }
   function mqSpecGroupBarHTML() {
     const gs = mqSpecGroups();
-    if (gs.length < 2) { window._mqSpecGroup = gs.length === 1 ? gs[0].id : ''; return ''; }
     const specs = window._mqSpecRecords || [];
-    const count = id => specs.filter(r => { let rs = []; try { rs = JSON.parse(r.fields['Visible rooms'] || '[]'); } catch (e) {} return !id || mqSpecGroupsOfRooms(rs).includes(id); }).length;
+    const roomsOf = r => { let rs = []; try { rs = JSON.parse(r.fields['Visible rooms'] || '[]'); } catch (e) {} return Array.isArray(rs) ? rs : []; };
+    const parked = specs.filter(r => mqSpecItemClass(roomsOf(r)) === 'parked').length;
+    const orphans = specs.filter(r => mqSpecItemClass(roomsOf(r)) === 'orphan').length;
+    if (orphans) gs.push({ id: '__none', name: 'No quote', icon: '⚠️', rooms: [] });
+    if (!gs.length) { window._mqSpecGroup = ''; return ''; }
+    const count = id => specs.filter(r => { const rs = roomsOf(r), c = mqSpecItemClass(rs); if (id === '__none') return c === 'orphan'; if (!id) return c !== 'parked'; return mqSpecGroupsOfRooms(rs).includes(id); }).length;
     if (window._mqSpecGroup === undefined || (window._mqSpecGroup && !gs.some(g => g.id === window._mqSpecGroup))) window._mqSpecGroup = (gs.find(g => count(g.id) > 0) || gs[0]).id;
     const cur = window._mqSpecGroup;
     const chip = (id, label) => `<button type="button" onclick="mqSpecPickGroup('${id}')" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;border:1px solid ${cur === id ? '#1a1a1a' : '#e5e7eb'};background:${cur === id ? '#1a1a1a' : '#fff'};color:${cur === id ? '#fff' : '#374151'};font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">${label} <span style="font-weight:500;opacity:.7">${count(id)}</span></button>`;
     return `<div id="mq-spec-groupbar" style="margin-bottom:12px">
       <div style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#6b7280;margin-bottom:6px">Quote</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap">${gs.map(g => chip(g.id, `${g.icon ? g.icon + ' ' : ''}${mqEscHtml(g.name)}`)).join('')}${chip('', 'All')}</div>
-      <div style="font-size:12px;color:#6b7280;margin-top:6px">${cur ? `Items in <strong>${mqEscHtml((gs.find(g => g.id === cur) || {}).name || '')}</strong>. <strong>+ New item</strong> adds one to this quote.` : 'Every item, for every quote.'}</div>
+      <div style="font-size:12px;color:#6b7280;margin-top:6px">${cur === '__none' ? 'These items were ticked for project types that have since been deleted, so they show on no quote. Tick a project type on each (Project types column) or delete it.' : cur ? `Items in <strong>${mqEscHtml((gs.find(g => g.id === cur) || {}).name || '')}</strong>. <strong>+ New item</strong> adds one to this quote.` : 'Every item, for every quote you offer.'}</div>
+      
     </div>`;
   }
   window.mqSpecPickGroup = function(id) {
@@ -10165,6 +10180,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   function mqSpecNewItemRooms() {
     const gs = mqSpecGroups();
     const g = gs.find(x => x.id === window._mqSpecGroup) || (gs.some(x => x.cab) ? null : gs[0]);
+    if (!g && !gs.some(x => x.cab)) return null;
     if (!g || g.cab) return null; // cabinet item = no project types ticked (as before)
     return g.rooms;
   }
@@ -10203,7 +10219,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const proOnlyMatch = !proOnlyFilter || row.getAttribute('data-proonly') === '1';
       const grp = window._mqSpecGroup || '';
       const inGroups = mqSpecGroupsOfRooms(rooms);
-      const groupMatch = !grp || inGroups.includes(grp);
+      const cls = mqSpecItemClass(rooms);
+      const groupMatch = grp === '__none' ? cls === 'orphan' : (!grp ? cls !== 'parked' : inGroups.includes(grp));
       const show = roomMatch && categoryMatch && searchMatch && proOnlyMatch && groupMatch;
       row.style.display = show ? '' : 'none';
       if (show) visibleCount++;
@@ -12687,7 +12704,13 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       if (have) itemMap[it.id] = have.id; else todo.push(it);
     });
     const fixIf = (pq.cats || []).filter(pc => pc.showIf && catMap[pc.id] && !(cats.find(c => c.id === catMap[pc.id]) || {}).showIf);
-    return { q, t, pq, cats, catMap, roomMap, itemMap, todo, fixIf, shopRec, f };
+    // Specialty items from the pack this quote doesn't have yet (matched by
+    // name among the shop's items ticked for this quote's project types).
+    const qRooms = rooms.map(r => r.id);
+    const sp = window._mqSpecRecords || await atGet(CONFIG.SPECIALTY_TABLE, `FIND("${f['Shop token']}", ARRAYJOIN({Shop token (lookup)}))`);
+    const haveSpec = n => sp.some(r => nm(r.fields['Item name']) === nm(n) && mqRoomIdsOf(r.fields['Visible rooms']).some(id => qRooms.includes(id)));
+    const specTodo = qRooms.length ? (pq.specs || []).filter(sx => sx && sx.fields && !haveSpec(sx.fields['Item name'])) : [];
+    return { q, t, pq, cats, catMap, roomMap, itemMap, todo, fixIf, specTodo, qRooms, shopRec, f };
   }
   // Pricing tab: the Restore button only shows when something is missing
   // (Jordan, Nov 2026). Checked in the background once per visit, then the
@@ -12709,7 +12732,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     try { li = await atGet(CONFIG.LINE_ITEMS_TABLE, `FIND("${window._mqShopRecord.fields['Shop token']}", ARRAYJOIN({Shop token (lookup)}))`); } catch (e) { return; }
     let changed = false;
     for (const id of ids) {
-      try { const plan = await mqQtPackPlan(id, li); const n = plan ? plan.todo.length + plan.fixIf.length : 0; if (n !== window._mqPackMissing[id]) { window._mqPackMissing[id] = n; changed = true; } } catch (e) {}
+      try { const plan = await mqQtPackPlan(id, li); const n = plan ? plan.todo.length + plan.fixIf.length + plan.specTodo.length : 0; if (n !== window._mqPackMissing[id]) { window._mqPackMissing[id] = n; changed = true; } } catch (e) {}
     }
     if (changed && window.mqccRerenderAll) window.mqccRerenderAll();
   }
@@ -12720,9 +12743,13 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     try {
       const plan = await mqQtPackPlan(qtId);
       if (!plan) { say('Couldn\u2019t load the starter pack right now.', 'error'); return done(); }
-      let { q, pq, cats, catMap, roomMap, itemMap, todo, fixIf, shopRec, f } = plan;
-      if (!todo.length && !fixIf.length) { window._mqPackMissing[qtId] = 0; if (window.mqccRerenderAll) window.mqccRerenderAll(); say(`✓ "${q.name}" already has everything from the starter pack.`); return done(); }
-      if (!confirm(`Add ${todo.length} missing option${todo.length === 1 ? '' : 's'} back to "${q.name}" from the starter pack${fixIf.length ? `, and reconnect ${fixIf.length} "Only if" rule${fixIf.length === 1 ? '' : 's'}` : ''}?\n\nYour existing options, prices and photos stay exactly as they are.`)) return done();
+      let { q, pq, cats, catMap, roomMap, itemMap, todo, fixIf, specTodo, qRooms, shopRec, f } = plan;
+      if (!todo.length && !fixIf.length && !specTodo.length) { window._mqPackMissing[qtId] = 0; if (window.mqccRerenderAll) window.mqccRerenderAll(); say(`✓ "${q.name}" already has everything from the starter pack.`); return done(); }
+      const parts = [];
+      if (todo.length) parts.push(`${todo.length} missing option${todo.length === 1 ? '' : 's'}`);
+      if (fixIf.length) parts.push(`reconnect ${fixIf.length} "Only if" rule${fixIf.length === 1 ? '' : 's'}`);
+      if (specTodo.length) parts.push(`${specTodo.length} specialty item${specTodo.length === 1 ? '' : 's'} (${specTodo.map(x => x.fields['Item name']).join(', ')}${specTodo.some(x => x.fields.Active === false) ? ' — switched off until you turn them on' : ''})`);
+      if (!confirm(`Add to "${q.name}" from the starter pack: ${parts.join('; ')}?\n\nYour existing options, prices and photos stay exactly as they are.`)) return done();
       if (btn) btn.textContent = `⏳ Adding ${todo.length}…`;
       const created = []; let failed = 0;
       for (const it of todo) {
@@ -12741,6 +12768,14 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         if (c.src && itemMap[c.src]) { c.src = itemMap[c.src]; ch = true; }
         if (ch) { try { await atUpdate(CONFIG.LINE_ITEMS_TABLE, r.id, { 'Custom pricing': JSON.stringify(c) }); } catch (e) {} }
       }
+      let specAdded = 0;
+      for (const sx of specTodo) {
+        const mapped = mqRoomIdsOf(sx.fields['Visible rooms']).map(id => roomMap[id]).filter(Boolean);
+        const fields = Object.assign({}, sx.fields, { Shop: [shopRec.id], 'Visible rooms': JSON.stringify(mapped.length ? mapped : qRooms) });
+        const rec = await mqPackCreate(CONFIG.SPECIALTY_TABLE, fields);
+        if (rec && rec.id) specAdded++; else failed++;
+      }
+      if (specAdded) { try { const specs = await loadSpecialty(f['Shop token']); window._mqSpecRecords = specs; if (el('mq-spec-list')) renderSpecialty(specs, shopRec); } catch (e) {} }
       let relinked = 0;
       cats = cats.map(c => { const pc = fixIf.find(x => catMap[x.id] === c.id); if (pc && itemMap[pc.showIf]) { relinked++; return Object.assign({}, c, { showIf: itemMap[pc.showIf] }); } return c; });
       const upd = {};
@@ -12752,7 +12787,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       if (window._mqLastFetchTimes) Object.keys(window._mqLastFetchTimes).forEach(k => { window._mqLastFetchTimes[k] = 0; });
       delete window._mqPackMissing[qtId];
       if (window.mqphReload) await window.mqphReload();
-      say(failed ? `⚠️ Added ${created.length}, but ${failed} couldn't be saved (Airtable was busy) — click Restore again in a minute.` : `✓ "${q.name}": ${created.length} option${created.length === 1 ? '' : 's'} added back${relinked ? `, ${relinked} "Only if" rule${relinked === 1 ? '' : 's'} reconnected` : ''}. Check the prices — they're the starter pack's.`, failed ? 'error' : 'success');
+      say(failed ? `⚠️ Added ${created.length}, but ${failed} couldn't be saved (Airtable was busy) — click Restore again in a minute.` : `✓ "${q.name}": ${[created.length ? `${created.length} option${created.length === 1 ? '' : 's'} added back` : '', relinked ? `${relinked} "Only if" rule${relinked === 1 ? '' : 's'} reconnected` : '', specAdded ? `${specAdded} specialty item${specAdded === 1 ? '' : 's'} added (Specialty items tab)` : ''].filter(Boolean).join(', ')}. Check the prices — they're the starter pack's.`, failed ? 'error' : 'success');
     } catch (e) { console.error('restore from pack', e); say('Couldn\u2019t restore right now — please try again.', 'error'); }
     done();
   };
