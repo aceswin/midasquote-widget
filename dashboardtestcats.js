@@ -12569,38 +12569,69 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     }
     try { return !!mqQtPackTrade(qtId); } catch (e) { return false; }
   };
-  window.mqRestoreQtFromPack = async function(qtId, btn) {
+  // What a pack-made quote is missing compared with its starter pack.
+  async function mqQtPackPlan(qtId, li) {
     const hit = mqQtPackTrade(qtId);
     const shopRec = window._mqShopRecord;
-    if (!hit || !shopRec) return;
+    if (!hit || !shopRec) return null;
     const { q, t } = hit;
+    const quotes = mqPackQuotes(await mqTradePackLoad(t));
+    const nm = s => String(s || '').trim().toLowerCase();
+    const pq = quotes.find(x => nm(x.qt && x.qt.name) === nm(q.packName || q.name))
+      || quotes.find(x => nm(q.name).startsWith(nm(x.qt && x.qt.name)))
+      || quotes[q.packIdx || 0] || quotes[0];
+    if (!pq) return null;
+    const f = shopRec.fields;
+    let cats = mqJsonObj(f['Custom categories'], []); if (!Array.isArray(cats)) cats = [];
+    const mine = cats.filter(c => c && c.qt === qtId);
+    const used = new Set(), catMap = {};
+    (pq.cats || []).forEach(pc => { const sc = mine.find(c => !used.has(c.id) && nm(c.name) === nm(pc.name)); if (sc) { used.add(sc.id); catMap[pc.id] = sc.id; } });
+    const rooms = (window._mqRooms || mqJsonObj(f['Room types'], [])).filter(r => r && r.forQt === qtId);
+    const roomMap = {}; (pq.rooms || []).forEach(pr => { const r = rooms.find(x => nm(x.name) === nm(pr.name)); if (r) roomMap[pr.id] = r.id; });
+    li = li || await atGet(CONFIG.LINE_ITEMS_TABLE, `FIND("${f['Shop token']}", ARRAYJOIN({Shop token (lookup)}))`);
+    const itemMap = {}, todo = [];
+    (pq.items || []).forEach(it => {
+      const sc = catMap[it.fields.Category];
+      if (!sc) return;
+      const have = li.find(r => r.fields && r.fields['Category'] === sc && nm(r.fields['Name']) === nm(it.fields['Name']));
+      if (have) itemMap[it.id] = have.id; else todo.push(it);
+    });
+    const fixIf = (pq.cats || []).filter(pc => pc.showIf && catMap[pc.id] && !(cats.find(c => c.id === catMap[pc.id]) || {}).showIf);
+    return { q, t, pq, cats, catMap, roomMap, itemMap, todo, fixIf, shopRec, f };
+  }
+  // Pricing tab: the Restore button only shows when something is missing
+  // (Jordan, Nov 2026). Checked in the background once per visit, then the
+  // step list redraws if any quote needs it.
+  window._mqPackMissing = window._mqPackMissing || {};
+  window.mqQtPackMissing = qtId => {
+    const m = window._mqPackMissing;
+    if (!(qtId in m)) {
+      m[qtId] = 0;
+      clearTimeout(window._mqPackMissT);
+      window._mqPackMissT = setTimeout(mqPackMissingScan, 300);
+    }
+    return m[qtId];
+  };
+  async function mqPackMissingScan() {
+    const ids = Object.keys(window._mqPackMissing).filter(id => mqQtPackTrade(id));
+    if (!ids.length) return;
+    let li;
+    try { li = await atGet(CONFIG.LINE_ITEMS_TABLE, `FIND("${window._mqShopRecord.fields['Shop token']}", ARRAYJOIN({Shop token (lookup)}))`); } catch (e) { return; }
+    let changed = false;
+    for (const id of ids) {
+      try { const plan = await mqQtPackPlan(id, li); const n = plan ? plan.todo.length + plan.fixIf.length : 0; if (n !== window._mqPackMissing[id]) { window._mqPackMissing[id] = n; changed = true; } } catch (e) {}
+    }
+    if (changed && window.mqccRerenderAll) window.mqccRerenderAll();
+  }
+  window.mqRestoreQtFromPack = async function(qtId, btn) {
     const say = (m, type) => { if (window.mqccMsg) window.mqccMsg(m, type === 'error'); else showMsg('mq-shop-msg', m, type); };
     if (btn) { btn.disabled = true; btn.textContent = '⏳ Checking…'; }
     const done = () => { if (btn) { btn.disabled = false; btn.textContent = '↺ Restore from starter pack'; } };
     try {
-      const quotes = mqPackQuotes(await mqTradePackLoad(t));
-      const nm = s => String(s || '').trim().toLowerCase();
-      const pq = quotes.find(x => nm(x.qt && x.qt.name) === nm(q.packName || q.name))
-        || quotes.find(x => nm(q.name).startsWith(nm(x.qt && x.qt.name)))
-        || quotes[q.packIdx || 0] || quotes[0];
-      if (!pq) { say('Couldn\u2019t load the starter pack right now.', 'error'); return done(); }
-      const f = shopRec.fields;
-      let cats = mqJsonObj(f['Custom categories'], []); if (!Array.isArray(cats)) cats = [];
-      const mine = cats.filter(c => c && c.qt === qtId);
-      const used = new Set(), catMap = {};
-      (pq.cats || []).forEach(pc => { const sc = mine.find(c => !used.has(c.id) && nm(c.name) === nm(pc.name)); if (sc) { used.add(sc.id); catMap[pc.id] = sc.id; } });
-      const rooms = (window._mqRooms || mqJsonObj(f['Room types'], [])).filter(r => r && r.forQt === qtId);
-      const roomMap = {}; (pq.rooms || []).forEach(pr => { const r = rooms.find(x => nm(x.name) === nm(pr.name)); if (r) roomMap[pr.id] = r.id; });
-      const li = await atGet(CONFIG.LINE_ITEMS_TABLE, `FIND("${f['Shop token']}", ARRAYJOIN({Shop token (lookup)}))`);
-      const itemMap = {}, todo = [];
-      (pq.items || []).forEach(it => {
-        const sc = catMap[it.fields.Category];
-        if (!sc) return;
-        const have = li.find(r => r.fields && r.fields['Category'] === sc && nm(r.fields['Name']) === nm(it.fields['Name']));
-        if (have) itemMap[it.id] = have.id; else todo.push(it);
-      });
-      const fixIf = (pq.cats || []).filter(pc => pc.showIf && catMap[pc.id] && !(cats.find(c => c.id === catMap[pc.id]) || {}).showIf);
-      if (!todo.length && !fixIf.length) { say(`✓ "${q.name}" already has everything from the starter pack.`); return done(); }
+      const plan = await mqQtPackPlan(qtId);
+      if (!plan) { say('Couldn\u2019t load the starter pack right now.', 'error'); return done(); }
+      let { q, pq, cats, catMap, roomMap, itemMap, todo, fixIf, shopRec, f } = plan;
+      if (!todo.length && !fixIf.length) { window._mqPackMissing[qtId] = 0; if (window.mqccRerenderAll) window.mqccRerenderAll(); say(`✓ "${q.name}" already has everything from the starter pack.`); return done(); }
       if (!confirm(`Add ${todo.length} missing option${todo.length === 1 ? '' : 's'} back to "${q.name}" from the starter pack${fixIf.length ? `, and reconnect ${fixIf.length} "Only if" rule${fixIf.length === 1 ? '' : 's'}` : ''}?\n\nYour existing options, prices and photos stay exactly as they are.`)) return done();
       if (btn) btn.textContent = `⏳ Adding ${todo.length}…`;
       const created = []; let failed = 0;
@@ -12629,6 +12660,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       if (phCh) upd['Photos'] = JSON.stringify(ph);
       if (Object.keys(upd).length) { await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, upd); Object.assign(shopRec.fields, upd); }
       if (window._mqLastFetchTimes) Object.keys(window._mqLastFetchTimes).forEach(k => { window._mqLastFetchTimes[k] = 0; });
+      delete window._mqPackMissing[qtId];
       if (window.mqphReload) await window.mqphReload();
       say(failed ? `⚠️ Added ${created.length}, but ${failed} couldn't be saved (Airtable was busy) — click Restore again in a minute.` : `✓ "${q.name}": ${created.length} option${created.length === 1 ? '' : 's'} added back${relinked ? `, ${relinked} "Only if" rule${relinked === 1 ? '' : 's'} reconnected` : ''}. Check the prices — they're the starter pack's.`, failed ? 'error' : 'success');
     } catch (e) { console.error('restore from pack', e); say('Couldn\u2019t restore right now — please try again.', 'error'); }
