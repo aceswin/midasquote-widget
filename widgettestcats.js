@@ -895,9 +895,9 @@
          the bottom so cards in a row line up. Simple cards (just + Add or a
          counter) are 184px; cards with choices (variants, supply/install,
          "Uses your…") are 220px. A counter alone at the bottom is centred. */
-      #midasquote-widget .mq-spec-item.mq-spec-product{flex:0 0 220px;padding:0;gap:0;overflow:hidden}
+      #midasquote-widget .mq-spec-item.mq-spec-product{flex:0 0 260px;padding:0;gap:0;overflow:hidden}
       #midasquote-widget .mq-spec-item.mq-spec-product.mq-spec-compact{flex:0 0 184px}
-      #midasquote-widget .mq-spec-product .mq-spec-top{flex-direction:column;align-items:stretch;gap:0;flex:1}
+      #midasquote-widget .mq-spec-product .mq-spec-top{flex-direction:column;align-items:stretch;gap:0;flex:0 0 auto}
       #midasquote-widget .mq-spec-product .mq-spec-top > div{width:100%}
       #midasquote-widget .mq-spec-product .mq-spec-top > div:first-child{border-bottom:1px solid #eef0f3}
       #midasquote-widget .mq-spec-product .mq-spec-top > div + div{padding:10px 12px 4px}
@@ -907,9 +907,7 @@
       #midasquote-widget .mq-spec-product .mq-vpicker-badge{top:8px!important;right:8px!important}
       #midasquote-widget .mq-spec-product .mq-spec-top > div + div > div[style*="margin-top:10px"]{margin-top:6px!important}
       #midasquote-widget .mq-spec-product > :not(.mq-spec-top):not(.mq-spec-bottom){padding:4px 12px 0;box-sizing:border-box;width:100%}
-      #midasquote-widget .mq-spec-product .mq-spec-variant-row .mq-vpicker-row{flex-wrap:wrap;overflow:visible;padding:2px 0 4px;gap:6px}
-      #midasquote-widget .mq-spec-product .mq-spec-variant-row .mq-vpicker-arrow{display:none!important}
-      #midasquote-widget .mq-spec-product .mq-spec-bottom{padding:6px 12px 12px}
+      #midasquote-widget .mq-spec-product .mq-spec-bottom{padding:6px 12px 12px;margin-top:auto}
       #midasquote-widget .mq-spec-product .mq-qty-ctrl{flex-wrap:wrap;row-gap:6px}
       #midasquote-widget .mq-spec-product .mq-cc-si,#midasquote-widget .mq-spec-product .mq-spec-mode-select{width:100%!important;max-width:100%;box-sizing:border-box}
       #midasquote-widget .mq-spec-product .mq-spec-bottom.mq-solo{align-items:center;text-align:center}
