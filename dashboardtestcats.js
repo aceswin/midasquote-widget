@@ -2779,6 +2779,32 @@ window.logoutMember = async function () {
   .mq-studio-nav button,.mq-studio-muted-btn{cursor:pointer;border:1px solid #dfdce2;background:#fff;color:#494452;border-radius:10px;padding:9px 14px;font-size:12px;font-weight:700;transition:.15s}
   .mq-studio-nav button.active,.mq-studio-nav button:hover{background:#2c2436;border-color:#2c2436;color:white}
   .mq-studio-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;margin-bottom:20px}
+  #mq-studio .mq-studio-mytpl-savebtn{background:#16a34a;color:#fff;border:0;border-radius:9px;padding:8px 13px;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap}
+  #mq-studio .mq-studio-mytpl-savebtn:hover{background:#15803d}
+  #mq-studio .mq-studio-mytpl-tile{position:relative}
+  #mq-studio .mq-mytpl-tools{position:absolute;top:14px;right:14px;display:flex;gap:5px;opacity:0;transition:opacity .15s}
+  #mq-studio .mq-studio-mytpl-tile:hover .mq-mytpl-tools,#mq-studio .mq-studio-mytpl-tile:focus-within .mq-mytpl-tools{opacity:1}
+  @media (hover:none){#mq-studio .mq-mytpl-tools{opacity:1}}
+  #mq-studio .mq-mytpl-tools span{background:#fff;border:1px solid #e5e7eb;border-radius:7px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 2px 8px rgba(0,0,0,.15);cursor:pointer}
+  #mq-studio .mq-mytpl-tools span:hover{background:#f3f4f6}
+  #mq-studio .mq-mytpl-badge{position:absolute;top:14px;left:14px;background:#16a34a;color:#fff;font-size:10px;font-weight:800;letter-spacing:.04em;padding:3px 7px;border-radius:6px}
+  #mq-studio .mq-studio-blank-thumb{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:#fff;border:2px dashed #d6d3d8;border-radius:9px;color:#78727c;font-size:13px;font-weight:600}
+  #mq-studio .mq-studio-blank-thumb b{font-size:38px;line-height:1;color:#a8a2ab;font-weight:400}
+  #mq-studio .mq-studio-mytpl-empty{grid-column:1/-1;padding:26px;border:1px dashed #d6d3d8;border-radius:13px;background:#fff;color:#57525a;font-size:14px;line-height:1.5;text-align:center}
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-mytpl-modal{position:fixed!important;inset:0!important;z-index:2147483600!important;background:rgba(17,12,20,.45)!important;display:flex!important;align-items:center!important;justify-content:center!important;padding:16px!important}
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-mytpl-modal .mq-mytpl-box{box-sizing:border-box!important;background:#fff!important;border-radius:14px!important;padding:20px 22px!important;width:100%!important;max-width:430px!important;box-shadow:0 20px 50px rgba(0,0,0,.3)!important;font-family:inherit!important;color:#1f1a22!important}
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-mytpl-modal h4{margin:0 0 6px!important;font-size:17px!important}
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-mytpl-modal p{margin:0 0 14px!important;font-size:13px!important;color:#6b6570!important;line-height:1.45!important}
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-mytpl-modal input[type=text]{width:100%!important;box-sizing:border-box!important;font-size:15px!important;padding:9px 11px!important;border:1.5px solid #d6d3d8!important;border-radius:8px!important;margin-bottom:14px!important}
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-mytpl-modal .mq-mytpl-row{display:flex!important;gap:8px!important;justify-content:flex-end!important;flex-wrap:wrap!important}
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-mytpl-modal button{border:1px solid #d6d3d8!important;background:#fff!important;border-radius:8px!important;padding:8px 13px!important;font-size:13px!important;font-weight:600!important;cursor:pointer!important;color:#1f1a22!important}
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-mytpl-modal button.mq-go{background:#16a34a!important;border-color:#16a34a!important;color:#fff!important}
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-mytpl-modal button:disabled{opacity:.55!important;cursor:default!important}
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-mytpl-modal .mq-mytpl-sizes{display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important;margin-bottom:14px!important}
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-mytpl-modal .mq-mytpl-sizes button{display:flex!important;flex-direction:column!important;align-items:center!important;gap:6px!important;padding:12px 8px!important;font-weight:600!important}
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-mytpl-modal .mq-mytpl-sizes button small{font-weight:400!important;color:#78727c!important;font-size:11px!important}
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-mytpl-modal .mq-mytpl-sizes i{display:block!important;border:2px solid #9a94a0!important;border-radius:3px!important;background:#f6f4f7!important}
+  #midasquote-dashboard #mq-page-marketing #mq-studio .mq-mytpl-modal .mq-mytpl-status{font-size:12px!important;color:#6b6570!important;margin-top:10px!important;min-height:16px!important}
   .mq-studio-tile{background:#fff;border:1px solid #e9e6e9;border-radius:13px;padding:9px;text-align:left;cursor:pointer;box-shadow:0 3px 18px rgba(32,26,41,.04);transition:transform .2s,border-color .2s,box-shadow .2s;color:inherit}
   .mq-studio-tile:hover,.mq-studio-tile:focus-visible{transform:translateY(-3px);border-color:#a98caa;box-shadow:0 10px 28px rgba(32,26,41,.12);outline:none}
   .mq-studio-thumb{display:block;width:100%;height:175px;object-fit:cover;border-radius:8px;background:#eee8e9}
@@ -3576,10 +3602,10 @@ window.logoutMember = async function () {
                 </button>
               </div>
               <div class="mq-studio-mobile-notice" role="note">📱 <strong>Design Studio works best on a tablet or desktop.</strong> You can explore templates on your phone, but precise editing (dragging, resizing and rotating) is easier on a larger screen. <button type="button" id="mq-studio-mobile-continue">Continue on phone anyway</button></div>
-              <div class="mq-studio-nav" role="group" aria-label="Filter templates"><button type="button" class="active" data-studio-filter="all">All designs</button><button type="button" data-studio-filter="social">Social posts</button><button type="button" data-studio-filter="print">Posters</button><button type="button" data-studio-filter="yard">Yard signs</button><button type="button" data-studio-filter="qr">QR promotions</button></div>
+              <div class="mq-studio-nav" role="group" aria-label="Filter templates"><button type="button" class="active" data-studio-filter="all">All designs</button><button type="button" data-studio-filter="mine">⭐ My templates</button><button type="button" data-studio-filter="social">Social posts</button><button type="button" data-studio-filter="print">Posters</button><button type="button" data-studio-filter="yard">Yard signs</button><button type="button" data-studio-filter="qr">QR promotions</button></div>
               <div class="mq-studio-grid" id="mq-studio-grid"></div>
               <div id="mq-studio-workspace" class="mq-studio-workspace" style="display:none">
-                <div class="mq-studio-editor-top"><div><span class="mq-studio-kicker">DESIGN STUDIO</span><h3 id="mq-studio-edit-title">Edit template</h3></div><div class="mq-studio-template-switch"><label for="mq-studio-template-select">Switch design</label><select id="mq-studio-template-select" aria-label="Switch design template"></select><button type="button" class="mq-studio-muted-btn" id="mq-studio-back">← All templates</button></div></div><div class="mq-studio-canvas-actions"><button type="button" id="mq-studio-quick-text">+ Add text</button><button type="button" id="mq-studio-quick-shape">+ Add shape</button><button type="button" id="mq-studio-quick-arrow">+ Add arrow</button><button type="button" id="mq-studio-quick-doodle">+ Add doodle</button><button type="button" id="mq-studio-quick-bubble">+ Add bubble</button><button type="button" id="mq-studio-quick-sticker">+ Add sticker</button><button type="button" id="mq-studio-properties-toggle">Selected object options</button><button type="button" id="mq-studio-settings-toggle">All design settings</button></div>
+                <div class="mq-studio-editor-top"><div><span class="mq-studio-kicker">DESIGN STUDIO</span><h3 id="mq-studio-edit-title">Edit template</h3></div><div class="mq-studio-template-switch"><label for="mq-studio-template-select">Switch design</label><select id="mq-studio-template-select" aria-label="Switch design template"></select><button type="button" class="mq-studio-mytpl-savebtn" id="mq-studio-mytpl-save" title="Save this design so you can reuse it any time, on any computer">💾 Save as my template</button><button type="button" class="mq-studio-muted-btn" id="mq-studio-back">← All templates</button></div></div><div class="mq-studio-canvas-actions"><button type="button" id="mq-studio-quick-text">+ Add text</button><button type="button" id="mq-studio-quick-shape">+ Add shape</button><button type="button" id="mq-studio-quick-arrow">+ Add arrow</button><button type="button" id="mq-studio-quick-doodle">+ Add doodle</button><button type="button" id="mq-studio-quick-bubble">+ Add bubble</button><button type="button" id="mq-studio-quick-sticker">+ Add sticker</button><button type="button" id="mq-studio-properties-toggle">Selected object options</button><button type="button" id="mq-studio-settings-toggle">All design settings</button></div>
                 <div class="mq-studio-editor-layout">
                   <div class="mq-studio-fields">
                     <div class="mq-studio-control-card">
@@ -7361,7 +7387,9 @@ window.logoutMember = async function () {
   };
 
   async function loadProposalTemplates(shopToken) {
-    const recs = await atGet(CONFIG.PROPOSAL_TEMPLATES_TABLE, `FIND("${shopToken}", ARRAYJOIN({Shop token (lookup)}))`);
+    const recs = (await atGet(CONFIG.PROPOSAL_TEMPLATES_TABLE, `FIND("${shopToken}", ARRAYJOIN({Shop token (lookup)}))`))
+      // Design Studio "My templates" live in the same table — not proposals.
+      .filter(r => !String(r.fields['Template name'] || '').startsWith('MQSTUDIO:'));
     return recs.sort((a, b) => (a.fields['Sort order'] || 0) - (b.fields['Sort order'] || 0));
   }
 
@@ -18404,7 +18432,10 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
       ctx.clearRect(0,0,W,H);ctx.fillStyle='#eee5dd';ctx.fillRect(0,0,W,H);
       const fill=(c,x,y,w,h)=>{ctx.fillStyle=c;ctx.fillRect(x,y,w,h)};
       let primary=safeColor(opts.headlineColor,'#ffffff'),secondary=safeColor(opts.subColor,'#eee0e7');
-      if(t.mode==='luxury'){
+      if(t.mode==='blank'){
+        fill(b,0,0,W,H);
+        if(hasPhoto)cover(ctx,opts.photo,0,0,W,H);
+      }else if(t.mode==='luxury'){
         fill(b,0,0,W,H);
         if(hasPhoto){cover(ctx,opts.photo,0,0,W,H)}
         else{const g=ctx.createLinearGradient(0,0,W,H);g.addColorStop(0,b);g.addColorStop(1,b);fill(g,0,0,W,H)}
@@ -18474,7 +18505,7 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
       if(finish==='cinematic'){
         const shadow=ctx.createLinearGradient(0,0,0,H);
         shadow.addColorStop(0,'rgba(0,0,0,.20)');shadow.addColorStop(.4,'rgba(0,0,0,0)');shadow.addColorStop(1,'rgba(0,0,0,.37)');
-        if(t.mode!=='minimal'&&t.mode!=='frame'){ctx.fillStyle=shadow;ctx.fillRect(0,0,W,H)}
+        if(t.mode!=='minimal'&&t.mode!=='frame'&&t.mode!=='blank'){ctx.fillStyle=shadow;ctx.fillRect(0,0,W,H)}
       }
       if(finish==='architect' && !hasPhoto){fill('#ffffff0a',W*.64,0,W*.36,H)}
       const detail=opts.accent||'none';ctx.strokeStyle=accent;ctx.lineWidth=Math.max(2,2.2*k);
@@ -18645,9 +18676,171 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
       }
       return header+defs+body+'</svg>';
     }
+    // ── My templates (Jordan, Nov 2026) ──────────────────────────────────
+    // A shop can save any design it has worked on — layout, words, colours,
+    // photos — and open it again later on any computer. Each one is a row in
+    // the Proposal templates table named "MQSTUDIO:<id>" (the proposal lists
+    // skip those). Photos are uploaded through the normal image uploader so
+    // the row only holds links. "Blank canvas" starts a design from scratch.
+    const MQ_MYTPL_PREFIX='MQSTUDIO:', MQ_MYTPL_MAX=20;
+    const MQ_STUDIO_BLANK={id:'blank',title:'Blank canvas',category:'blank',tag:'Start from scratch',mode:'blank',headline:'',sub:'',cta:''};
+    const MQ_BLANK_SIZES=[['square','Square post','1080 × 1080',36,36],['portrait','Feed portrait','1080 × 1350',32,40],['story','Story / Reel','1080 × 1920',25,44],['poster','Poster','1080 × 1620',29,44],['landscape','Yard sign','1620 × 1080',48,32]];
+    let mqMyTpls=null, mqMyTplLoading=null, mqMyTplOpen=null;
+    const mqShopTok=()=>shopRecord.fields['Shop token']||'';
+    const mqMyTplEsc=v=>String(v==null?'':v).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    function mqMyTplParse(r){let b=null;try{b=JSON.parse(r.fields['Body']||'null');}catch(e){}return b&&b.v?{recId:r.id,body:b}:null;}
+    function mqMyTplLoad(force){
+      if(mqMyTplLoading&&!force)return mqMyTplLoading;
+      const tok=mqShopTok().replace(/"/g,'');
+      mqMyTplLoading=atGet(CONFIG.PROPOSAL_TEMPLATES_TABLE,`AND(FIND("${tok}", ARRAYJOIN({Shop token (lookup)})), FIND("${MQ_MYTPL_PREFIX}", {Template name}) = 1)`)
+        .then(rows=>{mqMyTpls=(rows||[]).map(mqMyTplParse).filter(Boolean).sort((a,b)=>String(b.body.saved||'').localeCompare(String(a.body.saved||'')));return mqMyTpls;})
+        .catch(e=>{console.warn('My templates failed to load',e);mqMyTpls=mqMyTpls||[];return mqMyTpls;});
+      return mqMyTplLoading;
+    }
+    function mqMyTplTiles(filter){
+      if(filter!=='all'&&filter!=='mine')return;
+      if(mqMyTpls===null){mqMyTplLoad().then(()=>{if(!mqStudioDesignOpen())window.mqStudioRefreshGallery();});}
+      // Blank canvas
+      const blank=document.createElement('button');blank.type='button';blank.className='mq-studio-tile mq-studio-blank-tile';
+      blank.innerHTML=`<div class="mq-studio-thumb-area"><div class="mq-studio-blank-thumb"><b>＋</b>Start from scratch</div></div><div class="mq-studio-tile-meta"><span><strong>Blank canvas</strong><small>Pick a size and build your own</small></span><b aria-hidden="true">↗</b></div>`;
+      blank.addEventListener('click',()=>mqBlankOpen());grid.appendChild(blank);
+      (mqMyTpls||[]).forEach(tp=>{
+        const b=tp.body,btn=document.createElement('div');btn.className='mq-studio-tile mq-studio-mytpl-tile';btn.tabIndex=0;btn.setAttribute('role','button');btn.dataset.mytpl=tp.recId;
+        if(b.size==='landscape')btn.classList.add('mq-studio-yard-card');
+        btn.innerHTML=`<div class="mq-studio-thumb-area">${b.thumb?`<img class="mq-studio-thumb" alt="" src="${mqMyTplEsc(b.thumb)}"/>`:`<div class="mq-studio-blank-thumb" style="border-style:solid"><b>★</b>${mqMyTplEsc(b.name)}</div>`}</div><span class="mq-mytpl-badge">MINE</span><span class="mq-mytpl-tools"><span data-act="rename" title="Rename">✏️</span><span data-act="delete" title="Delete">🗑️</span></span><div class="mq-studio-tile-meta"><span><strong>${mqMyTplEsc(b.name)}</strong><small>My template${b.saved?' · saved '+new Date(b.saved).toLocaleDateString():''}</small></span><b aria-hidden="true">↗</b></div>`;
+        btn.addEventListener('click',e=>{const act=e.target.closest('[data-act]')?.dataset.act;if(act==='rename')return mqMyTplRename(tp);if(act==='delete')return mqMyTplDelete(tp);mqMyTplOpenRec(tp);});
+        btn.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target===btn)mqMyTplOpenRec(tp);});
+        grid.appendChild(btn);
+      });
+      if(filter==='mine'&&mqMyTpls&&!mqMyTpls.length){const n=document.createElement('div');n.className='mq-studio-mytpl-empty';n.innerHTML='<strong>No saved templates yet.</strong><br>Open any design (or the blank canvas), make it yours, then click <b>💾 Save as my template</b> at the top of the editor. It’ll be here every time you log in.';grid.appendChild(n);}
+    }
+    function mqMyTplModal(html){
+      const host=mqStudioDesignOpen()?workspace:root;
+      const m=document.createElement('div');m.className='mq-mytpl-modal';m.innerHTML=`<div class="mq-mytpl-box">${html}</div>`;
+      m.addEventListener('mousedown',e=>{if(e.target===m)m.remove();});host.appendChild(m);return m;
+    }
+    function mqBlankOpen(){
+      const m=mqMyTplModal(`<h4>Start from scratch</h4><p>Pick a size. You get a plain canvas with all the usual tools — add text, shapes, photos and your logo.</p><div class="mq-mytpl-sizes">${MQ_BLANK_SIZES.map(([k,l,d,w,h])=>`<button type="button" data-size="${k}"><i style="width:${w}px;height:${h}px"></i>${l}<small>${d}</small></button>`).join('')}</div><div class="mq-mytpl-row"><button type="button" data-x>Cancel</button></div>`);
+      m.querySelector('[data-x]').onclick=()=>m.remove();
+      m.querySelectorAll('[data-size]').forEach(b=>b.onclick=()=>{m.remove();mqStartBlank(b.dataset.size);});
+    }
+    function mqBlankBase(size){
+      field('size').value=size;field('color').value='#ffffff';field('quick-brand').value='#ffffff';
+      field('composition').value='original';field('finish').value='editorial';field('accent').value='none';
+      mqStudioPhoto=null;mqStudioDetached=true;mqStudioCustomLayers=[];mqStudioSelectedLayerId=null;
+    }
+    function mqStartBlank(size){
+      select(MQ_STUDIO_BLANK);if(mqStudioSelected!==MQ_STUDIO_BLANK)return;
+      mqBlankBase(size);
+      if(field('template-select'))field('template-select').value='';
+      renderLayerList();syncLayerControls();update();resetStudioHistory();
+      mqShowToast('Blank canvas ready — use + Add text, shapes or a photo');
+    }
+    // Image → link. Photos already online keep their link; anything picked
+    // from the computer (or drawn) is uploaded once.
+    async function mqMyTplImgUrl(img,cache){
+      if(!img)return null;if(cache.has(img))return cache.get(img);
+      const p=(async()=>{
+        const src=img.src||'';if(/^https?:/i.test(src))return src;
+        const w=img.naturalWidth||img.width,h=img.naturalHeight||img.height;if(!w||!h)return null;
+        const sc=Math.min(1,2000/Math.max(w,h)),cv=document.createElement('canvas');cv.width=Math.max(1,Math.round(w*sc));cv.height=Math.max(1,Math.round(h*sc));
+        const cx=cv.getContext('2d');cx.drawImage(img,0,0,cv.width,cv.height);
+        let alpha=false;try{const t=document.createElement('canvas');t.width=48;t.height=48;const tx=t.getContext('2d');tx.drawImage(cv,0,0,48,48);const d=tx.getImageData(0,0,48,48).data;for(let i=3;i<d.length;i+=4)if(d[i]<250){alpha=true;break;}}catch(e){}
+        const type=alpha?'image/png':'image/jpeg';
+        const blob=await new Promise(r=>{try{cv.toBlob(r,type,0.9);}catch(e){r(null);}});if(!blob)return null;
+        return await mqUploadImage(new File([blob],'studio-'+Date.now()+(alpha?'.png':'.jpg'),{type}),mqShopTok(),alpha?'logos':'general');
+      })();
+      cache.set(img,p);return p;
+    }
+    async function mqMyTplSerialize(name){
+      const st=captureStudioState();if(!st)throw new Error('Nothing open');
+      const cache=new Map(),layers=[];
+      for(const l of mqStudioCustomLayers){
+        const c={...l};delete c.image;
+        if(c.type==='image'){
+          if(c.qrCode){delete c.dataUrl;}
+          else if(l.image){const u=await mqMyTplImgUrl(l.image,cache);if(u)c.dataUrl=u;else delete c.dataUrl;}
+          else if(c.dataUrl&&!/^https?:/i.test(c.dataUrl))delete c.dataUrl;
+        }
+        layers.push(c);
+      }
+      const photo=await mqMyTplImgUrl(mqStudioPhoto,cache),logo=await mqMyTplImgUrl(mqStudioLogo,cache);
+      let thumb=null;
+      try{
+        update(true);const src=field('canvas'),sc=Math.min(1,520/Math.max(src.width,src.height));
+        const cv=document.createElement('canvas');cv.width=Math.round(src.width*sc);cv.height=Math.round(src.height*sc);cv.getContext('2d').drawImage(src,0,0,cv.width,cv.height);update();
+        const blob=await new Promise(r=>{try{cv.toBlob(r,'image/jpeg',0.82);}catch(e){r(null);}});
+        if(blob)thumb=await mqUploadImage(new File([blob],'studio-thumb-'+Date.now()+'.jpg',{type:'image/jpeg'}),mqShopTok(),'general');
+      }catch(e){console.warn('Template preview not saved',e);}
+      return {v:1,name,base:mqStudioSelected.id,size:field('size').value,values:st.values,quickSurface:st.quickSurface,layers,detached:st.detached,photo,logo,thumb,saved:new Date().toISOString()};
+    }
+    function mqMyTplSaveDialog(){
+      if(!mqStudioSelected)return;
+      const cur=mqMyTplOpen;
+      const m=mqMyTplModal(`<h4>💾 Save as my template</h4><p>Saves everything on this design — positions, words, colours and photos — so you can open it again any time, on any computer.</p><input type="text" maxlength="60" placeholder="e.g. Before & After – my style"/><div class="mq-mytpl-row"><button type="button" data-x>Cancel</button>${cur?`<button type="button" data-new>Save as new</button><button type="button" class="mq-go" data-upd>Update “${mqMyTplEsc(cur.name)}”</button>`:`<button type="button" class="mq-go" data-new>Save template</button>`}</div><div class="mq-mytpl-status"></div>`);
+      const inp=m.querySelector('input'),status=m.querySelector('.mq-mytpl-status');
+      inp.value=cur?cur.name:(mqStudioSelected===MQ_STUDIO_BLANK?'My design':'My '+mqStudioSelected.title);
+      setTimeout(()=>{inp.focus();inp.select();},30);
+      m.querySelector('[data-x]').onclick=()=>m.remove();
+      const go=async upd=>{
+        const name=inp.value.trim();if(!name){status.textContent='Give it a name first.';inp.focus();return;}
+        if(!upd){await mqMyTplLoad();if((mqMyTpls||[]).length>=MQ_MYTPL_MAX){status.textContent=`You can keep up to ${MQ_MYTPL_MAX} templates — delete one you don’t use, or update an existing one.`;return;}}
+        m.querySelectorAll('button').forEach(b=>b.disabled=true);status.textContent='Saving… (uploading photos)';
+        try{
+          const body=await mqMyTplSerialize(name);const json=JSON.stringify(body);
+          if(json.length>95000)throw new Error('This design is too large to save.');
+          let recId;
+          if(upd&&cur){await atUpdate(CONFIG.PROPOSAL_TEMPLATES_TABLE,cur.recId,{'Body':json});recId=cur.recId;}
+          else{const rec=await atCreate(CONFIG.PROPOSAL_TEMPLATES_TABLE,{'Shop':[shopRecord.id],'Template name':MQ_MYTPL_PREFIX+Date.now().toString(36),'Body':json});recId=rec&&rec.id;if(!recId)throw new Error('Save failed');}
+          mqMyTplOpen={recId,name};field('edit-title').textContent=name;
+          await mqMyTplLoad(true);m.remove();mqShowToast(`Saved “${name}” to My templates`);
+        }catch(e){console.error(e);status.textContent='Could not save: '+(e.message||e)+' Please try again.';m.querySelectorAll('button').forEach(b=>b.disabled=false);}
+      };
+      m.querySelector('[data-new]').onclick=()=>go(false);
+      const u=m.querySelector('[data-upd]');if(u)u.onclick=()=>go(true);
+      inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();go(!!cur);}if(e.key==='Escape')m.remove();});
+    }
+    function mqMyTplLoadImg(url,onReady){if(!url)return null;const img=new Image();img.crossOrigin='anonymous';img.onload=()=>{onReady&&onReady();update();};img.src=url;return img;}
+    function mqMyTplOpenRec(tp){
+      const b=tp.body,base=b.base==='blank'?MQ_STUDIO_BLANK:(MQ_STUDIO_TEMPLATES.find(t=>t.id===b.base)||MQ_STUDIO_TEMPLATES_CAB.find(t=>t.id===b.base)||MQ_STUDIO_BLANK);
+      select(base);if(mqStudioSelected!==base)return;
+      if(base===MQ_STUDIO_BLANK)mqBlankBase(b.size||'square');
+      mqRestoring=true;
+      try{
+        Object.entries(b.values||{}).forEach(([id,v])=>{const el=document.getElementById(id);if(el&&el.type!=='file')el.value=v;});
+        if(field('quick-surface'))field('quick-surface').value=b.quickSurface||'#e9d9c8';
+        if(b.size)field('size').value=b.size;
+        mqStudioDetached=!!b.detached;
+        mqStudioPhoto=mqMyTplLoadImg(b.photo);mqStudioLogo=b.logo?mqMyTplLoadImg(b.logo):mqStudioLogo;
+        mqStudioCustomLayers=(b.layers||[]).map(l=>{const c={...l};
+          if(c.type==='image'){
+            if(c.qrCode){c.dataUrl=makeQrDataUrl(quoteLink(),640);if(c.dataUrl){const i=new Image();i.onload=()=>update();i.src=c.dataUrl;c.image=i;}}
+            else if(c.dataUrl){c.image=mqMyTplLoadImg(c.dataUrl);}
+          }
+          return c;});
+        mqStudioSelectedLayerId=null;
+      }finally{mqRestoring=false;}
+      if(field('template-select'))field('template-select').value=base===MQ_STUDIO_BLANK?'':base.id;
+      mqMyTplOpen={recId:tp.recId,name:b.name};field('edit-title').textContent=b.name;
+      renderLayerList();syncLayerControls();update();resetStudioHistory();
+    }
+    function mqMyTplRename(tp){
+      const m=mqMyTplModal(`<h4>Rename template</h4><input type="text" maxlength="60"/><div class="mq-mytpl-row"><button type="button" data-x>Cancel</button><button type="button" class="mq-go" data-ok>Rename</button></div><div class="mq-mytpl-status"></div>`);
+      const inp=m.querySelector('input');inp.value=tp.body.name||'';setTimeout(()=>{inp.focus();inp.select();},30);
+      m.querySelector('[data-x]').onclick=()=>m.remove();
+      const ok=async()=>{const name=inp.value.trim();if(!name)return;m.querySelectorAll('button').forEach(b=>b.disabled=true);
+        try{const body={...tp.body,name};await atUpdate(CONFIG.PROPOSAL_TEMPLATES_TABLE,tp.recId,{'Body':JSON.stringify(body)});tp.body=body;if(mqMyTplOpen&&mqMyTplOpen.recId===tp.recId)mqMyTplOpen.name=name;m.remove();window.mqStudioRefreshGallery();mqShowToast('Renamed');}
+        catch(e){m.querySelector('.mq-mytpl-status').textContent='Could not rename — please try again.';m.querySelectorAll('button').forEach(b=>b.disabled=false);}};
+      m.querySelector('[data-ok]').onclick=ok;inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();ok();}});
+    }
+    async function mqMyTplDelete(tp){
+      if(!confirm(`Delete “${tp.body.name}” from My templates?\n\nThis can’t be undone.`))return;
+      try{await atDelete(CONFIG.PROPOSAL_TEMPLATES_TABLE,tp.recId);mqMyTpls=(mqMyTpls||[]).filter(x=>x.recId!==tp.recId);if(mqMyTplOpen&&mqMyTplOpen.recId===tp.recId)mqMyTplOpen=null;window.mqStudioRefreshGallery();mqShowToast('Template deleted');}
+      catch(e){mqShowToast('Could not delete — please try again','error');}
+    }
     function renderGallery(filter='all'){
       mqStudioRefreshTemplates();
-      grid.innerHTML='';MQ_STUDIO_TEMPLATES.filter(t=>filter==='all'||t.category===filter).forEach(t=>{
+      grid.innerHTML='';mqMyTplTiles(filter);MQ_STUDIO_TEMPLATES.filter(t=>filter==='all'||t.category===filter).forEach(t=>{
         const btn=document.createElement('button');btn.type='button';btn.className='mq-studio-tile';btn.innerHTML=`<div class="mq-studio-thumb-area"><img class="mq-studio-thumb" alt=""/></div><div class="mq-studio-tile-meta"><span><strong></strong><small></small></span><b aria-hidden="true">↗</b></div>`;
         if(t.category==='yard')btn.classList.add('mq-studio-yard-card');
         const preview=btn.querySelector('img');
@@ -18762,7 +18955,7 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
     function undoRedo(delta){clearTimeout(mqHistoryTimer);commitStudioHistory();const next=mqHistoryIndex+delta;if(next<0||next>=mqHistory.length)return;mqHistoryIndex=next;restoreStudioState(mqHistory[next].state);historyButtons();scheduleDraftSave();}
     function serializeDraft(){const state=captureStudioState();if(!state)return null;
       return {version:1,template:state.template,values:state.values,quickSurface:state.quickSurface,layers:state.layers.map(l=>{const c={...l};if(c.dataUrl&&c.dataUrl.length>200000)delete c.dataUrl;return c}),detached:state.detached};}
-    function draftKey(){return `midasquote_studio_autosave_${shopRecord.id||'shop'}_${mqStudioSelected?.id||'design'}`;}
+    function draftKey(){return `midasquote_studio_autosave_${shopRecord.id||'shop'}_${mqMyTplOpen?'my_'+mqMyTplOpen.recId:(mqStudioSelected?.id||'design')}`;}
     function writeStudioDraft(){if(!mqStudioSelected)return;const status=field('history-status');try{localStorage.setItem(draftKey(),JSON.stringify(serializeDraft()));if(status)status.textContent='Saved in this browser';}catch(err){if(status)status.textContent='Autosave unavailable · use Save draft';}}
     function scheduleDraftSave(){if(mqThumbing)return;clearTimeout(mqDraftTimer);const status=field('history-status');if(status)status.textContent='Unsaved changes';mqDraftTimer=setTimeout(writeStudioDraft,1400);}
     function loadStudioDraft(){const raw=localStorage.getItem(draftKey());if(!raw)return false;
@@ -18773,7 +18966,7 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
     function resetStudioHistory(){clearTimeout(mqHistoryTimer);clearTimeout(mqDraftTimer);mqHistory=[];mqHistoryIndex=-1;mqHistoryTemplateId=mqStudioSelected?.id;commitStudioHistory();}
     // Ephemeral per-template drafts: kept only in this dashboard instance, never uploaded.
     const mqSessionDesigns=new Map();
-    function rememberSessionDesign(){if(!mqStudioSelected)return;clearTimeout(mqHistoryTimer);mqSessionDesigns.set(mqStudioSelected.id,captureStudioState());}
+    function rememberSessionDesign(){if(!mqStudioSelected||mqMyTplOpen)return;clearTimeout(mqHistoryTimer);mqSessionDesigns.set(mqStudioSelected.id,captureStudioState());}
     function restoreSessionDesign(id){const saved=mqSessionDesigns.get(id);if(!saved)return false;restoreStudioState(saved);mqStudioSelectedLayerId=null;renderLayerList();syncLayerControls();update();resetStudioHistory();return true;}
 
     function update(forExport=false){if(!mqStudioSelected)return;if(field('quick-brand'))field('quick-brand').value=field('color').value;if(field('quick-accent'))field('quick-accent').value=field('accent-color').value;const quickRemove=field('photo-remove-quick');if(quickRemove){quickRemove.disabled=!mqStudioPhoto;quickRemove.style.opacity=mqStudioPhoto?'1':'.45';quickRemove.title=mqStudioPhoto?'Remove the background image':'No background image to remove';}syncRangeLabels();const canvas=field('canvas');const sizes={square:[1080,1080],portrait:[1080,1350],story:[1080,1920],poster:[1080,1620],landscape:[1620,1080]};const fmt=field('size').value;{const fs=sizes[fmt]||sizes.square,fk=Math.min(fs[0]/1080,fs[1]/1080);mqStudioCustomLayers.forEach(l=>{if(l.fullBleed&&l._fbFmt!==fmt){l.x=0;l.y=0;l.w=Math.round(fs[0]/fk);l.h=Math.round(fs[1]/fk);l._fbFmt=fmt;}});}const quickFmt=field('quick-size');if(quickFmt&&quickFmt.value!==fmt)quickFmt.value=fmt;const dims=sizes[fmt]||sizes.square;if(field('format-dimensions'))field('format-dimensions').textContent=dims.join(' × ')+' px';if(canvas.width!==dims[0])canvas.width=dims[0];if(canvas.height!==dims[1])canvas.height=dims[1];paint(canvas,mqStudioSelected,{...currentOpts(),highlight:forExport?null:mqStudioFocus,suppressSelection:!!forExport});queuePreviewFollow();if(!forExport){root._mqSyncActions?.();scheduleStudioHistory()}}
@@ -18812,6 +19005,7 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
         mqShowToast('For precise editing, use a tablet or desktop. Or tap Continue on phone anyway.');
         return;
       }
+      if(!thumbMode)mqMyTplOpen=null;
       mqStudioSelected=t;field('edit-title').textContent=t.title;if(field('template-select'))field('template-select').value=t.id;field('shop-name').value=shopName;field('headline').value=t.headline;field('subline').value=t.sub;field('cta').value=t.cta;field('color').value=safeColor(color);field('quick-brand').value=safeColor(color);field('quick-surface').value='#e9d9c8';field('quick-accent').value='#d9be97';field('size').value=mqStudioDefaultSize(t);setDefaults();field('composition').value=t.id==='premium'?'cinema':mqStudioIsYard(t)?'split':t.id==='before'?'original':t.id==='poster'?'window':'original';if(t.id==='yardbefore'||t.id.startsWith('ys-'))field('composition').value='original';if(MQ_BLEED_YARD.has(t.id))field('composition').value='original';field('finish').value=t.mode==='luxury'?'bold':t.mode==='frame'?'editorial':(mqStudioIsYard(t)||t.category==='print')?'architect':'cinematic';field('accent').value=t.mode==='frame'?'frame':t.mode==='luxury'?'corner':mqStudioIsYard(t)?'stripe':'none';if(t.mode==='minimal'){field('headline-color').value='#382b36';field('sub-color').value='#685861'}if(t.id==='yardfinance'){field('cta-bg').value='#f4d84d';field('cta-color').value='#211a21';field('headline-color').value='#ffffff';field('sub-color').value='#fff5df';field('accent-color').value='#f4d84d';}if(t.id==='yardshowroom'){field('cta').value='BROWSE OUR SHOWROOM';field('headline-color').value='#ffffff';field('sub-color').value='#fff5df';field('accent-color').value='#c9a24b';}if(!thumbMode){workspace.style.display='flex';workspace.classList.add('mq-studio-fullscreen','mq-studio-canvas-first');lockStudioScroll();workspace.classList.remove('mq-studio-property-mode','mq-studio-show-layers');if(field('layers-toggle'))field('layers-toggle').textContent='☷ All layers';previewShift=0;preview.style.transform='';}update(true);if(t.id==='yardbefore'||t.id.startsWith('ys-')){mqStudioDetached=true;}else{detachBuiltIns(true);}const photoArea=(t.id==='yardbefore'||t.id.startsWith('ys-'))?null:(mqStudioUsesDefaultPhoto(t)?defaultProjectPhotoLayer(t,field('composition').value):null);if(photoArea){mqStudioCustomLayers.unshift(photoArea);if(photoArea.fullBleed){const tint={...defaultShapeLayer(),name:'Photo tint',place:'back',x:0,y:0,w:photoArea.w,h:photoArea.h,radius:0,fill:'#190c17',stroke:'#190c17',opacity:mqStudioIsYard(t)?48:MQ_BLEED_YARD.has(t.id)?58:75,fullBleed:true,_fbFmt:photoArea._fbFmt};mqStudioCustomLayers.splice(1,0,tint);}}const seededLayers=seededStudioLayers(t);if(seededLayers.length){mqStudioCustomLayers.push(...seededLayers);}if(thumbMode){return studioPopulateStarterPhotos(t);}renderLayerList();update();studioPopulateStarterPhotos(t);resetStudioHistory();requestAnimationFrame(()=>requestAnimationFrame(()=>{
       // Browser chooses the actual scrollable ancestor (in Webflow .mq-content has overflow:visible).
       // scrollIntoView works on the document and nested scrollers, unlike manually altering .mq-content.
@@ -18890,6 +19084,8 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
       field('remove-photo').addEventListener('click',removeProjectPhoto);
       field('photo-remove-quick').addEventListener('click',removeProjectPhoto);
       field('back').addEventListener('click',()=>{unlockStudioScroll();workspace.style.display='none';workspace.classList.remove('mq-studio-fullscreen');previewShift=0;preview.style.transform='';root.scrollIntoView({behavior:'smooth',block:'start'})});
+      field('back').addEventListener('click',()=>{if(mqMyTplOpen)setTimeout(()=>window.mqStudioRefreshGallery(),0);});
+      field('mytpl-save')?.addEventListener('click',mqMyTplSaveDialog);
       field('quick-download').addEventListener('click',()=>field('download').click());
       field('download').addEventListener('click',()=>{update(true);const a=document.createElement('a');a.href=field('canvas').toDataURL('image/png');a.download=(shopName+'-'+mqStudioSelected.id+'-'+field('size').value).toLowerCase().replace(/[^a-z0-9-]+/g,'-')+'.png';a.click();update()});
       const stylePacks={
@@ -18969,7 +19165,7 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
         if(!inlineEditor)return;
         const editor=inlineEditor,layer=mqStudioCustomLayers.find(l=>l.id===editor.dataset.layerId);
         if(layer){layer.text=commit?editor.value:editor.dataset.originalText;mqStudioSelectedLayerId=layer.id;syncLayerControls();update();}
-        editor.remove();inlineEditor=null;
+        inlineEditor=null;if(editor.isConnected)editor.remove();
       }
       function editLayerInline(layer){
         if(!layer||!(layer.type==='text'||layer.type==='button')||layer.locked)return;
