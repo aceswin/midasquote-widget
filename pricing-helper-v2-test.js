@@ -6396,6 +6396,7 @@ window.mqphGoToWizard = function() {
       if (off.has('trim')) hide(document.getElementById('mqph-scope-trim'));
       if (off.has('island')) hide(document.getElementById('mqph-scope-islandpanel'));
     }
+    try { mqccApplyFilterScope(); } catch (e) { console.warn('pricing filter', e); }
   }
   window.mqphApplyEstimatorTabScope = mqphApplyEstimatorTabScope;
 
@@ -6627,6 +6628,135 @@ window.mqphGoToWizard = function() {
     return `<span style="display:inline-block;font-size:10px;font-weight:700;letter-spacing:.03em;padding:2px 7px;border:1px solid;border-radius:10px;${tones[tone] || tones.gray};white-space:nowrap">${text}</span>`;
   }
 
+  // ── Pricing filter (Jordan, Nov 2026) ─────────────────────────────────
+  // A bar at the top of Pricing: pick a quote (Cabinets or one of the shop's
+  // quote types), optionally one of its project types, and Everything /
+  // Website widget only / Pro only. Only matching steps and options show,
+  // and anything added while filtered starts tagged for it (pre-ticked in
+  // the add window, still editable). Remembered per shop in this browser.
+  function mqccFKeyName() { return 'mqcc_filter_' + ((shopRecord && (shopRecord._recordId || shopRecord.id)) || ''); }
+  function mqccF() {
+    if (!window._mqccFilter) {
+      try { window._mqccFilter = JSON.parse(localStorage.getItem(mqccFKeyName()) || 'null'); } catch (e) { window._mqccFilter = null; }
+      if (!window._mqccFilter || typeof window._mqccFilter !== 'object') window._mqccFilter = { qt: 'all', room: '', pro: 'all' };
+    }
+    const f = window._mqccFilter;
+    if (!['all', 'widget', 'pro'].includes(f.pro)) f.pro = 'all';
+    return f;
+  }
+  function mqccFSave() { try { localStorage.setItem(mqccFKeyName(), JSON.stringify(mqccF())); } catch (e) {} }
+  function mqccQtIsPro(qt) { if (!qt) return false; const q = mqccQts().find(x => x.id === qt); return !!(q && q.proOnly); }
+  function mqccFLiveQts() {
+    const off = typeof window.mqQtsNotOffered === 'function' ? window.mqQtsNotOffered(mqccShopFields()) : new Set();
+    return mqccQts().filter(q => !off.has(q.id));
+  }
+  // null = every quote; '' = Cabinets; 'qt_…' = that quote type.
+  function mqccFKey() {
+    const f = mqccF();
+    if (f.qt === 'cab') return mqphComputeTabScope().countertopsOnly ? null : '';
+    if (f.qt && f.qt !== 'all') return mqccFLiveQts().some(q => q.id === f.qt) ? f.qt : null;
+    return null;
+  }
+  function mqccFRoom() {
+    const k = mqccFKey(), f = mqccF();
+    if (k === null || !f.room) return '';
+    return mqccQtRooms(k).some(r => r.id === f.room) ? f.room : '';
+  }
+  function mqccFActive() { return mqccFKey() !== null || mqccF().pro !== 'all'; }
+  function mqccItemRooms(r) { let v = []; try { v = JSON.parse((r && r.fields && r.fields['Visible rooms']) || '[]'); } catch (e) { v = []; } return Array.isArray(v) ? v : []; }
+  function mqccFStepOk(c) {
+    const f = mqccF(), k = mqccFKey(), room = mqccFRoom();
+    if (k !== null && (c.qt || '') !== k) return false;
+    if (room && (mqccCatRoomsHidden()[c.id] || []).includes(room)) return false;
+    const stepPro = !!c.proOnly || mqccQtIsPro(c.qt);
+    if (f.pro === 'widget' && stepPro) return false;
+    if (f.pro === 'pro' && !stepPro && !mqccItems(c.id).some(r => mqccCfg(r).proOnly)) return false;
+    return true;
+  }
+  function mqccFItemOk(r, c) {
+    const f = mqccF(), room = mqccFRoom();
+    if (room) { const v = mqccItemRooms(r); if (v.length && !v.includes(room)) return false; }
+    const pro = !!mqccCfg(r).proOnly, stepPro = !!c.proOnly || mqccQtIsPro(c.qt);
+    if (f.pro === 'widget' && pro) return false;
+    if (f.pro === 'pro' && !stepPro && !pro) return false;
+    return true;
+  }
+  function mqccRoomNames(qt, ids) { const rs = mqccQtRooms(qt); return ids.map(id => (rs.find(r => r.id === id) || {}).name).filter(Boolean); }
+  window.mqccSetFilter = function (k, v) {
+    const f = mqccF(); f[k] = v; if (k === 'qt') f.room = '';
+    mqccFSave(); mqccRerender(null);
+  };
+  // What a new step / option made right now gets tagged with.
+  function mqccFTagText(qtOverride) {
+    const k = mqccFKey(), room = mqccFRoom(), f = mqccF(), bits = [];
+    if (k !== null) bits.push(k === '' ? 'Cabinets' : mqccQtName(k));
+    if (room && (qtOverride === undefined || qtOverride === k)) bits.push((mqccQtRooms(k).find(r => r.id === room) || {}).name + ' only');
+    if (f.pro === 'pro') bits.push('⚡ Pro only');
+    return bits.join(' · ');
+  }
+  function mqccFNoteHtml(id) {
+    return `<div id="${id}" style="display:none;align-items:flex-start;gap:9px;background:#eff6ff;border:1px solid #bfdbfe;border-left:4px solid #2563eb;border-radius:8px;padding:9px 12px;margin:0 0 14px;font-size:12.5px;color:#1e3a8a;line-height:1.5"></div>`;
+  }
+  function mqccFNoteFill(id, isNew) {
+    const el = document.getElementById(id); if (!el) return;
+    const t = isNew && mqccFActive() ? mqccFTagText() : '';
+    if (!t) { el.style.display = 'none'; el.innerHTML = ''; return; }
+    el.innerHTML = `<span>🎯</span><span>Pre-filled from your Pricing filter: <strong>${mqccEsc(t)}</strong>. You can change any of it below before saving.</span>`;
+    el.style.display = 'flex';
+  }
+  function mqccFBarHtml() {
+    const f = mqccF(), k = mqccFKey(), room = mqccFRoom();
+    const cab = !mqphComputeTabScope().countertopsOnly;
+    const qts = mqccFLiveQts();
+    const qtChoices = (cab ? 1 : 0) + qts.length;
+    const chip = (on, label, js, title) => `<button type="button" class="mqcc-fchip${on ? ' on' : ''}" onclick="${js}"${title ? ` title="${mqccEsc(title)}"` : ''}>${label}</button>`;
+    const rows = [];
+    if (qtChoices > 1) rows.push(`<div class="mqcc-frow"><span class="mqcc-flab">Quote</span>${chip(k === null, 'All', "mqccSetFilter('qt','all')")}${cab ? chip(k === '', 'Cabinets', "mqccSetFilter('qt','cab')") : ''}${qts.map(q => chip(k === q.id, mqccEsc(q.name) + (q.proOnly ? ' ⚡' : ''), `mqccSetFilter('qt','${q.id}')`)).join('')}</div>`);
+    const rs = k !== null ? mqccQtRooms(k).filter(r => r.active !== false) : [];
+    if (rs.length > 1) rows.push(`<div class="mqcc-frow"><span class="mqcc-flab">Project type</span>${chip(!room, 'All ' + mqccEsc(k === '' ? 'cabinet' : mqccQtName(k)) + ' types', "mqccSetFilter('room','')")}${rs.map(r => chip(room === r.id, mqccEsc(r.name || 'Project type'), `mqccSetFilter('room','${r.id}')`)).join('')}</div>`);
+    rows.push(`<div class="mqcc-frow"><span class="mqcc-flab">Shows on</span>${chip(f.pro === 'all', 'Everything', "mqccSetFilter('pro','all')")}${chip(f.pro === 'widget', 'Website widget', "mqccSetFilter('pro','widget')", 'Hide anything that is MidasQuote Pro only')}${chip(f.pro === 'pro', '⚡ MidasQuote Pro only', "mqccSetFilter('pro','pro')", 'Only Pro-only steps and options')}</div>`);
+    const tag = mqccFActive() ? mqccFTagText() : '';
+    return `<style>
+      #mqcc-fbar{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:12px 16px;margin:0 0 14px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+      #mqcc-fbar .mqcc-ftitle{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#6b7280;margin-bottom:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+      #mqcc-fbar .mqcc-frow{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:6px 0}
+      #mqcc-fbar .mqcc-flab{font-size:12px;font-weight:700;color:#374151;min-width:96px}
+      #mqcc-fbar .mqcc-fchip{border:1px solid #d1d5db !important;background:#fff !important;color:#374151 !important;border-radius:999px !important;padding:5px 12px !important;font-size:12.5px !important;font-weight:600 !important;cursor:pointer;line-height:1.3 !important;margin:0 !important;height:auto !important;min-height:0 !important}
+      #mqcc-fbar .mqcc-fchip:hover{border-color:#9ca3af !important}
+      #mqcc-fbar .mqcc-fchip.on{background:#111827 !important;border-color:#111827 !important;color:#fff !important}
+      #mqcc-fbar .mqcc-ftag{font-size:12px;color:#1e3a8a;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:6px 10px;margin-top:8px;line-height:1.45}
+      #mqcc-fbar .mqcc-fclear{margin-left:auto;font-size:12px;font-weight:600;color:#2563eb;background:none;border:0;cursor:pointer;padding:0;text-transform:none;letter-spacing:0}
+      @media(max-width:640px){#mqcc-fbar .mqcc-flab{min-width:0;width:100%}}
+    </style>
+    <div class="mqcc-ftitle">🔎 Show only…${mqccFActive() ? `<button type="button" class="mqcc-fclear" onclick="window._mqccFilter={qt:'all',room:'',pro:'all'};mqccSetFilter('pro','all')">Show everything</button>` : ''}</div>
+    ${rows.join('')}
+    ${tag ? `<div class="mqcc-ftag">🎯 Anything you add while this is on is tagged <strong>${mqccEsc(tag)}</strong> — you can change it in the add window.</div>` : ''}`;
+  }
+  // Runs after every Pricing render: puts the bar at the top and tucks away
+  // the built-in cabinet sections when a non-cabinet quote is picked.
+  function mqccApplyFilterScope() {
+    const host = document.getElementById('mq-pricing-helper-v2');
+    const custom = document.getElementById('mqph-scope-custom');
+    if (!host || !custom) return;
+    let bar = document.getElementById('mqcc-fbar');
+    if (!bar) {
+      bar = document.createElement('div'); bar.id = 'mqcc-fbar';
+      // Right under "Manage your rates" — above the training video if it's there.
+      const first = host.querySelector('[id^="mq-training-video-"]') || [...host.querySelectorAll('.mqph-cat-block, [id^="mqph-scope-"]')].find(e => e.offsetParent !== null || e === custom);
+      (first || custom).parentNode.insertBefore(bar, first || custom);
+    }
+    bar.innerHTML = mqccFBarHtml();
+    const k = mqccFKey();
+    if (k !== null && k !== '') {
+      host.querySelectorAll('.mqph-cat-block, [id^="mqph-scope-"], .mq-pricing-hardware-note').forEach(e => {
+        if (e === custom || e === bar || custom.contains(e)) return;
+        e.style.display = 'none';
+      });
+      document.querySelectorAll('.mq-pricing-hardware-note').forEach(e => { e.style.display = 'none'; });
+    }
+  }
+  window.mqccApplyFilterScope = mqccApplyFilterScope;
+
   function buildCustomCatsHtml() {
     const cats = mqccCats();
     // With quote types: Cabinets steps first, then each quote type's own.
@@ -6646,11 +6776,15 @@ window.mqphGoToWizard = function() {
     const groupLabel = k => k === '' ? 'Cabinets (Cabinets only &amp; Cabinets + countertops)' : (k === '__gone' ? 'A deleted quote type — not showing anywhere' : '🗂️ ' + mqccEsc(mqccQtName(k)) + ((qtsAll.find(q => q.id === k) || {}).on === false ? ' <span style="font-weight:700;color:#b45309;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:1px 8px;letter-spacing:0;text-transform:none">Off — not on your widget yet</span>' : ''));
     const blockOf = (c, ci, stepNo) => {
       const key = c.id;
-      const items = mqccItems(c.id);
+      const allItems = mqccItems(c.id);
+      const items = allItems.filter(r => mqccFItemOk(r, c));
+      const itemsCut = items.length !== allItems.length;
+      const fRoom = mqccFRoom();
       const chips = [
         mqccChip(c.answer === 'one' ? 'Pick one' : 'Pick any', 'blue'),
         c.required ? mqccChip(c.answer === 'one' ? 'Must choose' : 'Must answer', 'gray') : '',
         c.proOnly ? mqccChip('⚡ Pro only', 'gold') : '',
+        fRoom && !(mqccCatRoomsHidden()[c.id] || []).length ? mqccChip('All ' + mqccEsc(c.qt ? mqccQtName(c.qt) : 'cabinet') + ' types', 'gray') : '',
         c.showIf ? mqccChip('Only if ' + mqccEsc(mqccOptionLabel(c.showIf) || 'option removed'), 'gray') : '',
         (() => { const hid = mqccCatRoomsHidden()[c.id] || []; if (!hid.length) return ''; const rs = mqccQtRooms(c.qt || ''); const on = rs.filter(r => !hid.includes(r.id)); return rs.length > 1 && on.length < rs.length ? mqccChip('Only for ' + mqccEsc(on.map(r => r.name).join(', ') || 'no project types'), 'gray') : ''; })(),
         c.qt ? mqccChip('🗂️ ' + mqccEsc(mqccQtName(c.qt) || 'Deleted quote — not showing'), mqccQtName(c.qt) ? 'gold' : 'gray') : '',
@@ -6666,12 +6800,12 @@ window.mqphGoToWizard = function() {
           cfg.adj ? 'uses project type %' : '',
         ].filter(Boolean).join(' · ');
         return `<div class="mqph-row">
-          <div style="display:flex;flex-direction:column;gap:2px">
+          <div style="display:flex;flex-direction:column;gap:2px${itemsCut ? ';visibility:hidden' : ''}">
             <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" style="padding:0 6px" title="Move up" ${ri === 0 ? 'disabled' : ''} onclick="mqccMoveItem('${c.id}','${r.id}',-1)">↑</button>
             <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" style="padding:0 6px" title="Move down" ${ri === items.length - 1 ? 'disabled' : ''} onclick="mqccMoveItem('${c.id}','${r.id}',1)">↓</button>
           </div>
           <div style="flex:1;min-width:0">
-            <div class="mqph-row-name">${mqccEsc(r.fields['Name'] || '—')} ${cfg.proOnly ? mqccChip('⚡ Pro only', 'gold') : ''}</div>
+            <div class="mqph-row-name">${mqccEsc(r.fields['Name'] || '—')} ${cfg.proOnly ? mqccChip('⚡ Pro only', 'gold') : ''} ${(() => { const v = mqccItemRooms(r); const rs = mqccQtRooms(c.qt || ''); if (rs.length < 2) return ''; if (v.length && v.length < rs.length) return mqccChip('🗂️ ' + mqccEsc(mqccRoomNames(c.qt || '', v).join(', ') || 'No project types'), 'blue'); return fRoom ? mqccChip('All ' + mqccEsc(c.qt ? mqccQtName(c.qt) : 'cabinet') + ' types', 'gray') : ''; })()}</div>
             ${r.fields['Description'] ? `<div class="mqph-row-desc">${mqccEsc(r.fields['Description'])}</div>` : ''}
             ${notes ? `<div class="mqph-row-desc" style="color:#6b7280 !important">${notes}</div>` : ''}
           </div>
@@ -6699,14 +6833,20 @@ window.mqphGoToWizard = function() {
         <div id="mqph-cat-body-${key}" style="display:none">
           ${c.description ? `<div style="padding:10px 16px 0;font-size:12px;color:#6b7280;line-height:1.5">Customers see: “${mqccEsc(c.description)}”</div>` : ''}
           ${c.answer === 'one' && mqccItems(c.id).length > 1 ? `<div style="padding:8px 16px 0;font-size:12px;color:#6b7280;line-height:1.5">↕️ ${c.manualOrder ? `Customers see these <strong>in your order</strong> (set with ↑ ↓). <a href="#" onclick="event.preventDefault();event.stopPropagation();mqccOrderReset('${c.id}')" style="color:#1d4ed8">Go back to cheapest first</a>` : `Customers see these <strong>cheapest first</strong>. Move one with ↑ ↓ to use your own order instead.`}</div>` : ''}
-          ${items.length ? rows : `<div style="padding:16px;font-size:12px;color:#6b7280;line-height:1.5">No options yet. Click <strong>+ Add option</strong> to add the first one.</div>`}
+          ${itemsCut ? `<div style="padding:8px 16px 0;font-size:12px;color:#1e40af;line-height:1.5">🔎 Showing ${items.length} of ${allItems.length} options for your filter. ↑↓ ordering is available when the filter is off.</div>` : ''}
+          ${items.length ? rows : `<div style="padding:16px;font-size:12px;color:#6b7280;line-height:1.5">${itemsCut ? 'No options in this step match your filter yet. Click <strong>+ Add option</strong> to add one — it’ll be tagged for it.' : 'No options yet. Click <strong>+ Add option</strong> to add the first one.'}</div>`}
           ${items.length ? mqccPreviewShell(c) : ''}
         </div>
       </div>`;
     };
     const catBlocks = qtsAll.length || cats.some(c => c.qt)
       ? groupKeys.map(k => {
-          const list = cats.filter(c => groupOf(c) === k);
+          const fk = mqccFKey();
+          if (fk !== null && k !== fk) return '';
+          if (k && k !== '__gone' && mqccF().pro === 'widget' && mqccQtIsPro(k)) return '';
+          const listAll = cats.filter(c => groupOf(c) === k);
+          const list = listAll.filter(mqccFStepOk);
+          if (mqccFActive() && !list.length && !(fk !== null && k === fk)) return '';
           const head = `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin:16px 0 6px"><div style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#6b7280">${groupLabel(k)}</div>${k && k !== '__gone' ? `<button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="window._mqccNewCatQt='${k}';mqccOpenCat(null)">+ New step for ${mqccEsc(mqccQtName(k))}</button>` : ''}</div>`;
           if (k && k !== '__gone') {
             // Each quote type in its own coloured box (same colour as on My
@@ -6720,16 +6860,16 @@ window.mqphGoToWizard = function() {
             const bhead = `<div onclick="if(!event.target.closest('button'))mqccQtToggle('${k}')" style="display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;flex-wrap:wrap">
               <span style="width:30px;height:30px;border-radius:8px;background:#fff;border:1px solid ${bd}44;color:${bd};display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">${icon}</span>
               <span style="font-size:16px;font-weight:800;color:#111827">${mqccEsc(mqccQtName(k))}</span>
-              <span style="font-size:12px;color:#6b7280">${list.length} step${list.length === 1 ? '' : 's'}</span>${offTag}
+              <span style="font-size:12px;color:#6b7280">${list.length !== listAll.length ? `${list.length} of ${listAll.length} steps` : `${list.length} step${list.length === 1 ? '' : 's'}`}</span>${offTag}
               <span style="margin-left:auto;display:inline-flex;gap:10px;align-items:center">${typeof window.mqQtHasPack === 'function' && window.mqQtHasPack(k) ? `<button class="mqph-btn mqph-btn-secondary mqph-btn-sm" title="Wipe this quote and set it up fresh from MidasQuote's starter pack" onclick="event.stopPropagation();window.mqQtResetToPack('${k}')">↺ Reset to starter pack</button>` : ''}${window.mqQtPackRestorable && window.mqQtPackRestorable(k) && window.mqQtPackMissing && window.mqQtPackMissing(k) > 0 ? `<button class="mqph-btn mqph-btn-secondary mqph-btn-sm" title="Puts back any option a step is missing from MidasQuote's starter pack — never changes what's already here" onclick="mqRestoreQtFromPack('${k}', this)">↺ Restore from starter pack</button>` : ''}<button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="window._mqccNewCatQt='${k}';mqccOpenCat(null)">+ New step</button><span class="mqcc-qt-shut-lab" style="font-size:12px;font-weight:600;color:${bd}">${shut ? 'Show ▸' : 'Hide ▾'}</span></span>
             </div>`;
-            const body = list.length ? list.map((c, i) => blockOf(c, cats.indexOf(c), i + 1)).join('') : `<div style="font-size:12px;color:#6b7280;margin-top:10px">No steps yet — this quote won't show on your widget until it has at least one.</div>`;
+            const body = list.length ? list.map((c, i) => blockOf(c, cats.indexOf(c), i + 1)).join('') : `<div style="font-size:12px;color:#6b7280;margin-top:10px">${listAll.length ? 'No steps match your filter yet — click <strong>+ New step</strong> to add one (it’ll be tagged for it).' : 'No steps yet — this quote won\'t show on your widget until it has at least one.'}</div>`;
             return `<div data-mqcc-group="${k}" style="border:1.5px solid ${bd}55;border-left:5px solid ${bd};background:${bg};border-radius:16px;padding:12px 14px 10px;margin:14px 0">${bhead}<div class="mqcc-qt-body" style="${shut ? 'display:none;' : ''}margin-top:6px">${body}</div></div>`;
           }
           if (!list.length) return '';
           return `<div data-mqcc-group="${k}">` + head + list.map(c => blockOf(c, cats.indexOf(c))).join('') + `</div>`;
         }).join('') + (offNames.length ? `<div style="margin:14px 0 4px;font-size:12px;color:#6b7280;line-height:1.5">🔕 Hidden because you don't offer that trade any more: <strong>${offNames.map(mqccEsc).join(', ')}</strong>. Tick the trade again on Business info (or switch the quote back on) to see and edit its steps here.</div>` : '')
-      : cats.map(blockOf).join('');
+      : cats.filter(mqccFStepOk).map(c => blockOf(c, cats.indexOf(c))).join('');
 
     const howGroups = [...new Set(Object.values(MQCC_HOW).map(o => o.group))];
     const boffNow = mqphBoff();
@@ -6770,7 +6910,7 @@ window.mqphGoToWizard = function() {
             <div><h3 id="mqcc-cat-title">New category</h3><p>This becomes its own step on your widget.</p></div>
             <button class="mqph-modal-hdr-close" onclick="mqccClose('mqcc-cat-overlay')">×</button>
           </div>
-          <div class="mqph-modal-body"><div id="mqcc-cat-newtip" style="display:none;align-items:flex-start;gap:10px;background:#fffbeb;border:1px solid #fcd34d;border-left:4px solid #f59e0b;border-radius:10px;padding:11px 14px;margin-bottom:16px;font-size:13px;line-height:1.5;color:#78350f"><span style="font-size:17px;line-height:1.2">💡</span><span><strong>You're making the step itself</strong> — its name, the question customers see, and where it goes. The choices inside it (and their prices) come next: after you save, click <strong>+ Add option</strong> on the step.</span></div><div class="mqcc-modal-grid"><div>
+          <div class="mqph-modal-body">${mqccFNoteHtml('mqcc-cat-fnote')}<div id="mqcc-cat-newtip" style="display:none;align-items:flex-start;gap:10px;background:#fffbeb;border:1px solid #fcd34d;border-left:4px solid #f59e0b;border-radius:10px;padding:11px 14px;margin-bottom:16px;font-size:13px;line-height:1.5;color:#78350f"><span style="font-size:17px;line-height:1.2">💡</span><span><strong>You're making the step itself</strong> — its name, the question customers see, and where it goes. The choices inside it (and their prices) come next: after you save, click <strong>+ Add option</strong> on the step.</span></div><div class="mqcc-modal-grid"><div>
             <div class="mqph-field" id="mqcc-cat-qt-wrap"><label>Which quote is this step in?</label>
               <select id="mqcc-cat-qt" onchange="mqccCatQtChanged()"></select>
               <div style="font-size:11px;color:#6b7280;margin-top:4px;line-height:1.45">Choose which quote type this step appears in.</div>
@@ -6826,6 +6966,7 @@ window.mqphGoToWizard = function() {
             <button class="mqph-modal-hdr-close" onclick="mqccClose('mqcc-item-overlay')">×</button>
           </div>
           <div class="mqph-modal-body"><div class="mqcc-modal-grid"><div>
+            ${mqccFNoteHtml('mqcc-item-fnote')}
             <div class="mqph-field" id="mqcc-item-step-wrap" style="display:none"><label>Which step is this option in?</label><select id="mqcc-item-step"></select><div style="font-size:11px;color:#6b7280;margin-top:4px">Change it to move this option (with its photo) into another step of this quote.</div></div>
             <div class="mqph-field"><label>Option name</label><input type="text" id="mqcc-item-name" maxlength="80" placeholder="e.g. Premium upgrade"/></div>
             <div class="mqph-field"><label>Description for customers (optional)</label><input type="text" id="mqcc-item-desc" maxlength="200"/></div>
@@ -6879,6 +7020,14 @@ window.mqphGoToWizard = function() {
             </div>
             <div class="mqph-field" id="mqcc-item-showif-wrap"><label>Show this option</label><select id="mqcc-item-showif"></select></div>
             ${mqccTieFieldHtml('item')}
+            <div class="mqph-field" id="mqcc-item-rooms-wrap" style="display:none"><label>Show this option for these project types</label>
+              <style>#mqcc-item-rooms{display:grid !important;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px;padding:2px 0}
+                #mqcc-item-rooms label.mqcc-room-opt{display:flex !important;align-items:center !important;gap:9px !important;margin:0 !important;padding:9px 12px !important;border:1px solid #e5e7eb !important;border-radius:9px !important;background:#fff !important;font-size:13px !important;font-weight:600 !important;color:#111 !important;text-transform:none !important;letter-spacing:0 !important;cursor:pointer}
+                #mqcc-item-rooms label.mqcc-room-opt:has(input:checked){border-color:#2563eb !important;background:#eff6ff !important}
+                #mqcc-item-rooms label.mqcc-room-opt input{width:17px !important;height:17px !important;min-width:17px;margin:0 !important;padding:0 !important;flex:0 0 auto;accent-color:#2563eb}</style>
+              <div id="mqcc-item-rooms"></div>
+              <div style="font-size:11px;color:#6b7280;margin-top:4px;line-height:1.45">Untick a project type to hide this option for it. (Also editable on My Products.)</div>
+            </div>
             <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin:4px 0 0;cursor:pointer">
               <input type="checkbox" id="mqcc-item-pro" style="width:16px;height:16px"/> ⚡ MidasQuote Pro only (hidden on your public widget)
             </label>
@@ -6936,14 +7085,16 @@ window.mqphGoToWizard = function() {
     document.getElementById('mqcc-cat-desc').value = c ? (c.description || '') : '';
     document.getElementById('mqcc-cat-answer').value = c && c.answer === 'one' ? 'one' : 'any';
     document.getElementById('mqcc-cat-required').checked = !!(c && c.required);
-    document.getElementById('mqcc-cat-pro').checked = !!(c && c.proOnly);
+    document.getElementById('mqcc-cat-pro').checked = c ? !!c.proOnly : mqccF().pro === 'pro';
+    mqccFNoteFill('mqcc-cat-fnote', !c);
     // Which quote: Cabinets / Both, or one of the shop's own quote types.
     const qts = mqccQts();
     const qtSel = document.getElementById('mqcc-cat-qt');
     // A business that doesn't do cabinetry (Business info) gets no Cabinets
     // choice -- unless it's editing an old cabinet-side step (Nov 2026).
     const noCab = mqphComputeTabScope().countertopsOnly && qts.length > 0;
-    const curQt = c ? (c.qt || '') : (window._mqccNewCatQt || (noCab ? qts[0].id : ''));
+    const fk = mqccFKey();
+    const curQt = c ? (c.qt || '') : (window._mqccNewCatQt || (fk ? fk : '') || (noCab ? qts[0].id : ''));
     window._mqccNewCatQt = '';
     qtSel.innerHTML = (noCab && curQt ? '' : `<option value="">Cabinets (the Cabinets only and Cabinets + countertops quotes)</option>`)
       + qts.map(q => `<option value="${q.id}">${mqccEsc(q.name)}${q.on === false ? ' (turned off)' : ''}${q.proOnly ? ' — Pro only' : ''}</option>`).join('')
@@ -7006,9 +7157,42 @@ window.mqphGoToWizard = function() {
     const rooms = mqccQtRooms(qt);
     if (rooms.length < 2) { wrap.style.setProperty('display', 'none', 'important'); box.innerHTML = ''; return; }
     const sameQuote = mqccEditCat && (((mqccCats().find(x => x.id === mqccEditCat) || {}).qt || '') === qt);
-    const hidden = new Set(sameQuote ? (mqccCatRoomsHidden()[mqccEditCat] || []) : []);
+    const fRoom = !mqccEditCat && mqccFKey() === qt ? mqccFRoom() : '';
+    const hidden = new Set(sameQuote ? (mqccCatRoomsHidden()[mqccEditCat] || []) : (fRoom ? rooms.filter(r => r.id !== fRoom).map(r => r.id) : []));
     box.innerHTML = rooms.map(r => `<label class="mqcc-room-opt"><input type="checkbox" class="mqcc-cat-room" value="${mqccEsc(r.id)}" ${hidden.has(r.id) ? '' : 'checked'}/><span>${mqccEsc(r.name || 'Project type')}${r.active === false ? ' <span class="mqcc-room-off">(off)</span>' : ''}</span></label>`).join('');
     wrap.style.removeProperty('display');
+  }
+  // Option-level project types (the option's own "Visible rooms": [] = all).
+  // Only the project types the step itself shows for are offered.
+  function mqccItemRoomsFill(c, r) {
+    const wrap = document.getElementById('mqcc-item-rooms-wrap'), box = document.getElementById('mqcc-item-rooms');
+    if (!wrap || !box) return;
+    const qt = c.qt || '';
+    const stepHid = mqccCatRoomsHidden()[c.id] || [];
+    const rooms = mqccQtRooms(qt).filter(x => !stepHid.includes(x.id));
+    box.dataset.cid = c.id;
+    if (rooms.length < 2) { wrap.style.display = 'none'; box.innerHTML = ''; return; }
+    let on;
+    if (r) { const v = mqccItemRooms(r); on = new Set(v.length ? v : rooms.map(x => x.id)); }
+    else { const fr = mqccFKey() === qt ? mqccFRoom() : ''; on = new Set(fr && rooms.some(x => x.id === fr) ? [fr] : rooms.map(x => x.id)); }
+    box.innerHTML = rooms.map(x => `<label class="mqcc-room-opt"><input type="checkbox" class="mqcc-item-room" value="${mqccEsc(x.id)}" ${on.has(x.id) ? 'checked' : ''}/><span>${mqccEsc(x.name || 'Project type')}</span></label>`).join('');
+    wrap.style.display = '';
+  }
+  // → the JSON to save in "Visible rooms", or null to leave it alone, or false if none ticked.
+  function mqccItemRoomsRead(c, r) {
+    const boxes = [...document.querySelectorAll('#mqcc-item-rooms .mqcc-item-room')];
+    if (!boxes.length) return null;
+    const checked = boxes.filter(b => b.checked).map(b => b.value);
+    if (!checked.length) return false;
+    const all = mqccQtRooms(c.qt || '').map(x => x.id);
+    const stepHid = mqccCatRoomsHidden()[c.id] || [];
+    const old = r ? mqccItemRooms(r) : [];
+    const oldEff = old.length ? old : all;
+    const keepHidden = oldEff.filter(id => stepHid.includes(id)); // project types not offered in this window keep their old setting
+    let next = all.filter(id => checked.includes(id) || keepHidden.includes(id));
+    if (next.length === all.length) next = [];
+    const json = JSON.stringify(next);
+    return json === JSON.stringify(old) && r ? null : json;
   }
   function mqccCatRoomsRead() {
     const boxes = [...document.querySelectorAll('#mqcc-cat-rooms .mqcc-cat-room')];
@@ -7215,7 +7399,9 @@ window.mqphGoToWizard = function() {
     document.getElementById('mqcc-item-unit').value = cfg.unit || '';
     document.getElementById('mqcc-item-rate').value = r && r.fields['Rate'] != null ? r.fields['Rate'] : '';
     document.getElementById('mqcc-item-min').value = cfg.min > 0 ? cfg.min : '';
-    document.getElementById('mqcc-item-pro').checked = !!cfg.proOnly;
+    document.getElementById('mqcc-item-pro').checked = r ? !!cfg.proOnly : (mqccF().pro === 'pro' && !c.proOnly && !mqccQtIsPro(c.qt));
+    mqccItemRoomsFill(c, r);
+    mqccFNoteFill('mqcc-item-fnote', !r);
     const inst = cfg.install && typeof cfg.install === 'object' ? cfg.install : null;
     document.getElementById('mqcc-item-inst-on').checked = !!(inst && inst.price > 0);
     document.getElementById('mqcc-item-inst-price').value = inst && inst.price > 0 ? inst.price : '';
@@ -7374,6 +7560,8 @@ window.mqphGoToWizard = function() {
     if (how === 'opt' && !src) { alert('Pick which option’s number this is priced on.'); return; }
     const measPick = document.getElementById('mqcc-item-meas').value;
     if (how === 'meas' && !measPick) { alert('Pick which measurement this is priced on (add measurements on Project types → this quote first).'); return; }
+    const roomsJson = mqccItemRoomsRead(mqccCats().find(x => x.id === ed.cid) || {}, ed.id ? lineItems.find(x => x.id === ed.id) : null);
+    if (roomsJson === false) { alert('Tick at least one project type for this option to show in.'); return; }
     const min = parseFloat(document.getElementById('mqcc-item-min').value);
     const cfg = {
       how,
@@ -7401,6 +7589,7 @@ window.mqphGoToWizard = function() {
       Rate: Math.round(rate * 100) / 100,
       'Custom pricing': JSON.stringify(cfg),
     };
+    if (roomsJson != null && !(ed.id && document.getElementById('mqcc-item-step') && document.getElementById('mqcc-item-step').value !== ed.cid)) fields['Visible rooms'] = roomsJson;
     const btn = document.getElementById('mqcc-item-save');
     btn.disabled = true;
     try {
