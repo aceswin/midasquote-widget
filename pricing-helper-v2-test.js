@@ -2193,7 +2193,7 @@ window.mqphGoToWizard = function() {
         </div>
       </div>
 
-      ${typeof window.mqTrainingVideoBlockHTML === 'function' ? window.mqTrainingVideoBlockHTML('pricing') : ''}
+      ${document.getElementById('mq-page-pricing') && document.querySelector('#mq-page-pricing .mq-pricing-intro') ? '' : (typeof window.mqTrainingVideoBlockHTML === 'function' ? window.mqTrainingVideoBlockHTML('pricing') : '')}
 
       ${driftNotices.length ? driftNotices.map(n => `<div class="mqph-msg mqph-msg-success" style="display:block;margin-bottom:1rem">${n}</div>`).join('') : ''}
 
@@ -6721,7 +6721,7 @@ window.mqphGoToWizard = function() {
       #mqcc-fbar .mqcc-ftitle{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#6b7280;margin-bottom:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
       #mqcc-fbar .mqcc-frow{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:6px 0}
       #mqcc-fbar .mqcc-flab{font-size:12px;font-weight:700;color:#374151;min-width:96px}
-      #mqcc-fbar .mqcc-fchip{border:1px solid #d1d5db !important;background:#fff !important;color:#374151 !important;border-radius:999px !important;padding:5px 12px !important;font-size:12.5px !important;font-weight:600 !important;cursor:pointer;line-height:1.3 !important;margin:0 !important;height:auto !important;min-height:0 !important}
+      #mqcc-fbar .mqcc-fchip{border:1px solid #d1d5db !important;background:#fff !important;color:#374151 !important;border-radius:8px !important;padding:5px 12px !important;font-size:12.5px !important;font-weight:600 !important;cursor:pointer;line-height:1.3 !important;margin:0 !important;height:auto !important;min-height:0 !important}
       #mqcc-fbar .mqcc-fchip:hover{border-color:#9ca3af !important}
       #mqcc-fbar .mqcc-fchip.on{background:#111827 !important;border-color:#111827 !important;color:#fff !important}
       #mqcc-fbar .mqcc-ftag{font-size:12px;color:#1e3a8a;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:6px 10px;margin-top:8px;line-height:1.45}
@@ -6739,6 +6739,22 @@ window.mqphGoToWizard = function() {
     const custom = document.getElementById('mqph-scope-custom');
     if (!host || !custom) return;
     let bar = document.getElementById('mqcc-fbar');
+    // Page order (Jordan, Nov 2026): title → this filter → training video →
+    // Handles & knobs note → "Manage your rates" + everything else. The bar
+    // and video live in their own slot under the title so re-drawing the
+    // pricing below never moves or reloads them.
+    const page = document.getElementById('mq-page-pricing');
+    const intro = page && page.querySelector('.mq-pricing-intro');
+    if (intro) {
+      let top = document.getElementById('mqph-top');
+      if (!top) { top = document.createElement('div'); top.id = 'mqph-top'; intro.after(top); }
+      if (!bar || bar.parentNode !== top) { if (bar) bar.remove(); bar = document.createElement('div'); bar.id = 'mqcc-fbar'; top.prepend(bar); }
+      if (!document.getElementById('mq-training-video-pricing') && typeof window.mqTrainingVideoBlockHTML === 'function') {
+        const v = document.createElement('div'); v.id = 'mqph-top-video'; v.innerHTML = window.mqTrainingVideoBlockHTML('pricing'); top.appendChild(v);
+      }
+      const hw = page.querySelector('.mq-pricing-hardware-note');
+      if (hw && hw.previousElementSibling !== top) top.after(hw);
+    }
     if (!bar) {
       bar = document.createElement('div'); bar.id = 'mqcc-fbar';
       // Right under "Manage your rates" — above the training video if it's there.
