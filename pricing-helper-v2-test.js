@@ -2184,7 +2184,7 @@ window.mqphGoToWizard = function() {
     const hasItems = visibleItems.length > 0;
 
     return `
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;gap:1rem;flex-wrap:wrap">
+      <div id="mqph-wizard-row" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;gap:1rem;flex-wrap:wrap">
         <div style="font-size:12px;color:#64748b;font-weight:700;letter-spacing:.06em;text-transform:uppercase">Manage your rates</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
           ${wizardHasRun ? `<div style="font-size:12px;color:#6b7280;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:8px 12px;max-width:340px;line-height:1.5">✨ Add new items using the <strong>+ Add</strong> buttons below, or <button class="mqph-btn-ghost" style="font-size:12px;padding:0;color:#1d4ed8;text-decoration:underline;cursor:pointer;background:none;border:none;font-family:inherit" onclick="mqphGoToWizard()">re-run the pricing wizard</button> to reprice everything.</div>` : `<button class="mqph-btn mqph-btn-secondary" onclick="mqphStartItemSetup()">🛠️ Edit shop items</button>`}
@@ -6763,6 +6763,11 @@ window.mqphGoToWizard = function() {
     }
     bar.innerHTML = mqccFBarHtml();
     const k = mqccFKey();
+    // The pricing wizard row (tip, Re-run pricing wizard, Start fresh) is
+    // cabinet-only: shown when Cabinets is picked — or when cabinets are the
+    // shop's only quote, so there's nothing to pick (Jordan, Nov 2026).
+    const wiz = document.getElementById('mqph-wizard-row');
+    if (wiz) { const cab = !mqphComputeTabScope().countertopsOnly; wiz.style.display = cab && (k === '' || (k === null && !mqccFLiveQts().length)) ? 'flex' : 'none'; }
     if (k !== null && k !== '') {
       host.querySelectorAll('.mqph-cat-block, [id^="mqph-scope-"], .mq-pricing-hardware-note').forEach(e => {
         if (e === custom || e === bar || custom.contains(e)) return;
