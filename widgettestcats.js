@@ -890,20 +890,30 @@
       /* Cards get a defined edge — hairline border + soft shadow (Jordan, Nov 2026). */
       #midasquote-widget .mq-spec-item{border-color:#e3e5e9;border-radius:12px;box-shadow:0 1px 2px rgba(16,24,40,.05),0 4px 14px rgba(16,24,40,.08)}
       #midasquote-widget .mq-spec-item.on{box-shadow:0 0 0 2px #93c5fd,0 4px 14px rgba(16,24,40,.08)}
-      /* Simple cards (just a + Add or a counter — no variants, install choice
-         or notes) are product cards: photo across the top, name + description,
-         button pinned to the bottom so every card in a row lines up. */
-      #midasquote-widget .mq-spec-item.mq-spec-compact{flex:0 0 184px;padding:0;gap:0;overflow:hidden}
-      #midasquote-widget .mq-spec-compact .mq-spec-top{flex-direction:column;align-items:stretch;gap:0;flex:1}
-      #midasquote-widget .mq-spec-compact .mq-spec-top > div{width:100%}
-      #midasquote-widget .mq-spec-compact .mq-spec-top > div:first-child{border-bottom:1px solid #eef0f3}
-      #midasquote-widget .mq-spec-compact .mq-spec-top > div + div{padding:10px 12px 4px}
-      #midasquote-widget .mq-spec-compact .mq-spec-name{font-weight:600}
-      #midasquote-widget .mq-spec-compact .mq-spec-thumb,#midasquote-widget .mq-spec-compact .mq-spec-thumb-placeholder{display:block;width:100%;height:auto;aspect-ratio:4/3;border:0;border-radius:0;background:#f3f4f6;object-fit:cover}
-      #midasquote-widget .mq-spec-compact .mq-spec-thumb-placeholder{display:flex}
-      #midasquote-widget .mq-spec-compact .mq-vpicker-badge{top:8px!important;right:8px!important}
-      #midasquote-widget .mq-spec-compact .mq-spec-bottom{padding:6px 12px 12px}
-      #midasquote-widget .mq-spec-compact .mq-qty-ctrl{flex-wrap:wrap;row-gap:6px}
+      /* Every card is a product card (Jordan, Nov 2026): photo across the top,
+         name + description, any choices, then the counter / + Add pinned to
+         the bottom so cards in a row line up. Simple cards (just + Add or a
+         counter) are 184px; cards with choices (variants, supply/install,
+         "Uses your…") are 220px. A counter alone at the bottom is centred. */
+      #midasquote-widget .mq-spec-item.mq-spec-product{flex:0 0 220px;padding:0;gap:0;overflow:hidden}
+      #midasquote-widget .mq-spec-item.mq-spec-product.mq-spec-compact{flex:0 0 184px}
+      #midasquote-widget .mq-spec-product .mq-spec-top{flex-direction:column;align-items:stretch;gap:0;flex:1}
+      #midasquote-widget .mq-spec-product .mq-spec-top > div{width:100%}
+      #midasquote-widget .mq-spec-product .mq-spec-top > div:first-child{border-bottom:1px solid #eef0f3}
+      #midasquote-widget .mq-spec-product .mq-spec-top > div + div{padding:10px 12px 4px}
+      #midasquote-widget .mq-spec-product .mq-spec-name{font-weight:600}
+      #midasquote-widget .mq-spec-product .mq-spec-thumb,#midasquote-widget .mq-spec-product .mq-spec-thumb-placeholder{display:block;width:100%;height:auto;aspect-ratio:4/3;border:0;border-radius:0;background:#f3f4f6;object-fit:cover}
+      #midasquote-widget .mq-spec-product .mq-spec-thumb-placeholder{display:flex}
+      #midasquote-widget .mq-spec-product .mq-vpicker-badge{top:8px!important;right:8px!important}
+      #midasquote-widget .mq-spec-product .mq-spec-top > div + div > div[style*="margin-top:10px"]{margin-top:6px!important}
+      #midasquote-widget .mq-spec-product > :not(.mq-spec-top):not(.mq-spec-bottom){padding:4px 12px 0;box-sizing:border-box;width:100%}
+      #midasquote-widget .mq-spec-product .mq-spec-variant-row .mq-vpicker-row{flex-wrap:wrap;overflow:visible;padding:2px 0 4px;gap:6px}
+      #midasquote-widget .mq-spec-product .mq-spec-variant-row .mq-vpicker-arrow{display:none!important}
+      #midasquote-widget .mq-spec-product .mq-spec-bottom{padding:6px 12px 12px}
+      #midasquote-widget .mq-spec-product .mq-qty-ctrl{flex-wrap:wrap;row-gap:6px}
+      #midasquote-widget .mq-spec-product .mq-cc-si,#midasquote-widget .mq-spec-product .mq-spec-mode-select{width:100%!important;max-width:100%;box-sizing:border-box}
+      #midasquote-widget .mq-spec-product .mq-spec-bottom.mq-solo{align-items:center;text-align:center}
+      #midasquote-widget .mq-spec-product .mq-spec-bottom.mq-solo .mq-qty-ctrl{justify-content:center}
       #midasquote-widget .mq-spec-compact .mq-spec-top > div + div > div[style*="margin-top:10px"]{margin-top:6px!important}
       #midasquote-widget .mq-spec-top{display:flex;align-items:flex-start;gap:8px}
       #midasquote-widget .mq-spec-bottom{display:flex;flex-direction:column;align-items:flex-start;gap:3px}
@@ -2412,7 +2422,7 @@
           <span style="font-size:11px;font-weight:600;color:#6b7280">${s.installPerSqFt ? 'square feet' : (s.installPerFt ? 'linear feet' : (s.installCustomUnit ? mqEscUnit(s.installCustomUnit) : 'quantity'))}</span>
         </div>` : '';
       return `
-      <div class="mq-spec-item${!installChoiceDropdownHtml && !variantPickerHtml && !installQtyRowHtml ? ' mq-spec-compact' : ''}" id="${itemDomId}" data-rooms="${roomsAttr}" data-item-id="${s.id}">
+      <div class="mq-spec-item mq-spec-product${!installChoiceDropdownHtml && !variantPickerHtml && !installQtyRowHtml ? ' mq-spec-compact' : ''}" id="${itemDomId}" data-rooms="${roomsAttr}" data-item-id="${s.id}">
         <div class="mq-spec-top">
           <div style="position:relative;flex-shrink:0" id="mq-spec-visual-${prefix}-${i}" data-group-key="${groupKey}">${mqSpecVisualHTML(s, groupKey, itemDomId)}</div>
           <div style="flex:1;min-width:0">
@@ -2423,7 +2433,7 @@
         </div>
         ${installChoiceDropdownHtml ? `<div style="width:100%" id="mq-spec-modewrap-${prefix}-${i}">${installChoiceDropdownHtml}</div>` : ''}
         ${variantPickerHtml}
-        <div class="mq-spec-bottom">
+        <div class="mq-spec-bottom${installQtyRowHtml ? '' : ' mq-solo'}">
           <div class="mq-qty-ctrl">
             <button class="mq-qty-btn" onclick="mqAdjQty('${prefix}',${i},-1)">−</button>
             <input type="text" inputmode="${(s.perSqFt||s.perFt||s.customUnit)?'decimal':'numeric'}" pattern="${(s.perSqFt||s.perFt||s.customUnit)?'[0-9]*\\.?[0-9]*':'[0-9]*'}" id="mq-qty-${prefix}-${i}" value="0" style="width:36px;text-align:center;font-size:16px;font-weight:500;border:1px solid #d1d5db;border-radius:4px;padding:2px 4px;font-family:inherit;box-shadow:none" oninput="mqSetQty('${prefix}',${i},this.value)" onclick="this.select()"/>
@@ -3472,7 +3482,7 @@
         <span style="font-size:11px;font-weight:600;color:#6b7280">${mqCcEsc(it.unit || 'quantity')}</span>${instHtml}`
       : `<input type="checkbox" id="mq-${p}-cck-${it.id}" style="display:none"/>
         <button type="button" class="mq-cc-add" id="mq-${p}-cckb-${it.id}" onclick="event.stopPropagation();mqCcToggle('${p}','${it.id}')">+ Add</button>${instHtml}`;
-    return `<div class="mq-spec-item mq-cc-card${!vars.length && !it.inst && !auto ? ' mq-spec-compact' : ''}" id="mq-${p}-ccc-${it.id}" data-cc-item="${it.id}">
+    return `<div class="mq-spec-item mq-spec-product mq-cc-card${!vars.length && !it.inst && !auto ? ' mq-spec-compact' : ''}" id="mq-${p}-ccc-${it.id}" data-cc-item="${it.id}">
         <div class="mq-spec-top">
           <div style="position:relative;flex-shrink:0" id="mq-${p}-ccimg-${it.id}">${thumb}${featured}</div>
           <div style="flex:1;min-width:0">
@@ -3481,7 +3491,7 @@
             ${auto ? `<div style="font-size:11px;color:#166534;margin-top:6px;line-height:1.3">📐 ${auto}</div>` : ''}
           </div>
         </div>
-        <div class="mq-spec-bottom">${control}</div>
+        <div class="mq-spec-bottom${it.how === 'each' && !it.inst && !vars.length ? ' mq-solo' : ''}">${control}</div>
       </div>`;
   }
 
