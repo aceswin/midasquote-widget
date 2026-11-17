@@ -17842,7 +17842,7 @@ ${mqIsFreePlanShop() ? mqShowroomLockNoteHTML(true) : `      <label class="mq-bt
         const refresh=()=>{const key=select.value;const o=[...select.options].find(x=>x.value===key);button.innerHTML='';const n=document.createElement('span');n.textContent=o?o.textContent:key;button.append(n,thumb(key));menu.querySelectorAll('.mq-rich-shape-option').forEach(i=>i.setAttribute('aria-selected',String(i.dataset.shape===key)));};
         const open=()=>{if(activePicker?.button===button)return;closePicker();refresh();const orig=select.value;menu.hidden=false;button.setAttribute('aria-expanded','true');
           activePicker={menu,button,revert:()=>{if(select.value!==orig){select.value=orig;select.dispatchEvent(new Event('input',{bubbles:true}));}refresh();}};
-          const cur=menu.querySelector('.mq-rich-shape-option[aria-selected="true"]');if(cur){cur.scrollIntoView({block:'nearest'});cur.focus({preventScroll:true});}};
+          const cur=menu.querySelector('.mq-rich-shape-option[aria-selected="true"]');if(cur){menu.scrollTop+=cur.getBoundingClientRect().top-menu.getBoundingClientRect().top-6;cur.focus({preventScroll:true});}};
         button.addEventListener('click',ev=>{ev.preventDefault();ev.stopPropagation();if(activePicker?.button===button){closePicker();return;}open();});
         pickerKeys(menu,'.mq-rich-shape-option');
         select.after(holder);holder.append(button,menu);
@@ -18923,7 +18923,7 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
     function captureStudioState(){
       if(!mqStudioSelected)return null;
       const values={};historyFormFields().forEach(el=>values[el.id]=el.value);
-      return {template:mqStudioSelected.id,values,quickSurface:field('quick-surface')?.value||'#e9d9c8',layers:mqStudioCustomLayers.map(l=>{const copy={...l};delete copy.image;return copy}),detached:mqStudioDetached,photo:mqStudioPhoto||null,logo:mqStudioLogo||null,selected:mqStudioSelectedLayerId};
+      return {template:mqStudioSelected.id,values,quickSurface:field('quick-surface')?.value||'#e9d9c8',layers:mqStudioCustomLayers.map(l=>{const copy={...l};delete copy.image;if(l.image)Object.defineProperty(copy,'image',{value:l.image,enumerable:false,writable:true,configurable:true});return copy}),detached:mqStudioDetached,photo:mqStudioPhoto||null,logo:mqStudioLogo||null,selected:mqStudioSelectedLayerId};
     }
     function restoreStudioState(snapshot){
       if(!snapshot||snapshot.template!==mqStudioSelected?.id)return;
@@ -18933,7 +18933,7 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
         if(field('quick-surface'))field('quick-surface').value=snapshot.quickSurface||'#e9d9c8';
         mqStudioDetached=!!snapshot.detached;mqStudioPhoto=snapshot.photo||null;mqStudioLogo=snapshot.logo||null;
         mqStudioCustomLayers=(snapshot.layers||[]).map(l=>{const copy={...l};if(copy.type==='image'){
-          if(l.image && l.image.complete)copy.image=l.image;
+          if(l.image){copy.image=l.image;if(!l.image.complete)l.image.addEventListener('load',()=>update(),{once:true});}
           else if(l.dataUrl){const img=new Image();img.onload=()=>update();img.src=l.dataUrl;copy.image=img;}
         }return copy;});
         mqStudioSelectedLayerId=snapshot.selected||null;
@@ -19130,7 +19130,7 @@ function drawCustomLayer(ctx,layer,k,regions,highlight){const x=(layer.x||0)*k,y
 if(field('detach'))field('detach').addEventListener('click',()=>{if(mqStudioDetached){mqShowToast('Elements are already independent layers');return;}detachBuiltIns(false);});
 field('add-text-layer').addEventListener('click',()=>addLayer(defaultTextLayer()));
 ['x','y'].forEach(ax=>{const b=field('flip-'+ax);if(b)b.addEventListener('click',()=>{const l=currentLayer();if(!l||l.locked)return;const key=ax==='x'?'flipX':'flipY';l[key]=!l[key];update();});});
-field('add-shape-layer').addEventListener('click',()=>{addLayer(defaultShapeLayer());requestAnimationFrame(()=>requestAnimationFrame(()=>{const sh=field('layer-shape');sh?.closest('label')?.scrollIntoView({block:'nearest'});sh?._mqOpenPicker?.();}));});
+field('add-shape-layer').addEventListener('click',()=>{addLayer(defaultShapeLayer());requestAnimationFrame(()=>requestAnimationFrame(()=>{const sh=field('layer-shape');sh?.closest('label')?.scrollIntoView({block:'nearest'});sh?._mqOpenPicker?.();const mn=sh?.parentElement?.querySelector('.mq-rich-shape-menu');if(mn&&!mn.hidden)mn.scrollIntoView({block:'nearest'});}));});
 if(field('add-arrow-layer'))field('add-arrow-layer').addEventListener('click',()=>addLayer(defaultArrowLayer('arrow')));
 if(field('add-doodle-layer'))field('add-doodle-layer').addEventListener('click',()=>addLayer(defaultDoodleLayer('burst')));
 if(field('add-swipe-layer'))field('add-swipe-layer').addEventListener('click',()=>addLayer(defaultBrushSwipeLayer()));
@@ -19196,11 +19196,11 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
       }
       const showPropertyMode=()=>{workspace.classList.remove('mq-studio-canvas-first');workspace.classList.add('mq-studio-property-mode');previewShift=0;preview.style.transform='';requestAnimationFrame(queuePreviewFollow);};
       field('quick-text').addEventListener('click',()=>{const layer=defaultTextLayer();const cv=field('canvas'),unit=cv._mqUnit||1;layer.x=Math.round(Math.max(20,(cv.width/unit-layer.w)/2));layer.y=Math.round(Math.max(20,(cv.height/unit-layer.h)/2));addLayer(layer);editLayerInline(layer);});
-      field('quick-shape').addEventListener('click',()=>{addLayer(defaultShapeLayer());showPropertyMode();requestAnimationFrame(()=>requestAnimationFrame(()=>{const sh=field('layer-shape');sh?.closest('label')?.scrollIntoView({block:'nearest'});sh?._mqOpenPicker?.();}));});
-      if(field('quick-arrow'))field('quick-arrow').addEventListener('click',()=>{addLayer(defaultArrowLayer('arrow'));showPropertyMode();});
-      if(field('quick-doodle'))field('quick-doodle').addEventListener('click',()=>{addLayer(defaultBrushSwipeLayer());showPropertyMode();});
-      if(field('quick-bubble'))field('quick-bubble').addEventListener('click',()=>{addLayer(defaultBubbleLayer());showPropertyMode();});
-      if(field('quick-sticker'))field('quick-sticker').addEventListener('click',()=>{addLayer(defaultStickerLayer());showPropertyMode();});
+      field('quick-shape').addEventListener('click',()=>{addLayer(defaultShapeLayer());showPropertyMode();requestAnimationFrame(()=>requestAnimationFrame(()=>{const sh=field('layer-shape');sh?.closest('label')?.scrollIntoView({block:'nearest'});sh?._mqOpenPicker?.();const mn=sh?.parentElement?.querySelector('.mq-rich-shape-menu');if(mn&&!mn.hidden)mn.scrollIntoView({block:'nearest'});}));});
+      if(field('quick-arrow'))field('quick-arrow').addEventListener('click',()=>{addLayer(defaultArrowLayer('arrow'));showPropertyMode();requestAnimationFrame(()=>requestAnimationFrame(()=>{const sh=field('layer-shape');sh?.closest('label')?.scrollIntoView({block:'nearest'});sh?._mqOpenPicker?.();const mn=sh?.parentElement?.querySelector('.mq-rich-shape-menu');if(mn&&!mn.hidden)mn.scrollIntoView({block:'nearest'});}));});
+      if(field('quick-doodle'))field('quick-doodle').addEventListener('click',()=>{addLayer(defaultBrushSwipeLayer());showPropertyMode();requestAnimationFrame(()=>requestAnimationFrame(()=>{const sh=field('layer-shape');sh?.closest('label')?.scrollIntoView({block:'nearest'});sh?._mqOpenPicker?.();const mn=sh?.parentElement?.querySelector('.mq-rich-shape-menu');if(mn&&!mn.hidden)mn.scrollIntoView({block:'nearest'});}));});
+      if(field('quick-bubble'))field('quick-bubble').addEventListener('click',()=>{addLayer(defaultBubbleLayer());showPropertyMode();requestAnimationFrame(()=>requestAnimationFrame(()=>{const sh=field('layer-shape');sh?.closest('label')?.scrollIntoView({block:'nearest'});sh?._mqOpenPicker?.();const mn=sh?.parentElement?.querySelector('.mq-rich-shape-menu');if(mn&&!mn.hidden)mn.scrollIntoView({block:'nearest'});}));});
+      if(field('quick-sticker'))field('quick-sticker').addEventListener('click',()=>{addLayer(defaultStickerLayer());showPropertyMode();requestAnimationFrame(()=>requestAnimationFrame(()=>{const sh=field('layer-shape');sh?.closest('label')?.scrollIntoView({block:'nearest'});sh?._mqOpenPicker?.();const mn=sh?.parentElement?.querySelector('.mq-rich-shape-menu');if(mn&&!mn.hidden)mn.scrollIntoView({block:'nearest'});}));});
       field('layers-toggle').addEventListener('click',()=>{
         const beforeRotation=new Map(mqStudioCustomLayers.map(layer=>[layer.id,Number(layer.rotation)||0]));
         workspace.classList.toggle('mq-studio-show-layers');
