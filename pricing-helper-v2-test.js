@@ -241,7 +241,7 @@ let wizardBaseline = null;
 
        /* MidasQuote Premium v4 — visual refinements only; no pricing logic or field changes. */
        #mq-pricing-helper-v2{max-width:1180px !important;width:100% !important;margin:0 auto !important;padding:8px 0 40px !important;color:#0f172a !important}
-       #mq-pricing-helper-v2 .mqph-cat-block,#mq-pricing-helper-v2 .mqph-setup-card,#mq-pricing-helper-v2 .mqph-ct-block{background:#fff !important;border:1px solid #e5ebf3 !important;border-radius:20px !important;box-shadow:0 12px 30px rgba(15,23,42,.045) !important;margin-bottom:14px !important;overflow:hidden !important}
+       #mq-pricing-helper-v2 .mqph-cat-block,#mq-pricing-helper-v2 .mqph-setup-card,#mq-pricing-helper-v2 .mqph-ct-block{background:#fff !important;border:1px solid #e5ebf3 !important;border-radius:8px !important;box-shadow:0 12px 30px rgba(15,23,42,.045) !important;margin-bottom:14px !important;overflow:hidden !important}
        #mq-pricing-helper-v2 .mqph-cat-header,#mq-pricing-helper-v2 .mqph-setup-header{background:linear-gradient(180deg,#ffffff,#f9fafc) !important;border-bottom:1px solid #eaf0f6 !important;padding:19px 22px !important;min-height:68px !important;gap:12px !important}
        #mq-pricing-helper-v2 .mqph-cat-header:hover{background:linear-gradient(180deg,#fffdf8,#fff6e2) !important}
        #mq-pricing-helper-v2 .mqph-cat-title{font-size:14px !important;font-weight:800 !important;letter-spacing:0.015em !important;color:#152134 !important;text-transform:none !important;line-height:1.45 !important}
@@ -6670,7 +6670,6 @@ window.mqphGoToWizard = function() {
     if (room && (mqccCatRoomsHidden()[c.id] || []).includes(room)) return false;
     const stepPro = !!c.proOnly || mqccQtIsPro(c.qt);
     if (f.pro === 'widget' && stepPro) return false;
-    if (f.pro === 'pro' && !stepPro && !mqccItems(c.id).some(r => mqccCfg(r).proOnly)) return false;
     return true;
   }
   function mqccFItemOk(r, c) {
@@ -6678,7 +6677,6 @@ window.mqphGoToWizard = function() {
     if (room) { const v = mqccItemRooms(r); if (v.length && !v.includes(room)) return false; }
     const pro = !!mqccCfg(r).proOnly, stepPro = !!c.proOnly || mqccQtIsPro(c.qt);
     if (f.pro === 'widget' && pro) return false;
-    if (f.pro === 'pro' && !stepPro && !pro) return false;
     return true;
   }
   function mqccRoomNames(qt, ids) { const rs = mqccQtRooms(qt); return ids.map(id => (rs.find(r => r.id === id) || {}).name).filter(Boolean); }
@@ -6691,7 +6689,7 @@ window.mqphGoToWizard = function() {
     const k = mqccFKey(), room = mqccFRoom(), f = mqccF(), bits = [];
     if (k !== null) bits.push(k === '' ? 'Cabinets' : mqccQtName(k));
     if (room && (qtOverride === undefined || qtOverride === k)) bits.push((mqccQtRooms(k).find(r => r.id === room) || {}).name + ' only');
-    if (f.pro === 'pro') bits.push('⚡ Pro only');
+    if (f.pro === 'pro') bits.push('⚡ MidasQuote Pro only');
     return bits.join(' · ');
   }
   function mqccFNoteHtml(id) {
@@ -6714,10 +6712,10 @@ window.mqphGoToWizard = function() {
     if (qtChoices > 1) rows.push(`<div class="mqcc-frow"><span class="mqcc-flab">Quote</span>${chip(k === null, 'All', "mqccSetFilter('qt','all')")}${cab ? chip(k === '', 'Cabinets', "mqccSetFilter('qt','cab')") : ''}${qts.map(q => chip(k === q.id, mqccEsc(q.name) + (q.proOnly ? ' ⚡' : ''), `mqccSetFilter('qt','${q.id}')`)).join('')}</div>`);
     const rs = k !== null ? mqccQtRooms(k).filter(r => r.active !== false) : [];
     if (rs.length > 1) rows.push(`<div class="mqcc-frow"><span class="mqcc-flab">Project type</span>${chip(!room, 'All ' + mqccEsc(k === '' ? 'cabinet' : mqccQtName(k)) + ' types', "mqccSetFilter('room','')")}${rs.map(r => chip(room === r.id, mqccEsc(r.name || 'Project type'), `mqccSetFilter('room','${r.id}')`)).join('')}</div>`);
-    rows.push(`<div class="mqcc-frow"><span class="mqcc-flab">Shows on</span>${chip(f.pro === 'all', 'Everything', "mqccSetFilter('pro','all')")}${chip(f.pro === 'widget', 'Website widget', "mqccSetFilter('pro','widget')", 'Hide anything that is MidasQuote Pro only')}${chip(f.pro === 'pro', '⚡ MidasQuote Pro only', "mqccSetFilter('pro','pro')", 'Only Pro-only steps and options')}</div>`);
+    rows.push(`<div class="mqcc-frow"><span class="mqcc-flab">Shows on</span>${chip(f.pro === 'all', 'Everything', "mqccSetFilter('pro','all')")}${chip(f.pro === 'widget', 'Website widget', "mqccSetFilter('pro','widget')", 'Hide anything that is MidasQuote Pro only')}${chip(f.pro === 'pro', '⚡ MidasQuote Pro', "mqccSetFilter('pro','pro')", 'Everything MidasQuote Pro shows — anything you add here is set to Pro only')}</div>`);
     const tag = mqccFActive() ? mqccFTagText() : '';
     return `<style>
-      #mqcc-fbar{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:12px 16px;margin:0 0 14px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+      #mqcc-fbar{background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:12px 16px;margin:0 0 14px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
       #mqcc-fbar .mqcc-ftitle{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#6b7280;margin-bottom:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
       #mqcc-fbar .mqcc-frow{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:6px 0}
       #mqcc-fbar .mqcc-flab{font-size:12px;font-weight:700;color:#374151;min-width:96px}
@@ -6885,7 +6883,7 @@ window.mqphGoToWizard = function() {
               <span style="margin-left:auto;display:inline-flex;gap:10px;align-items:center">${typeof window.mqQtHasPack === 'function' && window.mqQtHasPack(k) ? `<button class="mqph-btn mqph-btn-secondary mqph-btn-sm" title="Wipe this quote and set it up fresh from MidasQuote's starter pack" onclick="event.stopPropagation();window.mqQtResetToPack('${k}')">↺ Reset to starter pack</button>` : ''}${window.mqQtPackRestorable && window.mqQtPackRestorable(k) && window.mqQtPackMissing && window.mqQtPackMissing(k) > 0 ? `<button class="mqph-btn mqph-btn-secondary mqph-btn-sm" title="Puts back any option a step is missing from MidasQuote's starter pack — never changes what's already here" onclick="mqRestoreQtFromPack('${k}', this)">↺ Restore from starter pack</button>` : ''}<button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="window._mqccNewCatQt='${k}';mqccOpenCat(null)">+ New step</button><span class="mqcc-qt-shut-lab" style="font-size:12px;font-weight:600;color:${bd}">${shut ? 'Show ▸' : 'Hide ▾'}</span></span>
             </div>`;
             const body = list.length ? list.map((c, i) => blockOf(c, cats.indexOf(c), i + 1)).join('') : `<div style="font-size:12px;color:#6b7280;margin-top:10px">${listAll.length ? 'No steps match your filter yet — click <strong>+ New step</strong> to add one (it’ll be tagged for it).' : 'No steps yet — this quote won\'t show on your widget until it has at least one.'}</div>`;
-            return `<div data-mqcc-group="${k}" style="border:1.5px solid ${bd}55;border-left:5px solid ${bd};background:${bg};border-radius:16px;padding:12px 14px 10px;margin:14px 0">${bhead}<div class="mqcc-qt-body" style="${shut ? 'display:none;' : ''}margin-top:6px">${body}</div></div>`;
+            return `<div data-mqcc-group="${k}" style="border:1.5px solid ${bd}55;border-left:5px solid ${bd};background:${bg};border-radius:8px;padding:12px 14px 10px;margin:14px 0">${bhead}<div class="mqcc-qt-body" style="${shut ? 'display:none;' : ''}margin-top:6px">${body}</div></div>`;
           }
           if (!list.length) return '';
           return `<div data-mqcc-group="${k}">` + head + list.map(c => blockOf(c, cats.indexOf(c))).join('') + `</div>`;
