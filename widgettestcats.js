@@ -887,13 +887,24 @@
       #midasquote-widget .mq-qty-ctrl input{text-indent:0}
       #midasquote-widget .mq-spec-grid{display:block}
       #midasquote-widget .mq-spec-item{display:flex;flex-direction:column;gap:6px;padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;transition:all 0.15s;flex:0 0 280px;min-width:0}
+      /* Cards get a defined edge — hairline border + soft shadow (Jordan, Nov 2026). */
+      #midasquote-widget .mq-spec-item{border-color:#e3e5e9;border-radius:12px;box-shadow:0 1px 2px rgba(16,24,40,.05),0 4px 14px rgba(16,24,40,.08)}
+      #midasquote-widget .mq-spec-item.on{box-shadow:0 0 0 2px #93c5fd,0 4px 14px rgba(16,24,40,.08)}
       /* Simple cards (just a + Add or a counter — no variants, install choice
-         or notes) stack name over photo in a narrow card instead of leaving
-         empty space beside the photo (Jordan, Nov 2026). */
-      #midasquote-widget .mq-spec-item.mq-spec-compact{flex:0 0 140px}
-      #midasquote-widget .mq-spec-compact .mq-spec-top{flex-direction:column-reverse;align-items:stretch;gap:6px}
+         or notes) are product cards: photo across the top, name + description,
+         button pinned to the bottom so every card in a row lines up. */
+      #midasquote-widget .mq-spec-item.mq-spec-compact{flex:0 0 184px;padding:0;gap:0;overflow:hidden}
+      #midasquote-widget .mq-spec-compact .mq-spec-top{flex-direction:column;align-items:stretch;gap:0;flex:1}
       #midasquote-widget .mq-spec-compact .mq-spec-top > div{width:100%}
-      #midasquote-widget .mq-spec-compact .mq-spec-thumb,#midasquote-widget .mq-spec-compact .mq-spec-thumb-placeholder{width:100%;height:110px}
+      #midasquote-widget .mq-spec-compact .mq-spec-top > div:first-child{border-bottom:1px solid #eef0f3}
+      #midasquote-widget .mq-spec-compact .mq-spec-top > div + div{padding:10px 12px 4px}
+      #midasquote-widget .mq-spec-compact .mq-spec-name{font-weight:600}
+      #midasquote-widget .mq-spec-compact .mq-spec-thumb,#midasquote-widget .mq-spec-compact .mq-spec-thumb-placeholder{display:block;width:100%;height:auto;aspect-ratio:4/3;border:0;border-radius:0;background:#f3f4f6;object-fit:cover}
+      #midasquote-widget .mq-spec-compact .mq-spec-thumb-placeholder{display:flex}
+      #midasquote-widget .mq-spec-compact .mq-vpicker-badge{top:8px!important;right:8px!important}
+      #midasquote-widget .mq-spec-compact .mq-spec-bottom{padding:6px 12px 12px}
+      #midasquote-widget .mq-spec-compact .mq-qty-ctrl{flex-wrap:wrap;row-gap:6px}
+      #midasquote-widget .mq-spec-compact .mq-spec-top > div + div > div[style*="margin-top:10px"]{margin-top:6px!important}
       #midasquote-widget .mq-spec-top{display:flex;align-items:flex-start;gap:8px}
       #midasquote-widget .mq-spec-bottom{display:flex;flex-direction:column;align-items:flex-start;gap:3px}
       #midasquote-widget .mq-spec-item.on{background:#eff6ff;border-color:#93c5fd}
