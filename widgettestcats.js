@@ -307,6 +307,14 @@
     // (Re-checked below once the shop's own quote types are known: with one
     // of those on, every built-in tab may legitimately be turned off.)
     if (window._mqHiddenTabs.length >= MQ_ALL_TAB_IDS.length) window._mqHiddenTabsAll = true;
+    // ...unless the shop has deliberately said it doesn't do cabinets or
+    // countertops (Business info ticks, e.g. a brand-new shop that hasn't
+    // picked its trade yet): then nothing on means "online quotes coming
+    // soon" (mqNoQuotesYet), not the cabinet quotes it never offered.
+    try {
+      const bz = (JSON.parse(shop['Hidden widget tabs'] || '{}') || {}).business;
+      if (bz && Array.isArray(bz.off) && bz.off.includes('cabinetry') && bz.off.includes('countertops')) window._mqHiddenTabsAll = false;
+    } catch(e) {}
 
     // Per-category "Pick a collection" dropdown label (materials, doors,
     // drawers, crown, valance can each say something different).
@@ -879,6 +887,13 @@
       #midasquote-widget .mq-qty-ctrl input{text-indent:0}
       #midasquote-widget .mq-spec-grid{display:block}
       #midasquote-widget .mq-spec-item{display:flex;flex-direction:column;gap:6px;padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;transition:all 0.15s;flex:0 0 280px;min-width:0}
+      /* Simple cards (just a + Add or a counter — no variants, install choice
+         or notes) stack name over photo in a narrow card instead of leaving
+         empty space beside the photo (Jordan, Nov 2026). */
+      #midasquote-widget .mq-spec-item.mq-spec-compact{flex:0 0 140px}
+      #midasquote-widget .mq-spec-compact .mq-spec-top{flex-direction:column-reverse;align-items:stretch;gap:6px}
+      #midasquote-widget .mq-spec-compact .mq-spec-top > div{width:100%}
+      #midasquote-widget .mq-spec-compact .mq-spec-thumb,#midasquote-widget .mq-spec-compact .mq-spec-thumb-placeholder{width:100%;height:110px}
       #midasquote-widget .mq-spec-top{display:flex;align-items:flex-start;gap:8px}
       #midasquote-widget .mq-spec-bottom{display:flex;flex-direction:column;align-items:flex-start;gap:3px}
       #midasquote-widget .mq-spec-item.on{background:#eff6ff;border-color:#93c5fd}
@@ -2386,7 +2401,7 @@
           <span style="font-size:11px;font-weight:600;color:#6b7280">${s.installPerSqFt ? 'square feet' : (s.installPerFt ? 'linear feet' : (s.installCustomUnit ? mqEscUnit(s.installCustomUnit) : 'quantity'))}</span>
         </div>` : '';
       return `
-      <div class="mq-spec-item" id="${itemDomId}" data-rooms="${roomsAttr}" data-item-id="${s.id}">
+      <div class="mq-spec-item${!installChoiceDropdownHtml && !variantPickerHtml && !installQtyRowHtml ? ' mq-spec-compact' : ''}" id="${itemDomId}" data-rooms="${roomsAttr}" data-item-id="${s.id}">
         <div class="mq-spec-top">
           <div style="position:relative;flex-shrink:0" id="mq-spec-visual-${prefix}-${i}" data-group-key="${groupKey}">${mqSpecVisualHTML(s, groupKey, itemDomId)}</div>
           <div style="flex:1;min-width:0">
@@ -3446,7 +3461,7 @@
         <span style="font-size:11px;font-weight:600;color:#6b7280">${mqCcEsc(it.unit || 'quantity')}</span>${instHtml}`
       : `<input type="checkbox" id="mq-${p}-cck-${it.id}" style="display:none"/>
         <button type="button" class="mq-cc-add" id="mq-${p}-cckb-${it.id}" onclick="event.stopPropagation();mqCcToggle('${p}','${it.id}')">+ Add</button>${instHtml}`;
-    return `<div class="mq-spec-item mq-cc-card" id="mq-${p}-ccc-${it.id}" data-cc-item="${it.id}">
+    return `<div class="mq-spec-item mq-cc-card${!vars.length && !it.inst && !auto ? ' mq-spec-compact' : ''}" id="mq-${p}-ccc-${it.id}" data-cc-item="${it.id}">
         <div class="mq-spec-top">
           <div style="position:relative;flex-shrink:0" id="mq-${p}-ccimg-${it.id}">${thumb}${featured}</div>
           <div style="flex:1;min-width:0">
@@ -9856,6 +9871,7 @@
     buildTALLCAB(data);
     container.innerHTML = mqFxLazyImgs(buildWidgetHTML(shop, specs, data));
     wireWidget(data);
+    if (mqNoQuotesYet(container, shop)) return;
     // Free plan (Oct 2026): no DEMO watermark — the widget is free to use on a shop's own site. Photos still show as placeholders (loadShopData).
     if (window.mqFxInit) window.mqFxInit();
     // Fresh estimate — nothing calculated yet, so hide any leftover sticky
@@ -10291,6 +10307,25 @@
     const roomId = roomEl ? roomEl.value : '';
     const room = (window._mqRoomTypes||[]).find(r => r.id === roomId);
     return !room || room.showRange !== false;
+  }
+  // Nov 2026: a brand-new shop starts with every quote switched off until
+  // it picks what it does (dashboard welcome step), and any shop can end up
+  // with nothing switched on. Instead of an empty, broken-looking form the
+  // widget says online quotes are coming and how to reach the shop.
+  function mqNoQuotesYet(container, shop) {
+    const tabs = container.querySelectorAll('.mq-tab[onclick^="mqSwitchTab(\'"]').length;
+    if (tabs || (window._mqQuoteTypes || []).length) return false;
+    window._mqNoQuotes = true;
+    const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const name = shop['Shop name'] || '', phone = shop['Phone'] || '', web = shop['Website'] || shop['Website URL'] || '';
+    const bc = /^#[0-9a-f]{6}$/i.test(shop['Brand colour'] || '') ? shop['Brand colour'] : '#1a1a1a';
+    container.innerHTML = `<div style="max-width:520px;margin:0 auto;padding:36px 24px;text-align:center;font-family:inherit">
+      <div style="width:56px;height:56px;margin:0 auto 14px;border-radius:14px;background:${bc}1a;color:${bc};display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h5"/></svg></div>
+      <div style="font-size:20px;font-weight:800;color:#111;margin-bottom:8px">Online quotes coming soon</div>
+      <div style="font-size:15px;color:#4b5563;line-height:1.6">${name ? esc(name) + ' is' : "We're"} getting instant estimates set up. In the meantime, we'd love to hear about your project.</div>
+      ${phone ? `<a href="tel:${esc(String(phone).replace(/[^0-9+]/g, ''))}" style="display:inline-block;margin-top:18px;padding:12px 22px;border-radius:10px;background:${bc};color:#fff;font-weight:700;text-decoration:none">📞 ${esc(phone)}</a>` : ''}
+    </div>`;
+    return true;
   }
   function fmtRange(low, high) {
     const f = n => CUR() + Math.round(n).toLocaleString();
@@ -11009,6 +11044,7 @@
       buildTALLCAB(data);
       container.innerHTML=mqFxLazyImgs(buildWidgetHTML(shop,specs,data));
       wireWidget(data);
+      if (mqNoQuotesYet(container, shop)) return;
       // Free plan (Oct 2026): no DEMO watermark — the widget is free to use on a shop's own site. Photos still show as placeholders (loadShopData).
       if (window.mqFxInit) window.mqFxInit();
       mqSetupModalOverlays();
