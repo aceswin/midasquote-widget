@@ -6465,7 +6465,7 @@ window.logoutMember = async function () {
     // A project type of one of the shop's own quote types (Shop Info).
     const isQt = !!r.forQt;
     return `
-      <div class="mq-room-row${isOpen?' mq-room-open':''}" data-idx="${idx}" style="border:1px solid #e5e7eb;border-radius:8px;padding:10px;margin-bottom:8px${r.active===false?';opacity:0.6':''}">
+      <div class="mq-room-row${isOpen?' mq-room-open':''}" data-idx="${idx}" data-rid="${String(r.id||'').replace(/"/g,'&quot;')}" style="border:1px solid #e5e7eb;border-radius:8px;padding:10px;margin-bottom:8px${r.active===false?';opacity:0.6':''}">
         <div style="display:grid;grid-template-columns:24px minmax(140px,300px) 32px 40px;gap:10px;align-items:center;margin-bottom:8px">
           <span class="mq-room-drag-handle" style="cursor:grab;color:#9ca3af;font-size:16px;text-align:center">⠿</span>
           <input type="text" value="${(r.name||'').replace(/"/g,'&quot;')}" id="mq-room-name-${idx}" placeholder="Project name" style="font-size:13px;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit"/>
@@ -6752,7 +6752,55 @@ window.logoutMember = async function () {
     });
   }
 
+  // Project-type boxes are only read when you press Save, but lots of things
+  // redraw the whole list (+ Add project type, delete, adding a measuring
+  // photo, a trade loading…). Anything typed and not saved yet used to be
+  // wiped by that redraw (Jordan, Nov 17 2026: named Refacing, added
+  // Repainting, and Refacing's name was gone). Now every box you touch is
+  // marked, and each redraw first copies the marked boxes back onto their
+  // project type (matched by id, not position).
+  if (!window._mqRoomDirtyHook) {
+    window._mqRoomDirtyHook = true;
+    const mark = e => { const t = e.target; if (t && t.id && t.id.indexOf('mq-room-') === 0 && t.closest && t.closest('.mq-room-row')) t.dataset.mqDirty = '1'; };
+    document.addEventListener('input', mark, true);
+    document.addEventListener('change', mark, true);
+  }
+  function mqRoomsKeepEdits() {
+    const rooms = window._mqRooms;
+    if (!Array.isArray(rooms)) return;
+    const num = v => parseFloat(v) || 0;
+    const map = {
+      'name': (r, e) => { r.name = e.value; },
+      'desc': (r, e) => { r.description = e.value; },
+      'adj-mat': (r, e) => { r.materialAdjPct = num(e.value); },
+      'adj-upper-mat': (r, e) => { r.upperMaterialAdjPct = num(e.value); },
+      'adj-install': (r, e) => { r.installAdjPct = num(e.value); },
+      'adj-total': (r, e) => { r.totalAdjPct = num(e.value); },
+      'adj-island-mat': (r, e) => { r.islandMaterialAdjPct = num(e.value); },
+      'active': (r, e) => { r.active = e.checked !== false; },
+      'visibility': (r, e) => { r.proOnly = e.value === 'proOnly'; r.hideFromPro = e.value === 'hideFromPro'; },
+      'hidemeasure': (r, e) => { r.hideMeasureGuide = e.checked === true; },
+      'showrange': (r, e) => { r.showRange = e.checked !== false; },
+      'hideprices': (r, e) => { r.showLinePrices = !e.checked; },
+      'addisland': (r, e) => { r.showIslandButton = e.checked === true; },
+      'islanddouble': (r, e) => { r.islandAllowDoubleRow = e.checked === true; },
+      'cover': (r, e) => { r.coverImage = e.value; },
+      'measure-text': (r, e) => { r.measureText = e.value; },
+      'measure-img': (r, e) => { r.measureImage = e.value; },
+    };
+    document.querySelectorAll('.mq-room-row[data-rid] [data-mq-dirty]').forEach(e => {
+      const row = e.closest('.mq-room-row'); if (!row) return;
+      const r = rooms.find(x => String(x.id) === row.dataset.rid); if (!r) return;
+      const idx = row.dataset.idx;
+      const m = e.id.match(new RegExp('^mq-room-(.+)-' + idx + '(?:-(\\d+))?$'));
+      if (!m) return;
+      if (m[1] === 'measure-img-extra' && m[2] != null) { if (!Array.isArray(r.measureImages)) r.measureImages = []; r.measureImages[+m[2]] = e.value; return; }
+      if (map[m[1]]) map[m[1]](r, e);
+    });
+  }
+  window.mqRoomsKeepEdits = mqRoomsKeepEdits;
   function renderRoomsList() {
+    try { mqRoomsKeepEdits(); } catch (e) { console.warn('keep project type edits', e); }
     const rooms = window._mqRooms || [];
     const isDemo = (window._mqShopRecord?.fields?.['Plan']||'') === 'Demo';
     const cabinetEntries = [];
