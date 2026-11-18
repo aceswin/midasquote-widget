@@ -2420,18 +2420,20 @@ window.logoutMember = async function () {
                 <div class="mq-page-title">Leads</div>
                 <div class="mq-page-sub">All quote requests from your widget</div>
               </div>
-              <select id="mq-lead-filter" onchange="mqFilterLeads()" style="font-size:13px;padding:6px 10px;border:1px solid #e5e7eb;border-radius:8px;font-family:inherit">
+            </div>
+            <div id="mq-leads-msg"></div>
+            <div class="mq-leads-toolbar" style="margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+              <select id="mq-lead-filter" onchange="mqFilterLeads()" style="width:auto;min-width:170px;font-size:13px;padding:6px 10px;border:1px solid #e5e7eb;border-radius:8px;font-family:inherit">
                 <option value="">All leads</option>
                 <option value="New">New</option>
                 <option value="Contacted">Contacted</option>
                 <option value="Booked">Booked</option>
                 <option value="Lost">Lost</option>
               </select>
-            </div>
-            <div id="mq-leads-msg"></div>
-            <div style="margin-bottom:1rem;display:flex;justify-content:flex-end;flex-wrap:wrap;gap:8px">
+              <div style="display:flex;flex-wrap:wrap;gap:8px">
               <button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqDeleteSelectedLeads()">🗑️ Delete selected</button>
               <button class="mq-btn mq-btn-danger mq-btn-sm" onclick="mqDeleteAllLeads()">🗑️ Clear all leads</button>
+              </div>
             </div>
             <div class="mq-card" style="padding:0;overflow:hidden">
               <div id="mq-leads-table"><div class="mq-loading">Loading leads...</div></div>
