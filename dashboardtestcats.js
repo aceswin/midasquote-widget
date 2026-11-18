@@ -2055,7 +2055,9 @@ window.logoutMember = async function () {
     '👥': 'users', '📊': 'chart', '📄': 'file', '💬': 'chat', '📖': 'book', '🏝': 'island', '🌴': 'island', '🪨': 'stone', '🎁': 'gift', '💰': 'tag', '🧱': 'box', '🛒': 'tag',
   };
   const MQT_EMOJI_RE = /^[\s ]*((?:\p{Extended_Pictographic}|[☀-➿])️?(?:‍(?:\p{Extended_Pictographic})️?)*)[\s ]*/u;
-  const MQT_P = 'html body #midasquote-dashboard';
+  // Repeated id = stronger selector, so this layer wins over the older
+  // page-specific rules (e.g. #mq-page-products .mq-product-category-card).
+  const MQT_P = 'html body #midasquote-dashboard#midasquote-dashboard#midasquote-dashboard';
   function mqtCss() {
     const P = MQT_P;
     return `
@@ -2099,7 +2101,9 @@ window.logoutMember = async function () {
     ${P} .mq-sr-title{display:flex!important;align-items:center;gap:12px;font-size:15px!important;font-weight:600!important;color:#1f2328!important}
     /* cards */
     ${P} .mq-card, ${P} .mqph-cat-block, ${P} .mq-rooms-sec, ${P} .mq-stat, ${P} .mqph-setup-card, ${P} .mqph-ct-block{background:#fff!important;border:1px solid #e6e8eb!important;border-radius:10px!important;box-shadow:0 1px 2px rgba(16,24,40,.04)!important}
-    ${P} .mq-card{padding:20px 22px!important;margin-bottom:12px!important}
+    ${P} .mq-card:not([style*="padding:0"]){padding:20px 22px!important}
+    ${P} .mq-card{margin-bottom:12px!important}
+    ${P} .mq-card[style*="padding:0"]{padding:0!important}
     ${P} .mq-card-title, ${P} .mqph-cat-title, ${P} .mq-rooms-sec-title{font-size:15px!important;font-weight:600!important;color:#1f2328!important;letter-spacing:0!important}
     ${P} .mq-card-title{display:flex!important;align-items:center!important;gap:12px!important}
     ${P} .mqph-cat-header{background:#fff!important;border-bottom:1px solid #f0f1f3!important;padding:14px 18px!important}
@@ -2107,6 +2111,36 @@ window.logoutMember = async function () {
     ${P} .mqt-ic{width:32px;height:32px;min-width:32px;border-radius:8px;background:#f6f7f9;border:1px solid #eceef1;display:inline-flex;align-items:center;justify-content:center;color:#5b626b;flex:0 0 auto}
     ${P} .mqt-chev{margin-left:auto!important;margin-right:0!important;display:inline-flex!important;align-items:center;justify-content:center;color:#9aa1a9!important;font-size:0!important;width:20px;height:20px;flex:0 0 auto;order:99}
     ${P} .mqt-chev svg{width:18px;height:18px}
+    /* tighter corners everywhere (the older layers used 18–24px) */
+    ${P} .mq-product-category-card, ${P} #mq-page-pricing .mq-card, ${P} .mq-sr-card, ${P} .mq-room-row{border-radius:10px!important;box-shadow:0 1px 2px rgba(16,24,40,.04)!important}
+    ${P} #mq-page-products .mq-product-category-card>div:first-child{padding:14px 18px!important;min-height:0!important}
+    ${P} #mq-page-products .mq-product-category-card [id^="mq-cat-body-"]{padding:18px!important}
+    ${P} .mq-room-row{padding:12px 14px!important}
+    ${P} .mq-card.mq-sr-card{padding:0!important}
+    ${P} .mq-sr-head{padding:14px 18px!important;margin:0!important}
+    ${P} .mq-sr-card > .mq-sr-body{padding:4px 18px 18px!important;margin:0!important;border-top:1px solid #f0f1f3}
+    /* code boxes: light, like GitHub/Stripe docs */
+    ${P} .mq-embed-box{background:#f6f8fa!important;border:1px solid #e1e4e8!important;color:#24292f!important;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace!important;font-size:12.5px!important;line-height:1.65!important;padding:14px 16px!important;border-radius:8px!important}
+    ${P} .mq-embed-box *{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace!important;color:#24292f!important}
+    ${P} .mq-embed-box .mq-copy-btn{font-family:Inter,-apple-system,"Segoe UI",sans-serif!important;background:#fff!important;color:#1f2328!important;border:1px solid #d0d7de!important;border-radius:6px!important;padding:4px 10px!important;font-weight:600!important;font-size:12px!important}
+    ${P} .mq-embed-box .mq-copy-btn:hover{background:#f3f4f6!important}
+    /* Specialty items: compact rows that fit without sideways scrolling */
+    ${P} .mq-content:has(#mq-page-specialty.active){max-width:1480px!important}
+    ${P} #mq-spec-table-wrap{padding:6px 10px!important}
+    ${P} #mq-spec-table{border-spacing:0 6px!important;min-width:0!important}
+    ${P} #mq-spec-table td{background:#fff!important;box-shadow:none!important;border-color:#eceef1!important;padding:10px 8px!important}
+    ${P} #mq-spec-table td:first-child{border-radius:8px 0 0 8px!important}
+    ${P} #mq-spec-table td:last-child{border-radius:0 8px 8px 0!important}
+    ${P} #mq-spec-table th{padding:8px!important;font-size:11px!important;line-height:1.3!important;white-space:normal!important}
+    ${P} #mq-spec-table th:nth-child(2){width:190px!important}
+    ${P} #mq-spec-table th:nth-child(3){width:110px!important}
+    ${P} #mq-spec-table th:nth-child(4){width:115px!important}
+    ${P} #mq-spec-table th:nth-child(5){width:110px!important}
+    ${P} #mq-spec-table th:nth-child(6){width:72px!important}
+    ${P} #mq-spec-table th:nth-child(8){width:200px!important}
+    ${P} #mq-spec-table th:nth-child(9){width:150px!important}
+    ${P} #mq-spec-table th:nth-child(10), ${P} #mq-spec-table th:nth-child(11){width:52px!important}
+    ${P} #mq-spec-table td select, ${P} #mq-spec-table td input[type=text], ${P} #mq-spec-table td input[type=number]{max-width:100%!important;min-width:0!important}
     /* stats */
     ${P} .mq-stat-val{font-weight:700!important;letter-spacing:-.02em}
     ${P} .mq-stat-lbl{color:#5b626b!important;font-weight:500!important}
@@ -21328,6 +21362,7 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
     }
 
     injectStyles();
+    try { mqtInjectCss(); } catch (e) {}
     container.innerHTML = '<div class="mq-loading" style="padding:4rem;text-align:center;font-size:14px;color:#6b7280">Loading your dashboard...</div>';
 
     let shopToken = new URLSearchParams(window.location.search).get('shop');
@@ -21401,6 +21436,7 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
       _mqTrustTextColor = savedTrustColors.text || '';
     } catch(e) {}
     container.innerHTML = buildHTML(shopRecord.fields);
+    try { mqtRefresh(); } catch (e) {}
     mqInitStickyTopbar();
     mqInitStickyNav();
     mqInitStickySpecHeader();
