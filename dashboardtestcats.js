@@ -2231,6 +2231,114 @@ window.logoutMember = async function () {
     } else { const p = window.mqHideTrainingVideo(key); document.querySelectorAll(`.mqt-video[data-video="${key}"]`).forEach(mqtVideoLabel); await p; }
     document.querySelectorAll(`.mqt-video[data-video="${key}"]`).forEach(mqtVideoLabel);
   };
+  // Nov 17 (Jordan): clean studio layout styles (see mqs2Init).
+  function mqs2Css() {
+    if (document.getElementById('mqs2-css')) return;
+    const W = '#mq-studio-workspace#mq-studio-workspace#mq-studio-workspace#mq-studio-workspace.mqs2.mq-studio-fullscreen';
+    const css = `
+${W}{display:grid!important;grid-template-columns:76px minmax(0,1fr) 312px!important;grid-template-rows:60px minmax(0,1fr)!important;grid-template-areas:"top top top" "rail stage panel"!important;gap:0!important;padding:0!important;background:#fff!important;font-family:Inter,system-ui,-apple-system,'Segoe UI',sans-serif!important;color:#111827!important;overflow:hidden!important}
+${W} *{font-family:inherit}
+${W} .mqs2-hide{display:none!important}
+${W} .mq-studio-editor-top{grid-area:top;display:flex!important;align-items:center!important;gap:12px!important;padding:0 16px!important;margin:0!important;border:0!important;border-bottom:1px solid #e5e7eb!important;background:#fff!important;min-height:0!important;height:60px!important;box-shadow:none!important;border-radius:0!important}
+${W} .mqs2-back{width:34px!important;height:34px!important;min-height:34px!important;padding:0!important;display:grid!important;place-items:center!important;border:1px solid #e5e7eb!important;border-radius:8px!important;background:#fff!important;color:#4b5563!important;box-shadow:none!important;flex:none}
+${W} .mqs2-back:hover{border-color:#111827!important;color:#111827!important}
+${W} .mqs2-name{display:flex!important;align-items:center;gap:10px;min-width:0}
+${W} .mqs2-name .mq-studio-kicker{display:none!important}
+${W} .mqs2-name h3{display:none!important}
+${W} .mqs2-name select{height:36px!important;min-height:36px!important;border:1px solid transparent!important;border-radius:8px!important;padding:0 30px 0 10px!important;font-weight:600!important;font-size:15px!important;line-height:1!important;font-family:inherit!important;color:#111827!important;background-color:#fff!important;width:auto!important;max-width:320px;box-shadow:none!important;cursor:pointer}
+${W} .mqs2-name select:hover{border-color:#e5e7eb!important}
+${W} .mqs2-topr{margin-left:auto;display:flex;align-items:center;gap:8px}
+${W} .mqs2-ib{width:34px!important;height:34px!important;min-height:34px!important;padding:0!important;display:grid!important;place-items:center!important;border:0!important;border-radius:8px!important;background:none!important;color:#374151!important;box-shadow:none!important}
+${W} .mqs2-ib:hover:not(:disabled){background:#f3f4f6!important}
+${W} .mqs2-ib:disabled{color:#d1d5db!important;opacity:1!important}
+${W} .mqs2-sep{width:1px;height:24px;background:#e5e7eb;margin:0 4px}
+${W} .mqs2-status{font-weight:500!important;font-size:12px!important;line-height:1.2!important;font-family:inherit!important;color:#6b7280!important;margin:0 6px 0 0!important;white-space:nowrap;display:inline-flex!important;align-items:center;gap:6px}
+${W} .mqs2-status::before{content:"";width:7px;height:7px;border-radius:50%;background:#22c55e}
+${W} #mq-studio-mytpl-save{height:36px!important;min-height:36px!important;padding:0 14px!important;border:1px solid #e5e7eb!important;border-radius:8px!important;background:#fff!important;color:#111827!important;font-weight:600!important;font-size:13px!important;line-height:1!important;font-family:inherit!important;box-shadow:none!important}
+${W} #mq-studio-mytpl-save:hover{border-color:#111827!important}
+${W} .mqs2-primary{height:36px!important;min-height:36px!important;padding:0 14px!important;border:1px solid #111827!important;border-radius:8px!important;background:#111827!important;color:#fff!important;font-weight:600!important;font-size:13px!important;line-height:1!important;font-family:inherit!important;display:inline-flex!important;align-items:center;gap:7px;cursor:pointer;white-space:nowrap}
+${W} .mqs2-primary:hover{background:#000!important}
+${W} .mq-studio-canvas-actions{grid-area:rail;display:flex!important;flex-direction:column!important;flex-wrap:nowrap!important;align-items:stretch!important;gap:4px!important;padding:10px 6px!important;margin:0!important;border:0!important;border-right:1px solid #e5e7eb!important;background:#fff!important;overflow-y:auto;position:static!important;box-shadow:none!important;border-radius:0!important}
+${W} .mqs2-tool{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:5px!important;width:100%!important;min-height:58px!important;height:auto!important;padding:9px 0 7px!important;border:0!important;border-radius:8px!important;background:none!important;color:#4b5563!important;font-weight:500!important;font-size:11px!important;line-height:1.1!important;font-family:inherit!important;box-shadow:none!important;transform:none!important}
+${W} .mqs2-tool:hover{background:#f3f4f6!important;color:#111827!important}
+${W} .mq-studio-editor-layout{display:contents!important}
+${W} .mq-studio-preview-wrap{grid-area:stage;background:#eef0f3!important;border:0!important;border-radius:0!important;box-shadow:none!important;padding:44px 24px 64px!important;margin:0!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:0!important;overflow:auto!important;height:100%!important;max-height:100%!important;min-height:0!important;align-self:stretch!important;width:auto!important;max-width:none!important;position:relative!important;transform:none!important}
+${W} .mq-studio-preview-wrap.mqs2-zoomed{justify-content:flex-start!important;align-items:flex-start!important}
+${W} .mq-studio-preview-wrap.mqs2-zoomed canvas#mq-studio-canvas{margin:auto!important}
+${W} canvas#mq-studio-canvas{display:block!important;width:auto!important;height:auto!important;max-width:100%!important;max-height:calc(100dvh - 170px)!important;flex:0 0 auto!important;min-height:0!important;margin:0!important;border:0!important;border-radius:2px!important;box-shadow:0 1px 3px rgba(0,0,0,.08),0 12px 32px rgba(0,0,0,.12)!important;transform:none!important;background:#fff}
+${W} .mqs2-tip{grid-area:stage;align-self:start;justify-self:center;position:relative!important;z-index:3;top:auto!important;margin:12px auto 0!important;max-width:90%!important;pointer-events:none;text-align:center!important;font-weight:400!important;font-size:12px!important;line-height:1.4!important;font-family:inherit!important;color:#6b7280!important;background:none!important;border:0!important;padding:0!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+${W} .mqs2-tip strong{font-weight:600;color:#374151}
+${W} .mqs2-zoom{grid-area:stage;align-self:end;justify-self:center;margin-bottom:14px;position:relative;display:flex;background:#fff;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;z-index:3;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+${W} .mqs2-zoom button{border:0!important;background:#fff!important;color:#374151!important;font-weight:600!important;font-size:12px!important;line-height:1!important;font-family:inherit!important;padding:8px 11px!important;min-height:0!important;height:auto!important;box-shadow:none!important;border-radius:0!important;cursor:pointer}
+${W} .mqs2-zoom button+button{border-left:1px solid #e5e7eb!important}
+${W} .mqs2-zoom button:hover{background:#f9fafb!important}
+${W} .mqs2-zoom .mqs2-zl{min-width:86px}
+${W} .mqs2-panel,${W} .mq-studio-fields{grid-area:panel;border-left:1px solid #e5e7eb!important;background:#fff!important;overflow-y:auto!important;min-height:0!important;max-height:none!important;height:auto!important;margin:0!important;box-shadow:none!important;border-radius:0!important}
+${W} .mqs2-panel{padding:18px;display:none}
+${W}.mq-studio-canvas-first .mqs2-panel{display:block}
+${W}.mq-studio-canvas-first .mq-studio-fields{display:none!important}
+${W}:not(.mq-studio-canvas-first) .mq-studio-fields{display:flex!important;flex-direction:column!important;gap:12px!important;padding:0 16px 18px!important}
+${W} .mqs2-grp{padding-bottom:18px;margin-bottom:18px;border-bottom:1px solid #f1f2f4}
+${W} .mqs2-grp:last-child{border-bottom:0;margin-bottom:0}
+${W} .mqs2-ph{display:flex;justify-content:space-between;align-items:center;font-weight:600;font-size:11px;line-height:1.2;font-family:inherit;letter-spacing:.06em;text-transform:uppercase;color:#6b7280;margin:0 0 10px}
+${W} .mqs2-link{border:0!important;background:none!important;padding:0!important;min-height:0!important;height:auto!important;font-weight:600!important;font-size:12px!important;line-height:1.2!important;font-family:inherit!important;color:#6b7280!important;text-transform:none;letter-spacing:0;box-shadow:none!important;cursor:pointer}
+${W} .mqs2-link:hover{color:#111827!important}
+${W} .mqs2-panel select{width:100%!important;height:38px!important;min-height:38px!important;border:1px solid #e5e7eb!important;border-radius:8px!important;padding:0 10px!important;font-weight:500!important;font-size:13px!important;line-height:1!important;font-family:inherit!important;color:#111827!important;background-color:#fff!important;box-shadow:none!important;max-width:none!important;min-width:0!important}
+${W} .mqs2-dims{display:block;margin-top:6px;font-weight:400!important;font-size:12px!important;line-height:1.2!important;font-family:inherit!important;color:#9ca3af!important}
+${W} .mqs2-row{display:flex!important;justify-content:space-between!important;align-items:center!important;font-weight:400!important;font-size:13px!important;line-height:1.2!important;font-family:inherit!important;color:#111827!important;margin:0 0 10px!important}
+${W} .mqs2-row input[type=color]{width:32px!important;height:32px!important;min-height:32px!important;padding:2px!important;border:1px solid #e5e7eb!important;border-radius:7px!important;background:#fff!important;cursor:pointer}
+${W} .mqs2-two{display:flex;gap:8px}
+${W} .mqs2-btn{flex:1;height:36px!important;min-height:36px!important;padding:0 10px!important;border:1px solid #e5e7eb!important;border-radius:8px!important;background:#fff!important;color:#111827!important;font-weight:600!important;font-size:12.5px!important;line-height:1!important;font-family:inherit!important;box-shadow:none!important;opacity:1;cursor:pointer}
+${W} .mqs2-btn:hover:not(:disabled){border-color:#111827!important}
+${W} .mqs2-btn:disabled{color:#c4c8ce!important;cursor:default}
+${W} .mqs2-rowbtn{display:flex!important;width:100%!important;justify-content:space-between!important;align-items:center!important;padding:9px 0!important;min-height:0!important;height:auto!important;border:0!important;background:none!important;box-shadow:none!important;font-weight:400!important;font-size:13px!important;line-height:1.2!important;font-family:inherit!important;color:#111827!important;cursor:pointer;border-radius:0!important}
+${W} .mqs2-rowbtn svg{color:#9ca3af}
+${W} .mqs2-rowbtn:hover svg{color:#111827}
+${W} .mqs2-fhead{position:sticky;top:0;z-index:7;background:#fff;display:flex;align-items:center;gap:10px;padding:14px 0 12px;margin:0 0 -4px;border-bottom:1px solid #f1f2f4}
+${W} .mqs2-done{display:inline-flex!important;align-items:center;gap:4px;border:1px solid #e5e7eb!important;border-radius:8px!important;background:#fff!important;padding:6px 10px 6px 6px!important;min-height:0!important;height:auto!important;font-weight:600!important;font-size:12px!important;line-height:1!important;font-family:inherit!important;color:#374151!important;box-shadow:none!important;cursor:pointer}
+${W} .mqs2-done:hover{border-color:#111827!important;color:#111827!important}
+${W} .mqs2-layers{margin-left:auto!important;flex:none;border:1px solid #e5e7eb!important;border-radius:8px!important;background:#fff!important;padding:6px 10px!important;min-height:0!important;height:auto!important;font-size:12px!important;font-weight:600!important;color:#374151!important;box-shadow:none!important;cursor:pointer}
+${W}:not(.mq-studio-property-mode) .mqs2-layers{display:none!important}
+${W} .mqs2-ftitle{font-weight:600;font-size:13px;line-height:1.2;font-family:inherit;color:#111827;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+${W}.mq-studio-canvas-first .mqs2-selbar,${W}:not(.mq-studio-property-mode) .mqs2-selbar{display:none!important}
+${W} .mqs2-selbar{display:flex!important;flex-wrap:wrap!important;gap:6px!important;position:static!important;margin:0!important;padding:0!important;border:0!important;background:none!important;box-shadow:none!important;width:auto!important;transform:none!important}
+${W} .mqs2-selbar .mq-studio-action-label{display:none!important}
+${W} .mqs2-selbar button{flex:1 1 auto!important;height:34px!important;min-height:34px!important;padding:0 10px!important;border:1px solid #e5e7eb!important;border-radius:8px!important;background:#fff!important;color:#111827!important;font-weight:600!important;font-size:12px!important;line-height:1!important;font-family:inherit!important;box-shadow:none!important;opacity:1!important}
+${W} .mqs2-selbar button:hover{border-color:#111827!important}
+${W} .mqs2-selbar button[data-action=delete]{color:#b91c1c!important}
+${W} .mq-studio-fields .mq-studio-control-card{border:0!important;border-bottom:1px solid #f1f2f4!important;border-radius:0!important;box-shadow:none!important;background:#fff!important;padding:4px 0 16px!important;margin:0!important}
+${W} .mq-studio-fields .mq-studio-control-card:last-child{border-bottom:0!important}
+${W} .mq-studio-fields label{font-family:inherit!important;color:#374151!important}
+${W} .mq-studio-fields input:not([type=color]):not([type=range]):not([type=checkbox]),${W} .mq-studio-fields select,${W} .mq-studio-fields textarea{border:1px solid #e5e7eb!important;border-radius:8px!important;font-family:inherit!important;box-shadow:none!important;background-color:#fff!important}
+${W} .mq-studio-fields h4{font-weight:600!important;font-size:13px!important;line-height:1.3!important;font-family:inherit!important;color:#111827!important}
+${W} .mq-studio-fields .mq-studio-context-top h4{display:none!important}
+${W} .mq-studio-fields .mq-studio-context-top{display:block!important;position:absolute;width:0;height:0;overflow:visible}
+${W} .mq-font-preview-note{display:none!important}
+${W} .mq-studio-fields button:not(.mqs2-done):not(.mq-rich-shape-option){font-family:inherit!important;border-radius:8px!important}
+${W} input[type=range]{accent-color:#111827}
+@media(max-width:900px){
+${W}{display:flex!important;flex-direction:column!important;overflow-y:auto!important;overflow-x:hidden!important}
+${W} > *,${W} .mq-studio-preview-wrap,${W} .mq-studio-fields{flex:0 0 auto!important}
+${W} .mq-studio-editor-top{order:1;height:auto!important;flex-wrap:wrap!important;padding:10px 12px!important;gap:8px!important}
+${W} .mqs2-name{flex:1}
+${W} .mqs2-name select{max-width:100%;width:100%!important}
+${W} .mqs2-topr{margin-left:0;width:100%;flex-wrap:wrap}
+${W} .mqs2-status,${W} .mqs2-sep{display:none!important}
+${W} .mqs2-primary{margin-left:auto}
+${W} .mq-studio-canvas-actions{order:2;flex-direction:row!important;overflow-x:auto!important;overflow-y:hidden!important;border-right:0!important;border-bottom:1px solid #e5e7eb!important;padding:6px!important}
+${W} .mqs2-tool{width:auto!important;min-width:62px!important;flex:0 0 auto!important}
+${W} .mqs2-tip{order:3;margin:0!important;padding:10px 12px 0!important;background:#eef0f3!important;max-width:none!important;white-space:normal}
+${W} .mq-studio-preview-wrap{order:4;height:auto!important;max-height:none!important;min-height:0!important;padding:10px 12px 16px!important;overflow:visible!important}
+${W} canvas#mq-studio-canvas{max-height:55dvh!important}
+${W} .mqs2-zoom{display:none!important}
+${W} .mqs2-panel,${W} .mq-studio-fields{order:5;border-left:0!important;border-top:1px solid #e5e7eb!important;overflow:visible!important;max-height:none!important}
+${W} .mqs2-fhead{position:static}
+}
+@media(min-width:901px){.mq-studio-rescue{display:none!important}}
+`;
+    const st = document.createElement('style'); st.id = 'mqs2-css'; st.textContent = css;
+    document.head.appendChild(st);
+  }
   function mqtHeaders() {
     document.querySelectorAll('#midasquote-dashboard .mq-page').forEach(pg => {
       const id = pg.id.replace('mq-page-', '');
@@ -2455,9 +2563,8 @@ window.logoutMember = async function () {
                 <span id="mq-biz-sum" style="font-size:12.5px;font-weight:500;color:#6b7280;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%"></span>
               </div>
               <div id="mq-shopsec-biz-body">
-              <div class="mq-hint" style="display:block;margin-bottom:10px;font-size:12px;line-height:1.45">Tick everything you quote. Cabinetry and Countertops switch our built-in quotes on or off; any other trade gets its own quote type.</div>
-              <div id="mq-biz-chips" style="display:flex;flex-wrap:wrap;gap:8px"></div>
-              <div id="mq-biz-trades" style="margin-top:10px"></div>
+              <div id="mq-biz-chips"></div>
+              <div id="mq-biz-trades"></div>
               </div>
             </div>
 
@@ -12935,6 +13042,74 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   function mqSyncTabToggles(hidden) {
     ['both','cabinets','countertops'].forEach(id => { const t = el('mq-tab-' + id + '-toggle'); if (t) t.classList.toggle('on', !hidden.includes(id)); });
   }
+  // Nov 17 (Jordan): "What does your business do?" laid out as numbered
+  // sections -- groups listed on the left, trades in an even grid.
+  function mqBizCss() {
+    if (document.getElementById('mq-biz-css2')) return;
+    const P = '#midasquote-dashboard', Q = '#mq-welcome-modal';
+    const r = (sel, body) => `${P} ${sel},${Q} ${sel}{${body}}`;
+    const st = document.createElement('style'); st.id = 'mq-biz-css2';
+    st.textContent = [
+      r('.mqb-sec', 'display:grid;grid-template-columns:190px minmax(0,1fr);gap:22px;padding:18px 0;border-top:1px solid #eef0f2;align-items:start'),
+      r('#mq-biz-chips > .mqb-sec:first-child', 'border-top:0;padding-top:6px'),
+      r('.mqb-lab', 'font-size:13px;font-weight:600;color:#111827;display:flex;flex-wrap:wrap;align-items:center;line-height:20px'),
+      r('.mqb-lab small', 'display:block;width:100%;font-size:12px;font-weight:400;color:#6b7280;line-height:1.5;margin-top:4px'),
+      r('.mqb-num', 'display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:#111827;color:#fff;font-size:11px;font-weight:600;margin-right:8px;flex:none'),
+      r('.mqb-seg', 'justify-self:start;display:inline-flex;align-items:center;border:1px solid #e5e7eb;border-radius:8px;padding:3px;gap:3px;flex-wrap:wrap'),
+      r('.mqb-seg button', 'padding:7px 14px;border-radius:6px;font-weight:500;font-size:13px;line-height:1.2;font-family:inherit;border:0;background:none;color:#374151;cursor:pointer'),
+      r('.mqb-seg button.on', 'background:#111827;color:#fff'),
+      r('.mqb-seg > span', 'padding:7px 12px;font-size:13px;color:#9ca3af'),
+      r('.mqb-sum', 'display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:12px;font-size:12px;color:#6b7280'),
+      r('.mqb-tag', 'background:#f3f4f6;border-radius:6px;padding:4px 9px;font-weight:500;color:#111827'),
+      r('.mqb-none', 'color:#9ca3af'),
+      r('.mqb-pick', 'border:1px solid #e5e7eb;border-radius:10px;display:grid;grid-template-columns:220px minmax(0,1fr);overflow:hidden;background:#fff'),
+      r('.mqb-cats', 'background:#f9fafb;border-right:1px solid #e5e7eb;padding:8px;display:flex;flex-direction:column;gap:2px'),
+      r('.mqb-cat', 'display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;text-align:left;padding:10px 12px;border-radius:7px;border:0;background:none;font-weight:500;font-size:13px;line-height:1.3;font-family:inherit;color:#374151;cursor:pointer'),
+      r('.mqb-cat:hover', 'background:#f1f2f4'),
+      r('.mqb-cat.on', 'background:#fff;box-shadow:0 0 0 1px #e5e7eb;color:#111827;font-weight:600'),
+      r('.mqb-cnt', 'font-size:11px;font-weight:600;background:#fbf3df;color:#8a6510;border-radius:10px;padding:2px 8px;flex:none'),
+      r('.mqb-grid', 'padding:12px;min-width:0'),
+      r('.mqb-items', 'display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px'),
+      r('.mqb-items[hidden]', 'display:none!important'),
+      r('.mq-biz-chip', 'display:flex!important;align-items:center;gap:10px;width:100%;min-height:44px;text-align:left;border:1px solid #e5e7eb!important;border-radius:8px!important;padding:9px 12px!important;background:#fff!important;color:#111827!important;font-weight:500;font-size:13px;line-height:1.3;font-family:inherit;cursor:pointer;transform:none!important;box-shadow:none!important;transition:border-color .15s,background .15s'),
+      r('.mq-biz-chip:hover', 'border-color:#d7a42e!important'),
+      r('.mq-biz-chip.on', 'border-color:#d7a42e!important;background:#fffbf0!important'),
+      r('.mq-biz-chip.busy', 'cursor:progress;opacity:.85'),
+      r('.mqb-cb', 'width:16px;height:16px;border-radius:4px;border:1.5px solid #cbd0d6;flex:none;display:grid;place-items:center;font-size:11px;line-height:1;color:#fff'),
+      r('.mq-biz-chip.on .mqb-cb', 'background:#c9971f;border-color:#c9971f'),
+      r('.mq-biz-chip.busy .mqb-cb', 'border:2px solid #e5d3a6;border-top-color:#c9971f;border-radius:50%;background:none;animation:mqbspin .8s linear infinite'),
+      r('.mqb-lbl', 'flex:1;min-width:0'),
+      r('.mqb-bi', 'font-size:10.5px;font-weight:600;color:#8a6510;flex:none'),
+      r('.mqb-bi-muted', 'color:#9ca3af'),
+      r('.mq-biz-chip-wait', 'font-size:11px;color:#8a6510;flex:none'),
+      r('.mqb-table', 'border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;background:#fff'),
+      r('.mqb-row', 'display:grid;grid-template-columns:200px minmax(0,1fr) 230px;gap:14px;align-items:center;padding:10px 14px;border-top:1px solid #f1f2f4;font-size:13px'),
+      r('.mqb-row:first-child', 'border-top:0'),
+      r('.mqb-head', 'background:#f9fafb;border-bottom:1px solid #e5e7eb;font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:#6b7280;font-weight:600;padding:9px 14px'),
+      r('.mqb-head + .mqb-row', 'border-top:0'),
+      r('.mqb-trade', 'display:flex;align-items:center;gap:10px;font-weight:500;color:#111827'),
+      r('.mqb-ic', 'width:28px;height:28px;border-radius:7px;background:#f3f4f6;color:#374151;display:inline-grid;place-items:center;flex:none'),
+      r('.mqb-status small', 'display:block;font-size:11.5px;color:#6b7280;margin-top:2px'),
+      r('.mqb-ok', 'color:#15803d;font-weight:500'),
+      r('.mqb-warn', 'color:#b45309;font-weight:500'),
+      r('.mqb-row > div', 'text-align:left;min-width:0'),
+      r('.mqb-row > .mqb-act', 'text-align:right'),
+      r('.mqb-go', 'border:1px solid #e5e7eb;background:#fff;border-radius:7px;padding:6px 11px;font-weight:600;font-size:12px;line-height:1.2;font-family:inherit;color:#111827;cursor:pointer;white-space:nowrap'),
+      r('.mqb-go:hover', 'border-color:#111827'),
+      '@keyframes mqbspin{to{transform:rotate(360deg)}}',
+      `${Q} .mqb-sec{grid-template-columns:1fr;gap:10px}`,
+      `${Q} .mqb-lab small{display:none}`,
+      `@media(max-width:820px){${P} .mqb-sec{grid-template-columns:1fr;gap:10px}${P} .mqb-pick,${Q} .mqb-pick{grid-template-columns:1fr}${P} .mqb-cats,${Q} .mqb-cats{flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1px solid #e5e7eb}${P} .mqb-cat,${Q} .mqb-cat{width:auto;white-space:nowrap}${P} .mqb-row,${Q} .mqb-row{grid-template-columns:1fr;gap:6px}${P} .mqb-head,${Q} .mqb-head{display:none}${P} .mqb-row > .mqb-act,${Q} .mqb-row > .mqb-act{text-align:left}}`,
+    ].join('\n');
+    document.head.appendChild(st);
+  }
+  window.mqBizCat = function(id) {
+    window._mqBizCat = id;
+    document.querySelectorAll('.mqb-cat').forEach(b => b.classList.toggle('on', b.dataset.mqbCat === id));
+    document.querySelectorAll('.mqb-items').forEach(g => { g.hidden = g.dataset.mqbItems !== id; });
+    const b = document.querySelector('.mqb-cat.on'), row = b && b.parentElement;
+    if (row && row.scrollWidth > row.clientWidth) row.scrollTo({ left: b.offsetLeft - 8, behavior: 'smooth' });
+  };
   window.mqRenderBizTypes = function() {
     const chips = el('mq-biz-chips'), tradesEl = el('mq-biz-trades');
     const shopRec = window._mqShopRecord;
@@ -12950,62 +13125,67 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const chip = t => {
       const pend = window._mqBizBusy && window._mqBizBusy[t.id];
       const on = pend ? pend.on : isOn(t);
-      return `<button type="button" class="mq-biz-chip" data-mq-biz="${t.id}" aria-pressed="${on}" onclick="mqBizToggle('${t.id}')" style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;font-family:inherit;padding:5px 11px;border-radius:8px;cursor:pointer;${on ? 'background:#1a1a1a;color:#fff;border:1.5px solid #1a1a1a' : 'background:#fff;color:#374151;border:1.5px solid #d1d5db'}"><span style="width:13px;height:13px;border-radius:3px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;line-height:1;${pend ? 'font-size:11px' : on ? 'background:#d7a42e;color:#1a1a1a' : 'border:1.5px solid #9ca3af'}">${pend ? '⏳' : on ? '✓' : ''}</span>${mqEscHtml(t.label)}${pend ? `<span class="mq-biz-chip-wait" style="font-size:11px;font-weight:500;opacity:.8">${pend.on ? 'Setting up…' : 'Saving…'}</span>` : ''}</button>`;
+      const tag = t.builtIn ? '<span class="mqb-bi">Built-in</span>' : (t.id === 'other' ? '<span class="mqb-bi mqb-bi-muted">Your own quote</span>' : '');
+      return `<button type="button" class="mq-biz-chip${on ? ' on' : ''}${pend ? ' busy' : ''}" data-mq-biz="${t.id}" aria-pressed="${on}" onclick="mqBizToggle('${t.id}')"><span class="mqb-cb">${pend ? '' : on ? '✓' : ''}</span><span class="mqb-lbl">${mqEscHtml(t.label)}</span>${pend ? `<span class="mq-biz-chip-wait">${pend.on ? 'Setting up…' : 'Saving…'}</span>` : tag}</button>`;
     };
-    // Industry first, then its trades in groups (groups with nothing ticked
-    // start folded once anything is ticked, so the list stays short).
+    // Industry first, then its trades: groups listed on the left, the
+    // picked group's trades in an even grid on the right.
     const ind = mqIndustryOf(biz);
     const all = mqBizTradeList(biz.trades);
     const groups = ind.groups.map(g => ({ id: g.id, label: g.label, list: all.filter(t => (t.builtIn ? MQ_BIZ_FIXED_GROUP : t.group) === g.id) }));
     const more = all.filter(t => t.id !== 'other' && !groups.some(g => g.list.includes(t)));
     if (more.length) groups.push({ id: 'more', label: 'More trades', list: more });
     const otherT = all.find(t => t.id === 'other');
-    const anyOn = all.some(isOn);
-    window._mqBizGrpOpen = window._mqBizGrpOpen || {};
-    const grpHtml = groups.filter(g => g.list.length).map(g => {
+    if (otherT) groups.push({ id: 'other', label: 'Something else', list: [otherT] });
+    const shown = groups.filter(g => g.list.length);
+    if (!shown.some(g => g.id === window._mqBizCat)) window._mqBizCat = (shown.find(g => g.list.some(isOn)) || shown[0] || {}).id;
+    const cur = window._mqBizCat;
+    mqBizCss();
+    const catHtml = shown.map(g => {
       const n = g.list.filter(isOn).length;
-      const open = window._mqBizGrpOpen[g.id] !== undefined ? window._mqBizGrpOpen[g.id] : (!anyOn || n > 0);
-      return `<div class="mq-biz-grp${open ? ' mq-biz-grp-open' : ''}" data-mq-bizgrp="${g.id}" style="border:1px solid #e5e7eb;border-radius:9px;background:#fff;min-width:0">
-        <button type="button" onclick="mqBizGrpToggle('${g.id}')" aria-expanded="${open}" style="display:flex;width:100%;align-items:center;justify-content:space-between;gap:10px;background:none;border:0;padding:7px 11px;font-family:inherit;font-size:12.5px;font-weight:700;color:#111;cursor:pointer;text-align:left">
-          <span>${mqEscHtml(g.label)}${n ? ` <span style="font-weight:600;color:#15803d;font-size:12px;margin-left:4px">${n} ticked</span>` : ''}</span>
-          <span style="display:inline-block;color:#6b7280;transition:transform .15s;transform:rotate(${open ? 180 : 0}deg)">▾</span>
-        </button>
-        <div style="display:${open ? 'flex' : 'none'};flex-wrap:wrap;gap:6px;padding:0 10px 10px">${g.list.map(chip).join('')}</div>
-      </div>`;
+      return `<button type="button" class="mqb-cat${g.id === cur ? ' on' : ''}" data-mqb-cat="${g.id}" onclick="mqBizCat('${g.id}')"><span>${mqEscHtml(g.label)}</span>${n ? `<span class="mqb-cnt">${n}</span>` : ''}</button>`;
     }).join('');
+    const itemsHtml = shown.map(g => `<div class="mqb-items" data-mqb-items="${g.id}"${g.id === cur ? '' : ' hidden'}>${g.list.map(chip).join('')}</div>`).join('');
+    const onList = all.filter(isOn).map(t => t.label);
     chips.style.display = 'block';
-    if (!document.getElementById('mq-biz-css')) {
-      const st = document.createElement('style'); st.id = 'mq-biz-css';
-      st.textContent = '#mq-biz-grps{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;align-items:start}'
-        + '#mq-biz-grps .mq-biz-grp{background:#fff !important;border:1px solid #cfd6df !important;border-radius:10px !important;box-shadow:0 1px 2px rgba(15,23,42,.05);transition:background .15s,border-color .15s,box-shadow .15s}'
-        + '#mq-biz-grps .mq-biz-grp:not(.mq-biz-grp-open):hover{background:#fffbf0 !important;border-color:#d7a42e !important}'
-        + '#mq-biz-grps .mq-biz-grp-open{grid-column:1/-1;background:#fffbf0 !important;border:1.5px solid #d7a42e !important;box-shadow:0 2px 10px rgba(215,164,46,.15)}'
-        + '#mq-biz-grps .mq-biz-grp-open > button{border-bottom:1px solid #f1e3bd !important;margin-bottom:10px;background:#fbf3df !important;border-radius:9px 9px 0 0 !important;color:#6b4f0c !important}';
-      document.head.appendChild(st);
-    }
-    chips.innerHTML = `<div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;margin-bottom:10px"><span style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#6b7280;margin-right:2px">Industry</span>${MQ_INDUSTRIES.map(x => { const on = x.id === ind.id; return `<button type="button" onclick="mqBizIndustry('${x.id}')" aria-pressed="${on}" style="font-size:12.5px;font-weight:600;font-family:inherit;padding:5px 11px;border-radius:8px;cursor:pointer;${on ? 'background:#fbf3df;color:#8a6510;border:1.5px solid #d7a42e' : 'background:#fff;color:#374151;border:1.5px solid #d1d5db'}">${on ? '✓ ' : ''}${mqEscHtml(x.label)}</button>`; }).join('')}<span style="font-size:11.5px;color:#9ca3af">More industries coming soon</span></div>
-      <div style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#6b7280;margin-bottom:5px">What you quote</div>
-      <div id="mq-biz-grps">${grpHtml}</div>${otherT ? `<div style="margin-top:6px">${chip(otherT)}</div>` : ''}`;
+    chips.innerHTML = `<div class="mqb-sec">
+        <div class="mqb-lab"><span class="mqb-num">1</span>Industry</div>
+        <div class="mqb-seg">${MQ_INDUSTRIES.map(x => { const on = x.id === ind.id; return `<button type="button" class="${on ? 'on' : ''}" onclick="mqBizIndustry('${x.id}')" aria-pressed="${on}">${mqEscHtml(x.label)}</button>`; }).join('')}<span>More coming soon</span></div>
+      </div>
+      <div class="mqb-sec">
+        <div class="mqb-lab"><span class="mqb-num">2</span>What you quote<small>Tick everything you do. Cabinetry and Countertops turn the built-in quotes on or off.</small></div>
+        <div style="min-width:0">
+          <div class="mqb-sum">You quote:${onList.length ? onList.map(l => `<span class="mqb-tag">${mqEscHtml(l)}</span>`).join('') : '<span class="mqb-none">nothing yet</span>'}</div>
+          <div class="mqb-pick"><div class="mqb-cats">${catHtml}</div><div class="mqb-grid">${itemsHtml}</div></div>
+        </div>
+      </div>`;
+    requestAnimationFrame(() => { const b = chips.querySelector('.mqb-cat.on'), row = b && b.parentElement; if (row && row.scrollWidth > row.clientWidth) row.scrollLeft = b.offsetLeft - 8; });
     // Header summary + first-visit fold: open for a new shop or while a
     // ticked trade still needs its quote added, folded otherwise.
     const sumEl = el('mq-biz-sum');
-    const onList = all.filter(isOn).map(t => t.label);
     if (sumEl) sumEl.textContent = onList.length ? '· ' + (onList.length > 4 ? onList.slice(0, 4).join(', ') + ` +${onList.length - 4} more` : onList.join(', ')) : '· nothing ticked yet';
     if (!tradesEl) return;
-    const rows = mqBizTradeList(biz.trades).filter(t => !t.builtIn && isOn(t)).map(t => {
+    const ctNoPricing = biz.ct && Array.isArray(window._mqCtItems) && !window._mqCtItems.some(r => r.fields && r.fields['Active'] !== false);
+    const rowHtml = (icon, label, status, action) => `<div class="mqb-row"><div class="mqb-trade"><span class="mqb-ic">${icon}</span>${label}</div><div class="mqb-status">${status}</div><div class="mqb-act">${action}</div></div>`;
+    const goBtn = (txt, js) => `<button type="button" class="mqb-go" onclick="${js}">${txt} →</button>`;
+    const rows = [];
+    if (biz.cab) rows.push(rowHtml(mqQtIconSvg('cabinet', 15), 'Cabinetry', '<span class="mqb-ok">✓ Built-in cabinet quote</span>', goBtn('Pricing', "mqGoTo('pricing')")));
+    if (biz.ct) rows.push(rowHtml(mqQtIconSvg('counter', 15), 'Countertops', ctNoPricing ? '<span class="mqb-warn">No countertop pricing yet</span>' : '<span class="mqb-ok">✓ Built-in countertop quote</span>', goBtn(ctNoPricing ? 'Set up pricing' : 'Pricing', "mqGoTo('pricing')")));
+    mqBizTradeList(biz.trades).filter(t => !t.builtIn && isOn(t)).forEach(t => {
       const matches = mqQtsOfTrade(t, qts);
       const match = matches[0] || null;
-      const right = match
-        ? `<span style="color:#15803d;font-weight:600">✓ ${matches.map(q => '"' + mqEscHtml(q.name) + '"').join(' + ')} ${matches.length > 1 ? 'quotes' : 'quote'} set up</span> <a href="#" onclick="event.preventDefault();mqQtOpenInRooms('${match.id}')" style="color:#1d4ed8;font-weight:600;text-decoration:none;margin-left:6px">Project types →</a>`
-        : (t.qtName && mqTradeHasPack(t)
-          ? `<span style="display:inline-flex;flex-direction:column;align-items:flex-end;gap:3px"><button type="button" class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqBizAddQt('${t.id}')">${(() => { const inf = mqPackInfoNorm(mqTradePackInfo(t)); return inf && Array.isArray(inf.quotes) && inf.quotes.length > 1 ? `+ Add ${mqEscHtml(t.label)} quotes` : `+ Add a ${mqEscHtml((inf && inf.quotes && inf.quotes[0] && inf.quotes[0].name) || t.qtName)} quote`; })()}</button><span style="font-size:11px;color:#6b7280">Comes set up: ${mqEscHtml(mqTradePackSummary(mqTradePackInfo(t)))}</span></span>`
-          : t.qtName
-          ? `<button type="button" class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqBizAddQt('${t.id}')">+ Add a ${mqEscHtml(t.qtName)} quote</button>`
-          : `<button type="button" class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqBizAddQt('${t.id}')">+ Add a quote type</button>`);
-      return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;border:1px solid #e5e7eb;border-radius:9px;padding:6px 10px;margin-bottom:6px;font-size:12.5px">
-        <span style="display:inline-flex;align-items:center;gap:8px;font-weight:600;color:#111"><span style="width:26px;height:26px;border-radius:6px;background:#fbf3df;color:#8a6510;display:inline-flex;align-items:center;justify-content:center">${mqQtIconSvg(t.icon, 15)}</span>${mqEscHtml(t.label)}</span>
-        <span>${right}</span>
-      </div>`;
+      let status, action;
+      if (match) {
+        status = `<span class="mqb-ok">✓ ${matches.map(q => '"' + mqEscHtml(q.name) + '"').join(' + ')} ${matches.length > 1 ? 'quotes' : 'quote'} set up</span>`;
+        action = goBtn('Project types', `mqQtOpenInRooms('${match.id}')`);
+      } else {
+        const inf = t.qtName && mqTradeHasPack(t) ? mqPackInfoNorm(mqTradePackInfo(t)) : null;
+        const lbl = inf ? (Array.isArray(inf.quotes) && inf.quotes.length > 1 ? `+ Add ${mqEscHtml(t.label)} quotes` : `+ Add a ${mqEscHtml((inf.quotes && inf.quotes[0] && inf.quotes[0].name) || t.qtName)} quote`) : (t.qtName ? `+ Add a ${mqEscHtml(t.qtName)} quote` : '+ Add a quote type');
+        status = `<span class="mqb-warn">Not set up yet</span>${inf ? `<small>Comes set up: ${mqEscHtml(mqTradePackSummary(mqTradePackInfo(t)))}</small>` : ''}`;
+        action = `<button type="button" class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqBizAddQt('${t.id}')">${lbl}</button>`;
+      }
+      const ic = t.id === 'other' ? 'sparkle' : t.icon;
+      rows.push(rowHtml(mqQtIconSvg(ic, 15), mqEscHtml(t.label), status, action));
     });
     const inWelcome = !!(document.getElementById('mq-welcome-pick') && document.getElementById('mq-welcome-pick').contains(tradesEl));
     const nothing = !inWelcome && !biz.cab && !biz.ct && !qts.some(q => q.on !== false && !q.proOnly);
@@ -13019,24 +13199,11 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         if (b) b.style.display = 'none'; if (c) c.style.transform = 'rotate(0deg)';
       }
     }
-    // Countertops ticked but nothing priced yet -> say so.
-    const ctNoPricing = biz.ct && Array.isArray(window._mqCtItems) && !window._mqCtItems.some(r => r.fields && r.fields['Active'] !== false);
-    tradesEl.innerHTML = rows.join('') + (ctNoPricing ? `<div style="font-size:12.5px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:8px 10px;margin:4px 0 6px;line-height:1.5">Countertops is ticked, but you have no countertop pricing yet — <a href="#" onclick="event.preventDefault();mqGoTo('pricing')" style="color:#1d4ed8;font-weight:600">set it up on the Pricing tab →</a></div>` : '') + (nothing ? `<div style="font-size:12.5px;color:#b45309;margin-top:4px">Your widget has no quotes to show yet. Add a quote type for your trade.</div>` : '')
+    tradesEl.innerHTML = (rows.length ? `<div class="mqb-sec"><div class="mqb-lab"><span class="mqb-num">3</span>Your quotes<small>The quote each trade shows on your widget.</small></div><div class="mqb-table"><div class="mqb-row mqb-head"><div>Trade</div><div>Quote on your widget</div><div></div></div>${rows.join('')}</div></div>` : '') + (nothing ? `<div style="font-size:12.5px;color:#b45309;margin-top:4px">Your widget has no quotes to show yet. Add a quote type for your trade.</div>` : '')
       + ((!biz.cab || !biz.ct) && biz.set && !inWelcome ? `<div style="font-size:12px;color:#6b7280;margin-top:6px;line-height:1.5">${!biz.cab && !biz.ct ? 'Built-in cabinet and countertop pricing is hidden' : (!biz.cab ? 'Built-in cabinet pricing is hidden' : 'Built-in countertop pricing is hidden')} on the Pricing, My products and Project types tabs, and the matching built-in quote is hidden in MidasQuote Pro too. Nothing is deleted. Tick it again any time to bring it back.</div>` : '');
     if (window.mqWelcomeSync) window.mqWelcomeSync();
   };
-  window.mqBizGrpToggle = function(id) {
-    const box = document.querySelector(`[data-mq-bizgrp="${id}"]`);
-    if (!box) return;
-    const body = box.children[1], btn = box.children[0];
-    const open = body.style.display === 'none';
-    body.style.display = open ? 'flex' : 'none';
-    box.classList.toggle('mq-biz-grp-open', open);
-    btn.setAttribute('aria-expanded', open);
-    btn.lastElementChild.style.transform = `rotate(${open ? 180 : 0}deg)`;
-    window._mqBizGrpOpen = window._mqBizGrpOpen || {};
-    window._mqBizGrpOpen[id] = open;
-  };
+  window.mqBizGrpToggle = function(id) { const b = document.getElementById('mq-shopsec-biz-body'); if (b && b.style.display === 'none' && window.mqToggleShopSection) mqToggleShopSection('biz'); window.mqBizCat(id); };
   window.mqBizIndustry = async function(id) {
     const shopRec = window._mqShopRecord;
     if (!shopRec || !MQ_INDUSTRIES.some(x => x.id === id)) return;
@@ -13057,14 +13224,10 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     window._mqBizBusy[id] = { on: nowOn };
     if (chip) {
       chip.setAttribute('aria-pressed', String(nowOn));
-      chip.style.background = nowOn ? '#1a1a1a' : '#fff';
-      chip.style.color = nowOn ? '#fff' : '#374151';
-      chip.style.borderColor = nowOn ? '#1a1a1a' : '#d1d5db';
-      chip.style.opacity = '.85'; chip.style.cursor = 'progress';
-      const box = chip.querySelector('span');
-      if (box) { box.textContent = '⏳'; box.style.border = '0'; box.style.background = 'transparent'; box.style.fontSize = '11px'; }
+      chip.classList.toggle('on', nowOn); chip.classList.add('busy');
+      const box = chip.querySelector('.mqb-cb'); if (box) box.textContent = '';
+      chip.querySelectorAll('.mqb-bi').forEach(x => x.remove());
       const lab = document.createElement('span'); lab.className = 'mq-biz-chip-wait'; lab.textContent = nowOn ? 'Setting up…' : 'Saving…';
-      lab.style.cssText = 'font-size:11px;font-weight:500;opacity:.8';
       chip.appendChild(lab);
     }
     const run = (window._mqBizQ || Promise.resolve()).catch(() => {}).then(() => mqBizToggleRun(id));
@@ -18441,7 +18604,7 @@ ${mqIsFreePlanShop() ? mqShowroomLockNoteHTML(true) : `      <label class="mq-bt
       if(!mqRescueButton){
         mqRescueButton=document.createElement('button');
         mqRescueButton.type='button';
-        mqRescueButton.textContent='↑ Studio top';
+        mqRescueButton.textContent='↑ Studio top';mqRescueButton.className='mq-studio-rescue';
         mqRescueButton.setAttribute('aria-label','Return to the top of the design studio without changing the design');
         Object.assign(mqRescueButton.style,{position:'fixed',right:'16px',bottom:'16px',zIndex:'2147483647',padding:'12px 17px',borderRadius:'11px',border:'1px solid #cebfcf',background:'#231d27',color:'#fff',font:'700 13px Arial,sans-serif',boxShadow:'0 8px 30px #0004',cursor:'pointer'});
         mqRescueButton.addEventListener('click',resetStudioScroll);
@@ -20030,6 +20193,115 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
         if(replace)replace.style.display=layer?.type==='image'?'inline-flex':'none';
       }
       root._mqSyncActions=syncFixedActions;
+      // ── Nov 17 (Jordan): clean studio layout ─────────────────────────────
+      // Top bar · tool strip on the left · design in the middle · a settings
+      // panel on the right that follows what's selected. The existing
+      // controls are moved, not rebuilt, so every button keeps its wiring.
+      (function mqs2Init(){
+        if(workspace.classList.contains('mqs2'))return;
+        workspace.classList.add('mqs2');
+        const ic=(p,s)=>`<svg viewBox="0 0 24 24" width="${s||20}" height="${s||20}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
+        const I={
+          text:'<path d="M5 6V4h14v2M12 4v16M9 20h6"/>',
+          shape:'<rect x="3" y="3" width="8" height="8" rx="1"/><circle cx="17" cy="17" r="4"/>',
+          arrow:'<path d="M5 19L19 5M10 5h9v9"/>',
+          doodle:'<path d="M4 18c3-6 5 2 8-4s5 1 8-5"/>',
+          bubble:'<path d="M4 5h16v11H9l-5 4z"/>',
+          sticker:'<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/>',
+          image:'<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/>',
+          undo:'<path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 010 12h-3"/>',
+          redo:'<path d="M15 14l5-5-5-5"/><path d="M20 9H10a6 6 0 000 12h3"/>',
+          back:'<path d="M15 18l-6-6 6-6"/>',
+          down:'<path d="M12 4v12M6 11l6 6 6-6M5 20h14"/>',
+          chev:'<path d="M9 6l6 6-6 6"/>',
+          x:'<path d="M18 6L6 18M6 6l12 12"/>'
+        };
+        const top=workspace.querySelector('.mq-studio-editor-top');
+        const rail=workspace.querySelector('.mq-studio-canvas-actions');
+        const fields=workspace.querySelector('.mq-studio-fields');
+        const sw=top&&top.querySelector('.mq-studio-template-switch');
+        // Top bar: back · name + design picker | undo redo · status · save as template · download
+        const back=field('back');
+        if(top&&back){back.innerHTML=ic(I.back,18);back.title='All templates';back.classList.add('mqs2-back');top.insertBefore(back,top.firstChild);}
+        const nameBox=top&&top.querySelector('.mq-studio-kicker')&&top.querySelector('.mq-studio-kicker').parentElement;
+        const sel=field('template-select');
+        if(nameBox&&sel){nameBox.classList.add('mqs2-name');const lab=sw&&sw.querySelector('label');if(lab)lab.style.display='none';nameBox.appendChild(sel);}
+        const right=document.createElement('div');right.className='mqs2-topr';
+        const undo=field('undo'),redo=field('redo'),status=field('history-status');
+        if(undo){undo.innerHTML=ic(I.undo,18);undo.classList.add('mqs2-ib');right.appendChild(undo);}
+        if(redo){redo.innerHTML=ic(I.redo,18);redo.classList.add('mqs2-ib');right.appendChild(redo);}
+        const sep=document.createElement('span');sep.className='mqs2-sep';right.appendChild(sep);
+        if(status){status.classList.add('mqs2-status');right.appendChild(status);}
+        const tplSave=field('mytpl-save');if(tplSave){tplSave.textContent='Save as template';right.appendChild(tplSave);}
+        const dl=field('quick-download');if(dl){dl.innerHTML=ic(I.down,16)+'Download PNG';dl.removeAttribute('style');dl.className='mqs2-primary';dl.id='mq-studio-quick-download';right.appendChild(dl);}
+        if(sw)sw.replaceWith(right);else if(top)top.appendChild(right);
+        // Tool strip
+        const tool=(id,key,label)=>{const b=field(id);if(!b)return;b.innerHTML=ic(I[key])+'<span>'+label+'</span>';b.classList.add('mqs2-tool');if(rail)rail.appendChild(b);};
+        tool('quick-text','text','Text');tool('quick-shape','shape','Shapes');tool('quick-arrow','arrow','Arrows');tool('quick-doodle','doodle','Doodle');tool('quick-bubble','bubble','Bubble');tool('quick-sticker','sticker','Sticker');tool('direct-image-btn','image','Image');
+        const pt=field('properties-toggle');if(pt)pt.style.display='none';
+        // Design panel (shown when nothing is selected)
+        const panel=document.createElement('div');panel.className='mqs2-panel';
+        const grp=(title,extra)=>{const g=document.createElement('div');g.className='mqs2-grp';g.innerHTML='<div class="mqs2-ph"><span>'+title+'</span></div>';if(extra)g.firstChild.appendChild(extra);panel.appendChild(g);return g;};
+        const gCanvas=grp('Canvas');
+        const size=field('quick-size'),dims=field('format-dimensions');
+        if(size)gCanvas.appendChild(size);if(dims){dims.classList.add('mqs2-dims');gCanvas.appendChild(dims);}
+        const reset=field('reset-colors');
+        if(reset){reset.textContent='Reset';reset.className='mqs2-link';}
+        const gCol=grp('Colours',reset);
+        const qc=workspace.querySelector('.mq-studio-quick-colors');
+        if(qc)[...qc.querySelectorAll('label')].forEach(l=>{l.classList.add('mqs2-row');gCol.appendChild(l);});
+        const gBg=grp('Background image');
+        const bgRow=document.createElement('div');bgRow.className='mqs2-two';gBg.appendChild(bgRow);
+        const pq=field('photo-quick'),pr=field('photo-remove-quick');
+        if(pq){pq.textContent='Change';pq.removeAttribute('style');pq.className='mqs2-btn';bgRow.appendChild(pq);}
+        if(pr){pr.textContent='Remove';pr.removeAttribute('style');pr.className='mqs2-btn';bgRow.appendChild(pr);}
+        const gMore=grp('More');
+        const st=field('settings-toggle');
+        const rowBtn=(b,label)=>{if(!b)return;b.innerHTML='<span>'+label+'</span>'+ic(I.chev,16);b.removeAttribute('style');b.className='mqs2-rowbtn';gMore.appendChild(b);};
+        rowBtn(st,'All design settings');rowBtn(field('quick-save'),'Save draft');rowBtn(field('quick-load'),'Load saved draft');
+        [workspace.querySelector('.mq-studio-format-bar'),qc,workspace.querySelector('.mq-history-toolbar'),preview.querySelector(':scope > p'),preview.querySelector('.mq-studio-preview-toolbar')].forEach(x=>{if(x)x.classList.add('mqs2-hide');});
+        workspace.appendChild(panel);
+        // Settings panel header + the selected-item actions move into the right panel
+        if(fields){
+          const head=document.createElement('div');head.className='mqs2-fhead';
+          head.innerHTML='<button type="button" class="mqs2-done">'+ic(I.back,16)+'Design</button><span class="mqs2-ftitle"></span>';
+          fields.insertBefore(head,fields.firstChild);
+          const lt=field('layers-toggle');if(lt){lt.classList.add('mqs2-layers');head.appendChild(lt);}
+          if(hoverbar){hoverbar.removeAttribute('style');hoverbar.classList.add('mqs2-selbar');head.after(hoverbar);hoverbar.querySelectorAll('.mq-studio-action-sep').forEach(s=>s.remove());}
+          head.querySelector('.mqs2-done').addEventListener('click',()=>{mqStudioSelectedLayerId=null;workspace.classList.remove('mq-studio-property-mode','mq-studio-show-layers');workspace.classList.add('mq-studio-canvas-first');syncLayerControls();update();});
+        }
+        // Stage: hint + zoom
+        const tip=preview.querySelector('.mq-studio-preview-tip');if(tip){tip.classList.add('mqs2-tip');const tx='Click anything on the design to edit it. Drag to move, use the corners to resize.';tip.textContent=tx;tip.setAttribute('data-mq-gen',tx);tip.dataset.mqCabhtml=tx;}
+        const zoom=document.createElement('div');zoom.className='mqs2-zoom';
+        zoom.innerHTML='<button type="button" data-z="-" title="Zoom out">−</button><button type="button" data-z="fit" title="Fit to screen" class="mqs2-zl">Fit</button><button type="button" data-z="+" title="Zoom in">+</button>';
+        workspace.appendChild(zoom);if(tip)workspace.appendChild(tip);
+        let z=null;const zl=zoom.querySelector('.mqs2-zl');
+        const zLabel=()=>{const w=canvas.getBoundingClientRect().width;const pc=canvas.width?Math.round(w/canvas.width*100):0;zl.textContent=(z?'':'Fit · ')+pc+'%';};
+        const setZ=nz=>{z=nz;if(!z){['width','height','max-width','max-height'].forEach(p=>canvas.style.removeProperty(p));preview.classList.remove('mqs2-zoomed');}else{canvas.style.setProperty('width',Math.round(canvas.width*z)+'px','important');canvas.style.setProperty('height','auto','important');canvas.style.setProperty('max-width','none','important');canvas.style.setProperty('max-height','none','important');preview.classList.add('mqs2-zoomed');}requestAnimationFrame(zLabel);};
+        zoom.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const cur=canvas.getBoundingClientRect().width/(canvas.width||1);if(b.dataset.z==='fit')setZ(null);else setZ(Math.max(.1,Math.min(2,(b.dataset.z==='+'?cur*1.25:cur/1.25))));});
+        if(size)size.addEventListener('change',()=>setTimeout(()=>setZ(null),60));
+        if(window.ResizeObserver)new ResizeObserver(()=>zLabel()).observe(canvas);
+        // Panel follows the selection: an item selected → its settings;
+        // nothing selected → the design panel. The column never changes
+        // width, so the design never moves.
+        let lastSel=null;
+        const sync=root._mqSyncActions;
+        root._mqSyncActions=function(){
+          sync&&sync.apply(this,arguments);
+          const layer=mqStudioCustomLayers.find(l=>l.id===mqStudioSelectedLayerId&&!l.hidden);
+          const id=layer?layer.id:null;
+          const t=workspace.querySelector('.mqs2-ftitle');
+          if(id!==lastSel){
+            lastSel=id;
+            if(id&&!workspace.classList.contains('mq-studio-property-mode'))showPropertyMode();
+            else if(!id&&workspace.classList.contains('mq-studio-property-mode')&&!workspace.classList.contains('mq-studio-show-layers')){workspace.classList.remove('mq-studio-property-mode');workspace.classList.add('mq-studio-canvas-first');}
+          }
+          if(t)t.textContent=workspace.classList.contains('mq-studio-property-mode')?(layer?(layer.name||layer.type):'Layers'):'All design settings';
+        };
+        if(st)st.addEventListener('click',()=>{const t=workspace.querySelector('.mqs2-ftitle');if(t)t.textContent='All design settings';});
+        new MutationObserver(()=>{const t=workspace.querySelector('.mqs2-ftitle');if(!t)return;const layer=mqStudioCustomLayers.find(l=>l.id===mqStudioSelectedLayerId&&!l.hidden);t.textContent=workspace.classList.contains('mq-studio-property-mode')?(layer?(layer.name||layer.type):'Layers'):'All design settings';}).observe(workspace,{attributes:true,attributeFilter:['class']});
+        mqs2Css();
+      })();
       const hideHover=()=>{}; // Compatibility with pointer handlers; no hover state to hide.
       const duplicateLayer=id=>{const layer=mqStudioCustomLayers.find(l=>l.id===id);if(!layer)return;const copy=hydrateLayer({...cloneObj(layer),id:layerUid(),name:(layer.name||layer.type)+' copy',x:(layer.x||0)+24,y:(layer.y||0)+24});mqStudioCustomLayers.push(copy);mqStudioSelectedLayerId=copy.id;syncLayerControls();update();};
       hoverbar.addEventListener('click',e=>{
