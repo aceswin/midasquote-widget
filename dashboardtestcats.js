@@ -275,10 +275,13 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         <div class="mq-step">
           <div class="mq-step-head"><span class="mq-step-num">Step 3</span><span class="mq-step-title">Pricing</span></div>
           <div class="mq-step-body">
-            <p>Run the pricing wizard to reverse-engineer your rates from real quotes you'll do based on your products. This is the core of your quoting math and can be edited at any time.</p>
+            <p>This is where your quoting math lives — the prices the widget uses to build every ballpark. Everything here can be changed any time.</p>
+            <div style="font-size:13px;font-weight:800;color:#111;margin:0.9rem 0 0.2rem">Your own quote types (Painting, Flooring, Framing…)</div>
+            <p>Each quote type is priced with <strong>custom steps</strong>: every step is a question on your widget with priced options. If it came from a starter pack, its steps are already filled in — just change the prices to yours and add or remove options. Use the <strong>Show only…</strong> filter at the top of Pricing to work on one quote (or one project type) at a time. See "Custom pricing categories" in this guide\u2019s Pricing tab.</p>
+            <div style="font-size:13px;font-weight:800;color:#111;margin:0.9rem 0 0.2rem">If you quote cabinets</div>
+            <p>Run the pricing wizard to reverse-engineer your cabinet rates from real jobs you'd quote with your own products.</p>
             <p>Start with the pricing wizard, adding your basic box materials, doors, hinges, drawers, and installation rates. After that, you can add bulk items of the same price, or add any more items you wish. You can also configure your crown/valance pricing, and your countertop and tall cabinet pricing.</p>
             <p>The widget takes the measurements input by the customer and uses these prices to generate your ballparks. It knows to attach crown to upper cabinet measurements and tall cabinets. It also takes your base cabinet measurements and automatically attaches countertop measurements to them if counters are selected. The widget also incorporates formulas that have been proven to accurately generate quotes for customers wanting only "some drawers" or "mostly drawers." All you need to do is do your drawer quotes in the pricing wizard, and the rest is taken care of for you.</p>
-            <p>Quoting something other than cabinets? Your own quote types are priced with <strong>custom steps</strong> instead of the wizard — each step is a question on your widget with priced options. See "Custom pricing categories" in this guide\u2019s Pricing tab.</p>
           </div>
         </div>
         <div class="mq-step">
@@ -477,9 +480,9 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     pricing: {
       title: 'Pricing',
       body: `
-        <p>This is where your actual cabinet, countertop, and trim pricing lives — box materials, door styles, hinges, drawer configurations, countertop materials, crown/valance, and tall cabinets.</p>
-        <p>Start by running the pricing wizard with a few of your most commonly sold items. No need to add everything here. Just keep it to a max of 5 items for each category (box materials, drawer styles, door styles, hinges). No need to list items with matching prices either. You can easily add multiple items of the same or different price using the "Mini pricing wizards" afterwards.</p>
-        <p>Prices you set here are what the widget's calculator actually uses — this is the core of your quoting math, so it's worth double-checking your quotes.</p>
+        <p>Everything the widget uses to price a quote lives here: your own quote types\u2019 steps and options, plus (if you quote cabinets and countertops) your box materials, door styles, hinges, drawers, countertops, crown/valance and tall cabinets. Prices you set here are what the widget\u2019s calculator actually uses, so it\u2019s worth double-checking your quotes.</p>
+        <p><strong>Your own quote types</strong> are priced with custom steps — see "Custom pricing categories" below.</p>
+        <p><strong>If you quote cabinets:</strong> start by running the pricing wizard with a few of your most commonly sold items. No need to add everything here. Just keep it to a max of 5 items for each category (box materials, drawer styles, door styles, hinges). No need to list items with matching prices either. You can easily add multiple items of the same or different price using the "Mini pricing wizards" afterwards.</p>
         <div class="mq-cab-hw-note" style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Don't add handles or knobs here</div>
           <p style="margin:0">If you supply hardware, add it as a Specialty Item instead with its own per-unit price, so customers can choose how many they need. It's your choice to add handles/knobs. If you install handles but don't supply them, then you still need to make sure you include handle installation in your door installation pricing (you'll be reminded in the pricing wizard). If you do supply handles, then it's still best to add in the installation costs when reminded in the pricing wizard — that way, if a customer doesn't include handles in their ballpark, your estimate will still have the installation of them covered.</p>
