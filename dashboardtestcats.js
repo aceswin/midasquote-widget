@@ -203,26 +203,50 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     mqCenterOverContent(document.getElementById('mq-floating-save'));
   }
 
+  // Save bar (Nov 17 2026): a bar along the bottom instead of a floating
+  // button over the content. Shows "✓ All changes saved" or "● Unsaved
+  // changes" — anything typed/changed on the page marks it unsaved; a save
+  // (button, or the page's own autosave) marks it saved again.
+  window._mqtDirty = false;
+  function mqtSaveBarState() {
+    const bar = document.getElementById('mq-floating-save'); if (!bar) return;
+    bar.classList.toggle('dirty', !!window._mqtDirty);
+    const m = bar.querySelector('.mqt-sb-msg'); if (m) m.textContent = window._mqtDirty ? 'You have unsaved changes' : 'All changes saved';
+  }
+  window.mqtMarkDirty = function (v) { window._mqtDirty = v !== false; mqtSaveBarState(); };
+  if (!window._mqtDirtyHook) {
+    window._mqtDirtyHook = true;
+    const mark = e => {
+      const bar = document.getElementById('mq-floating-save'); if (!bar || bar.style.display === 'none') return;
+      const t = e.target; if (!t || !t.closest || !t.closest('#midasquote-dashboard .mq-page.active')) return;
+      if (t.closest('.mqh-shell') || t.id === 'mq-help-search') return;
+      if (/^(INPUT|SELECT|TEXTAREA)$/.test(t.tagName) || t.isContentEditable) window.mqtMarkDirty(true);
+    };
+    document.addEventListener('input', mark, true);
+    document.addEventListener('change', mark, true);
+  }
+  function mqtWrapSave(name) {
+    const fn = window[name]; if (typeof fn !== 'function' || fn._mqtWrapped) return;
+    const w = async function () { const r = await fn.apply(this, arguments); window.mqtMarkDirty(false); return r; };
+    w._mqtWrapped = true; window[name] = w;
+  }
   function mqToggleFloatingSave(action) {
-    let btn = document.getElementById('mq-floating-save');
-    if (!action) {
-      if (btn) btn.style.display = 'none';
-      window.removeEventListener('resize', mqPositionFloatingSave);
-      return;
+    let bar = document.getElementById('mq-floating-save');
+    if (!action) { if (bar) bar.style.display = 'none'; document.body.classList.remove('mqt-has-savebar'); return; }
+    ['mqSaveShop', 'mqSaveRooms', 'mqSaveProducts'].forEach(mqtWrapSave);
+    if (!bar) {
+      bar = document.createElement('div');
+      bar.id = 'mq-floating-save'; bar.className = 'mqt-savebar';
+      bar.innerHTML = '<div class="mqt-sb-in"><span class="mqt-sb-dot"></span><span class="mqt-sb-msg"></span><button type="button" class="mqt-sb-btn"></button></div>';
+      document.body.appendChild(bar);
     }
-    if (!btn) {
-      btn = document.createElement('button');
-      btn.id = 'mq-floating-save';
-      btn.style.cssText = "position:fixed;bottom:26px;z-index:9998;padding:14px 24px;border-radius:8px;border:1px solid rgba(212,175,55,0.22);background:linear-gradient(180deg,#151820 0%,#0f1116 100%);color:#fff;font-size:14px;font-weight:700;letter-spacing:0.01em;cursor:pointer;box-shadow:0 18px 40px rgba(15,23,42,0.24);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;transition:transform 0.15s, box-shadow 0.15s";
-      btn.onmouseover = () => { btn.style.boxShadow = '0 22px 44px rgba(15,23,42,0.3)'; btn.style.transform = 'translateY(-1px)'; };
-      btn.onmouseout = () => { btn.style.boxShadow = '0 18px 40px rgba(15,23,42,0.24)'; btn.style.transform = 'translateY(0)'; };
-      document.body.appendChild(btn);
-    }
-    btn.textContent = action.label;
-    btn.onclick = action.fn;
-    btn.style.display = 'block';
-    mqPositionFloatingSave();
-    window.addEventListener('resize', mqPositionFloatingSave);
+    const btn = bar.querySelector('.mqt-sb-btn');
+    btn.textContent = String(action.label || 'Save changes').replace(/^[^A-Za-z]+/, '');
+    btn.onclick = async () => { btn.disabled = true; try { await action.fn(); window.mqtMarkDirty(false); } finally { btn.disabled = false; } };
+    window._mqtDirty = false;
+    bar.style.display = 'block';
+    document.body.classList.add('mqt-has-savebar');
+    mqtSaveBarState();
   }
 
   // One save action per tab that actually has one. Tabs not listed here
@@ -1956,6 +1980,298 @@ window.logoutMember = async function () {
     } catch(e) { console.error('Failed to save reshown training video state — needs a "Training videos hidden" field on Shops', e); }
   };
   // =================== end training videos ===================
+
+  // ════════════════════════════════════════════════════════════════════
+  // Dashboard look, v3 (Jordan, Nov 17 2026 — "make it look more
+  // professional, flow easily and look clean"). One layer on top of the
+  // existing styles: flat light background, one font (Inter), white cards
+  // with a thin border and 10px corners, underline tabs + numbered setup
+  // steps (✓ when done), a tidy header row on every page (title left,
+  // Watch video + Need help right), outline icons instead of emojis on card
+  // titles, chevrons on the right, and the save button as a bar along the
+  // bottom. Purely visual — no page logic changes.
+  // ════════════════════════════════════════════════════════════════════
+  const MQT_I = {
+    home: '<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/>',
+    gear: '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
+    users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+    zap: '<path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/>',
+    palette: '<circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.93 0 1.65-.75 1.65-1.69 0-.44-.18-.84-.44-1.13-.29-.29-.44-.65-.44-1.13a1.64 1.64 0 0 1 1.67-1.67h2c3.05 0 5.56-2.5 5.56-5.55C21.97 6.01 17.46 2 12 2z"/>',
+    user: '<circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/>',
+    chart: '<path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/>',
+    file: '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 13H8"/><path d="M16 17H8"/><path d="M16 13h-2"/>',
+    card: '<rect width="20" height="14" x="2" y="5" rx="2"/><path d="M2 10h20"/>',
+    book: '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',
+    chat: '<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22z"/>',
+    wrench: '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>',
+    clipboard: '<rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>',
+    link: '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+    compass: '<circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>',
+    store: '<path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"/><path d="M2 7h20"/>',
+    pen: '<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/>',
+    mail: '<rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>',
+    lock: '<rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+    layout: '<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/>',
+    layers: '<path d="m12 2 10 5-10 5L2 7z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/>',
+    globe: '<circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>',
+    code: '<path d="m16 18 6-6-6-6"/><path d="m8 6-6 6 6 6"/>',
+    bulb: '<path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/>',
+    phone: '<rect width="14" height="20" x="5" y="2" rx="2"/><path d="M12 18h.01"/>',
+    tag: '<path d="M12.59 2.59A2 2 0 0 0 11.17 2H4a2 2 0 0 0-2 2v7.17a2 2 0 0 0 .59 1.41l8.7 8.7a2.43 2.43 0 0 0 3.42 0l6.58-6.58a2.43 2.43 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/>',
+    image: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.09-3.09a2 2 0 0 0-2.82 0L6 21"/>',
+    receipt: '<path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 17.5v-11"/>',
+    alert: '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+    star: '<path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/>',
+    box: '<path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/>',
+    door: '<path d="M13 4h3a2 2 0 0 1 2 2v14"/><path d="M2 20h3"/><path d="M13 20h9"/><path d="M10 12v.01"/><path d="M13 4.56v16.01a1 1 0 0 1-1.24.97L5 20V5.56a2 2 0 0 1 1.51-1.94l4-1A2 2 0 0 1 13 4.56Z"/>',
+    drawers: '<rect width="20" height="5" x="2" y="3" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/>',
+    car: '<path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/>',
+    crown: '<path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/>',
+    trophy: '<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>',
+    columns: '<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/><path d="M15 3v18"/>',
+    sparkles: '<path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/>',
+    camera: '<path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/>',
+    eyeoff: '<path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.53 13.53 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><path d="m2 2 20 20"/>',
+    pointer: '<path d="m4 4 7.07 17 2.51-7.39L21 11.07z"/>',
+    ruler: '<path d="M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.41 2.41 0 0 1 0-3.4l2.6-2.6a2.41 2.41 0 0 1 3.4 0Z"/><path d="m14.5 12.5 2-2"/><path d="m11.5 9.5 2-2"/><path d="m8.5 6.5 2-2"/><path d="m17.5 15.5 2-2"/>',
+    target: '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
+    island: '<path d="M3 13h18v6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M5 13V9h14v4"/>',
+    stone: '<path d="M3 7h18v4H3z"/><path d="M5 11v9"/><path d="M19 11v9"/>',
+    gift: '<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"/>',
+    play: '<polygon points="6 3 20 12 6 21 6 3"/>',
+    help: '<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>',
+    chev: '<path d="m9 18 6-6-6-6"/>',
+    chevd: '<path d="m6 9 6 6 6-6"/>',
+    x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+    check: '<path d="M20 6 9 17l-5-5"/>',
+    dot: '<rect width="16" height="16" x="4" y="4" rx="3"/>',
+  };
+  const mqtSvg = (k, sz, sw) => `<svg width="${sz || 16}" height="${sz || 16}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw || 1.8}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${MQT_I[k] || MQT_I.dot}</svg>`;
+  const MQT_EMOJI = {
+    '📋': 'clipboard', '🔗': 'link', '🧭': 'compass', '🏢': 'store', '🎨': 'palette', '📝': 'pen', '📩': 'mail', '📨': 'mail', '💳': 'card', '🔒': 'lock',
+    '🎛': 'layout', '🗂': 'layers', '🌐': 'globe', '🧩': 'code', '💡': 'bulb', '📱': 'phone', '⚡': 'zap', '🏷': 'tag', '🖼': 'image', '🧾': 'receipt',
+    '⚠': 'alert', '⭐': 'star', '🪵': 'box', '🚪': 'door', '🗄': 'drawers', '🔧': 'wrench', '🛠': 'wrench', '🚗': 'car', '👑': 'crown', '🏆': 'trophy',
+    '🏛': 'columns', '✨': 'sparkles', '📦': 'box', '📸': 'camera', '📷': 'camera', '🙈': 'eyeoff', '🖱': 'pointer', '📏': 'ruler', '🎯': 'target',
+    '👥': 'users', '📊': 'chart', '📄': 'file', '💬': 'chat', '📖': 'book', '🏝': 'island', '🌴': 'island', '🪨': 'stone', '🎁': 'gift', '💰': 'tag', '🧱': 'box', '🛒': 'tag',
+  };
+  const MQT_EMOJI_RE = /^[\s ]*((?:\p{Extended_Pictographic}|[☀-➿])️?(?:‍(?:\p{Extended_Pictographic})️?)*)[\s ]*/u;
+  const MQT_P = 'html body #midasquote-dashboard';
+  function mqtCss() {
+    const P = MQT_P;
+    return `
+    ${P}{background:#f6f7f9!important;color:#1f2328;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif!important;-webkit-font-smoothing:antialiased}
+    ${P} *:not([style*="font-family"]):not(code):not(pre):not(kbd):not(textarea.mq-mono):not(.mq-mono){font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif!important}
+    ${P} .mq-layout, ${P} .mq-content{background:transparent!important;background-image:none!important}
+    ${P} .mq-content{max-width:1180px!important;width:100%!important;margin:0 auto!important;padding:28px 24px 120px!important;box-sizing:border-box}
+    /* top bar */
+    ${P} .mq-topbar{background:#111318!important;border-bottom:0!important}
+    /* menu: underline tabs + numbered steps */
+    ${P} .mq-top-navigation{background:#fff!important;border-bottom:1px solid #e6e8eb!important;box-shadow:none!important}
+    ${P} .mq-nav-major{padding:0 clamp(14px,2.5vw,32px)!important;gap:2px!important;border-bottom:1px solid #f0f1f3!important}
+    ${P} .mq-major-tab{display:inline-flex!important;align-items:center;gap:8px;border:0!important;border-radius:0!important;background:none!important;box-shadow:none!important;padding:14px 12px 12px!important;border-bottom:2px solid transparent!important;margin-bottom:-1px;color:#5b626b!important;font-weight:500!important;font-size:14px!important}
+    ${P} .mq-major-tab svg{color:#8b929b}
+    ${P} .mq-major-tab:hover{color:#1f2328!important}
+    ${P} .mq-major-tab.active, ${P} .mq-top-navigation .mq-major-tab.active{color:#1f2328!important;font-weight:600!important;border-color:transparent transparent #c9a45c!important;background:none!important;box-shadow:none!important}
+    ${P} .mq-major-tab.active svg{color:#a07a2c}
+    ${P} .mq-top-navigation .mq-sidebar{padding:10px clamp(14px,2.5vw,32px)!important;gap:4px!important;background:#fff!important;border:0!important}
+    ${P} .mq-top-navigation .mq-nav-item{border:0!important;background:transparent!important;border-radius:8px!important;padding:7px 12px!important;font-size:13.5px!important;font-weight:500!important;color:#3d434b!important;gap:8px!important;box-shadow:none!important}
+    ${P} .mq-top-navigation .mq-nav-item svg{color:#8b929b}
+    ${P} .mq-top-navigation .mq-nav-item:hover{background:#f3f4f6!important;color:#1f2328!important}
+    ${P} .mq-top-navigation .mq-nav-item.active{background:#111318!important;color:#fff!important}
+    ${P} .mq-top-navigation .mq-nav-item.active svg{color:#e3b341}
+    ${P} .mq-nav-step{width:20px!important;height:20px!important;min-width:20px;border-radius:50%!important;border:1px solid #d7dbe0!important;background:#fff!important;color:#5b626b!important;font-size:11px!important;font-weight:700!important;display:inline-flex!important;align-items:center;justify-content:center;padding:0!important;line-height:1!important;box-shadow:none!important}
+    ${P} .mq-nav-item.mqt-done .mq-nav-step{background:#e7f6ec!important;border-color:#bfe5cb!important;color:#15803d!important}
+    ${P} .mq-nav-item.active .mq-nav-step{background:#e3b341!important;border-color:#e3b341!important;color:#111!important}
+    /* page header */
+    ${P} .mqt-ph{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin:0 0 22px;flex:1 1 auto;min-width:0}
+    @media(max-width:700px){${P} .mqt-ph{flex-wrap:wrap}}
+    ${P} .mqt-ph-l{flex:1 1 auto;min-width:0}
+    ${P} .mqt-ph-r{display:flex;gap:8px;flex:0 0 auto;align-items:center}
+    ${P} .mq-page-title{font-size:28px!important;line-height:1.2!important;font-weight:700!important;letter-spacing:-.02em;color:#1f2328!important;margin:0 0 6px!important}
+    ${P} .mq-page-sub{font-size:15px!important;line-height:1.55!important;color:#5b626b!important;font-weight:400!important;max-width:760px;margin:0 0 4px!important}
+    ${P} .mqt-ph .mq-help-btn, ${P} .mqt-btn{position:static!important;display:inline-flex!important;align-items:center;gap:7px;border:1px solid #dfe2e6!important;background:#fff!important;border-radius:8px!important;padding:8px 13px!important;font-size:13.5px!important;font-weight:600!important;color:#1f2328!important;box-shadow:none!important;cursor:pointer;white-space:nowrap;line-height:1.2!important;top:auto!important;right:auto!important;margin:0!important;height:auto!important}
+    ${P} .mqt-ph .mq-help-btn:hover, ${P} .mqt-btn:hover{border-color:#c9a45c!important;background:#fffdf7!important}
+    ${P} .mqt-ph .mq-help-btn .mq-help-badge{display:none!important}
+    ${P} .mqt-ph .mq-help-btn svg, ${P} .mqt-btn svg{color:#6b727b}
+    ${P} [id^="mq-training-video-reshow-"]:not(#mq-training-video-reshow-islandPanel){display:none!important}
+    ${P} [id^="mq-training-video-"]:not(#mq-training-video-islandPanel) > button[onclick^="mqHideTrainingVideo"]{display:none!important}
+    ${P} .mq-sr-head{display:flex!important;align-items:center!important;gap:12px}
+    ${P} .mq-sr-title{display:flex!important;align-items:center;gap:12px;font-size:15px!important;font-weight:600!important;color:#1f2328!important}
+    /* cards */
+    ${P} .mq-card, ${P} .mqph-cat-block, ${P} .mq-rooms-sec, ${P} .mq-stat, ${P} .mqph-setup-card, ${P} .mqph-ct-block{background:#fff!important;border:1px solid #e6e8eb!important;border-radius:10px!important;box-shadow:0 1px 2px rgba(16,24,40,.04)!important}
+    ${P} .mq-card{padding:20px 22px!important;margin-bottom:12px!important}
+    ${P} .mq-card-title, ${P} .mqph-cat-title, ${P} .mq-rooms-sec-title{font-size:15px!important;font-weight:600!important;color:#1f2328!important;letter-spacing:0!important}
+    ${P} .mq-card-title{display:flex!important;align-items:center!important;gap:12px!important}
+    ${P} .mqph-cat-header{background:#fff!important;border-bottom:1px solid #f0f1f3!important;padding:14px 18px!important}
+    ${P} .mqph-cat-title{display:inline-flex!important;align-items:center;gap:12px}
+    ${P} .mqt-ic{width:32px;height:32px;min-width:32px;border-radius:8px;background:#f6f7f9;border:1px solid #eceef1;display:inline-flex;align-items:center;justify-content:center;color:#5b626b;flex:0 0 auto}
+    ${P} .mqt-chev{margin-left:auto!important;margin-right:0!important;display:inline-flex!important;align-items:center;justify-content:center;color:#9aa1a9!important;font-size:0!important;width:20px;height:20px;flex:0 0 auto;order:99}
+    ${P} .mqt-chev svg{width:18px;height:18px}
+    /* stats */
+    ${P} .mq-stat-val{font-weight:700!important;letter-spacing:-.02em}
+    ${P} .mq-stat-lbl{color:#5b626b!important;font-weight:500!important}
+    /* buttons + inputs */
+    ${P} .mq-btn, ${P} .mqph-btn{border-radius:8px!important;font-weight:600!important;box-shadow:none!important}
+    ${P} input[type=text], ${P} input[type=email], ${P} input[type=tel], ${P} input[type=number], ${P} input[type=url], ${P} input[type=password], ${P} select, ${P} textarea{border-radius:8px!important;border-color:#dfe2e6!important;box-shadow:none!important}
+    ${P} input:focus, ${P} select:focus, ${P} textarea:focus{border-color:#c9a45c!important;box-shadow:0 0 0 3px rgba(201,164,92,.18)!important;outline:0!important}
+    ${P} .mq-label{font-size:12.5px!important;font-weight:600!important;color:#5b626b!important}
+    /* coloured notes → calm callouts */
+    ${P} [style*="background:#fffbeb"], ${P} [style*="background:#fef3c7"], ${P} [style*="background:#fefce8"]{background:#fff8eb!important;border:1px solid #f6e2b8!important;border-radius:8px!important}
+    ${P} [style*="background:#eff6ff"], ${P} [style*="background:#f0f9ff"]{background:#f2f8ff!important;border:1px solid #d6e8ff!important;border-radius:8px!important}
+    ${P} [style*="background:#f0fdf4"], ${P} [style*="background:#ecfdf5"]{background:#f1faf4!important;border:1px solid #cdeedb!important;border-radius:8px!important}
+    ${P} #mq-spec-tips-card{border-radius:10px!important;background:#f1faf4!important;border:1px solid #cdeedb!important;box-shadow:none!important}
+    /* bottom save bar */
+    #mq-floating-save.mqt-savebar{position:fixed!important;left:0!important;right:0!important;bottom:0!important;top:auto!important;transform:none!important;z-index:9998!important;background:#fff!important;border:0!important;border-top:1px solid #e6e8eb!important;box-shadow:0 -4px 16px rgba(16,24,40,.06)!important;border-radius:0!important;padding:0!important;width:auto!important;font-family:Inter,-apple-system,"Segoe UI",sans-serif!important}
+    #mq-floating-save .mqt-sb-in{max-width:1180px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;gap:10px;box-sizing:border-box}
+    #mq-floating-save .mqt-sb-dot{width:8px;height:8px;border-radius:50%;background:#22c55e;flex:0 0 auto}
+    #mq-floating-save.dirty .mqt-sb-dot{background:#e3b341}
+    #mq-floating-save .mqt-sb-msg{font-size:14px;color:#3d434b;font-weight:500;margin-right:auto}
+    #mq-floating-save .mqt-sb-btn{background:#111318;color:#fff;border:1px solid #111318;border-radius:8px;padding:9px 16px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit}
+    #mq-floating-save .mqt-sb-btn:hover{background:#2a2d35}
+    #mq-floating-save:not(.dirty) .mqt-sb-btn{background:#fff;color:#1f2328;border-color:#dfe2e6}
+    @media(max-width:700px){${P} .mq-content{padding:18px 14px 110px!important}${P} .mq-page-title{font-size:23px!important}${P} .mqt-ph-r{width:100%}#mq-floating-save .mqt-sb-in{padding:10px 14px}}
+    `;
+  }
+  function mqtInjectCss() {
+    if (!document.getElementById('mqt-font')) {
+      const l = document.createElement('link'); l.id = 'mqt-font'; l.rel = 'stylesheet';
+      l.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap'; document.head.appendChild(l);
+    }
+    let st = document.getElementById('mqt-css');
+    if (!st) { st = document.createElement('style'); st.id = 'mqt-css'; st.textContent = mqtCss(); }
+    document.head.appendChild(st); // always last, so it wins over the older layers
+  }
+  // Menu: outline icons instead of glyphs/emojis.
+  const MQT_GROUP_ICON = { overview: 'home', setup: 'gear', leads: 'users', pro: 'zap', marketing: 'palette', account: 'user' };
+  const MQT_PAGE_ICON = { overview: 'chart', leads: 'users', pro: 'zap', proposals: 'file', marketing: 'palette', billing: 'card', helpguide: 'book', support: 'chat', templates: 'wrench' };
+  function mqtStripLead(el) {
+    // Drops the leading glyph/emoji (and &nbsp;) from an element's first text.
+    for (const n of el.childNodes) {
+      if (n.nodeType === 3) { if (!n.textContent.trim()) continue; n.textContent = n.textContent.replace(/^[\s ]*[^A-Za-z0-9(]+?[\s ]+/, '').replace(/^[\s ]+/, ''); return; }
+      if (n.nodeType === 1) return;
+    }
+  }
+  function mqtNav() {
+    document.querySelectorAll('#midasquote-dashboard .mq-major-tab:not([data-mqt])').forEach(b => {
+      b.dataset.mqt = '1'; mqtStripLead(b); b.insertAdjacentHTML('afterbegin', mqtSvg(MQT_GROUP_ICON[b.dataset.group] || 'dot', 16));
+    });
+    document.querySelectorAll('#midasquote-dashboard .mq-top-navigation .mq-nav-item:not([data-mqt])').forEach(it => {
+      it.dataset.mqt = '1';
+      if (it.querySelector('.mq-nav-step')) return;
+      const pg = ((it.getAttribute('onclick') || '').match(/mqNav\('(\w+)'/) || [])[1];
+      mqtStripLead(it); it.insertAdjacentHTML('afterbegin', mqtSvg(MQT_PAGE_ICON[pg] || 'dot', 15));
+    });
+  }
+  // ✓ on setup steps that are clearly done.
+  function mqtSteps() {
+    const f = (window._mqShopRecord || {}).fields || {};
+    const j = (v, d) => { try { const x = JSON.parse(v || 'null'); return x == null ? d : x; } catch (e) { return d; } };
+    const rooms = j(f['Room types'], []); const photos = j(f['Photos'], {}); const cc = j(f['Custom categories'], []);
+    const done = {
+      shop: !!String(f['Shop name'] || '').trim() && !!String(f['Phone'] || f['Email'] || f['City'] || '').trim(),
+      rooms: Array.isArray(rooms) && rooms.length > 0,
+      pricing: !!(window._mqPricingRecord && window._mqPricingRecord.id) || (Array.isArray(cc) && cc.length > 0),
+      products: photos && typeof photos === 'object' && Object.keys(photos).length > 0,
+      embed: Array.isArray(window._mqLeads) && window._mqLeads.length > 0,
+    };
+    document.querySelectorAll('#midasquote-dashboard .mq-top-navigation .mq-nav-item').forEach(it => {
+      const pg = ((it.getAttribute('onclick') || '').match(/mqNav\('(\w+)'/) || [])[1];
+      const s = it.querySelector('.mq-nav-step'); if (!s) return;
+      if (!s.dataset.n) s.dataset.n = s.textContent.trim();
+      const d = !!done[pg]; it.classList.toggle('mqt-done', d);
+      s.innerHTML = d ? mqtSvg('check', 12, 3) : s.dataset.n;
+    });
+  }
+  // Header row on every page: title + description left, buttons right.
+  const MQT_PAGE_VIDEO = { shop: 'shop', rooms: 'rooms', pricing: 'pricing', specialty: 'specialty', products: 'products' };
+  function mqtVideoHidden(key) { return !!(window._mqTrainingVideosHidden || {})[key]; }
+  function mqtVideoLabel(btn) { const k = btn.dataset.video; btn.innerHTML = mqtVideoHidden(k) ? mqtSvg('play', 14) + 'Watch video' : mqtSvg('x', 14) + 'Hide video'; }
+  window.mqtToggleVideo = async function (key) {
+    if (mqtVideoHidden(key)) {
+      const p = window.mqReshowTrainingVideo(key);
+      document.querySelectorAll(`.mqt-video[data-video="${key}"]`).forEach(mqtVideoLabel);
+      const b = document.getElementById('mq-training-video-' + key); if (b) b.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      await p;
+    } else { const p = window.mqHideTrainingVideo(key); document.querySelectorAll(`.mqt-video[data-video="${key}"]`).forEach(mqtVideoLabel); await p; }
+    document.querySelectorAll(`.mqt-video[data-video="${key}"]`).forEach(mqtVideoLabel);
+  };
+  function mqtHeaders() {
+    document.querySelectorAll('#midasquote-dashboard .mq-page').forEach(pg => {
+      const id = pg.id.replace('mq-page-', '');
+      if (id === 'helpguide') return;
+      let ph = pg.querySelector('.mqt-ph');
+      if (!ph) {
+        const title = [...pg.querySelectorAll('.mq-page-title')].find(t => !t.closest('.mq-card') && !t.closest('.mqh-shell'));
+        if (!title) return;
+        ph = document.createElement('div'); ph.className = 'mqt-ph';
+        ph.innerHTML = '<div class="mqt-ph-l"></div><div class="mqt-ph-r"></div>';
+        const subs = []; let n = title.nextElementSibling;
+        while (n && n.classList && n.classList.contains('mq-page-sub')) { subs.push(n); n = n.nextElementSibling; }
+        // Climb out of wrappers that hold nothing but the title + description
+        // (e.g. Pricing's narrow intro box), so the header spans the page.
+        let anchor = title;
+        while (anchor.parentElement && anchor.parentElement !== pg && [...anchor.parentElement.children].every(c => c === anchor || c === title || subs.includes(c) || c.classList.contains('mq-help-btn'))) anchor = anchor.parentElement;
+        anchor.parentNode.insertBefore(ph, anchor);
+        const left = ph.firstElementChild; left.appendChild(title); subs.forEach(x => left.appendChild(x));
+        if (anchor !== title && !anchor.textContent.trim() && !anchor.querySelector('img,input,select,button')) anchor.style.display = 'none'; // kept: Pricing's filter bar anchors after it
+        mqtStripLead(title);
+        const right = ph.lastElementChild;
+        const key = MQT_PAGE_VIDEO[id];
+        if (key && MQ_TRAINING_VIDEOS[key]) { const b = document.createElement('button'); b.type = 'button'; b.className = 'mqt-btn mqt-video'; b.dataset.video = key; b.onclick = () => window.mqtToggleVideo(key); right.appendChild(b); }
+        const help = pg.querySelector(':scope > .mq-help-btn') || pg.querySelector('.mq-help-btn');
+        if (help) { help.innerHTML = mqtSvg('help', 15) + 'Need help?'; right.appendChild(help); }
+      }
+      ph.querySelectorAll('.mqt-video').forEach(mqtVideoLabel);
+    });
+  }
+  // Card titles: outline icon instead of the emoji, chevron on the right.
+  function mqtCards(root) {
+    const R = root || document.getElementById('midasquote-dashboard'); if (!R) return;
+    R.querySelectorAll('.mq-card-title:not([data-mqt]), .mqph-cat-title:not([data-mqt]), .mq-rooms-sec-title:not([data-mqt]), .mq-sr-title:not([data-mqt])').forEach(t => {
+      t.dataset.mqt = '1';
+      // chevrons (▶ / ▼ spans in the title or right beside it) → svg
+      // chevron at the end of the header. ▶ ones turn 90° when opened;
+      // ▼ ones (Showroom) turn −90° when closed — the matching svg keeps both right.
+      const cands = [...t.querySelectorAll('span')];
+      if (t.parentElement) cands.push(...[...t.parentElement.children].filter(c => c.tagName === 'SPAN'));
+      cands.forEach(sp => {
+        const tx = (sp.textContent || '').trim();
+        if (!/^[▶▸►▼]$/.test(tx) || sp.children.length || sp.classList.contains('mqt-chev')) return;
+        sp.classList.add('mqt-chev'); sp.innerHTML = mqtSvg(tx === '▼' ? 'chevd' : 'chev', 18, 2);
+        if (tx === '▼' && sp.id && /^mq-sr-arrow-/.test(sp.id)) { const body = document.getElementById(sp.id.replace('arrow', 'body')); if (body && body.style.display === 'none' && !sp.style.transform) sp.style.transform = 'rotate(-90deg)'; }
+        const hdr = t.classList.contains('mqph-cat-title') ? t.closest('.mqph-cat-header') : (sp.parentElement === t ? t : sp.parentElement);
+        if (hdr) hdr.appendChild(sp);
+      });
+      // emoji → icon (first text in the title)
+      const walker = document.createTreeWalker(t, NodeFilter.SHOW_TEXT);
+      let tn; while ((tn = walker.nextNode())) { if (tn.textContent.trim()) break; }
+      if (!tn || tn.parentElement.closest('.mqt-chev')) return;
+      const m = tn.textContent.match(MQT_EMOJI_RE);
+      if (!m) return;
+      const em = m[1].replace(/️/g, '');
+      tn.textContent = tn.textContent.slice(m[0].length);
+      const ic = document.createElement('span'); ic.className = 'mqt-ic'; ic.innerHTML = mqtSvg(MQT_EMOJI[em] || MQT_EMOJI[[...em][0]] || 'dot', 17);
+      tn.parentNode.insertBefore(ic, tn);
+    });
+    // Project types section headers: ▶ first → chevron last
+    R.querySelectorAll('.mq-rooms-sec-chev:not([data-mqt])').forEach(c => { c.dataset.mqt = '1'; c.classList.add('mqt-chev'); c.innerHTML = mqtSvg('chev', 18, 2); c.parentNode.appendChild(c); });
+  }
+  let mqtMoT = null;
+  function mqtRefresh() { try { mqtInjectCss(); mqtNav(); mqtSteps(); mqtHeaders(); mqtCards(); } catch (e) { console.warn('theme', e); } }
+  window.mqtRefresh = mqtRefresh;
+  function mqtInit() {
+    mqtRefresh();
+    const root = document.getElementById('midasquote-dashboard');
+    if (root && !window._mqtMo) {
+      window._mqtMo = new MutationObserver(() => { if (mqtMoT) return; mqtMoT = setTimeout(() => { mqtMoT = null; try { mqtCards(); mqtHeaders(); } catch (e) {} }, 120); });
+      window._mqtMo.observe(root, { childList: true, subtree: true });
+    }
+    if (!window._mqtNavWrapped && typeof window.mqNav === 'function') {
+      window._mqtNavWrapped = true; const orig = window.mqNav;
+      window.mqNav = function () { const r = orig.apply(this, arguments); setTimeout(mqtRefresh, 0); return r; };
+    }
+  }
+  window.mqtInit = mqtInit;
 
   function buildHTML(shop) {
     const token = shop['Shop token'] || '';
@@ -10530,6 +10846,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   };
 
   window.mqMarkProductsDirty = function() {
+    if (window.mqtMarkDirty) window.mqtMarkDirty(true);
     document.querySelectorAll('.mq-products-save-btn').forEach(btn => {
       btn.textContent = '💾 Save changes';
       btn.style.background = '#16a34a';
@@ -21123,10 +21440,12 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
       window._mqIsAdminShop = false;
     }
     mqBuildHelpGuide();
+    try { mqtInit(); } catch (e) { console.warn('theme init', e); }
 
     const leads = await loadLeads(shopRecord.fields['Shop token']);
     window._mqLeads = sortLeadsArray(leads);
     renderStats(window._mqLeads);
+    try { mqtSteps(); } catch (e) {}
     el('mq-recent-leads').innerHTML = renderLeads(window._mqLeads, 5);
     el('mq-leads-table').innerHTML = renderLeads(window._mqLeads, null, true);
 
@@ -21493,7 +21812,7 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
       if (helperContainer && !helperContainer.dataset.loaded) {
         helperContainer.dataset.loaded = 'true';
         const script = document.createElement('script');
-        script.src = 'https://widget.midasquote.com/pricing-helper-v2-test.js';
+        script.src = 'https://widget.midasquote.com/pricing-helper-v2.js';
         script.onload = function() {
           window.mqph2Init(window._mqShopRecord, window._mqPricingRecord);
         };
