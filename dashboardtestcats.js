@@ -333,12 +333,11 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
             <p>You'll find your MidasQuote Pro link on the Embed code tab (Step 7 above) — add it to your phone or laptop like an app so it's one tap away when you need it.</p>
           </div>
         </div>
-        <p style="margin-top:1.4rem">To dive deeper into each tab, check out the help tabs at the top of this page.</p>
+        <p style="margin-top:1.4rem">To dive deeper into any part of your dashboard, pick a topic from the list on the left.</p>
         <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;padding:1rem 1.25rem;margin-top:1.4rem;font-size:13px;color:#991b1b;line-height:1.6">
           <div style="font-weight:700;font-size:14px;margin-bottom:6px">⚠️ What MidasQuote doesn't account for</div>
           <p style="margin:0 0 10px">The goal of MidasQuote is to give fast (5 minutes or less) ballpark estimates, without overloading the customer with inputs. To do this, we have to sacrifice some options — things like finished ends, crown/valance returns to walls, side splashes, and island finished ends and back panels. These items need to be absorbed into the ballpark range.</p>
-          <p style="margin:0 0 10px">This is why it's best to keep your range fairly tight on the low end (no more than -5%) and with decent padding on the high end (+20% at least).</p>
-          <p style="margin:0">We're currently working on a simple remedy for islands that won't overwhelm the customer or require much additional quoting — if any — for the shop owner, but it's not quite finished yet.</p>
+          <p style="margin:0">This is why it's best to keep your range fairly tight on the low end (no more than -5%) and with decent padding on the high end (+20% at least).</p>
         </div>
       `
     },
@@ -496,6 +495,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
             <li>The widget's overall estimate range (Business info → Quote range — low/high) — widens or narrows how far the shown range sits from the calculated price, across every project type at once.</li>
           </ul>
         </div>
+        <h4 style="font-size:12px;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:0.03em;margin:1.4rem 0 0.2rem">Cabinet pricing</h4>
         <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Adding a new box material, door style, drawer config, or hinge with the same price as one listed?</div>
           <p style="margin:0">Look for "Match another item's pricing instead of quoting a new job" right above the price field. Check it, pick an existing item from the dropdown, and the new one gets that exact same rate — no need to re-quote a whole spec job just because two items happen to cost the same.</p>
@@ -972,6 +972,19 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   const mqhIcon = (k, sz) => `<svg width="${sz || 16}" height="${sz || 16}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${MQH_I[k] || MQH_I.proposals}</svg>`;
   // Boxes that read better as a tip / warning than as a plain section.
   const MQH_CALLOUTS = { "don't add handles or knobs here": 'warn', "test your pricing once it's set up": 'tip' };
+  // Sections that only apply to some shops get a small label.
+  const MQH_ONLY_LABEL = { cab: 'Cabinet shops', ct: 'Countertop shops', cabct: 'Cabinet & countertop shops' };
+  const MQH_ONLY = {
+    "don't add handles or knobs here": 'cab', 'cabinet pricing': 'cab', 'extended (36"–40") upper cabinets': 'cab', 'tall cabinets': 'cab',
+    'crown moulding and valance': 'cab', 'countertop pricing': 'ct', 'price adjustments': 'cab',
+    "using price adjustments to cover what the pricing wizard doesn't": 'cab', "great for project types the wizard doesn't fit well": 'cab',
+    'great for refacing': 'cab', 'already built in': 'cabct', "what midasquote doesn't account for": 'cabct',
+  };
+  function mqhOnlyTag(el, title) {
+    const k = MQH_ONLY[String(title || '').toLowerCase()]; if (!k) return;
+    el.dataset.t = title;
+    const b = document.createElement('span'); b.className = 'mqh-only mqh-only-' + k; b.textContent = MQH_ONLY_LABEL[k]; el.appendChild(b);
+  }
   // Getting started step → the dashboard page its "Go to" button opens.
   const MQH_STEP_PAGES = { 'business info': 'shop', 'project types': 'rooms', 'pricing': 'pricing', 'specialty items': 'specialty', 'my products': 'products', 'showroom': 'showroom', 'embed code': 'embed', 'midasquote pro': 'midasquotepro' };
   const mqhStrip = t => String(t || '').replace(/^[^A-Za-z0-9"'(↺]+/, '').trim();
@@ -1030,6 +1043,11 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       ${D('.mqh-body h2')}{font-size:20px;font-weight:800;color:#1f2328;margin:40px 0 6px;padding-top:24px;border-top:1px solid #eef0f2;letter-spacing:-.01em;text-transform:none}
       ${D('.mqh-body h5')}{font-size:14.5px;font-weight:700;color:#1f2328;margin:18px 0 4px}
       ${D('.mqh-body h3')}{font-size:16px;font-weight:700;color:#1f2328;margin:26px 0 6px}
+      ${D('.mqh-only')}{display:inline-flex;align-items:center;gap:4px;margin-left:10px;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.01em;line-height:1.5;vertical-align:3px;white-space:nowrap;text-transform:none}
+      ${D('.mqh-only-cab')}{background:#fdf6e3;color:#8a6510;border:1px solid #ecd9a8}
+      ${D('.mqh-only-ct')}{background:#eef2f7;color:#334155;border:1px solid #d5dde8}
+      ${D('.mqh-only-cabct')}{background:#f3f0fa;color:#5b4a8a;border:1px solid #ddd5f0}
+      ${D('.mqh-call .mqh-only')}{vertical-align:1px}
       ${D('.mqh-body code')}{background:#f3f4f6;border-radius:4px;padding:1px 5px;font-size:13px}
       ${D('.mqh-call')}{display:flex;gap:12px;border-radius:10px;padding:14px 16px;margin:20px 0;font-size:14.5px;line-height:1.65}
       ${D('.mqh-call.tip')}{background:#f2f8ff;border:1px solid #d6e8ff;color:#1e3a5f}
@@ -1063,7 +1081,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   function mqhPretty(html) {
     const box = document.createElement('div'); box.className = 'mqh-body'; box.innerHTML = html;
     const first = [...box.children].find(e => e.tagName === 'P'); if (first && first === box.firstElementChild) first.classList.add('mqh-lead');
-    box.querySelectorAll('h4').forEach(h => { const n = document.createElement('h2'); n.textContent = mqhStrip(h.textContent); h.replaceWith(n); });
+    box.querySelectorAll('h4').forEach(h => { const n = document.createElement('h2'); n.textContent = mqhStrip(h.textContent); mqhOnlyTag(n, mqhStrip(h.textContent)); h.replaceWith(n); });
     [...box.querySelectorAll('div')].filter(d => /border-left:\s*3px solid #c9a45c/.test(d.getAttribute('style') || '')).forEach(d => {
       const t = d.firstElementChild; if (!t) return;
       const title = mqhStrip(t.textContent); const kind = MQH_CALLOUTS[title.toLowerCase()];
@@ -1071,18 +1089,19 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       if (kind) {
         const c = document.createElement('div'); c.className = 'mqh-call ' + kind + (d.className ? ' ' + d.className : '');
         c.innerHTML = mqhIcon(kind === 'tip' ? 'bulb' : 'alert', 18) + `<div><b class="t"></b></div>`;
-        c.querySelector('b.t').textContent = title; rest.forEach(x => c.lastElementChild.appendChild(x)); d.replaceWith(c); return;
+        c.querySelector('b.t').textContent = title; mqhOnlyTag(c.querySelector('b.t'), title); rest.forEach(x => c.lastElementChild.appendChild(x)); d.replaceWith(c); return;
       }
-      const h = document.createElement('h3'); h.textContent = title;
+      const h = document.createElement('h3'); h.textContent = title; mqhOnlyTag(h, title);
       const frag = document.createDocumentFragment(); frag.appendChild(h); rest.forEach(x => frag.appendChild(x));
       if (d.className) { const w = document.createElement('div'); w.className = d.className; w.appendChild(frag); d.replaceWith(w); } else d.replaceWith(frag);
     });
     // Other coloured boxes (e.g. the blue "Where specialty items show") → tip.
-    [...box.querySelectorAll('div')].filter(d => /background:\s*#(eff6ff|f0f9ff|fefce8|fffbeb)/.test(d.getAttribute('style') || '')).forEach(d => {
-      const c = document.createElement('div'); c.className = 'mqh-call tip';
+    [...box.querySelectorAll('div')].filter(d => /background:\s*#(eff6ff|f0f9ff|fefce8|fffbeb|fef2f2)/.test(d.getAttribute('style') || '')).forEach(d => {
+      const warn = /#(fef2f2|fffbeb)/.test(d.getAttribute('style') || '');
+      const c = document.createElement('div'); c.className = 'mqh-call ' + (warn ? 'warn' : 'tip');
       const kids = [...d.children]; const head = kids[0] && kids[0].tagName === 'DIV' ? kids.shift() : null;
-      c.innerHTML = mqhIcon('bulb', 18) + '<div></div>';
-      if (head) { const b = document.createElement('b'); b.className = 't'; b.textContent = mqhStrip(head.textContent); c.lastElementChild.appendChild(b); }
+      c.innerHTML = mqhIcon(warn ? 'alert' : 'bulb', 18) + '<div></div>';
+      if (head) { const b = document.createElement('b'); b.className = 't'; b.textContent = mqhStrip(head.textContent); mqhOnlyTag(b, mqhStrip(head.textContent)); c.lastElementChild.appendChild(b); }
       kids.forEach(x => c.lastElementChild.appendChild(x)); d.replaceWith(c);
     });
     // Getting started steps: numbered timeline with a "Go to" button.
@@ -1095,7 +1114,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     });
     box.querySelectorAll('[style]').forEach(e => { if (!e.closest('.mqh-call') && !e.closest('.mq-step-title')) e.removeAttribute('style'); else if (e.closest('.mqh-call')) e.removeAttribute('style'); });
     const used = {};
-    box.querySelectorAll('h2,h3').forEach(h => { let id = 'mqh-' + mqhSlug(h.textContent); if (used[id]) id += '-' + (++used[id]); else used[id] = 1; h.id = id; });
+    box.querySelectorAll('h2,h3').forEach(h => { let id = 'mqh-' + mqhSlug(h.dataset.t || h.textContent); if (used[id]) id += '-' + (++used[id]); else used[id] = 1; h.id = id; });
     box.addEventListener('click', e => { const g = e.target.closest('.mqh-go'); if (g && typeof window.mqProGoTo === 'function') { window.mqCloseHelpModal && window.mqCloseHelpModal(); window.mqProGoTo(g.dataset.page); } });
     return box;
   }
@@ -1112,7 +1131,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       box.querySelectorAll('h2,h3').forEach(h => {
         let t = h.textContent, n = h.nextElementSibling;
         while (n && !/^H[23]$/.test(n.tagName)) { t += ' ' + n.textContent; n = n.nextElementSibling; }
-        mqhIndex.push({ id, sec: h.id, title: h.textContent, text: t.toLowerCase() });
+        mqhIndex.push({ id, sec: h.id, title: h.dataset.t || h.textContent, text: t.toLowerCase() });
       });
     });
     return mqhIndex;
@@ -1195,7 +1214,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         const e = t => t.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
         toc.innerHTML = hs.map(h => h.classList.contains('mq-step-title')
           ? `<a class="s" data-id="${h.id}"><i>${(h.closest('.mq-step').querySelector('.mq-step-num') || {}).dataset?.n || ''}</i>${e(h.childNodes[0] ? h.childNodes[0].textContent.trim() : h.textContent)}</a>`
-          : `<a class="${h.tagName === 'H2' ? 'g' : ''}" data-id="${h.id}">${e(h.textContent)}</a>`).join('');
+          : `<a class="${h.tagName === 'H2' ? 'g' : ''}" data-id="${h.id}">${e(h.dataset.t || h.textContent)}</a>`).join('');
         toc.closest('.mqh-toc').style.visibility = hs.length > 2 ? '' : 'hidden';
         toc.onclick = e => { const a = e.target.closest('a[data-id]'); if (a) mqhScrollTo(document.getElementById(a.dataset.id)); };
       }
