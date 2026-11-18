@@ -260,13 +260,15 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
           <div class="mq-step-body">
             <p>Your logo, shop name, city, phone number, brand colour, and quote range. This is the foundation everything else is built on top of.</p>
             <p>Look further in Business info for on/off toggles to customize your widget even more, such as "display showroom link", "financing available badge", "password protected widget", and more.</p>
-            <p>You can even limit what you offer. Countertops only? No problem. Simply toggle off "cabinets only" and "both" to only offer countertops.</p>
+            <p>Start with <strong>What does your business do?</strong> and tick everything you quote. Cabinetry and Countertops use MidasQuote\u2019s built-in cabinet and countertop quotes. Every other trade you tick (Painting, Flooring, Framing…) gets its own <strong>quote type</strong> — its own tab on your widget — set up from a ready-made starter pack with project types, priced steps and photos you can change. Countertops only? Just untick Cabinetry.</p>
+            <p>You can also add a quote type of your own from scratch under <strong>Quote types</strong>.</p>
           </div>
         </div>
         <div class="mq-step">
           <div class="mq-step-head"><span class="mq-step-num">Step 2</span><span class="mq-step-title">Project types</span></div>
           <div class="mq-step-body">
             <p>Set up the project types your widget offers (Kitchen, Bathroom, or your own custom types), each with its own description, cover photo, and measuring guide. Use our premade ones, edit ours, or create your own from scratch.</p>
+            <p>Each of your own quote types has its own section here too, with its own project types (e.g. Painting → Bedroom, Living room) and any <strong>Measurements</strong> customers enter once, like wall area.</p>
             <p>Project types can also be used to increase or decrease ballpark percentages for specific parts of the quote — like uppers, bases, installation, and the total ballpark. For example, kick coverings aren't included in the pricing wizard, but to make up for that you could add something like 2% to your base cabinet quotes for any project type that includes bases. Learn more in this guide's "Project types" tab.</p>
           </div>
         </div>
@@ -276,6 +278,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
             <p>Run the pricing wizard to reverse-engineer your rates from real quotes you'll do based on your products. This is the core of your quoting math and can be edited at any time.</p>
             <p>Start with the pricing wizard, adding your basic box materials, doors, hinges, drawers, and installation rates. After that, you can add bulk items of the same price, or add any more items you wish. You can also configure your crown/valance pricing, and your countertop and tall cabinet pricing.</p>
             <p>The widget takes the measurements input by the customer and uses these prices to generate your ballparks. It knows to attach crown to upper cabinet measurements and tall cabinets. It also takes your base cabinet measurements and automatically attaches countertop measurements to them if counters are selected. The widget also incorporates formulas that have been proven to accurately generate quotes for customers wanting only "some drawers" or "mostly drawers." All you need to do is do your drawer quotes in the pricing wizard, and the rest is taken care of for you.</p>
+            <p>Quoting something other than cabinets? Your own quote types are priced with <strong>custom steps</strong> instead of the wizard — each step is a question on your widget with priced options. See "Custom pricing categories" in this guide\u2019s Pricing tab.</p>
           </div>
         </div>
         <div class="mq-step">
@@ -367,6 +370,15 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       body: `
         <p>The basics that show up at the top of your widget — your logo, shop name, city, and phone number.</p>
         <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
+          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">🧭 What does your business do?</div>
+          <p style="margin:0">Tick every trade you quote. Cabinetry and Countertops switch MidasQuote\u2019s built-in quotes on or off. Any other trade gets its own quote type, filled in from a starter pack (project types, priced steps, sample specialty items and photos) — change anything you like afterwards. Unticking a trade hides its quote from your widget without deleting it; tick it again to bring it back.</p>
+        </div>
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
+          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">🗂️ Quote types</div>
+          <p style="margin:0 0 0.5rem">Each quote type is its own tab (or card, in Focused layout) on your widget.</p>
+          <ul style="margin:0;padding-left:1.25rem;line-height:1.75"><li><strong>Built-in tabs:</strong> show or hide "Full project quote" (cabinets + countertops together), "Cabinets only" and "Countertops only". At least one tab has to stay on. Tick <em>Apply to MidasQuote Pro too</em> to hide the same ones in Pro.</li><li><strong>Your own quote types:</strong> click <strong>+ Add a quote type</strong>, name it, then set it up — its project types and measurements on Project types, its priced steps on Pricing. It only shows on your widget once it has at least one priced step.</li><li><strong>Rename, Pro only, Delete:</strong> Pro only keeps a quote type off your public widget but available in MidasQuote Pro.</li><li>With 4 or more tabs, customers get arrows to slide through them.</li></ul>
+        </div>
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Brand colour</div>
           <p style="margin:0">Used for your widget's tab bar, buttons, and logo placeholder.</p>
         </div>
@@ -405,10 +417,6 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">🎛️ Widget layout</div>
           <p style="margin:0">Pick <strong>Classic</strong> (one scrolling page, the original look) or <strong>Focused</strong> (one question at a time, full screen). It changes your embedded widget and your standalone link everywhere at once — no new embed code to paste. Use the Preview links to try either one before choosing. MidasQuote Pro always stays the same.</p>
-        </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
-          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">🗂️ Quote types</div>
-          <p style="margin:0">A card further down lets you turn off any of your widget's quote types (Full project quote, Cabinets only, Countertops only) per shop — whatever's left automatically fills the space. At least one has to stay on, and there's a checkbox to apply the same choice to MidasQuote Pro.</p>
         </div>
         <p style="margin-top:1.1rem">Everything on this tab autosaves a second or two after you stop typing — you'll see a small toast confirm each save.</p>
       `
@@ -455,7 +463,9 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         </div>
         <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Project types for your own quote types</div>
-          <p style="margin:0">Every quote type you offer (Painting, Framing, Fresh Doors…) gets its own section here with its own project types — click <strong>+ Add project type</strong> inside that quote type. Each one can have its own cover photo and how-to-measure guide, and in Pricing you can choose which steps and options show for each one.</p>
+          <p style="margin:0">Every quote type you offer (Painting, Framing, Fresh Doors…) gets its own section here with its own project types — click <strong>+ Add project type</strong> inside that quote type. Each one can have its own cover photo and how-to-measure guide, and in Pricing you can choose which steps and options show for each one. Each quote type also has:</p>
+          <ul style="margin:0.5rem 0 0;padding-left:1.25rem;line-height:1.75"><li><strong>① Card &amp; icon</strong> — the icon on its tab. In Focused layout its card uses the cover photo of its first project type.</li><li><strong>② Measurements</strong> — numbers customers enter once, like "Wall area" (sq ft), "Trim length" (lin ft) or "Number of rooms". Any option in Pricing can be priced on one.</li><li><strong>③ Priced steps</strong> — a shortcut to its steps on the Pricing tab.</li></ul>
+          <p style="margin:0.5rem 0 0">Name, on/off and Pro only for a quote type are on Business info.</p>
         </div>
         <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">How-to-measure editor</div>
@@ -515,7 +525,22 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         <h4 style="font-size:12px;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:0.03em;margin:1.4rem 0 0.2rem">✨ Custom pricing categories (your own steps)</h4>
         <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Steps for anything</div>
-          <p style="margin:0">Make your own priced steps — finished ends, site access, delivery, hourly work, or a whole quote type like Painting or Fresh Doors. Each one becomes its own numbered step on the widget (STEP 1, STEP 2… are added automatically in the order you set). Options can be flat-rate, per item (customer enters a count), per linear or square foot, or use the customer\u2019s measurements.</p>
+          <p style="margin:0">Custom steps are how you price anything the wizard doesn\u2019t cover — finished ends, site access, delivery or hourly work in your Cabinets quote, and <strong>everything</strong> in your own quote types (Painting, Framing, Fresh Doors…). Each step is one question on your widget with priced options, numbered STEP 1, STEP 2… automatically in the order you set. Click <strong>+ New step</strong> inside a quote type\u2019s box (or <strong>+ New category</strong> for Cabinets), then <strong>+ Add option</strong> on the step.</p>
+        </div>
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
+          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Step settings</div>
+          <p style="margin:0 0 0.5rem">When you add or edit a step:</p>
+          <ul style="margin:0;padding-left:1.25rem;line-height:1.75"><li><strong>How customers answer</strong> — <em>Pick any</em> (they add whatever they want) or <em>Pick one</em> (a single choice, like a door style).</li><li><strong>Where it goes on your widget</strong> — in a quote type, steps start right after Supply + install and follow each other in order. In Cabinets, choose which built-in step it comes after (after Details &amp; Selections by default).</li><li><strong>Only show this step if…</strong> — show it only after a certain earlier choice, e.g. "Ceiling finish" only if "Ceilings" was picked.</li><li><strong>Project types</strong> — untick any project type the whole step shouldn\u2019t show for.</li><li><strong>Pro only</strong> — keep the step for MidasQuote Pro quotes only.</li></ul>
+        </div>
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
+          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Ways to price an option</div>
+          <p style="margin:0 0 0.5rem">"What it\u2019s priced on" decides what the price is multiplied by:</p>
+          <ul style="margin:0;padding-left:1.25rem;line-height:1.75"><li><strong>Flat price</strong> — one fixed amount.</li><li><strong>Per unit, per sq ft or per linear ft</strong> — the customer enters how many (hours, panels, square feet…).</li><li><strong>One of this quote\u2019s measurements</strong> — e.g. $2.50 × the "Wall area" the customer entered once (set up measurements on Project types).</li><li><strong>Another option\u2019s number</strong> — e.g. primer priced on the same square feet as the paint.</li><li><strong>Cabinet measurements</strong> (Cabinets quote) — base, upper, total, island, crown or valance linear feet, number of drawers or tall cabinets.</li><li><strong>A percentage</strong> — of the cabinet estimate, of the cabinet estimate plus extras, or of one of your other steps.</li></ul>
+        </div>
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
+          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Option extras</div>
+          <p style="margin:0 0 0.5rem"></p>
+          <ul style="margin:0;padding-left:1.25rem;line-height:1.75"><li><strong>Minimum charge</strong> — so a small job never prices below it.</li><li><strong>Supply + install</strong> — give an option its own install price (per unit or flat), and customers can choose supply only or supplied &amp; installed.</li><li><strong>Show this option only if…</strong> — tie it to another pick, e.g. only with a certain door style.</li><li><strong>Pro only</strong> — keep the option out of your public widget.</li><li><strong>Photos, groups and best-seller badges</strong> — set on My Products, like everything else.</li></ul>
         </div>
         <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Which project types an option shows for</div>
@@ -549,7 +574,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       body: `
         <div style="background:#eff6ff;border:1px solid #bfdbfe;border-left:4px solid #2563eb;border-radius:8px;padding:12px 14px;margin:1rem 0">
           <div style="font-size:14.5px;font-weight:800;color:#1e3a8a;margin-bottom:0.35rem">Where specialty items show on your widget</div>
-          <p style="margin:0;color:#1e3a8a">All of a quote\u2019s specialty items appear together as one <strong>"Details &amp; Selections"</strong> step near the end of the widget — after the measurements and your other steps, right before the customer calculates their estimate. They\u2019re grouped by your categories, and customers only see the items you\u2019ve switched on for the project type they picked. (In the Cabinets tab, a custom step you\u2019ve set to come after Details &amp; Selections will show after it.)</p>
+          <p style="margin:0;color:#1e3a8a">All of a quote\u2019s specialty items appear together as one <strong>"Details &amp; Selections"</strong> step near the end of the widget. In your own quote types it comes after your steps, right before the customer calculates their estimate (unless you place a step after it). In the Cabinets quote, your custom steps come after it by default. Items are grouped by your categories, and customers only see the items switched on for the project type they picked.</p>
         </div>
         <p>Specialty Items isn't just for leftover extras — it's a fully flexible pricing tool. Anything you can price flat-rate, per linear foot, or per square foot can live here: pullouts, magic corners, floating shelves, custom range hoods, hardware, or even crown molding for when you are offering refacing, restaining, or repainting services. We have even pre-added some of these items for you to give you a better idea. You can keep or delete them.</p>
         <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
@@ -2267,7 +2292,7 @@ window.logoutMember = async function () {
               <div>
                 <div class="mq-page-title">Specialty items</div>
                 <div class="mq-page-sub">Anything you want to price and attach to a project type — not just add-ons. Price flat-rate, per linear foot, or per square foot; include the full cost — materials, hardware, and installation. What you enter is what gets added to the quote.</div>
-                <div class="mq-page-sub" style="margin-top:6px">📍 On your widget, all of a quote’s specialty items show together as one <strong>“Details &amp; Selections”</strong> step near the end — right before the customer calculates their estimate.</div>
+                <div class="mq-page-sub" style="margin-top:6px">📍 On your widget, all of a quote’s specialty items show together as one <strong>“Details &amp; Selections”</strong> step near the end of the quote.</div>
               </div>
             </div>
             ${mqTrainingVideoBlockHTML('specialty')}
