@@ -276,9 +276,9 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
           <div class="mq-step-head"><span class="mq-step-num">Step 3</span><span class="mq-step-title">Pricing</span></div>
           <div class="mq-step-body">
             <p>This is where your quoting math lives — the prices the widget uses to build every ballpark. Everything here can be changed any time.</p>
-            <div style="font-size:13px;font-weight:800;color:#111;margin:0.9rem 0 0.2rem">Your own quote types (Painting, Flooring, Framing…)</div>
+            <h5 class="mqh-h5" style="font-size:13px;font-weight:800;color:#111;margin:0.9rem 0 0.2rem">Your own quote types (Painting, Flooring, Framing…)</h5>
             <p>Each quote type is priced with <strong>custom steps</strong>: every step is a question on your widget with priced options. If it came from a starter pack, its steps are already filled in — just change the prices to yours and add or remove options. Use the <strong>Show only…</strong> filter at the top of Pricing to work on one quote (or one project type) at a time. See "Custom pricing categories" in this guide\u2019s Pricing tab.</p>
-            <div style="font-size:13px;font-weight:800;color:#111;margin:0.9rem 0 0.2rem">If you quote cabinets</div>
+            <h5 class="mqh-h5" style="font-size:13px;font-weight:800;color:#111;margin:0.9rem 0 0.2rem">If you quote cabinets</h5>
             <p>Run the pricing wizard to reverse-engineer your cabinet rates from real jobs you'd quote with your own products.</p>
             <p>Start with the pricing wizard, adding your basic box materials, doors, hinges, drawers, and installation rates. After that, you can add bulk items of the same price, or add any more items you wish. You can also configure your crown/valance pricing, and your countertop and tall cabinet pricing.</p>
             <p>The widget takes the measurements input by the customer and uses these prices to generate your ballparks. It knows to attach crown to upper cabinet measurements and tall cabinets. It also takes your base cabinet measurements and automatically attaches countertop measurements to them if counters are selected. The widget also incorporates formulas that have been proven to accurately generate quotes for customers wanting only "some drawers" or "mostly drawers." All you need to do is do your drawer quotes in the pricing wizard, and the rest is taken care of for you.</p>
@@ -885,8 +885,10 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
           <div style="font-size:18px;font-weight:800;color:#111">❓ ${content.title}</div>
           <button onclick="mqCloseHelpModal()" style="background:none;border:none;font-size:22px;color:#9ca3af;cursor:pointer;line-height:1;padding:0 4px">×</button>
         </div>
-        <div style="font-size:14px;color:#374151;line-height:1.7">${content.body}</div>
+        <div id="mq-help-modal-body"></div>
       </div>`;
+    try { mqhInjectCss(); modal.querySelector('#mq-help-modal-body').appendChild(mqhPretty(content.body)); }
+    catch (e) { modal.querySelector('#mq-help-modal-body').innerHTML = `<div style="font-size:14px;color:#374151;line-height:1.7">${content.body}</div>`; }
     modal.style.display = 'flex';
   };
   window.mqCloseHelpModal = function() {
@@ -929,71 +931,283 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     return (c.title + ' ' + c.body).replace(/<[^>]*>/g, ' ').toLowerCase();
   }
 
+  // ── Help guide layout (Nov 17 2026, Jordan: "looks a little cheap") ──
+  // Docs-style: left sidebar (grouped like the main menu, outline icons,
+  // search), one readable column, "On this page" on the right, previous /
+  // next and a support card at the bottom. The topic text itself is the
+  // same MQ_HELP_CONTENT — it's restyled on the way in (gold boxes become
+  // headings, a few become tip/warning callouts), so the per-page
+  // "Need help?" popups get the same clean look.
+  const MQH_GROUPS = [
+    ['Get started', ['gettingstarted']],
+    ['Set up your estimator', ['shop', 'rooms', 'pricing', 'specialty', 'products', 'showroom', 'embed']],
+    ['Leads & quotes', ['overview', 'leads']],
+    ['MidasQuote Pro', ['midasquotepro', 'proposals']],
+    ['Marketing', ['marketing']],
+    ['Account', ['billing']],
+  ];
+  const MQH_I = {
+    gettingstarted: '<path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/>',
+    shop: '<path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"/><path d="M2 7h20"/>',
+    rooms: '<path d="m12 2 10 5-10 5L2 7z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/>',
+    pricing: '<path d="M12.59 2.59A2 2 0 0 0 11.17 2H4a2 2 0 0 0-2 2v7.17a2 2 0 0 0 .59 1.41l8.7 8.7a2.43 2.43 0 0 0 3.42 0l6.58-6.58a2.43 2.43 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/>',
+    specialty: '<path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/>',
+    products: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.09-3.09a2 2 0 0 0-2.82 0L6 21"/>',
+    showroom: '<rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>',
+    embed: '<path d="m16 18 6-6-6-6"/><path d="m8 6-6 6 6 6"/>',
+    overview: '<path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/>',
+    leads: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+    midasquotepro: '<path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/>',
+    proposals: '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 13H8"/><path d="M16 17H8"/><path d="M16 13h-2"/>',
+    marketing: '<circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.93 0 1.65-.75 1.65-1.69 0-.44-.18-.84-.44-1.13-.29-.29-.44-.65-.44-1.13a1.64 1.64 0 0 1 1.67-1.67h2c3.05 0 5.56-2.5 5.56-5.55C21.97 6.01 17.46 2 12 2z"/>',
+    billing: '<circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/>',
+    templates: '<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/>',
+    search: '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+    chat: '<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22z"/>',
+    left: '<path d="m15 18-6-6 6-6"/>', right: '<path d="m9 18 6-6-6-6"/>',
+    bulb: '<path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/>',
+    alert: '<circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/>',
+    arrow: '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',
+  };
+  const mqhIcon = (k, sz) => `<svg width="${sz || 16}" height="${sz || 16}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${MQH_I[k] || MQH_I.proposals}</svg>`;
+  // Boxes that read better as a tip / warning than as a plain section.
+  const MQH_CALLOUTS = { "don't add handles or knobs here": 'warn', "test your pricing once it's set up": 'tip' };
+  // Getting started step → the dashboard page its "Go to" button opens.
+  const MQH_STEP_PAGES = { 'business info': 'shop', 'project types': 'rooms', 'pricing': 'pricing', 'specialty items': 'specialty', 'my products': 'products', 'showroom': 'showroom', 'embed code': 'embed', 'midasquote pro': 'midasquotepro' };
+  const mqhStrip = t => String(t || '').replace(/^[^A-Za-z0-9"'(↺]+/, '').trim();
+  const mqhSlug = t => mqhStrip(t).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || 'section';
+  function mqhInjectCss() {
+    if (document.getElementById('mqh-css')) return;
+    const st = document.createElement('style'); st.id = 'mqh-css';
+    const D = (sel) => `#midasquote-dashboard #mq-page-helpguide ${sel}, #mq-help-modal ${sel}`;
+    st.textContent = `
+      #midasquote-dashboard #mq-page-helpguide .mqh-shell{display:grid;grid-template-columns:248px minmax(0,1fr) 210px;background:#fff;border:1px solid #e6e8eb;border-radius:12px;max-width:1320px;align-items:start}
+      #midasquote-dashboard #mq-page-helpguide .mqh-side{position:sticky;top:var(--mqh-top,12px);max-height:calc(100vh - var(--mqh-top,12px) - 12px);overflow-y:auto;border-right:1px solid #eef0f2;padding:18px 12px 20px;background:#fbfbfc;border-radius:12px 0 0 12px;align-self:stretch}
+      #midasquote-dashboard #mq-page-helpguide .mqh-srch{display:flex;align-items:center;gap:8px;border:1px solid #e1e4e8;background:#fff;border-radius:8px;padding:0 10px;color:#8b929b;margin-bottom:16px}
+      #midasquote-dashboard #mq-page-helpguide .mqh-srch:focus-within{border-color:#c9a45c;box-shadow:0 0 0 3px rgba(201,164,92,.18)}
+      #midasquote-dashboard #mq-page-helpguide .mqh-srch input#mq-help-search[type=text]{flex:1;border:0!important;outline:0!important;box-shadow:none!important;background:transparent!important;padding:9px 0!important;font-size:13.5px!important;color:#1f2328!important;min-width:0!important;width:auto!important;height:auto!important;margin:0!important;border-radius:0!important;-webkit-appearance:none;appearance:none}
+      #midasquote-dashboard #mq-page-helpguide .mqh-srch kbd{font:11px inherit;border:1px solid #e1e4e8;border-radius:4px;padding:1px 5px;color:#8b929b;background:#fff}
+      #midasquote-dashboard #mq-page-helpguide .mqh-ng{margin-bottom:14px}
+      #midasquote-dashboard #mq-page-helpguide .mqh-ngt{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#8b929b;padding:0 10px 5px}
+      #midasquote-dashboard #mq-page-helpguide .mqh-ni{display:flex;align-items:center;gap:10px;width:100%;padding:7px 10px;border:0;background:none;border-radius:7px;font-size:14px;color:#3d434b;cursor:pointer;text-align:left;font-family:inherit;line-height:1.35}
+      #midasquote-dashboard #mq-page-helpguide .mqh-ni svg{color:#8b929b;flex:0 0 auto}
+      #midasquote-dashboard #mq-page-helpguide .mqh-ni:hover{background:#f1f2f4}
+      #midasquote-dashboard #mq-page-helpguide .mqh-ni.on{background:#fdf6e3;color:#1f2328;font-weight:600;box-shadow:inset 3px 0 0 #c9a45c}
+      #midasquote-dashboard #mq-page-helpguide .mqh-ni.on svg{color:#a07a2c}
+      #midasquote-dashboard #mq-page-helpguide .mqh-res{display:block;width:100%;text-align:left;border:0;background:none;padding:8px 10px;border-radius:7px;cursor:pointer;font-family:inherit}
+      #midasquote-dashboard #mq-page-helpguide .mqh-res:hover{background:#f1f2f4}
+      #midasquote-dashboard #mq-page-helpguide .mqh-res b{display:block;font-size:13.5px;color:#1f2328;font-weight:600}
+      #midasquote-dashboard #mq-page-helpguide .mqh-res small{display:block;font-size:12px;color:#8b929b;margin-top:1px}
+      #midasquote-dashboard #mq-page-helpguide .mqh-none{font-size:13px;color:#8b929b;padding:6px 10px;line-height:1.5}
+      #midasquote-dashboard #mq-page-helpguide .mqh-main{padding:36px 52px 48px;min-width:0}
+      #midasquote-dashboard #mq-page-helpguide .mqh-doc{max-width:720px}
+      #midasquote-dashboard #mq-page-helpguide .mqh-crumb{font-size:13px;color:#8b929b;margin-bottom:8px}
+      #midasquote-dashboard #mq-page-helpguide .mqh-crumb b{color:#3d434b;font-weight:600}
+      #midasquote-dashboard #mq-page-helpguide .mqh-h1{font-size:32px;line-height:1.2;font-weight:800;color:#1f2328;margin:0 0 14px;letter-spacing:-.02em}
+      #midasquote-dashboard #mq-page-helpguide .mqh-toc{padding:36px 18px 0 0;position:sticky;top:var(--mqh-top,12px);align-self:start}
+      #midasquote-dashboard #mq-page-helpguide .mqh-toc-in{border-left:1px solid #eef0f2;padding-left:16px;max-height:calc(100vh - var(--mqh-top,12px) - 48px);overflow-y:auto}
+      #midasquote-dashboard #mq-page-helpguide .mqh-toc-t{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#8b929b;margin-bottom:8px}
+      #midasquote-dashboard #mq-page-helpguide .mqh-toc a{display:block;font-size:13px;line-height:1.4;color:#5b626b;padding:4px 0;cursor:pointer;text-decoration:none}
+      #midasquote-dashboard #mq-page-helpguide .mqh-toc a:hover{color:#1f2328}
+      #midasquote-dashboard #mq-page-helpguide .mqh-toc a.g{font-weight:600;color:#1f2328;margin-top:8px}
+      #midasquote-dashboard #mq-page-helpguide .mqh-toc a.s{display:flex;gap:8px}#midasquote-dashboard #mq-page-helpguide .mqh-toc a.s i{font-style:normal;color:#a07a2c;font-weight:700;min-width:12px}
+      #midasquote-dashboard #mq-page-helpguide .mqh-toc a.on{color:#a07a2c;font-weight:600}
+      #midasquote-dashboard #mq-page-helpguide .mqh-pn{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:48px}
+      #midasquote-dashboard #mq-page-helpguide .mqh-pn button{border:1px solid #e6e8eb;border-radius:10px;padding:14px 16px;background:#fff;text-align:left;cursor:pointer;font-family:inherit;color:#1f2328}
+      #midasquote-dashboard #mq-page-helpguide .mqh-pn button:hover{border-color:#c9a45c}
+      #midasquote-dashboard #mq-page-helpguide .mqh-pn small{display:flex;align-items:center;gap:4px;color:#8b929b;font-size:12.5px}
+      #midasquote-dashboard #mq-page-helpguide .mqh-pn b{display:block;margin-top:2px;font-size:15px}
+      #midasquote-dashboard #mq-page-helpguide .mqh-pn .nx{text-align:right;grid-column:2}
+      #midasquote-dashboard #mq-page-helpguide .mqh-pn .nx small{justify-content:flex-end}
+      #midasquote-dashboard #mq-page-helpguide .mqh-sup{margin-top:16px;display:flex;align-items:center;gap:14px;background:#fbfbfc;border:1px solid #eef0f2;border-radius:10px;padding:16px 18px;font-size:14.5px;color:#3d434b;line-height:1.5}
+      #midasquote-dashboard #mq-page-helpguide .mqh-sup svg{color:#8b929b;flex:0 0 auto}
+      #midasquote-dashboard #mq-page-helpguide .mqh-sup button{margin-left:auto;background:#111318;color:#fff;border:0;border-radius:8px;padding:9px 14px;font-weight:600;font-size:13.5px;white-space:nowrap;cursor:pointer;font-family:inherit}
+      ${D('.mqh-body')}{font-size:15px;line-height:1.75;color:#3d434b}
+      ${D('.mqh-body p')}{margin:0 0 14px}
+      ${D('.mqh-body p.mqh-lead')}{font-size:17px;line-height:1.65;color:#4a5159}
+      ${D('.mqh-body ul, .mqh-body ol')}{margin:0 0 14px;padding-left:1.3rem}
+      ${D('.mqh-body li')}{margin-bottom:5px}
+      ${D('.mqh-body h2')}{font-size:20px;font-weight:800;color:#1f2328;margin:40px 0 6px;padding-top:24px;border-top:1px solid #eef0f2;letter-spacing:-.01em;text-transform:none}
+      ${D('.mqh-body h5')}{font-size:14.5px;font-weight:700;color:#1f2328;margin:18px 0 4px}
+      ${D('.mqh-body h3')}{font-size:16px;font-weight:700;color:#1f2328;margin:26px 0 6px}
+      ${D('.mqh-body code')}{background:#f3f4f6;border-radius:4px;padding:1px 5px;font-size:13px}
+      ${D('.mqh-call')}{display:flex;gap:12px;border-radius:10px;padding:14px 16px;margin:20px 0;font-size:14.5px;line-height:1.65}
+      ${D('.mqh-call.tip')}{background:#f2f8ff;border:1px solid #d6e8ff;color:#1e3a5f}
+      ${D('.mqh-call.warn')}{background:#fff8eb;border:1px solid #f6e2b8;color:#6b4a0e}
+      ${D('.mqh-call > svg')}{flex:0 0 auto;margin-top:3px}
+      ${D('.mqh-call b.t')}{display:block;margin-bottom:2px}
+      ${D('.mqh-call p, .mqh-call li')}{color:inherit;font-size:14.5px;margin:4px 0 0}
+      ${D('.mqh-call ul')}{margin:6px 0 0}
+      ${D('.mqh-body .mq-step')}{position:relative;padding:0 0 26px 48px;margin:0;border:0;background:none}
+      ${D('.mqh-body .mq-step::before')}{content:"";position:absolute;left:15px;top:34px;bottom:4px;width:2px;background:#eef0f2}
+      ${D('.mqh-body .mq-step:last-of-type::before')}{display:none}
+      ${D('.mqh-body .mq-step-head')}{display:flex;align-items:center;gap:10px;margin:0 0 6px;padding:0;border:0;background:none}
+      ${D('.mqh-body .mq-step-num')}{position:absolute;left:0;top:0;width:32px;height:32px;border-radius:50%;background:#fdf6e3;border:1px solid #ecd9a8;color:#8a6510;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;padding:0;font-size:0}
+      ${D('.mqh-body .mq-step-num::after')}{content:attr(data-n);font-size:13px}
+      ${D('.mqh-body .mq-step-title')}{font-size:17px;font-weight:700;color:#1f2328;line-height:32px}
+      ${D('.mqh-body .mq-step-body')}{padding:0;border:0;background:none}
+      ${D('.mqh-go')}{display:inline-flex;align-items:center;gap:6px;margin:2px 0 4px;border:1px solid #e1e4e8;background:#fff;border-radius:8px;padding:6px 12px;font-size:13px;font-weight:600;color:#1f2328;cursor:pointer;font-family:inherit}
+      ${D('.mqh-go:hover')}{border-color:#c9a45c;background:#fffdf7}
+      @media(max-width:1180px){#midasquote-dashboard #mq-page-helpguide .mqh-shell{grid-template-columns:240px minmax(0,1fr)}#midasquote-dashboard #mq-page-helpguide .mqh-toc{display:none}}
+      @media(max-width:820px){#midasquote-dashboard #mq-page-helpguide .mqh-shell{grid-template-columns:1fr}#midasquote-dashboard #mq-page-helpguide .mqh-side{position:static;max-height:none;border-right:0;border-bottom:1px solid #eef0f2;border-radius:12px 12px 0 0}#midasquote-dashboard #mq-page-helpguide #mqh-nav{display:flex;flex-wrap:wrap;gap:4px}#midasquote-dashboard #mq-page-helpguide .mqh-ng{margin:0;display:contents}#midasquote-dashboard #mq-page-helpguide .mqh-ngt{display:none}#midasquote-dashboard #mq-page-helpguide .mqh-ni{width:auto;border:1px solid #e6e8eb;background:#fff}#midasquote-dashboard #mq-page-helpguide .mqh-main{padding:24px 18px 32px}#midasquote-dashboard #mq-page-helpguide .mqh-h1{font-size:26px}}
+      #mq-help-modal, #mq-help-modal button{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+      #mq-help-modal .mqh-body{font-size:14.5px}
+      #mq-help-modal .mqh-body h2{font-size:17px;margin-top:28px;padding-top:18px}
+      #mq-help-modal .mqh-body h3{font-size:15px}
+      #mq-help-modal .mqh-body p.mqh-lead{font-size:15.5px}
+    `;
+    document.head.appendChild(st);
+  }
+  // Turns one topic's help HTML into the clean layout. `forPopup` skips
+  // the Getting-started "Go to" buttons' page jumps nothing else differs.
+  function mqhPretty(html) {
+    const box = document.createElement('div'); box.className = 'mqh-body'; box.innerHTML = html;
+    const first = [...box.children].find(e => e.tagName === 'P'); if (first && first === box.firstElementChild) first.classList.add('mqh-lead');
+    box.querySelectorAll('h4').forEach(h => { const n = document.createElement('h2'); n.textContent = mqhStrip(h.textContent); h.replaceWith(n); });
+    [...box.querySelectorAll('div')].filter(d => /border-left:\s*3px solid #c9a45c/.test(d.getAttribute('style') || '')).forEach(d => {
+      const t = d.firstElementChild; if (!t) return;
+      const title = mqhStrip(t.textContent); const kind = MQH_CALLOUTS[title.toLowerCase()];
+      const rest = [...d.children].slice(1);
+      if (kind) {
+        const c = document.createElement('div'); c.className = 'mqh-call ' + kind + (d.className ? ' ' + d.className : '');
+        c.innerHTML = mqhIcon(kind === 'tip' ? 'bulb' : 'alert', 18) + `<div><b class="t"></b></div>`;
+        c.querySelector('b.t').textContent = title; rest.forEach(x => c.lastElementChild.appendChild(x)); d.replaceWith(c); return;
+      }
+      const h = document.createElement('h3'); h.textContent = title;
+      const frag = document.createDocumentFragment(); frag.appendChild(h); rest.forEach(x => frag.appendChild(x));
+      if (d.className) { const w = document.createElement('div'); w.className = d.className; w.appendChild(frag); d.replaceWith(w); } else d.replaceWith(frag);
+    });
+    // Other coloured boxes (e.g. the blue "Where specialty items show") → tip.
+    [...box.querySelectorAll('div')].filter(d => /background:\s*#(eff6ff|f0f9ff|fefce8|fffbeb)/.test(d.getAttribute('style') || '')).forEach(d => {
+      const c = document.createElement('div'); c.className = 'mqh-call tip';
+      const kids = [...d.children]; const head = kids[0] && kids[0].tagName === 'DIV' ? kids.shift() : null;
+      c.innerHTML = mqhIcon('bulb', 18) + '<div></div>';
+      if (head) { const b = document.createElement('b'); b.className = 't'; b.textContent = mqhStrip(head.textContent); c.lastElementChild.appendChild(b); }
+      kids.forEach(x => c.lastElementChild.appendChild(x)); d.replaceWith(c);
+    });
+    // Getting started steps: numbered timeline with a "Go to" button.
+    box.querySelectorAll('.mq-step').forEach(st => {
+      const num = st.querySelector('.mq-step-num'); if (num) num.dataset.n = (num.textContent.match(/\d+/) || [''])[0];
+      const tt = st.querySelector('.mq-step-title'); const name = tt ? tt.childNodes[0] && tt.childNodes[0].textContent.trim().toLowerCase() : '';
+      if (tt && name) tt.id = 'mqh-step-' + mqhSlug(name);
+      const page = MQH_STEP_PAGES[name];
+      if (page) { const b = document.createElement('button'); b.type = 'button'; b.className = 'mqh-go'; b.dataset.page = page; b.innerHTML = 'Go to ' + mqhStrip(tt.childNodes[0].textContent) + ' ' + mqhIcon('arrow', 14); (st.querySelector('.mq-step-body') || st).appendChild(b); }
+    });
+    box.querySelectorAll('[style]').forEach(e => { if (!e.closest('.mqh-call') && !e.closest('.mq-step-title')) e.removeAttribute('style'); else if (e.closest('.mqh-call')) e.removeAttribute('style'); });
+    const used = {};
+    box.querySelectorAll('h2,h3').forEach(h => { let id = 'mqh-' + mqhSlug(h.textContent); if (used[id]) id += '-' + (++used[id]); else used[id] = 1; h.id = id; });
+    box.addEventListener('click', e => { const g = e.target.closest('.mqh-go'); if (g && typeof window.mqProGoTo === 'function') { window.mqCloseHelpModal && window.mqCloseHelpModal(); window.mqProGoTo(g.dataset.page); } });
+    return box;
+  }
+  window.mqhPretty = mqhPretty;
+  function mqhOrder() { return MQH_GROUPS.flatMap(g => g[1]).filter(id => MQ_HELP_CONTENT[id]); }
+  function mqhGroupOf(id) { const g = MQH_GROUPS.find(x => x[1].includes(id)); return g ? g[0] : ''; }
+  let mqhIndex = null;
+  function mqhBuildIndex() {
+    if (mqhIndex) return mqhIndex;
+    mqhIndex = [];
+    mqhOrder().forEach(id => {
+      const c = MQ_HELP_CONTENT[id]; const box = mqhPretty(c.guideBody || c.body);
+      mqhIndex.push({ id, sec: '', title: c.title, text: (c.title + ' ' + box.textContent).toLowerCase() });
+      box.querySelectorAll('h2,h3').forEach(h => {
+        let t = h.textContent, n = h.nextElementSibling;
+        while (n && !/^H[23]$/.test(n.tagName)) { t += ' ' + n.textContent; n = n.nextElementSibling; }
+        mqhIndex.push({ id, sec: h.id, title: h.textContent, text: t.toLowerCase() });
+      });
+    });
+    return mqhIndex;
+  }
+  function mqhRenderNav() {
+    const nav = document.getElementById('mqh-nav'); if (!nav) return;
+    nav.innerHTML = MQH_GROUPS.map(([g, ids]) => {
+      const items = ids.filter(id => MQ_HELP_CONTENT[id]);
+      if (!items.length) return '';
+      return `<div class="mqh-ng"><div class="mqh-ngt">${g}</div>${items.map(id => `<button type="button" class="mqh-ni${id === mqHelpActiveTopic ? ' on' : ''}" data-topic="${id}" onclick="mqSelectHelpTopic('${id}')">${mqhIcon(id)}<span>${MQ_HELP_CONTENT[id].title}</span></button>`).join('')}</div>`;
+    }).join('');
+  }
+  window.mqHelpSearch = function (query) {
+    const nav = document.getElementById('mqh-nav'); if (!nav) return;
+    const q = String(query || '').trim().toLowerCase();
+    if (!q) { mqhRenderNav(); return; }
+    const words = q.split(/\s+/).filter(Boolean);
+    const hits = mqhBuildIndex().filter(e => words.every(w => e.text.includes(w)))
+      .map(e => ({ e, score: (words.every(w => e.title.toLowerCase().includes(w)) ? 0 : 1) + (e.sec ? 0 : 0.5) }))
+      .sort((a, b) => a.score - b.score).slice(0, 14).map(x => x.e);
+    const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    nav.innerHTML = hits.length
+      ? `<div class="mqh-ngt">Results</div>` + hits.map(h => `<button type="button" class="mqh-res" onclick="mqSelectHelpTopic('${h.id}','${h.sec}')"><b>${esc(h.sec ? h.title : MQ_HELP_CONTENT[h.id].title)}</b><small>${esc(h.sec ? MQ_HELP_CONTENT[h.id].title : mqhGroupOf(h.id))}</small></button>`).join('')
+      : `<div class="mqh-none">No matches for “${esc(query)}”. Try another word, or message support.</div>`;
+  };
+  // How much of the top of the window the dashboard's sticky menu covers.
+  function mqhTopGap() {
+    // Bars stacked at the top (the fixed dark bar, then the menu rows that
+    // stick right under it) — follow the chain down from the top edge.
+    const bars = [...document.querySelectorAll('#midasquote-dashboard .mq-topbar, #midasquote-dashboard .mq-top-navigation, #midasquote-dashboard .mq-top-navigation *, #midasquote-dashboard header')]
+      .filter(e => { const p = getComputedStyle(e).position; return p === 'sticky' || p === 'fixed'; })
+      .map(e => e.getBoundingClientRect()).filter(r => r.height > 0 && r.top < 260).sort((x, y) => x.top - y.top);
+    let gap = 0;
+    bars.forEach(r => { if (r.top <= gap + 2 && r.bottom > gap) gap = r.bottom; });
+    const shell = document.querySelector('#mq-page-helpguide .mqh-shell');
+    if (shell) shell.style.setProperty('--mqh-top', Math.round(gap + 12) + 'px');
+    return gap;
+  }
+  function mqhScrollTo(el) { if (!el) return; const y = el.getBoundingClientRect().top + window.scrollY - (Math.max(mqhTopGap(), 0) + 24); window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' }); }
+  function mqhSpy() {
+    const toc = document.getElementById('mqh-toc'); const doc = document.getElementById('mq-help-panel');
+    if (!toc || !doc || !doc.offsetParent) return;
+    const lim = mqhTopGap() + 60;
+    const hs = [...doc.querySelectorAll('h2[id],h3[id],.mq-step-title[id]')]; let cur = hs[0];
+    hs.forEach(h => { if (h.getBoundingClientRect().top < lim) cur = h; });
+    toc.querySelectorAll('a').forEach(a => a.classList.toggle('on', !!cur && a.dataset.id === cur.id && !a.classList.contains('g')));
+  }
+  if (!window._mqhSpyHooked) { window._mqhSpyHooked = true; window.addEventListener('resize', () => { if (document.getElementById('mq-page-helpguide')?.classList.contains('active')) mqhTopGap(); });
+    window.addEventListener('scroll', () => { if (window._mqhSpyT) return; window._mqhSpyT = requestAnimationFrame(() => { window._mqhSpyT = null; mqhSpy(); }); }, { passive: true });
+    document.addEventListener('keydown', e => { if (e.key === '/' && !/INPUT|TEXTAREA|SELECT/.test((document.activeElement || {}).tagName || '') && document.getElementById('mq-page-helpguide')?.classList.contains('active')) { e.preventDefault(); document.getElementById('mq-help-search')?.focus(); } }); }
+
   function mqBuildHelpGuide() {
-    const tabbar = document.getElementById('mq-help-tabbar');
     const panel = document.getElementById('mq-help-panel');
-    if (!tabbar || !panel) return;
-    const topics = mqHelpGuideTopics();
-
-    tabbar.innerHTML = topics.map(id => `
-      <button type="button" class="mq-help-tab" id="mq-help-tab-${id}" onclick="mqSelectHelpTopic('${id}')">
-        <span class="mq-help-tab-icon">${MQ_HELP_GUIDE_ICONS[id] || '📄'}</span> ${MQ_HELP_CONTENT[id].title}
-      </button>`).join('');
-
-    mqSelectHelpTopic(topics[0]);
+    if (!panel) return;
+    mqhInjectCss();
+    mqSelectHelpTopic(mqHelpActiveTopic || mqhOrder()[0]);
   }
 
-  window.mqSelectHelpTopic = function(id) {
+  window.mqSelectHelpTopic = function(id, sec) {
     const content = MQ_HELP_CONTENT[id];
     const panel = document.getElementById('mq-help-panel');
     if (!content || !panel) return;
+    mqhInjectCss();
+    const changed = mqHelpActiveTopic !== id || !panel.querySelector('.mqh-body');
     mqHelpActiveTopic = id;
-
-    document.querySelectorAll('#mq-help-tabbar .mq-help-tab').forEach(btn => btn.classList.remove('active'));
-    document.getElementById('mq-help-tab-' + id)?.classList.add('active');
-
-    panel.innerHTML = `
-      <div class="mq-help-panel-title"><span>${MQ_HELP_GUIDE_ICONS[id] || '📄'}</span> ${content.title}</div>
-      <div class="mq-help-panel-body">${content.guideBody || content.body}</div>`;
-    panel.scrollTop = 0;
-
-    mqAlignHelpTabRow();
+    const srch = document.getElementById('mq-help-search');
+    if (!sec || !srch || !srch.value) mqhRenderNav();
+    else document.querySelectorAll('#mqh-nav .mqh-ni').forEach(b => b.classList.toggle('on', b.dataset.topic === id));
+    if (changed) {
+      const order = mqhOrder(), i = order.indexOf(id), prev = order[i - 1], next = order[i + 1];
+      panel.innerHTML = `<div class="mqh-crumb">Help › <b>${mqhGroupOf(id) || 'Help'}</b></div><h1 class="mqh-h1">${content.title}</h1>`;
+      panel.appendChild(mqhPretty(content.guideBody || content.body));
+      const foot = document.createElement('div');
+      foot.innerHTML = `<div class="mqh-pn">${prev ? `<button type="button" onclick="mqSelectHelpTopic('${prev}')"><small>${mqhIcon('left', 14)} Previous</small><b>${MQ_HELP_CONTENT[prev].title}</b></button>` : ''}${next ? `<button type="button" class="nx" onclick="mqSelectHelpTopic('${next}')"><small>Next ${mqhIcon('right', 14)}</small><b>${MQ_HELP_CONTENT[next].title}</b></button>` : ''}</div>
+        <div class="mqh-sup">${mqhIcon('chat', 20)}<div><b>Still stuck?</b><br>Send us a message and we’ll help you sort it out.</div><button type="button" onclick="mqProGoTo('support')">Message support</button></div>`;
+      panel.appendChild(foot);
+      const toc = document.getElementById('mqh-toc');
+      if (toc) {
+        const hs = [...panel.querySelectorAll('.mqh-body h2[id], .mqh-body h3[id], .mqh-body .mq-step-title[id]')];
+        const e = t => t.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+        toc.innerHTML = hs.map(h => h.classList.contains('mq-step-title')
+          ? `<a class="s" data-id="${h.id}"><i>${(h.closest('.mq-step').querySelector('.mq-step-num') || {}).dataset?.n || ''}</i>${e(h.childNodes[0] ? h.childNodes[0].textContent.trim() : h.textContent)}</a>`
+          : `<a class="${h.tagName === 'H2' ? 'g' : ''}" data-id="${h.id}">${e(h.textContent)}</a>`).join('');
+        toc.closest('.mqh-toc').style.visibility = hs.length > 2 ? '' : 'hidden';
+        toc.onclick = e => { const a = e.target.closest('a[data-id]'); if (a) mqhScrollTo(document.getElementById(a.dataset.id)); };
+      }
+    }
+    if (sec) setTimeout(() => mqhScrollTo(document.getElementById(sec)), 30);
+    else if (changed) { const top = document.getElementById('mq-page-helpguide'); if (top && top.offsetParent && top.getBoundingClientRect().top < 0) window.scrollTo({ top: Math.max(0, top.getBoundingClientRect().top + window.scrollY - 80), behavior: 'smooth' }); }
+    mqhTopGap();
+    setTimeout(mqhSpy, 60);
   };
 
-  // Whichever tab row holds the active tab should be the row sitting right
-  // on top of the white content panel — that's what sells the "this is the
-  // open folder tab" illusion, since the panel's white background is what
-  // the active tab visually merges into. If the active tab landed in the
-  // top row (under normal wrapping), flip the tab bar to wrap-reverse so
-  // that row renders at the bottom instead, and the other row moves up top.
-  // Re-measures from a clean 'wrap' baseline every time so the two physical
-  // rows always mean the same thing regardless of which state we were
-  // previously in.
-  function mqAlignHelpTabRow() {
-    const tabbar = document.getElementById('mq-help-tabbar');
-    if (!tabbar) return;
-    const tabs = Array.from(tabbar.querySelectorAll('.mq-help-tab'));
-    const activeTab = tabbar.querySelector('.mq-help-tab.active');
-    if (!tabs.length || !activeTab) return;
-
-    tabbar.style.flexWrap = 'wrap';
-    const offsets = tabs.map(t => t.offsetTop);
-    const bottomOffset = Math.max.apply(null, offsets);
-    const topOffset = Math.min.apply(null, offsets);
-    if (bottomOffset === topOffset) {
-      // Either everything genuinely fits on one line, or (far more often)
-      // this ran while the Help guide page was still hidden (display:none)
-      // during initial dashboard load, so every tab measured offsetTop 0.
-      // Either way we have no real row data to act on — clear the inline
-      // override instead of leaving it stuck on 'wrap', so the CSS default
-      // (wrap-reverse, which puts Getting started's row at the bottom)
-      // takes over once the page is actually visible.
-      tabbar.style.flexWrap = '';
-      return;
-    }
-
-    tabbar.style.flexWrap = (activeTab.offsetTop === bottomOffset) ? 'wrap' : 'wrap-reverse';
-  }
+  // Old folder-tab helpers kept as no-ops so nothing that still calls them breaks.
+  function mqAlignHelpTabRow() {}
 
   (function mqWatchHelpTabRowResize() {
     let t = null;
@@ -1008,12 +1222,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   // set, not a list to prune) — it just jumps straight to the first topic,
   // in tab order, whose text contains the query. Clearing the box leaves
   // you on whichever tab you're already reading.
-  window.mqHelpSearchJump = function(query) {
-    const q = (query || '').trim().toLowerCase();
-    if (!q) return;
-    const match = mqHelpGuideTopics().find(id => mqHelpPlainText(id).includes(q));
-    if (match && match !== mqHelpActiveTopic) mqSelectHelpTopic(match);
-  };
+  window.mqHelpSearchJump = function(query) { window.mqHelpSearch(query); };
 
   // Shown exactly once per shop, ever — the moment a brand new shop owner
   // first loads their dashboard. Tracked on the shop record itself in
@@ -2831,17 +3040,13 @@ window.logoutMember = async function () {
 
           <!-- HELP GUIDE -->
           <div class="mq-page" id="mq-page-helpguide">
-            <div class="mq-help-header-row">
-              <div>
-                <div class="mq-page-title" style="margin-bottom:2px">Help guide</div>
-                <div class="mq-page-sub" style="margin-bottom:0">Step-by-step instructions for every part of your dashboard. Can't find what you need? Head to the <strong>Support</strong> tab to send us a message.</div>
-              </div>
-              <input type="text" id="mq-help-search" placeholder="🔍 Jump to a topic…" oninput="mqHelpSearchJump(this.value)"/>
-            </div>
-
-            <div class="mq-help-folder">
-              <div class="mq-help-tabbar" id="mq-help-tabbar"></div>
-              <div class="mq-help-panel" id="mq-help-panel"></div>
+            <div class="mqh-shell">
+              <aside class="mqh-side">
+                <label class="mqh-srch"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg><input type="text" id="mq-help-search" placeholder="Search help…" autocomplete="off" oninput="mqHelpSearch(this.value)" onkeydown="if(event.key==='Escape'){this.value='';mqHelpSearch('');}else if(event.key==='Enter'){const r=document.querySelector('#mqh-nav .mqh-res');if(r)r.click();}"/><kbd>/</kbd></label>
+                <div id="mqh-nav"></div>
+              </aside>
+              <main class="mqh-main"><div class="mqh-doc" id="mq-help-panel"></div></main>
+              <nav class="mqh-toc" aria-label="On this page"><div class="mqh-toc-in"><div class="mqh-toc-t">On this page</div><div id="mqh-toc"></div></div></nav>
             </div>
           </div>
 
