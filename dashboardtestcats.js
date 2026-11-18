@@ -2104,6 +2104,8 @@ window.logoutMember = async function () {
     ${P} .mq-card:not([style*="padding:0"]){padding:20px 22px!important}
     ${P} .mq-card{margin-bottom:12px!important}
     ${P} .mq-card[style*="padding:0"]{padding:0!important}
+    ${P} #mq-spec-list > #mq-spec-groupbar{padding:16px 18px 0!important}
+    ${P} #mq-spec-list > .mq-spec-filter-toolbar{margin:0 18px 12px!important}
     ${P} .mq-card-title, ${P} .mqph-cat-title, ${P} .mq-rooms-sec-title{font-size:15px!important;font-weight:600!important;color:#1f2328!important;letter-spacing:0!important}
     ${P} .mq-card-title{display:flex!important;align-items:center!important;gap:12px!important}
     ${P} .mqph-cat-header{background:#fff!important;border-bottom:1px solid #f0f1f3!important;padding:14px 18px!important}
@@ -2302,7 +2304,16 @@ window.logoutMember = async function () {
     }
     if (!window._mqtNavWrapped && typeof window.mqNav === 'function') {
       window._mqtNavWrapped = true; const orig = window.mqNav;
-      window.mqNav = function () { const r = orig.apply(this, arguments); setTimeout(mqtRefresh, 0); return r; };
+      window.mqNav = function () {
+        const before = document.querySelector('#midasquote-dashboard .mq-page.active');
+        const r = orig.apply(this, arguments);
+        // A different page always opens at the top (Jordan: switching from
+        // halfway down Showroom left Embed code halfway down too). Anything
+        // that wants a specific spot scrolls there afterwards, as before.
+        const after = document.querySelector('#midasquote-dashboard .mq-page.active');
+        if (after && after !== before) window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+        setTimeout(mqtRefresh, 0); return r;
+      };
     }
   }
   window.mqtInit = mqtInit;
