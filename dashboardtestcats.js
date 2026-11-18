@@ -274,7 +274,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
           <div class="mq-step-head"><span class="mq-step-num">Step 3</span><span class="mq-step-title">Pricing</span></div>
           <div class="mq-step-body">
             <p>Run the pricing wizard to reverse-engineer your rates from real quotes you'll do based on your products. This is the core of your quoting math and can be edited at any time.</p>
-            <p>Start with the pricing wizard, adding your basic box materials, doors, hinges, drawers, and installation rates. After that, you can add bulk items of the same price, or add any more items you wish. You can also now configure your crown/valance pricing, and your countertop and tall cabinet pricing.</p>
+            <p>Start with the pricing wizard, adding your basic box materials, doors, hinges, drawers, and installation rates. After that, you can add bulk items of the same price, or add any more items you wish. You can also configure your crown/valance pricing, and your countertop and tall cabinet pricing.</p>
             <p>The widget takes the measurements input by the customer and uses these prices to generate your ballparks. It knows to attach crown to upper cabinet measurements and tall cabinets. It also takes your base cabinet measurements and automatically attaches countertop measurements to them if counters are selected. The widget also incorporates formulas that have been proven to accurately generate quotes for customers wanting only "some drawers" or "mostly drawers." All you need to do is do your drawer quotes in the pricing wizard, and the rest is taken care of for you.</p>
           </div>
         </div>
@@ -297,7 +297,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         <div class="mq-step">
           <div class="mq-step-head"><span class="mq-step-num">Step 6</span><span class="mq-step-title">Showroom <span style="font-weight:400;color:#9ca3af;font-size:13px">(optional)</span></span></div>
           <div class="mq-step-body">
-            <p>A shareable gallery built from the photos you've already added in My Products, or a completely custom showroom displaying your real work images. Pick "Default showroom" to show off your priced categories, or "Build my own" to show only custom categories you create here instead. Rename or hide anything without touching your actual pricing or the widget itself.</p>
+            <p>A shareable gallery you build one category at a time: pull in priced categories straight from Pricing (they keep following your photos and prices), and add your own categories for past projects, before &amp; afters, your team — anything. Rename, reorder or remove anything on the showroom without touching your actual pricing or the widget itself.</p>
             <p>Your showroom has its own standalone link that works completely on its own, and can also be embedded right on your website as a self-sizing iframe if you'd rather it live on your own page. Not all shops have a decent showroom on their website, so MidasQuote solves that problem for shops at no extra cost to you.</p>
           </div>
         </div>
@@ -453,7 +453,15 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Want a video instead of (or alongside) photos?</div>
           <p style="margin:0">Paste a YouTube, Vimeo, or Loom link — or a direct link to a video file — into any of the measuring guide image fields instead of a photo URL. It plays right there in the carousel with your other images, in whatever order you place it. There's no upload for video, only a link, since videos need to live somewhere that can actually stream them (YouTube, Vimeo, your own site) rather than something MidasQuote hosts for you.</p>
         </div>
-        <p style="margin-top:1.1rem">Accidentally deleted a standard type like Bathroom or Refacing? A "↩ Restore a default type…" dropdown appears automatically next to "+ Add room" whenever one's missing — it brings back the original description, image, and measuring guide.</p>
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
+          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Project types for your own quote types</div>
+          <p style="margin:0">Every quote type you offer (Painting, Framing, Fresh Doors…) gets its own section here with its own project types — click <strong>+ Add project type</strong> inside that quote type. Each one can have its own cover photo and how-to-measure guide, and in Pricing you can choose which steps and options show for each one.</p>
+        </div>
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
+          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">How-to-measure editor</div>
+          <p style="margin:0">The how-to-measure box has a small toolbar: <strong>Bold</strong>, <strong>💡 Tip</strong> (a highlighted tip box), <strong>• Bullet</strong>, <strong>[calc]</strong> (the little calculator icon customers tap) and a corner diagram. Select text and click a button, and the preview beside it shows exactly what customers will see.</p>
+        </div>
+        <p style="margin-top:1.1rem">Accidentally deleted a standard type like Bathroom or Refacing? A "↩ Restore a default type…" dropdown appears automatically next to "+ Add project type" whenever one's missing — it brings back the original description, image, and measuring guide.</p>
       `
     },
     pricing: {
@@ -493,7 +501,29 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         </div>
         <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">See (and edit) the original quote behind a rate</div>
-          <p style="margin:0">Opening Edit on a Box Material, Door Style, Drawer Config, or Hinge now shows the real job price that rate came from, so you can update it by typing a new job total instead of doing the math yourself.</p>
+          <p style="margin:0">Opening Edit on a Box Material, Door Style, Drawer Config, or Hinge shows the real job price that rate came from, so you can update it by typing a new job total instead of doing the math yourself.</p>
+        </div>
+        <h4 style="font-size:12px;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:0.03em;margin:1.4rem 0 0.2rem">🔎 Finding and adding things fast</h4>
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
+          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Show only… (the filter at the top)</div>
+          <p style="margin:0">Pick a <strong>Quote</strong> (Cabinets or one of your quote types), then optionally one of its <strong>Project types</strong>, and where it <strong>Shows on</strong>: Everything, Website widget (hides anything that\u2019s MidasQuote Pro only), or ⚡ MidasQuote Pro (everything Pro shows). Only matching steps and options show; ones shared by every project type stay visible with an "All … types" tag. Pick <strong>Cabinets</strong> to see the pricing wizard buttons. It remembers your choice; <strong>Show everything</strong> clears it.</p>
+        </div>
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
+          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">🎯 Anything you add while filtered is tagged for you</div>
+          <p style="margin:0">With a filter on, + New step and + Add option open with the quote, the project type and Pro only already ticked to match — a blue note at the top says so. Tick more project types or untick anything before saving.</p>
+        </div>
+        <h4 style="font-size:12px;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:0.03em;margin:1.4rem 0 0.2rem">✨ Custom pricing categories (your own steps)</h4>
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
+          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Steps for anything</div>
+          <p style="margin:0">Make your own priced steps — finished ends, site access, delivery, hourly work, or a whole quote type like Painting or Fresh Doors. Each one becomes its own numbered step on the widget (STEP 1, STEP 2… are added automatically in the order you set). Options can be flat-rate, per item (customer enters a count), per linear or square foot, or use the customer\u2019s measurements.</p>
+        </div>
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
+          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Which project types an option shows for</div>
+          <p style="margin:0">Open an option and tick the project types it should show for (leave all ticked for everywhere). Options limited to some project types show a 🗂️ tag listing them. You can set the same thing on My Products.</p>
+        </div>
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
+          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">↺ Restore from starter pack</div>
+          <p style="margin:0">If a quote came from a starter pack and is missing some of the pack\u2019s steps, options, photos or specialty items, this button appears on that quote. It only <strong>adds</strong> what\u2019s missing — it never changes your prices, names or photos.</p>
         </div>
         <h4 style="font-size:12px;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:0.03em;margin:1.4rem 0 0.2rem">How some of the trickier pricing actually works</h4>
         <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
@@ -517,10 +547,14 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     specialty: {
       title: 'Specialty items',
       body: `
+        <div style="background:#eff6ff;border:1px solid #bfdbfe;border-left:4px solid #2563eb;border-radius:8px;padding:12px 14px;margin:1rem 0">
+          <div style="font-size:14.5px;font-weight:800;color:#1e3a8a;margin-bottom:0.35rem">Where specialty items show on your widget</div>
+          <p style="margin:0;color:#1e3a8a">All of a quote\u2019s specialty items appear together as one <strong>"Details &amp; Selections"</strong> step near the end of the widget — after the measurements and your other steps, right before the customer calculates their estimate. They\u2019re grouped by your categories, and customers only see the items you\u2019ve switched on for the project type they picked. (In the Cabinets tab, a custom step you\u2019ve set to come after Details &amp; Selections will show after it.)</p>
+        </div>
         <p>Specialty Items isn't just for leftover extras — it's a fully flexible pricing tool. Anything you can price flat-rate, per linear foot, or per square foot can live here: pullouts, magic corners, floating shelves, custom range hoods, hardware, or even crown molding for when you are offering refacing, restaining, or repainting services. We have even pre-added some of these items for you to give you a better idea. You can keep or delete them.</p>
         <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Great for project types the wizard doesn't fit well</div>
-          <p style="margin:0">The Pricing wizard (box materials, door styles, hinges, drawers, crown/valance) reverse-engineers everything into linear feet — built for a full cabinet box. Refacing usually isn't priced that way; doors are normally priced per square foot instead. For a project type like Refacing, skip the wizard's door pricing and add "Doors" (and anything else it needs) here as a specialty item priced per square foot instead. You can also use our newly added "sized" option to add multiple sizes of an item with square footage generated for you. Read more in the "Sized variants" section below.</p>
+          <p style="margin:0">The Pricing wizard (box materials, door styles, hinges, drawers, crown/valance) reverse-engineers everything into linear feet — built for a full cabinet box. Refacing usually isn't priced that way; doors are normally priced per square foot instead. For a project type like Refacing, skip the wizard's door pricing and add "Doors" (and anything else it needs) here as a specialty item priced per square foot instead. You can also use the "sized" option to add multiple sizes of an item with square footage generated for you. Read more in the "Sized variants" section below.</p>
         </div>
         <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Category</div>
@@ -542,6 +576,14 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Works for internal-only project types too</div>
           <p style="margin:0">A project type marked "Only show in MidasQuote Pro" (on the Project Types tab) never appears on your public widget, but you can still price it here — e.g. an "Odd jobs" project type with a flat-rate "Door repair" item, so your team can quote it right from MidasQuote Pro even though it's never offered on the website.</p>
         </div>
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
+          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Organized by quote</div>
+          <p style="margin:0">When you offer more than one quote type, the tab splits into a tab per quote (Cabinetry, Painting…) so you only see the items that show for that quote. Click <strong>+ New item</strong> while a tab is open and the new item is set to that quote\u2019s project types automatically. An item that\u2019s also in another quote shows an "↔ Also in" tag. Items not attached to any quote you offer sit under "⚠️ No quote" so they\u2019re easy to fix.</p>
+        </div>
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
+          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Starter pack samples</div>
+          <p style="margin:0">Starter packs come with a few sample specialty items for each quote. They\u2019re added <strong>switched off</strong> so nothing shows on your widget until you\u2019re ready — price them, add a photo and switch them on, or delete them.</p>
+        </div>
         <p style="margin:1.1rem 0">Use <strong>Filter by category</strong>, <strong>Filter by project type</strong>, and <strong>Search by name</strong> together to quickly find one item out of a long list.</p>
         <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">🌍 Thinking in metric?</div>
@@ -549,11 +591,11 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         </div>
         <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Variants</div>
-          <p style="margin:0">Give one item multiple options (like Lemans pullout/Lazy susan/Magic corner under one "Corner cabinet solutions" item), each with its own price, minimum, and photo. Customers can now set a separate quantity for each variant they want, so 2 of one option and 1 of another show up as two separate lines on the same quote — works whether the item is flat-rate, per linear foot, or per square foot.</p>
+          <p style="margin:0">Give one item multiple options (like Lemans pullout/Lazy susan/Magic corner under one "Corner cabinet solutions" item), each with its own price, minimum, and photo. Customers can set a separate quantity for each variant they want, so 2 of one option and 1 of another show up as two separate lines on the same quote — works whether the item is flat-rate, per linear foot, or per square foot.</p>
         </div>
         <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Sized variants</div>
-          <p style="margin:0">A newly added feature is the ability to create multiple sized variants of a product, such as "Maple shaker door" with 20 different size increments like 30"x10", 30"x11", 30"x12", 30"x13", and so on. And the really helpful part of it is that you can apply one rate to all of them and it will autocalculate their costs based on their individual sizing, saving you a lot of calculator time.</p>
+          <p style="margin:0">You can create multiple sized variants of a product, such as "Maple shaker door" with 20 different size increments like 30"x10", 30"x11", 30"x12", 30"x13", and so on. And the really helpful part of it is that you can apply one rate to all of them and it will autocalculate their costs based on their individual sizing, saving you a lot of calculator time.</p>
         </div>
         <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Pro only</div>
@@ -587,6 +629,22 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">👁 Preview</div>
           <p style="margin:0">Shows exactly what this template will actually produce, filled with sample data (a fake customer, sample line items), so you can see how it looks without leaving the dashboard or running a real quote first.</p>
+        </div>
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
+          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">🧩 Blocks or Text</div>
+          <p style="margin:0">Build a template from blocks you drag into order (headings, paragraphs, the item list, totals, signature line…) — or switch to Text (advanced) to write it all as text with tokens. Blocks mode does all the formatting with buttons.</p>
+        </div>
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
+          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Click to jump</div>
+          <p style="margin:0">Click anything in the preview and the editor jumps straight to that block; click a block in the editor and it lights up in the preview. The block you\u2019re working on stays outlined in gold on both sides.</p>
+        </div>
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
+          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Text colour</div>
+          <p style="margin:0">Select the words you want to change first, then pick the colour.</p>
+        </div>
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
+          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Coloured item list</div>
+          <p style="margin:0">When the item list uses a coloured style, you can set how rounded its corners are.</p>
         </div>
         <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Proposals themselves</div>
@@ -663,7 +721,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         </div>
         <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">A whole category at once</div>
-          <p style="margin:0">At the top of each category, right below "Add a photo URL...", there's a small control. By default it reads <strong>"Visible for all project types"</strong> — nothing is hidden yet. Click it open and uncheck a project type, and it switches to <strong>"Hidden for: ..."</strong>, listing whatever you've unchecked — every item in that category (and the category itself) is now hidden for those types in one click, no need to touch them individually.</p>
+          <p style="margin:0">At the top of each category, right below "Add a photo URL...", there's a small control. By default it reads <strong>"Visible for all project types"</strong> — nothing is hidden yet. Click it open and uncheck a project type, and it switches to <strong>"Hidden for: ..."</strong>, listing whatever you've unchecked — every item in that category (and the category itself) is hidden for those types in one click, no need to touch them individually.</p>
         </div>
         <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <p style="margin:0">For example, uncheck <strong>Refacing</strong> under Box Materials, since a refacing job reuses the customer's existing box and doesn't need new box materials priced at all. Box Materials, Door Styles, and Drawer Configurations are always kept in sync with each other here, so unchecking Refacing on any one of the three does the same for all three automatically.</p>
@@ -727,6 +785,10 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
           <p style="margin:0">Next to Refacing/Repainting/Restaining's cover image and measuring guide image, this fills in MidasQuote's current default photo for that field — review it, then Save like any other edit here. Unlike the same-looking button on the Project Types tab, this field <em>is</em> the default itself (what new shops start from), so there's nothing to "fall back to" — this just fills in the known-correct URL for you instead of needing it typed or pasted by hand.</p>
         </div>
         <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
+          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">🧭 Business types &amp; starter packs</div>
+          <p style="margin:0">Each business type (Painting, Framing…) can have a starter pack: one or more quotes with their project types, steps, options, specialty items and photos. Build a quote in your own shop, then choose "Add a quote to this pack" and Save to pack. Shops get it by ticking that business type on Business info. Installing <strong>copies</strong> it into the shop — editing a pack later never changes shops that already have it, except: new specialty items are added to those shops automatically (switched off), and new steps/options show them a ↺ Restore from starter pack button that only adds what\u2019s missing.</p>
+        </div>
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Push to all shops</div>
           <p style="margin:0">Pushes specialty item changes out to shops that already exist. Use this deliberately; it's the one action here that does touch live shops.</p>
         </div>
@@ -741,7 +803,38 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     marketing: {
       title: 'Design Studio',
       body: `
-        <p>Create and customize graphics, posts, posters and QR promotions for your business.</p>
+        <p>Make social posts, stories, posters and yard signs for your business — already branded with your logo, colours and quote link.</p>
+        <h4 style="font-size:12px;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:0.03em;margin:1.4rem 0 0.2rem">🖼️ Picking a design</h4>
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
+          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">The gallery</div>
+          <p style="margin:0">Every preview shows the real design with your own photos, pulled from the project types you offer. Click one to open it at its proper size; <strong>Switch design</strong> at the top swaps to another and resizes for you.</p>
+        </div>
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
+          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Blank canvas</div>
+          <p style="margin:0"><strong>Start from scratch</strong> (first card in the gallery): pick a size — square post, feed portrait, story, poster or yard sign — and build your own on a plain canvas.</p>
+        </div>
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
+          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">⭐ My templates</div>
+          <p style="margin:0">Made something you like? Click <strong>💾 Save as my template</strong> at the top of the editor. Everything is saved — positions, words, colours, photos — and it shows under ⭐ My templates (and first in All designs) on any computer you log in from. Open a saved one, change it, and save again to <strong>Update</strong> it or <strong>Save as new</strong>. Hover a saved template to rename ✏️ or delete 🗑️ it. Up to 20.</p>
+        </div>
+        <h4 style="font-size:12px;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:0.03em;margin:1.4rem 0 0.2rem">✏️ Editing</h4>
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
+          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Background image</div>
+          <p style="margin:0">Use <strong>Change background image</strong> in the bar above the canvas to swap the photo behind the design (or remove it).</p>
+        </div>
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
+          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Add text, shapes, arrows, bubbles, stickers and doodles</div>
+          <p style="margin:0">Each + Add button adds one and opens its list of styles so you can pick the one you want. Drag to move, use the corner handles to resize, and the round handle on top to rotate (it snaps straight; hold Shift for 15° steps).</p>
+        </div>
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
+          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Undo / redo</div>
+          <p style="margin:0">Step back (or forward) through your changes any time.</p>
+        </div>
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
+          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Ready-made social posts</div>
+          <p style="margin:0">A set of general posts you can copy, edit and post alongside your designs.</p>
+        </div>
+        <p style="margin-top:1.1rem">When it looks right, click <strong>↓ Download PNG</strong> and post or print it.</p>
       `
     },
   };
@@ -2174,6 +2267,7 @@ window.logoutMember = async function () {
               <div>
                 <div class="mq-page-title">Specialty items</div>
                 <div class="mq-page-sub">Anything you want to price and attach to a project type — not just add-ons. Price flat-rate, per linear foot, or per square foot; include the full cost — materials, hardware, and installation. What you enter is what gets added to the quote.</div>
+                <div class="mq-page-sub" style="margin-top:6px">📍 On your widget, all of a quote’s specialty items show together as one <strong>“Details &amp; Selections”</strong> step near the end — right before the customer calculates their estimate.</div>
               </div>
             </div>
             ${mqTrainingVideoBlockHTML('specialty')}
