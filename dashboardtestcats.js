@@ -3568,6 +3568,7 @@ ${W} .mqs2-fhead{position:static}
                   <option value="Question">Just a question</option>
                   <option value="Support">Support — something's not working right</option>
                   <option value="Suggestion">Suggestion — an idea for MidasQuote</option>
+                  <option value="How to measure image">How to measure image — request a custom picture</option>
                 </select>
               </div>
               <div class="mq-field" style="margin-bottom:1rem">
@@ -4986,6 +4987,18 @@ ${W} .mqs2-fhead{position:static}
     }
   };
 
+  // Nov 19: Project types → How to measure → "Request a custom how-to-measure image".
+  window.mqRequestMeasureImage = function(ptName) {
+    const nav = document.querySelector(".mq-nav-item[onclick^=\"mqNav('support'\"]");
+    if (window.mqNav) mqNav('support', nav);
+    const t = document.getElementById('mq-support-topic'); if (t) t.value = 'How to measure image';
+    const m = document.getElementById('mq-support-message');
+    if (m && !m.value.trim()) m.value = `Project type: ${ptName || ''}\n\nWhat should the picture show? (e.g. which measurements, any special shapes)\n`;
+    const e = document.getElementById('mq-support-email');
+    const se = window._mqShopRecord?.fields?.['Lead notify email']; if (e && !e.value.trim() && se) e.value = se;
+    const st = document.getElementById('mq-support-status'); if (st && /No email found/.test(st.textContent)) st.textContent = '';
+    setTimeout(() => { if (m) { m.focus(); m.setSelectionRange(m.value.length, m.value.length); } }, 50);
+  };
   window.mqSubmitSupport = async function() {
     const emailEl = document.getElementById('mq-support-email');
     const topicEl = document.getElementById('mq-support-topic');
@@ -5348,7 +5361,10 @@ ${W} .mqs2-fhead{position:static}
       if (uploadBtn) uploadBtn.disabled = true;
       try {
         const url = await mqUploadImage(file, shopToken, category);
-        if (targetInput) targetInput.value = url;
+        // The list may have been redrawn while uploading: write to the box
+        // that's on screen now, not the one this button was wired to.
+        const liveTarget = (targetInputId && document.getElementById(targetInputId)) || targetInput;
+        if (liveTarget) liveTarget.value = url;
         if (statusEl) { statusEl.textContent = '✓ Uploaded!'; statusEl.style.color = '#16a34a'; }
         if (typeof onDone === 'function') onDone(url);
       } catch (e) {
@@ -7407,6 +7423,7 @@ ${W} .mqs2-fhead{position:static}
               </div>
             `).join('')}
             <button type="button" class="mq-btn mq-btn-sm" style="font-size:11px;margin-top:8px" onclick="mqAddRoomMeasureImage(${idx})">+ Add another image <span style="font-weight:400;color:#9ca3af">(optional — turns into a swipeable carousel once you have more than one)</span></button>`}
+            <div style="margin-top:10px;padding:10px 12px;border:1px solid #e5ebf3;border-radius:10px;background:#f8fafc;display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="font-size:12px;color:#4b5563;flex:1;min-width:200px">Need a how-to-measure picture made for this project type? We'll design one for you.</span><button type="button" class="mq-btn mq-btn-sm" style="font-size:11.5px" onclick="mqRequestMeasureImage('${String(r.name||'').replace(/\\/g,'').replace(/'/g,"\\'").replace(/"/g,'&quot;')}')">✉️ Request a custom how-to-measure image</button></div>
           
                     </div>
           </div>
@@ -7501,6 +7518,8 @@ ${W} .mqs2-fhead{position:static}
           window._mqShopRecord?.fields?.['Shop token'] || 'unknown-shop',
           'products',
           (url) => {
+            const room = (window._mqRooms || [])[idx];
+            if (room) { if (!Array.isArray(room.measureImages)) room.measureImages = []; room.measureImages[exIdx] = url; }
             const preview = document.getElementById(`mq-room-measure-img-extra-preview-${idx}-${exIdx}`);
             if (preview) preview.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>`;
             mqSaveRooms();
@@ -7620,6 +7639,9 @@ ${W} .mqs2-fhead{position:static}
       const row = e.closest('.mq-room-row'); if (!row) return;
       const r = rooms.find(x => String(x.id) === row.dataset.rid); if (!r) return;
       const idx = row.dataset.idx;
+      const mx = e.id.match(new RegExp('^mq-room-measure-img-extra-' + idx + '-(\\d+)$'));
+      if (mx) { if (!Array.isArray(r.measureImages)) r.measureImages = []; r.measureImages[+mx[1]] = e.value; return; }
+      if (/-file-/.test(e.id)) return;
       const m = e.id.match(new RegExp('^mq-room-(.+)-' + idx + '(?:-(\\d+))?$'));
       if (!m) return;
       if (m[1] === 'measure-img-extra' && m[2] != null) { if (!Array.isArray(r.measureImages)) r.measureImages = []; r.measureImages[+m[2]] = e.value; return; }
@@ -7858,7 +7880,9 @@ ${W} .mqs2-fhead{position:static}
         coverImage: (el(`mq-room-cover-${idx}`) ? el(`mq-room-cover-${idx}`).value : (r.coverImage || '')).trim(),
         measureText: (el(`mq-room-measure-text-${idx}`)?.value || '').trim(),
         measureImage: (el(`mq-room-measure-img-${idx}`) ? el(`mq-room-measure-img-${idx}`).value : (r.measureImage || '')).trim(),
-        measureImages: (r.measureImages || []).map((u, exIdx) => (el(`mq-room-measure-img-extra-${idx}-${exIdx}`) ? el(`mq-room-measure-img-extra-${idx}-${exIdx}`).value : (u || '')).trim()),
+        // An empty box only clears a link the owner deleted themselves; a
+        // just-uploaded link that's in memory but not on screen yet is kept.
+        measureImages: (r.measureImages || []).map((u, exIdx) => { const b = el(`mq-room-measure-img-extra-${idx}-${exIdx}`); if (!b) return String(u || '').trim(); return String(b.value || (b.dataset.mqDirty ? '' : (u || ''))).trim(); }),
         ...(r.packCover ? { packCover: r.packCover } : {}),
         ...(Array.isArray(r.packMeasure) && r.packMeasure.length ? { packMeasure: r.packMeasure } : {}),
         ...(r.forCountertops === true ? { forCountertops: true } : {}),

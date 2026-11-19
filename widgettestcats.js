@@ -948,6 +948,20 @@
       #midasquote-widget .mq-vpicker-row.mq-needs-choice{animation:mqShakeChoice 0.4s ease;box-shadow:0 0 0 3px rgba(220,38,38,0.25);border-radius:8px}
       #midasquote-widget .mq-vpicker-thumb{width:116px;height:116px;border-radius:6px;object-fit:contain;background:#f3f4f6}
       #midasquote-widget .mq-vpicker-thumb-placeholder{width:116px;height:116px;border-radius:6px;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:20px;color:#6b7280}
+      #midasquote-widget ul.mq-fxl{list-style:none;padding:0;margin:0}
+      #midasquote-widget ul.mq-fxl li.mq-fxl-row{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid #f1f2f4;list-style:none}
+      #midasquote-widget ul.mq-fxl li.mq-fxl-row:last-child{border-bottom:0}
+      #midasquote-widget ul.mq-fxl li.mq-fxl-row::before{content:none!important;display:none!important}
+      #midasquote-widget .mq-fxl-th{flex:none;width:46px;height:46px;border-radius:9px;overflow:hidden;background:#f3f4f6;display:flex;align-items:center;justify-content:center;color:#9ca3af;border:1px solid #eef0f2}
+      #midasquote-widget .mq-fxl-th img{width:100%;height:100%;object-fit:cover;display:block}
+      #midasquote-widget .mq-fxl-th-adj{font-weight:700;font-size:15px;color:#6b7280}
+      #midasquote-widget .mq-fxl-body{flex:1;min-width:0}
+      #midasquote-widget .mq-fxl-main{display:flex;justify-content:space-between;gap:12px;align-items:baseline;min-height:46px;align-items:center}
+      #midasquote-widget .mq-fxl-lbl{font-size:14px;color:#111827;line-height:1.35}
+      #midasquote-widget .mq-fxl-adj .mq-fxl-lbl{color:#6b7280}
+      #midasquote-widget .mq-fxl-amt{font-weight:600;color:#111827;white-space:nowrap;font-size:14px}
+      #midasquote-widget .mq-fxl-sub{display:flex;justify-content:space-between;gap:12px;font-size:13px;color:#4b5563;margin-top:-6px;padding:0 0 2px 2px}
+      #midasquote-widget .mq-fxl-sub .mq-fxl-amt{font-size:13px;color:#374151;font-weight:600}
       #midasquote-widget .mq-vpicker-label{font-size:10px;color:#374151;text-align:center;line-height:1.2;word-break:break-word;max-width:100%}
       #midasquote-widget .mq-vpicker-chip.selected .mq-vpicker-label{color:${bc};font-weight:600}
       #midasquote-widget .mq-vpicker-group-note{font-size:9px;color:#16a34a;text-align:center;line-height:1.25;margin-top:2px;max-width:100%}
@@ -8810,6 +8824,8 @@
       const ul=document.getElementById(listEl);ul.innerHTML='';
       const priced = mqShouldShowLinePrices(prefix);
       const sorted = priced ? mqPricedLines(result.lines, result.total).sort((a, b) => (a.adj - b.adj) || (b.cost - a.cost)) : [...result.lines].filter(l=>!l.bold).sort((a,b)=>b.cost-a.cost);
+      // Nov 19 (Jordan): Focused gets photo thumbnails on each line.
+      if (window._mqFxOn) { mqFxThumbLines(ul, sorted, priced); mqRenderDiscountBox(prefix, result.discount, result.low, result.high, result.total); return; }
       sorted.forEach(l=>{
         const li=document.createElement('li');
         li.innerHTML = priced
@@ -10669,6 +10685,49 @@
   // Single entry point for every place a price gets shown to a customer —
   // shows the usual ballpark range, or the exact clean total with no spread
   // at all, depending on the selected project type's own preference.
+
+  // ── Focused estimate thumbnails (Nov 19) ──────────────────────────────
+  // Each line gets the photo the customer saw on its option card (matched by
+  // name across the whole widget: options, door styles, materials, specialty
+  // items…); no photo → a small icon tile. An option's "— Install" line sits
+  // under its supply line instead of repeating the picture.
+  function mqFxPhotoIndex() {
+    const root = document.getElementById('midasquote-widget') || document;
+    const map = [];
+    const add = (name, src) => { name = String(name || '').replace(/\s+/g, ' ').trim(); if (!name || !src || /^data:image\/svg/.test(src)) return; if (!map.some(m => m.k === name.toLowerCase())) map.push({ k: name.toLowerCase(), src }); };
+    root.querySelectorAll('.mq-vpicker-chip').forEach(ch => { const l = ch.querySelector('.mq-vpicker-label'); const im = ch.querySelector('img'); if (l && im) add(l.textContent, im.getAttribute('src')); });
+    root.querySelectorAll('.mq-spec-item').forEach(card => { const l = card.querySelector('.mq-spec-name'); const im = card.querySelector('.mq-spec-top img'); if (l && im) add(l.textContent, im.getAttribute('src')); });
+    (window._mqCustomCats || []).forEach(c => (c.items || []).forEach(it => { if (it.photoUrl) add(it.name, it.photoUrl); }));
+    map.sort((a, b) => b.k.length - a.k.length);
+    return map;
+  }
+  function mqFxLineBase(label) { return String(label || '').replace(/^✓\s*/, '').replace(/\s*—\s*(Supply|Install|included)\s*$/i, '').replace(/\s*\([^)]*\)\s*$/, '').trim(); }
+  function mqFxThumbLines(ul, lines, priced) {
+    const idx = mqFxPhotoIndex();
+    const photoFor = label => { const t = String(label || '').toLowerCase(); const hit = idx.find(m => t === m.k || t.startsWith(m.k + ' ') || t.startsWith(m.k + ' (') || t.startsWith(m.k + ' —') || t.startsWith(m.k + ':') || t.startsWith(m.k + ',')); if (hit) return hit.src;
+      // Cabinet lines ("Base cabinets — White TFL / Shaker"): a door style or
+      // material named inside the line.
+      const esc = k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const inner = idx.find(m => m.k.length >= 4 && new RegExp('(^|[^a-z0-9])' + esc(m.k) + '($|[^a-z0-9])').test(t));
+      return inner ? inner.src : ''; };
+    // Group each install line under its supply line.
+    const rows = [];
+    lines.forEach(l => {
+      const isInst = /—\s*Install\s*$/i.test(l.label || '');
+      if (isInst) { const base = mqFxLineBase(l.label); const host = rows.find(r => !r.sub && mqFxLineBase(r.l.label) === base); if (host) { host.subs.push(l); return; } }
+      rows.push({ l, subs: [] });
+    });
+    const amt = l => priced ? `<span class="mq-fxl-amt">${l.included ? 'Included' : mqLineAmt(l.cost)}</span>` : '';
+    const icon = `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 7l-8-4-8 4 8 4 8-4z"/><path d="M4 7v10l8 4 8-4V7"/><path d="M12 11v10"/></svg>`;
+    ul.classList.add('mq-fxl');
+    ul.innerHTML = rows.map(({ l, subs }) => {
+      const src = l.adj ? '' : photoFor(mqFxLineBase(l.label)) || photoFor(l.label);
+      const isMeas = !src && (window._mqCustomCats || []).some(c => c.kind === 'meas' && mqFxLineBase(l.label).toLowerCase() === String(c.priceName || c.name || '').trim().toLowerCase());
+      const thumb = l.adj ? `<span class="mq-fxl-th mq-fxl-th-adj">%</span>` : isMeas ? `<span class="mq-fxl-th mq-fxl-th-ic"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l14-14 4 4L7 21z"/><path d="M7 13l2 2M10 10l2 2M13 7l2 2"/></svg></span>` : src ? `<span class="mq-fxl-th"><img src="${mqEsc(src)}" alt="" loading="lazy" onerror="this.parentNode.classList.add('mq-fxl-th-ic');this.replaceWith(document.createRange().createContextualFragment(this.dataset.ic||''))" data-ic='${icon}'/></span>` : `<span class="mq-fxl-th mq-fxl-th-ic">${icon}</span>`;
+      const subHtml = subs.map(s2 => `<div class="mq-fxl-sub"><span>↳ Install${(String(s2.label).match(/\(([^)]*)\)\s*—\s*Install\s*$/) || [])[1] ? ' (' + String(s2.label).match(/\(([^)]*)\)\s*—\s*Install\s*$/)[1] + ')' : ''}</span>${amt(s2)}</div>`).join('');
+      return `<li class="mq-fxl-row${l.adj ? ' mq-fxl-adj' : ''}">${thumb}<div class="mq-fxl-body"><div class="mq-fxl-main"><span class="mq-fxl-lbl">${l.label}</span>${amt(l)}</div>${subHtml}</div></li>`;
+    }).join('');
+  }
   function mqFmtPrice(prefix, low, high, total) {
     return mqShouldShowRange(prefix) ? fmtRange(low, high) : (CUR() + Math.round(total).toLocaleString());
   }
