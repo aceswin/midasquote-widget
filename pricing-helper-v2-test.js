@@ -6565,7 +6565,7 @@ window.mqphGoToWizard = function() {
     box.style.color = hot ? '#78350f' : '#134e4a';
     if (!hot && !box._open) {
       box.style.background = '#f9fafb'; box.style.borderColor = '#e5e7eb'; box.style.color = '#374151';
-      box.innerHTML = `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span>📏 Need the customer to type a number, like square feet?</span><a href="#" onclick="event.preventDefault();document.getElementById('mqcc-cat-measbox')._open=1;mqccCatMeasBox()" style="font-weight:600;color:#2563eb;text-decoration:none">That's a measurement →</a></div>`;
+      box.innerHTML = `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span>📏 Need the customer to type a number, like square feet?</span><a href="#" onclick="event.preventDefault();mqccCatMeasOpen()" style="font-weight:600;color:#2563eb;text-decoration:none">That's a measurement →</a></div>`;
       return;
     }
     const esc = mqccEsc;
@@ -6581,6 +6581,7 @@ window.mqphGoToWizard = function() {
       </div>
       <div id="mqcc-cat-measmsg" style="font-size:12px;margin-top:6px"></div>`;
   }
+  window.mqccCatMeasOpen = function() { const mb = document.getElementById('mqcc-cat-measbox'); if (mb) mb._open = 1; mqccCatMeasBox(); const n = document.getElementById('mqcc-cat-measname'); if (n) n.focus(); };
   window.mqccCatMeasAdd = async function(btn) {
     const qt = (document.getElementById('mqcc-cat-qt') || {}).value || '';
     const label = String((document.getElementById('mqcc-cat-measname') || {}).value || '').trim();
