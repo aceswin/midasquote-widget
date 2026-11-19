@@ -671,6 +671,11 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
           <p style="margin:0">Same idea for <code>{items}</code> (a styled list) or <code>{items_plain}</code> (the same list with no box or colour, if you'd rather it match your own paper proposal's look), <code>{totals_box}</code> or <code>{totals_plain}</code>, <code>{hr}</code> (a plain horizontal divider), <code>{subtotal}</code>, <code>{tax}</code>, <code>{total}</code>, <code>{customer_name}</code>, <code>{customer_address}</code>, <code>{customer_phone}</code>, <code>{job_name}</code>, <code>{description}</code>, <code>{date}</code>, and <code>{signature_line}</code> (a blank pen-and-paper signature + date line).</p>
         </div>
         <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
+          <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Images and job photos</div>
+          <p style="margin:0 0 0.7rem"><strong>＋ Image</strong> adds a picture that shows on every proposal from this template — a logo, a certification badge, a past project. Pick its width and alignment.</p>
+          <p style="margin:0"><strong>＋ Job photos</strong> marks where the photos for each job go. When you make a proposal in MidasQuote Pro, tap <strong>+ Add photos</strong> to add as many as you like (straight from your phone's camera or gallery), with optional captions. Choose 1, 2 or 3 photos per row. A proposal with no photos simply doesn't show this part. If a template has no Job photos block, any photos you add go at the end.</p>
+        </div>
+        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Show individual item prices</div>
           <p style="margin:0">On by default, controls what <code>{items}</code> actually shows. Turn it off if this template should keep pricing vague on paper — every item still lists, just without a price next to it, only the total shows. This is only the template's default: whoever creates a proposal in MidasQuote Pro can still flip it on or off for that one customer.</p>
         </div>
@@ -8364,7 +8369,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
 
   const PROPOSAL_TOKENS_HELP = `
     <div style="margin-bottom:10px"><strong>**text**</strong> — bold, same as anywhere else. &nbsp; <strong>{hr}</strong> — a horizontal divider line, place it anywhere. &nbsp; <strong>{break}</strong> — extra vertical space wherever you need it (hitting Return extra times alone won't add space beyond one normal paragraph gap — use {break} instead for more).</div>
-    <div style="margin-bottom:10px">Extra formatting tags (Text mode only — Blocks mode does all this with buttons): <code>{i}…{/i}</code> italic, <code>{u}…{/u}</code> underline, <code>{cols}left{|}right{/cols}</code> two columns, <code>{img:https://…|w=50|a=center}</code> an image, and <code>{box:align=center;size=24;list=bullets;bg=#hex;border=#hex}…{/box}</code> for alignment (left/center/right/justify), text size, bullet/numbered lists and box colours.</div>
+    <div style="margin-bottom:10px">Extra formatting tags (Text mode only — Blocks mode does all this with buttons): <code>{i}…{/i}</code> italic, <code>{u}…{/u}</code> underline, <code>{cols}left{|}right{/cols}</code> two columns, <code>{img:https://…|w=50|a=center}</code> an image, <code>{photos:n=2}</code> the job photos added in MidasQuote Pro (n = photos per row, 1–3), and <code>{box:align=center;size=24;list=bullets;bg=#hex;border=#hex}…{/box}</code> for alignment (left/center/right/justify), text size, bullet/numbered lists and box colours.</div>
     <div style="margin-bottom:10px">In <strong>Blocks</strong> mode you never need any of this — use a Text box block and its Bold / Text colour / Coloured background / Border options. In <strong>Text (advanced)</strong> mode: <code>{box:#bg}...{/box}</code> makes a coloured box, <code>{box:#bg|#border}...{/box}</code> adds a border, and <code>{color:#hex}...{/color}</code> colours text.</div>
 
     <div style="margin-bottom:6px"><strong>Customer &amp; job info</strong> <span style="font-weight:400">(filled in when the proposal is created in MidasQuote Pro)</span></div>
@@ -8500,6 +8505,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         }
         return;
       }
+      const ph = p.match(/^\{photos(?::([^}]*))?\}$/);
+      if (ph) { const n = parseInt(((ph[1] || '').match(/n=(\d)/) || [])[1], 10); blocks.push({ type: 'photos', n: [1, 2, 3].includes(n) ? n : 2 }); return; }
       const im = p.match(/^\{img:([^}]*)\}$/);
       if (im) {
         const parts = im[1].split('|'); const o = {};
@@ -8565,6 +8572,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const l = (b.l || '').trim(), r = (b.r || '').trim();
       return (l || r) ? `{cols}${l}{|}${r}{/cols}` : '';
     }
+    if (b.type === 'photos') return `{photos:n=${[1, 2, 3].includes(+b.n) ? +b.n : 2}}`;
     if (b.type === 'img') {
       if (!/^https?:\/\//i.test((b.url || '').trim())) return '';
       return `{img:${mqPbEncUrl(b.url)}|w=${parseInt(b.w, 10) || 50}|a=${b.a || 'center'}}`;
@@ -8579,7 +8587,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     return `{${b.tok}}`;
   }
   function mqPbPlainLike(b) {
-    if (b.type === 'cols' || b.type === 'img') return false;
+    if (b.type === 'cols' || b.type === 'img' || b.type === 'photos') return false;
     if (b.type === 'text') return !mqPbHasFmt(b);
     return true;
   }
@@ -8613,6 +8621,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     if (tok === '@text') return { type: 'text', text: '', bg: null, border: null };
     if (tok === '@cols') return { type: 'cols', l: '', r: '' };
     if (tok === '@img') return { type: 'img', url: '', w: 50, a: 'center' };
+    if (tok === '@photos') return { type: 'photos', n: 2 };
     const n = tok.replace(/[{}]/g, '');
     if (MQ_PB_INLINE[n]) return { type: 'field', tok: n, label: MQ_PB_INLINE[n].lab, suffix: '', bl: !!MQ_PB_INLINE[n].lab, bv: false };
     if (MQ_PB_ITEMS[n]) return { type: 'items', tok: n };
@@ -8737,6 +8746,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   function mqPbPill(b) {
     if (b.type === 'text') return { pill: '✏️ Text box', dark: true, bg: b.bg, bd: b.border, sum: mqPbPlain(b.text) || 'empty — click to type' };
     if (b.type === 'cols') return { pill: '▥ Two columns', dark: true, sum: [mqPbPlain(b.l), mqPbPlain(b.r)].filter(Boolean).join('  |  ') || 'empty — click to type' };
+    if (b.type === 'photos') return { pill: '📷 Job photos', dark: true, sum: `${+b.n || 2} per row · added to each proposal in MidasQuote Pro` };
     if (b.type === 'img') return { pill: '🖼 Image', dark: true, sum: b.url ? decodeURIComponent((b.url.split('?')[0].split('/').pop() || '').replace(/%(?![0-9a-fA-F]{2})/g, '%25')) : 'no image yet — click to add one' };
     if (b.type === 'field') return { pill: (MQ_PB_INLINE[b.tok] || { l: b.tok }).l, sum: [(b.label || '').trim(), b.suffix ? '… ' + b.suffix.trim() : ''].join(' ').trim() || 'filled in automatically' };
     if (b.type === 'items') return { pill: 'Item list', sum: MQ_PB_ITEMS[b.tok] || '' };
@@ -8782,6 +8792,9 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
           <div style="min-width:0"><div style="font-size:11px;font-weight:700;color:#6b7280;margin-bottom:4px">LEFT COLUMN</div>${mqPbRichToolbar(id, i, 'L')}${mqPbEditorHTML(id, i, 'L', b.l, '', 'Left column…')}</div>
           <div style="min-width:0"><div style="font-size:11px;font-weight:700;color:#6b7280;margin-bottom:4px">RIGHT COLUMN</div>${mqPbRichToolbar(id, i, 'R')}${mqPbEditorHTML(id, i, 'R', b.r, '', 'Right column…')}</div>
         </div>`;
+    } else if (b.type === 'photos') {
+      panel = `<div style="font-size:12px;color:#4b5563;line-height:1.5;margin-bottom:8px">The photos you add when making a proposal in MidasQuote Pro go here. If a proposal has no photos, this part doesn't show.</div>
+        <span style="${small}">Size <select onchange="mqPbImgSet('${id}',${i},'n',this.value)" style="width:auto;font-size:12.5px">${[[1, 'Large — 1 per row'], [2, 'Medium — 2 per row'], [3, 'Small — 3 per row']].map(([n, l]) => `<option value="${n}" ${(+b.n || 2) === n ? 'selected' : ''}>${l}</option>`).join('')}</select></span>`;
     } else if (b.type === 'img') {
       panel = `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
           <label class="mq-btn mq-btn-sm" style="cursor:pointer;display:inline-block">📤 Upload an image<input type="file" accept="image/*" style="display:none" onchange="mqPbImgUpload('${id}',${i},this)"/></label>
@@ -8921,7 +8934,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   window.mqPbAdd = function(id, tok, at) {
     const a = _mqPropBlocks[id] || (_mqPropBlocks[id] = []);
     const nb = mqPbNew(tok);
-    if (nb.type === 'text' || nb.type === 'cols' || nb.type === 'img') nb.open = true;
+    if (nb.type === 'text' || nb.type === 'cols' || nb.type === 'img' || nb.type === 'photos') nb.open = true;
     const idx = at == null ? a.length : at;
     a.splice(idx, 0, nb);
     window.mqPbRender(id, (nb.type === 'text' || nb.type === 'cols') ? idx : null);
@@ -9019,7 +9032,9 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const b = (_mqPropBlocks[id] || [])[i];
     if (!b) return;
     if (key === 'w') val = parseInt(val, 10) || 50;
+    if (key === 'n') val = parseInt(val, 10) || 2;
     b[key] = val;
+    if (key === 'n') { const se = document.getElementById(`mq-pb-sum-${id}-${i}`); if (se) se.textContent = mqPbPill(b).sum; }
     if (key === 'url') {
       const pv = document.getElementById(`mq-pb-imgprev-${id}-${i}`);
       if (pv) {
@@ -9152,7 +9167,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     { group: 'Add your own', blocksOnly: true, items: [
       { t: '@text', l: '＋ Text box', tip: 'Your own words. Bold, italic, underline, colours, size, alignment, bullet points, a coloured background and/or a border.' },
       { t: '@cols', l: '＋ Two columns', tip: 'Two blocks of text side by side.' },
-      { t: '@img', l: '＋ Image', tip: 'Upload a picture — a certification badge, a past project, a signature…' } ] },
+      { t: '@img', l: '＋ Image', tip: 'A picture that shows on every proposal — a certification badge, a past project, a signature…' },
+      { t: '@photos', l: '＋ Job photos', tip: 'A spot for the photos you add to each proposal in MidasQuote Pro (hidden when a proposal has none).' } ] },
     { group: 'Customer & job', items: [
       { t: '{customer_name}', l: 'Customer name', tip: 'The customer\'s name, filled in when the proposal is created.' },
       { t: '{customer_address}', l: 'Address', tip: 'Customer address. If left blank on a proposal, the whole line disappears.' },
@@ -9831,6 +9847,19 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     return `<div style="text-align:${a};margin:0 0 16px"><img src="${url}" crossorigin="anonymous" style="width:${w}%;max-width:100%;height:auto"/></div>`;
   }
 
+  // Nov 18 (Jordan): job photos grid. {photos:n=2} — n photos per row.
+  // With no photos (template preview) it shows grey placeholders.
+  function mqFmtPhotos(attrs, photos) {
+    const n = Math.min(3, Math.max(1, parseInt((String(attrs || '').match(/n=(\d)/) || [])[1], 10) || 2));
+    const esc = v => String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const cell = (inner, cap) => `<div style="break-inside:avoid;page-break-inside:avoid">${inner}${cap ? `<div style="font-size:12px;color:#4b5563;margin-top:5px;line-height:1.4">${esc(cap)}</div>` : ''}</div>`;
+    const grid = cells => `<div style="display:grid;grid-template-columns:repeat(${n},minmax(0,1fr));gap:12px;margin:0 0 16px">${cells}</div>`;
+    const list = Array.isArray(photos) ? photos.filter(p => p && /^https?:\/\//i.test(p.url || '')) : null;
+    if (list && list.length) return grid(list.map(p => cell(`<img src="${esc(p.url)}" crossorigin="anonymous" style="display:block;width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:6px"/>`, p.cap)).join(''));
+    if (list) return '';
+    return grid(Array.from({ length: n === 1 ? 1 : n }, () => cell(`<div style="aspect-ratio:4/3;border-radius:6px;background:#f3f4f6;border:1px dashed #d1d5db;display:flex;align-items:center;justify-content:center;color:#9ca3af;font-size:12px;text-align:center;padding:6px">Job photo</div>`)).join('')) + `<div style="font-size:11px;color:#9ca3af;margin:-8px 0 16px">Photos added in MidasQuote Pro go here.</div>`;
+  }
+
   function mqPropFormatTextChunk(text) {
     let html = mqPropEscapeHtml(text).replace(/\n/g, '<br>');
     html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
@@ -9870,6 +9899,11 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       .replace(/\{img:([^}]*)\}/g, (match, a) => {
         const key = `\u0000BOX${blockIndex++}\u0000`;
         customBlocks[key] = mqFmtImg(a);
+        return key;
+      })
+      .replace(/\{photos(?::([^}]*))?\}/g, (match, a) => {
+        const key = `\u0000BOX${blockIndex++}\u0000`;
+        customBlocks[key] = mqFmtPhotos(a, data && data.photos);
         return key;
       });
 

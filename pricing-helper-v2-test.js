@@ -6898,7 +6898,7 @@ window.mqphGoToWizard = function() {
           }
           if (!list.length) return '';
           return `<div data-mqcc-group="${k}">` + head + list.map(c => blockOf(c, cats.indexOf(c))).join('') + `</div>`;
-        }).join('') + (offNames.length ? `<div style="margin:14px 0 4px;font-size:12px;color:#6b7280;line-height:1.5">🔕 Hidden because you don't offer that trade any more: <strong>${offNames.map(mqccEsc).join(', ')}</strong>. Tick the trade again on Business info (or switch the quote back on) to see and edit its steps here.</div>` : '')
+        }).join('')
       : cats.filter(mqccFStepOk).map(c => blockOf(c, cats.indexOf(c))).join('');
 
     const howGroups = [...new Set(Object.values(MQCC_HOW).map(o => o.group))];
