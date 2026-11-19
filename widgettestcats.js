@@ -3297,6 +3297,7 @@
               tie: mqCcTieClean(cfg.tie),
               unit: cfg.how === 'sqft' ? 'sq ft' : (cfg.how === 'lft' ? 'lin ft' : String(cfg.unit || '').trim()),
               min: parseFloat(cfg.min) || 0,
+              later: !!cfg.later, // Nov 18: priced by a later step (no badge)
               showIf: typeof cfg.showIf === 'string' ? cfg.showIf : '',
               proOnly: !!cfg.proOnly,
               // Oct 25 (specialty-item parity): optional installation the
@@ -3523,7 +3524,7 @@
         }
         // Badges ($/$$/$$$) only mean something for a plain price — a %
         // option's "rate" is a percentage, not dollars.
-        list.forEach(o => { const hit = cat.items.find(i => i.id === o.value); if (hit && hit.how === 'pct') delete o.badge; });
+        list.forEach(o => { const hit = cat.items.find(i => i.id === o.value); if (hit && (hit.how === 'pct' || hit.later)) delete o.badge; });
         body = `${pickerRow(`mq-${p}-cc-${cat.id}`, list, null, cat.id)}
           <select id="mq-${p}-cc-${cat.id}" style="display:none">${list.map(o => `<option value="${o.value}">${mqCcEsc(o.label)}</option>`).join('')}</select>
           <div id="mq-${p}-ccdesc-${cat.id}" style="display:none;font-size:13.5px;color:#4b5563;margin-top:10px;line-height:1.45"></div>
@@ -4064,7 +4065,8 @@
         const c = finish(it.min, it.how === 'flat' ? it.rate : it.rate * qty) * ma;
         // A free pick (e.g. "Main floor") still shows on the quote, so the
         // shop sees every answer.
-        if (!c) lines.push({ label: `${it.how === 'flat' ? it.name : `${it.name} (${mqCcQtyLabel(it, qty)})`} — included`, cost: 0, included: true });
+        if (!c && it.later) lines.push({ label: it.name, cost: 0, included: true }); // priced by a later step
+        else if (!c) lines.push({ label: `${it.how === 'flat' ? it.name : `${it.name} (${mqCcQtyLabel(it, qty)})`} — included`, cost: 0, included: true });
         else lines.push({ label: (it.how === 'flat' ? it.name : `${it.name} (${mqCcQtyLabel(it, qty)})`) + sfx, cost: c });
       }
       if (doInst) {
