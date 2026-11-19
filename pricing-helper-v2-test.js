@@ -7050,6 +7050,7 @@ window.mqphGoToWizard = function() {
                 <button type="button" class="mqcc-kind" data-kind="choices" onclick="mqccCatKind('choices')"><span class="mqcc-kind-ic">☰</span><span><b>Choices</b><small>Customers pick from options</small></span></button>
                 <button type="button" class="mqcc-kind" data-kind="meas" onclick="mqccCatKind('meas')"><span class="mqcc-kind-ic">📏</span><span><b>A measurement</b><small>Customers type a number, like square feet</small></span></button>
               </div>
+              <div id="mqcc-cat-kindwarn" style="display:none;margin-top:8px;font-size:12.5px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:7px 10px"></div>
             </div>
             <div class="mqph-field" id="mqcc-cat-rooms-wrap" style="display:none !important"><label>Show this step for these project types</label>
               <style>
@@ -7087,7 +7088,7 @@ window.mqphGoToWizard = function() {
             <div class="mqph-field" id="mqcc-cat-opts-wrap" style="display:none"><label>Options</label>
               <div id="mqcc-cat-opts"></div>
               <a href="#" onclick="event.preventDefault();mqccRowAdd()" style="display:inline-block;font-size:13px;font-weight:600;color:#2563eb;text-decoration:none;margin-top:2px">+ Add option</a>
-              <div class="mqcc-hint">Photos, descriptions and extras for each option are on the step after you save.</div>
+              <div class="mqcc-hint" id="mqcc-cat-opts-hint">Photos, descriptions and extras for each option are on the step after you save.</div>
             </div>
             <label id="mqcc-cat-required-wrap" style="display:flex;align-items:center;gap:8px;font-size:13px;margin:0 0 14px;cursor:pointer">
               <input type="checkbox" id="mqcc-cat-required" style="width:16px;height:16px"/> <span id="mqcc-cat-required-txt">Customers must choose one (no “None” option)</span>
@@ -7422,7 +7423,36 @@ window.mqphGoToWizard = function() {
     document.getElementById('mqcc-cat-mlabel').value = m && c && m.label !== c.name ? m.label : '';
     document.getElementById('mqcc-cat-mrate').value = c && c.kind === 'meas' && parseFloat(c.rate) > 0 ? c.rate : '';
     document.getElementById('mqcc-cat-mpmode').value = c && c.kind === 'meas' && !(parseFloat(c.rate) > 0) ? 'later' : 'here';
-    window._mqccRows = c ? [] : [{ name: '', rate: '', how: 'flat' }];
+    window._mqccRowsGone = [];
+    window._mqccKindWas = kind;
+    window._mqccRows = c ? (c.kind === 'meas' ? [] : mqccItems(c.id).map(mqccRowFromItem)) : [{ name: '', rate: '', how: 'flat' }];
+  }
+  // An existing option as a step-box row. Pricing the simple rows can't show
+  // (%, another option's number, cabinet lin ft…) is read-only here.
+  const MQCC_ROW_SIMPLE = ['flat', 'each', 'sqft', 'lft', 'meas'];
+  function mqccRowFromItem(r) {
+    const cfg = mqccCfg(r);
+    const how0 = MQCC_HOW[cfg.how] ? cfg.how : 'flat';
+    const how = cfg.later ? 'later' : (how0 === 'meas' ? 'meas:' + (cfg.meas || '') : how0);
+    const rate = Number(r.fields['Rate']) || 0;
+    return { id: r.id, name: r.fields['Name'] || '', rate: cfg.later ? '' : String(rate), how, unit: cfg.unit || '',
+      locked: !MQCC_ROW_SIMPLE.includes(how0), lockedText: mqccPriceText(r), off: r.fields['Active'] === false,
+      extras: mqccRowExtras(r, cfg), nVar: Array.isArray(cfg.variants) ? cfg.variants.length : 0,
+      orig: { name: r.fields['Name'] || '', rate: cfg.later ? '' : String(rate), how } };
+  }
+  function mqccRowExtras(r, cfg) {
+    const hasPhoto = (cfg.ph && typeof cfg.ph === 'object' && cfg.ph[''] ) || mqccPvPhoto(r.fields['Category'], r.fields['Name'] || '');
+    return [
+      hasPhoto ? '📷 photo' : '',
+      Array.isArray(cfg.variants) && cfg.variants.length ? `${cfg.variants.length} variant${cfg.variants.length === 1 ? '' : 's'}` : '',
+      cfg.install && cfg.install.price > 0 ? 'install' : '',
+      cfg.min > 0 ? 'min ' + mqccMoney(cfg.min) : '',
+      r.fields['Description'] ? 'description' : '',
+      cfg.showIf ? 'only if…' : '',
+      cfg.tie ? 'linked' : '',
+      cfg.proOnly ? 'Pro only' : '',
+      r.fields['Active'] === false ? 'turned off' : '',
+    ].filter(Boolean);
   }
   // Show / hide the parts that belong to the picked kind.
   function mqccCatKindSync() {
@@ -7432,11 +7462,11 @@ window.mqphGoToWizard = function() {
     if (!qt && kind === 'meas' && !editing) kind = document.getElementById('mqcc-cat-kind').value = 'choices';
     const meas = kind === 'meas';
     const show = (id, on) => { const e = document.getElementById(id); if (e) e.style.setProperty('display', on ? '' : 'none', 'important'); };
-    show('mqcc-cat-kind-wrap', !!qt && !editing);
+    show('mqcc-cat-kind-wrap', !!qt);
     document.querySelectorAll('.mqcc-kind').forEach(b => b.classList.toggle('on', b.dataset.kind === kind));
     show('mqcc-cat-measf', meas);
     show('mqcc-cat-answer-wrap', !meas);
-    show('mqcc-cat-opts-wrap', !meas && !editing);
+    show('mqcc-cat-opts-wrap', !meas);
     mqccCatMType(document.getElementById('mqcc-cat-mtype').value, true);
     mqccCatMPMode(document.getElementById('mqcc-cat-mpmode').value, true);
     const nm = document.getElementById('mqcc-cat-name'), ds = document.getElementById('mqcc-cat-desc');
@@ -7447,7 +7477,14 @@ window.mqphGoToWizard = function() {
     if (rt) rt.textContent = meas ? 'Customers must fill this in' : (document.getElementById('mqcc-cat-answer').value === 'one' ? 'Customers must choose one (no “None” option)' : 'Customers must add at least one before continuing');
     const saveBtn = document.getElementById('mqcc-cat-save');
     if (saveBtn) saveBtn.textContent = editing ? 'Save changes' : 'Create step';
-    if (!meas && !editing) mqccRowsRender();
+    if (!meas) mqccRowsRender();
+    { const oh = document.getElementById('mqcc-cat-opts-hint'); if (oh) oh.textContent = editing ? 'Renaming or re-pricing keeps each option\'s photos and extras. Use “Photos & more →” for photos, variants, install and the rest.' : 'Photos, descriptions and extras for each option are on the step after you save.'; }
+    const kw = document.getElementById('mqcc-cat-kindwarn');
+    if (kw) {
+      const was = window._mqccKindWas, n = editing && was === 'choices' ? mqccItems(mqccEditCat).length : 0;
+      kw.textContent = editing && was !== kind ? (kind === 'meas' ? (n ? `Saving deletes this step's ${n} option${n === 1 ? '' : 's'}.` : '') : 'This step will ask customers to pick options instead of typing a number.') : '';
+      kw.style.display = kw.textContent ? 'block' : 'none';
+    }
   }
   window.mqccCatKind = function(k) { document.getElementById('mqcc-cat-kind').value = k; mqccCatKindSync(); mqccDraftCatPreview(); };
   window.mqccCatMPMode = function(m, quiet) {
@@ -7476,17 +7513,36 @@ window.mqphGoToWizard = function() {
     const box = document.getElementById('mqcc-cat-opts'); if (!box) return;
     const rows = window._mqccRows || (window._mqccRows = []);
     if (!rows.length) rows.push({ name: '', rate: '', how: 'flat' });
-    const hows = mqccRowHows();
-    box.innerHTML = rows.map((r, i) => `<div class="mqcc-orow">
+    const hows0 = mqccRowHows();
+    const cid = mqccEditCat;
+    box.innerHTML = rows.map((r, i) => {
+      const hows = hows0.map(([v, l]) => [v, v === 'each' && r.unit && r.unit !== 'each' ? 'per ' + r.unit.replace(/s$/, '') : l]);
+      if (/^meas:/.test(r.how) && !hows.some(h => h[0] === r.how)) hows.push([r.how, 'per unit of a removed measurement']);
+      const more = r.id ? `<a href="#" onclick="event.preventDefault();mqccRowFull(${i})" style="font-size:11.5px;font-weight:600;color:#2563eb;text-decoration:none;white-space:nowrap">Photos &amp; more →</a>` : '';
+      const tags = r.id && r.extras && r.extras.length ? `<span style="font-size:11.5px;color:#6b7280">${r.extras.map(mqccEsc).join(' · ')}</span>` : '';
+      const priceCell = r.locked
+        ? `<div style="grid-column:span 2;font-size:12.5px;color:#374151;padding:0 4px">${r.lockedText}</div>`
+        : `<div class="mqcc-money" style="${r.how === 'later' ? 'visibility:hidden' : ''}"><span>$</span><input type="number" min="0" step="0.01" placeholder="0.00" value="${mqccEsc(r.rate)}" oninput="mqccRowSet(${i},'rate',this.value)"/></div>
+        <select onchange="mqccRowSet(${i},'how',this.value)">${hows.map(([v, l]) => `<option value="${v}" ${r.how === v ? 'selected' : ''}>${mqccEsc(l)}</option>`).join('')}</select>`;
+      return `<div class="mqcc-orow" style="${r.off ? 'opacity:.6' : ''}">
         <input type="text" maxlength="60" placeholder="Option name" value="${mqccEsc(r.name)}" oninput="mqccRowSet(${i},'name',this.value)"/>
-        <div class="mqcc-money" style="${r.how === 'later' ? 'visibility:hidden' : ''}"><span>$</span><input type="number" min="0" step="0.01" placeholder="0.00" value="${mqccEsc(r.rate)}" oninput="mqccRowSet(${i},'rate',this.value)"/></div>
-        <select onchange="mqccRowSet(${i},'how',this.value)">${hows.map(([v, l]) => `<option value="${v}" ${r.how === v ? 'selected' : ''}>${mqccEsc(l)}</option>`).join('')}</select>
+        ${priceCell}
         <button type="button" class="mqcc-ox" title="Remove" onclick="mqccRowDel(${i})">✕</button>
-      </div>`).join('');
+      </div>${tags || more ? `<div style="display:flex;gap:10px;align-items:center;margin:-2px 0 8px 2px">${tags}${more}</div>` : ''}`;
+    }).join('');
   }
+  // Full option editor for one row (photos, variants, install…).
+  window.mqccRowFull = function(i) {
+    const r = (window._mqccRows || [])[i]; if (!r || !r.id) return;
+    const changed = (window._mqccRows || []).some(x => !x.id ? String(x.name || '').trim() : (x.name !== x.orig.name || x.rate !== x.orig.rate || x.how !== x.orig.how)) || (window._mqccRowsGone || []).length;
+    if (changed && !confirm('Open the full editor for this option?\n\nChanges you made in this step box that aren\'t saved yet will be lost.')) return;
+    const cid = mqccEditCat;
+    mqccClose('mqcc-cat-overlay');
+    mqccOpenItem(cid, r.id);
+  };
   window.mqccRowSet = function(i, k, v) { const r = (window._mqccRows || [])[i]; if (!r) return; r[k] = v; if (k === 'how') mqccRowsRender(); mqccDraftCatPreview(); };
   window.mqccRowAdd = function() { (window._mqccRows = window._mqccRows || []).push({ name: '', rate: '', how: 'flat' }); mqccRowsRender(); const ins = document.querySelectorAll('#mqcc-cat-opts .mqcc-orow input[type=text]'); if (ins.length) ins[ins.length - 1].focus(); };
-  window.mqccRowDel = function(i) { (window._mqccRows || []).splice(i, 1); mqccRowsRender(); mqccDraftCatPreview(); };
+  window.mqccRowDel = function(i) { const g = (window._mqccRows || []).splice(i, 1)[0]; if (g && g.id) (window._mqccRowsGone = window._mqccRowsGone || []).push(g); mqccRowsRender(); mqccDraftCatPreview(); };
   function mqccRowsFilled() { return (window._mqccRows || []).filter(r => String(r.name || '').trim()); }
   // Saves a measurement step's measurement on its quote (new or updated).
   async function mqccSaveStepMeas(qt, measId, label, type, unit) {
@@ -7548,8 +7604,23 @@ window.mqphGoToWizard = function() {
     const mType = document.getElementById('mqcc-cat-mtype').value;
     const mUnit = document.getElementById('mqcc-cat-munit').value.trim();
     if (kind === 'meas' && mType === 'count' && !mUnit) { alert('Say what\'s counted, e.g. doors.'); return; }
-    const badRow = kind === 'choices' && !mqccEditCat && mqccRowsFilled().find(r => r.rate !== '' && !(parseFloat(r.rate) >= 0));
+    const badRow = kind === 'choices' && mqccRowsFilled().find(r => !r.locked && r.how !== 'later' && r.rate !== '' && !(parseFloat(r.rate) >= 0));
     if (badRow) { alert(`Check the price for “${badRow.name}”.`); return; }
+    const prevCat = mqccEditCat ? Object.assign({}, mqccCats().find(c => c.id === mqccEditCat) || {}) : null;
+    const prevKind = prevCat ? (prevCat.kind === 'meas' ? 'meas' : 'choices') : null;
+    // Anything that would be lost → one clear warning first.
+    {
+      const warn = [];
+      const nOpts = prevCat && prevKind === 'choices' ? mqccItems(prevCat.id).length : 0;
+      if (prevCat && prevKind === 'choices' && kind === 'meas' && nOpts) warn.push(`This step's ${nOpts} option${nOpts === 1 ? '' : 's'} will be deleted (with their photos and settings).`);
+      if (kind === 'choices') {
+        const gone = window._mqccRowsGone || [];
+        if (gone.length) warn.push(`Delete ${gone.map(g => '“' + (g.orig ? g.orig.name : g.name) + '”').join(', ')} — photos and settings go with ${gone.length === 1 ? 'it' : 'them'}.`);
+        (window._mqccRows || []).filter(r => r.id && r.nVar && r.how !== r.orig.how && !['each', 'sqft', 'lft'].includes(r.how)).forEach(r => warn.push(`“${r.name}”: its ${r.nVar} variant${r.nVar === 1 ? '' : 's'} will be removed (they only work with per-item, per sq ft or per lin ft pricing).`));
+        (window._mqccRows || []).filter(r => r.id && !String(r.name || '').trim()).forEach(r => warn.push(`“${r.orig.name}” has no name — it will be deleted.`));
+      }
+      if (warn.length && !confirm('Before saving:\n\n• ' + warn.join('\n• ') + '\n\nSave anyway?')) return;
+    }
     const btn = document.getElementById('mqcc-cat-save');
     btn.disabled = true;
     const cats = mqccCats();
@@ -7605,11 +7676,52 @@ window.mqphGoToWizard = function() {
       } else if (ci >= 0) { delete cats[ci].kind; delete cats[ci].meas; delete cats[ci].rate; delete cats[ci].priceName; }
       await mqccSaveCats(cats);
       await mqccSaveCatRooms(id, roomPick);
-      // New Choices step: its options, made right here.
-      let made = 0;
-      if (kind === 'choices' && !mqccEditCat) {
-        let sort = 1;
-        for (const r of mqccRowsFilled()) {
+      // Switched kind on an existing step.
+      if (prevCat && prevKind === 'choices' && kind === 'meas') {
+        const old = mqccItems(id);
+        for (const r of old) { await atDelete(LINE_ITEMS_TABLE, r.id); }
+        const gone = new Set(old.map(r => r.id));
+        lineItems = lineItems.filter(r => !gone.has(r.id));
+        if (gone.size) await mqccClearShowIfRefs(gone);
+      }
+      if (prevCat && prevKind === 'meas' && kind === 'choices') { try { await mqccDropStepMeas(prevCat.qt, prevCat.meas); } catch (e) {} }
+      // Options from the rows: removed ones deleted, changed ones updated,
+      // new ones added. Extras (photos, variants, install…) are kept.
+      let made = 0, changedN = 0;
+      if (kind === 'choices' && mqccEditCat) {
+        const goneIds = new Set((window._mqccRowsGone || []).map(g => g.id));
+        (window._mqccRows || []).forEach(r => { if (r.id && !String(r.name || '').trim()) goneIds.add(r.id); });
+        for (const gid of goneIds) { try { await atDelete(LINE_ITEMS_TABLE, gid); } catch (e) {} }
+        if (goneIds.size) { lineItems = lineItems.filter(r => !goneIds.has(r.id)); await mqccClearShowIfRefs(goneIds); }
+        for (const r of (window._mqccRows || [])) {
+          if (!r.id || goneIds.has(r.id)) continue;
+          const rec = lineItems.find(x => x.id === r.id); if (!rec) continue;
+          const name = String(r.name).trim().slice(0, 60);
+          const nameCh = name !== r.orig.name, priceCh = !r.locked && (r.rate !== r.orig.rate || r.how !== r.orig.how);
+          if (!nameCh && !priceCh) continue;
+          const cfg = Object.assign({}, mqccCfg(rec));
+          const fields = { Name: name };
+          if (priceCh) {
+            if (r.how === 'later') { cfg.how = 'flat'; cfg.later = true; delete cfg.meas; fields.Rate = 0; }
+            else {
+              delete cfg.later;
+              if (/^meas:/.test(r.how)) { cfg.how = 'meas'; cfg.meas = r.how.slice(5); } else { cfg.how = r.how; delete cfg.meas; }
+              fields.Rate = Math.round((parseFloat(r.rate) || 0) * 100) / 100;
+            }
+            cfg.unit = cfg.how === 'each' ? (r.unit || cfg.unit || 'each') : '';
+            if (!['each', 'sqft', 'lft'].includes(cfg.how)) delete cfg.variants;
+            fields['Custom pricing'] = JSON.stringify(cfg);
+          }
+          await atUpdate(LINE_ITEMS_TABLE, r.id, fields);
+          if (nameCh) { try { await mqccCopyShopKeys(mqccKeyPairs(id, r.orig.name, id, name, cfg)); } catch (e) {} }
+          Object.assign(rec.fields, fields);
+          changedN++;
+        }
+      }
+      if (kind === 'choices') {
+        const have = mqccItems(id);
+        let sort = have.length ? Math.max(...have.map(x => x.fields['Sort order'] || 0)) + 1 : 1;
+        for (const r of mqccRowsFilled().filter(x => !x.id)) {
           const how = /^meas:/.test(r.how) ? 'meas' : (['each', 'sqft', 'lft'].includes(r.how) ? r.how : 'flat');
           const cfg = { how, unit: how === 'each' ? 'each' : '', min: 0, showIf: '', proOnly: mqccF().pro === 'pro' };
           if (how === 'meas') cfg.meas = r.how.slice(5);
@@ -7620,7 +7732,7 @@ window.mqphGoToWizard = function() {
           sort++;
         }
       }
-      window._mqccRows = [];
+      window._mqccRows = []; window._mqccRowsGone = [];
       mqccClose('mqcc-cat-overlay');
       mqccRerender(id);
       mqccMsg(mqccEditCat ? '✓ Step saved.' : kind === 'meas' ? '✓ Measurement step added.' : made ? `✓ Step added with ${made} option${made === 1 ? '' : 's'}.` : '✓ Step added — now add its options.');
@@ -8763,8 +8875,10 @@ window.mqphGoToWizard = function() {
       proOnly: document.getElementById('mqcc-cat-pro').checked, showIf: '',
     };
     let items = mqccEditCat ? mqccPvItems(mqccEditCat) : [];
-    if (!mqccEditCat && mqccRowsFilled().length) items = mqccRowsFilled().map((r, i) => {
+    const pvById = {}; items.forEach(x => { pvById[x.id] = x; });
+    if (mqccRowsFilled().length || (mqccEditCat && (window._mqccRowsGone || []).length)) items = mqccRowsFilled().filter(r => !r.off).map((r, i) => {
       const how = /^meas:/.test(r.how) ? 'meas' : (['sqft', 'lft', 'each'].includes(r.how) ? 'each' : 'flat');
+      if (r.id && pvById[r.id]) return r.locked ? Object.assign({}, pvById[r.id], { name: String(r.name).trim() }) : Object.assign({}, pvById[r.id], { name: String(r.name).trim(), rate: r.how === 'later' ? 0 : (parseFloat(r.rate) || 0), how, meas: how === 'meas' ? r.how.slice(5) : '', unit: r.how === 'sqft' ? 'sq ft' : (r.how === 'lft' ? 'lin ft' : (r.how === 'each' ? (r.unit || 'each') : '')) });
       return { id: '__r' + i, name: String(r.name).trim(), desc: '', rate: r.how === 'later' ? 0 : (parseFloat(r.rate) || 0), how, unit: r.how === 'sqft' ? 'sq ft' : (r.how === 'lft' ? 'lin ft' : (r.how === 'each' ? 'each' : '')), meas: how === 'meas' ? r.how.slice(5) : '', min: 0, showIf: '', proOnly: false, src: '', pctCc: '', tie: null, groupName: '', groupOrder: 0 };
     });
     const sample = !items.length;
