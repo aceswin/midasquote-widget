@@ -5406,7 +5406,9 @@ ${W} .mqs2-fhead{position:static}
           'Special Items': item.name,
           'Price': item.price,
           'Per linear foot': item.perFt,
-          'Active': true,
+          // Nov 18 (Jordan): new shops' specialty items start OFF -- they
+          // never show on the widget until the shop prices and turns one on.
+          'Active': false,
           'Sort order': item.sort,
         });
         if (rec?.id) created.push(rec);
@@ -5747,7 +5749,7 @@ ${W} .mqs2-fhead{position:static}
           'Description': master.fields['Description'] || '',
           'Category': master.fields['Category'] || '',
           'Pro only': master.fields['Pro only'] || false,
-          'Active': true,
+          'Active': false, // starts off for a new shop (Nov 18)
           'Visible rooms': master.fields['Visible rooms'] || '[]',
           'Template source ID': master.id,
           // Copied verbatim, same as the single-shop "Push to just this
@@ -13557,7 +13559,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       }
       // Specialty items
       for (const sx of (pack.specs || [])) {
-        const fields = Object.assign({}, sx.fields, { Shop: [shopRec.id], 'Visible rooms': mapRooms(sx.fields['Visible rooms']) });
+        const fields = Object.assign({}, sx.fields, { Shop: [shopRec.id], 'Visible rooms': mapRooms(sx.fields['Visible rooms']), Active: false });
         const rec = await atCreate(CONFIG.SPECIALTY_TABLE, fields);
         if (rec && rec.id) specMap[sx.id] = rec.id;
       }
@@ -13713,7 +13715,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         if (!plan || !plan.specTodo.length) continue;
         for (const sx of plan.specTodo) {
           const mapped = mqRoomIdsOf(sx.fields['Visible rooms']).map(r => plan.roomMap[r]).filter(Boolean);
-          const rec = await mqPackCreate(CONFIG.SPECIALTY_TABLE, Object.assign({}, sx.fields, { Shop: [window._mqShopRecord.id], 'Visible rooms': JSON.stringify(mapped.length ? mapped : plan.qRooms) }));
+          const rec = await mqPackCreate(CONFIG.SPECIALTY_TABLE, Object.assign({}, sx.fields, { Shop: [window._mqShopRecord.id], 'Visible rooms': JSON.stringify(mapped.length ? mapped : plan.qRooms), Active: false }));
           if (rec && rec.id) added++;
         }
         await mqMarkPackSpecsSeen(id, plan.specTodo);
@@ -13761,7 +13763,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       let specAdded = 0;
       for (const sx of specTodo) {
         const mapped = mqRoomIdsOf(sx.fields['Visible rooms']).map(id => roomMap[id]).filter(Boolean);
-        const fields = Object.assign({}, sx.fields, { Shop: [shopRec.id], 'Visible rooms': JSON.stringify(mapped.length ? mapped : qRooms) });
+        const fields = Object.assign({}, sx.fields, { Shop: [shopRec.id], 'Visible rooms': JSON.stringify(mapped.length ? mapped : qRooms), Active: false });
         const rec = await mqPackCreate(CONFIG.SPECIALTY_TABLE, fields);
         if (rec && rec.id) specAdded++; else failed++;
       }
