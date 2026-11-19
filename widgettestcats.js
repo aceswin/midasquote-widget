@@ -3321,11 +3321,24 @@
             };
           })
           .filter(it => it.name && (allowPro || !it.proOnly));
+        // Nov 18 (Jordan): a measurement step -- the customer types a number
+        // (one of the quote's measurements) right in this step. Its price
+        // (optional, per unit) is one built-in option that's "picked"
+        // whenever a number is entered, so totals and quote lines work as usual.
+        const mstep = c.kind === 'meas' && typeof c.meas === 'string' && c.meas;
+        if (mstep) items.splice(0, items.length, {
+          id: c.id + '_m', name: String(c.priceName || c.name || 'Measurement').trim(), desc: '', rate: parseFloat(c.rate) || 0,
+          how: 'meas', entry: '', src: '', meas: c.meas, pctCc: '', tie: mqCcTieClean(null), unit: '', min: parseFloat(c.min) || 0,
+          showIf: '', proOnly: false, inst: null, adj: false, variants: [], photoUrl: '', featured: false,
+          visibleRooms: effectiveVisibleRooms([], c.id), groupName: '', groupOrder: 0, groupDesc: '',
+        });
         return {
+          kind: mstep ? 'meas' : '',
+          meas: mstep ? c.meas : '',
           id: c.id,
           name: String(c.name || 'Extras'),
           description: String(c.description || ''),
-          answer: c.answer === 'one' ? 'one' : 'any',
+          answer: c.answer === 'one' && !mstep ? 'one' : 'any',
           required: !!c.required,
           // Pick-one steps list cheapest-first unless the shop has set its
           // own order with the arrows on the Pricing tab (Jordan, Nov 2026).
@@ -3414,6 +3427,7 @@
   }
   // Is this option currently picked by the customer (ignores visibility)?
   function mqCcPickedRaw(p, cat, it) {
+    if (cat.kind === 'meas') return mqCcNum(`mq-${p}-meas-${cat.meas}`) > 0;
     if (cat.answer === 'one') { const sel = document.getElementById(`mq-${p}-cc-${cat.id}`); return !!sel && sel.value === it.id; }
     if (it.variants && it.variants.length) return it.variants.some(v => mqCcVarQty(p, it, v.id) > 0);
     if (it.how === 'each') return mqCcNum(`mq-${p}-ccq-${it.id}`) > 0;
@@ -3495,7 +3509,9 @@
     return MQ_CC_CSS + cats.map(cat => {
       const key = `${p}-cc-${cat.id}`;
       let body;
-      if (cat.answer === 'one') {
+      if (cat.kind === 'meas') {
+        body = `<div class="mq-grid3 mq-cc-measstep" id="mq-${p}-ccm-${cat.id}"></div>`;
+      } else if (cat.answer === 'one') {
         const opts = cat.items.map(it => ({
           value: it.id, label: it.name, photoUrl: it.photoUrl, featured: it.featured, icon: '✨', price: it.rate,
           visibleRooms: it.visibleRooms, groupName: it.groupName, groupOrder: it.groupOrder, groupDesc: it.groupDesc,
@@ -3542,7 +3558,7 @@
         ${collapsibleHeader(key, mqCcEsc(cat.name))}
         ${cat.description && !window._mqFxOn ? `<div style="font-size:13px;color:#4b5563;margin-bottom:10px;line-height:1.5">${mqCcEsc(cat.description)}</div>` : ''}
         <div id="mq-${key}-body" style="display:none">${body}
-          <div class="mq-cc-req" id="mq-${p}-ccreq-${cat.id}" style="display:none">${cat.answer === 'one' ? 'Please choose an option to continue.' : 'Please add at least one option to continue.'}</div>
+          <div class="mq-cc-req" id="mq-${p}-ccreq-${cat.id}" style="display:none">${cat.kind === 'meas' ? 'Please enter a number to continue.' : cat.answer === 'one' ? 'Please choose an option to continue.' : 'Please add at least one option to continue.'}</div>
         </div>
       </div>`;
     }).join('');
@@ -3698,6 +3714,10 @@
     ms.forEach(m => {
       const f = document.getElementById(`mq-${p}-measf-${m.id}`);
       if (!f) return;
+      // Owned by a measurement step: always in that step.
+      const own = cats.find(c => c.kind === 'meas' && c.meas === m.id);
+      const ownBox = own && document.getElementById(`mq-${p}-ccm-${own.id}`);
+      if (ownBox) { if (f.parentNode !== ownBox) ownBox.appendChild(f); f.style.display = ''; return; }
       const rel = shown.filter(x => x.c.items.some(it => usesM(it, m)));
       const hit = rel.find(x => wantsM(x.c, m)) || rel[0];
       const box = hit && secOf(hit.c);
