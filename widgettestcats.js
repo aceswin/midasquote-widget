@@ -3306,7 +3306,8 @@
               // (incl. sized ones — their price is already worked out in the
               // dashboard) each with their own count, price, minimum and photo.
               inst: (cfg.install && typeof cfg.install === 'object' && (parseFloat(cfg.install.price) || 0) > 0)
-                ? { price: parseFloat(cfg.install.price) || 0, how: cfg.install.how === 'flat' ? 'flat' : 'same', min: parseFloat(cfg.install.min) || 0 } : null,
+                ? { price: parseFloat(cfg.install.price) || 0, how: ['flat', 'same', 'count', 'sqft', 'lft', 'meas'].includes(cfg.install.how) ? cfg.install.how : 'same', min: parseFloat(cfg.install.min) || 0,
+                    meas: typeof cfg.install.meas === 'string' ? cfg.install.meas : '', unit: String(cfg.install.unit || '').trim(), label: String(cfg.install.label || '').trim() } : null,
               adj: !!cfg.adj,
               variants: (Array.isArray(cfg.variants) && ['each','sqft','lft'].includes(cfg.how) && c.answer !== 'one')
                 ? cfg.variants.filter(v => v && v.id && String(v.label || '').trim()).map(v => ({
@@ -3471,7 +3472,7 @@
         <input type="hidden" id="mq-${p}-ccvs-${it.id}" value="${vars[0].id}"/>
         ${vars.map(v => `<input type="hidden" id="mq-${p}-ccv-${it.id}-${v.id}" value="0"/>`).join('')}` : '';
     const instHtml = it.inst ? `<select id="mq-${p}-ccsi-${it.id}" class="mq-cc-si" onclick="event.stopPropagation()" onchange="mqCcSiTouched('${p}','${it.id}')"><option value="supply">Supply only</option><option value="install">Supply + install</option></select>
-        <input type="hidden" id="mq-${p}-ccsit-${it.id}" value=""/>` : '';
+        <input type="hidden" id="mq-${p}-ccsit-${it.id}" value=""/>${mqCcInstQtyHTML(p, it.id, it)}` : '';
     const control = vars.length
       ? `${varPills}<div class="mq-qty-ctrl">
           <button class="mq-qty-btn" type="button" aria-label="Less" onclick="event.stopPropagation();mqCcAdj('${p}','${it.id}',-1)">−</button>
@@ -3543,7 +3544,7 @@
             <label class="mq-label" style="margin:0">Installation</label>
             <select id="mq-${p}-ccsi-${cat.id}" class="mq-cc-si" style="margin:0" onclick="event.stopPropagation()" onchange="mqCcSiTouched('${p}','${cat.id}')"><option value="supply">Supply only</option><option value="install">Supply + install</option></select>
             <input type="hidden" id="mq-${p}-ccsit-${cat.id}" value=""/>
-          </div>` : ''}`;
+          </div>${cat.items.some(i => i.inst && ['count', 'sqft', 'lft'].includes(i.inst.how)) ? mqCcInstQtyHTML(p, cat.id, null) : ''}` : ''}`;
       } else {
         // Groups (from My Products) become small headings; ungrouped last.
         const names = [...new Set(cat.items.filter(i => i.groupName).sort((a, b) => (a.groupOrder || 0) - (b.groupOrder || 0)).map(i => i.groupName))];
@@ -3585,7 +3586,53 @@
   window.mqCcSiTouched = function(p, key) {
     const t = document.getElementById(`mq-${p}-ccsit-${key}`);
     if (t) t.value = '1';
+    try { mqCcInstQtyShow(p); } catch (e) {}
   };
+  // Nov 18 (Jordan): installation priced its own way -- per door the customer
+  // counts, per sq ft / lin ft they enter, or per one of the quote's
+  // measurements -- not only "the same count as the option".
+  function mqCcInstOwn(inst) { return !!inst && (inst.how === 'count' || inst.how === 'sqft' || inst.how === 'lft'); }
+  function mqCcInstWord(inst) { return inst.how === 'sqft' ? 'square feet' : inst.how === 'lft' ? 'linear feet' : (inst.unit || 'items'); }
+  function mqCcInstAsk(inst, name) { return inst.label || (inst.how === 'sqft' ? 'How many square feet need installing?' : inst.how === 'lft' ? 'How many linear feet need installing?' : `How many ${inst.unit || 'of these'} need installing?`); }
+  function mqCcInstQtyHTML(p, key, it) {
+    if (it && !mqCcInstOwn(it.inst)) return '';
+    const ask = it ? mqCcInstAsk(it.inst, it.name) : '';
+    const word = it ? mqCcInstWord(it.inst) : '';
+    const entry = it ? (it.inst.how === 'sqft' ? 'sqft' : it.inst.how === 'lft' ? 'linear' : '') : '';
+    return `<div class="mq-cc-instq" id="mq-${p}-ccsiqw-${key}" style="display:none;margin-top:8px;padding-top:8px;border-top:1px dashed #e5e7eb" onclick="event.stopPropagation()">
+        <div id="mq-${p}-ccsiql-${key}" style="font-size:12px;color:#4b5563;margin-bottom:5px">${mqCcEsc(ask)}</div>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"><div class="mq-qty-ctrl">
+          <button class="mq-qty-btn" type="button" aria-label="Less" onclick="event.stopPropagation();mqCcInstAdj('${p}','${key}',-1)">−</button>
+          <input type="text" inputmode="decimal" id="mq-${p}-ccsiq-${key}" value="0" onclick="event.stopPropagation();this.select()" style="width:52px;text-align:center;font-size:16px;font-weight:500;border:1px solid #d1d5db;border-radius:4px;padding:2px 4px;font-family:inherit;box-shadow:none"/>
+          <button class="mq-qty-btn" type="button" aria-label="More" onclick="event.stopPropagation();mqCcInstAdj('${p}','${key}',1)">+</button>
+        </div>${entry ? calcBtn(`mq-${p}-ccsiq-${key}`, entry, it.name) : ''}<span id="mq-${p}-ccsiqu-${key}" style="font-size:12px;font-weight:600;color:#6b7280">${mqCcEsc(word)}</span></div>
+      </div>`;
+  }
+  window.mqCcInstAdj = function(p, key, delta) {
+    const el = document.getElementById(`mq-${p}-ccsiq-${key}`); if (!el) return;
+    el.value = mqCcQtyText(Math.max(0, Math.round(((parseFloat(el.value) || 0) + delta) * 100) / 100));
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+  };
+  function mqCcInstQtyShow(p) {
+    mqCcCatsFor(p).forEach(cat => {
+      if (cat.answer === 'one') {
+        const box = document.getElementById(`mq-${p}-ccsiqw-${cat.id}`); if (!box) return;
+        const sel = document.getElementById(`mq-${p}-cc-${cat.id}`);
+        const it = cat.items.find(i => i.id === (sel && sel.value));
+        const on = !!it && mqCcInstOwn(it.inst) && mqCcWantsInstall(p, cat, it);
+        box.style.display = on ? 'block' : 'none';
+        if (on) {
+          const l = document.getElementById(`mq-${p}-ccsiql-${cat.id}`); if (l) l.textContent = mqCcInstAsk(it.inst, it.name);
+          const u = document.getElementById(`mq-${p}-ccsiqu-${cat.id}`); if (u) u.textContent = mqCcInstWord(it.inst);
+        }
+        return;
+      }
+      cat.items.forEach(it => {
+        const box = document.getElementById(`mq-${p}-ccsiqw-${it.id}`); if (!box) return;
+        box.style.display = mqCcInstOwn(it.inst) && mqCcWantsInstall(p, cat, it) && mqCcPickedRaw(p, cat, it) ? 'block' : 'none';
+      });
+    });
+  }
   window.mqCcAdj = function(p, id, delta) {
     const vh = mqCcFind(id);
     if (vh && vh.it.variants && vh.it.variants.length) {
@@ -3700,7 +3747,7 @@
     // A measurement box only shows once an option that uses it is picked
     // (Jordan, Nov 2026: only Ceiling added -> don't ask for trim length).
     // Pick-one steps with nothing chosen yet still show their boxes.
-    const usesM = (it, m) => it.how === 'meas' && it.meas === m.id && mqCcRoomOk(it, room);
+    const usesM = (it, m) => ((it.how === 'meas' && it.meas === m.id) || (it.inst && it.inst.how === 'meas' && it.inst.meas === m.id)) && mqCcRoomOk(it, room);
     const wantsM = (c, m) => {
       if (c.answer === 'one') {
         const sel = document.getElementById(`mq-${p}-cc-${c.id}`);
@@ -3893,6 +3940,7 @@
       window._mqCcReshowing = true;
       try { window.mqRefreshAllPickerVisibility(p); } finally { window._mqCcReshowing = false; }
     }
+    try { mqCcInstQtyShow(p); } catch (e) {}
     if (mqIsQt(p)) { try { mqQtMeasPlace(p, cats, room); } catch(e) { console.warn('measurement placement', e); } }
     if (focusEl && document.activeElement !== focusEl && document.contains(focusEl)) { try { focusEl.focus({ preventScroll: true }); if (focusSel != null && focusEl.setSelectionRange) focusEl.setSelectionRange(focusSel, focusSel); } catch(e) {} }
     if (!changed && window.mqGetVisibleSections && window.mqGetVisibleSections(p).map(s => s.id).join('|') !== before) changed = true;
@@ -4070,10 +4118,13 @@
         else lines.push({ label: (it.how === 'flat' ? it.name : `${it.name} (${mqCcQtyLabel(it, qty)})`) + sfx, cost: c });
       }
       if (doInst) {
-        const perUnit = it.inst.how === 'same' && it.how !== 'flat';
-        const iq = perUnit ? qty : 1;
-        const c = finish(it.inst.min, it.inst.price * iq) * ia;
-        if (c) lines.push({ label: perUnit ? `${it.name} (${mqCcQtyLabel(it, iq)}) — Install` : `${it.name} — Install`, cost: c });
+        const ih = it.inst.how;
+        const perUnit = ih === 'same' && it.how !== 'flat';
+        const own = mqCcInstOwn(it.inst);
+        const iq = perUnit ? qty : own ? mqCcNum(`mq-${p}-ccsiq-${mqCcSiKey(cat, it)}`) : ih === 'meas' ? mqCcNum(`mq-${p}-meas-${it.inst.meas}`) : 1;
+        const c = (own || ih === 'meas') && !(iq > 0) ? 0 : finish(it.inst.min, it.inst.price * iq) * ia;
+        const word = own ? (ih === 'sqft' ? 'sq ft' : ih === 'lft' ? 'lin ft' : (it.inst.unit || 'units')) : ih === 'meas' ? (((window._mqQuoteTypes || []).reduce((f, qq) => f || (qq.measures || []).find(x => x.id === it.inst.meas), null)) || {}).unit || '' : '';
+        if (c) lines.push({ label: perUnit ? `${it.name} (${mqCcQtyLabel(it, iq)}) — Install` : (own || ih === 'meas') ? `${it.name} (${mqCcQtyText(iq)}${word ? ' ' + word : ''}) — Install` : `${it.name} — Install`, cost: c });
       }
       if (!lines.length) return;
       const sum = lines.reduce((a, l) => a + l.cost, 0);
@@ -4306,7 +4357,9 @@
     const roomIds = rooms.map(r => r.id);
     // Specialty items picked (in Specialty items) for one of its project types.
     const hasSpec = (data.specs || []).some(s => (s.visibleRooms || []).some(id => roomIds.includes(id)));
-    const hasInst = q.countertops || cats.some(c => c.items.some(i => i.inst)) || (hasSpec && (data.specs || []).some(s => s.offersInstallChoice && (s.visibleRooms || []).some(id => roomIds.includes(id))));
+    // Nov 19 (Jordan): your own steps' options carry their own Supply only /
+    // Supply + install choice (starting on Supply only) -- no separate question.
+    const hasInst = q.countertops || (hasSpec && (data.specs || []).some(s => s.offersInstallChoice && (s.visibleRooms || []).some(id => roomIds.includes(id))));
     const single = rooms.length <= 1;
     const pw = `<div class="mq-powered-by"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Powered by <a href="https://www.midasquote.com" target="_blank" rel="noopener">MidasQuote</a></div>`;
     return `

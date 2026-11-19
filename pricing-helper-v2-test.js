@@ -7940,7 +7940,7 @@ window.mqphGoToWizard = function() {
     const inQt = !!(c && c.qt);
     const note = document.getElementById('mqcc-item-inst-note');
     if (note) note.textContent = inQt
-      ? 'Customers choose Supply only or Supply + install on this option. Turning this on also adds a “Supply + install?” question to this quote (near the start); this option starts on that answer, and customers can change it on the option.'
+      ? 'Customers choose Supply only or Supply + install right on this option (it starts on Supply only).'
       : 'Customers get a Supply only / Supply + install choice on this option. It starts on whatever they picked in your Supply + install step, and they can change it.';
     const sel = document.getElementById('mqcc-item-inst-how');
     if (!sel) return;
