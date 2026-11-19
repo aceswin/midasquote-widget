@@ -7088,7 +7088,7 @@ window.mqphGoToWizard = function() {
             <div class="mqph-field" id="mqcc-cat-opts-wrap" style="display:none"><label>Options</label>
               <div id="mqcc-cat-opts"></div>
               <a href="#" onclick="event.preventDefault();mqccRowAdd()" style="display:inline-block;font-size:13px;font-weight:600;color:#2563eb;text-decoration:none;margin-top:2px">+ Add option</a>
-              <div class="mqcc-hint" id="mqcc-cat-opts-hint">Photos, descriptions and extras for each option are on the step after you save.</div>
+              <div class="mqcc-hint" id="mqcc-cat-opts-hint" style="margin-top:6px;color:#1e3a8a;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:7px 10px">✱ This is a quick start — after creating the step, you can edit each option further: photos, descriptions, variants, install prices and more.</div>
             </div>
             <label id="mqcc-cat-required-wrap" style="display:flex;align-items:center;gap:8px;font-size:13px;margin:0 0 14px;cursor:pointer">
               <input type="checkbox" id="mqcc-cat-required" style="width:16px;height:16px"/> <span id="mqcc-cat-required-txt">Customers must choose one (no “None” option)</span>
@@ -7478,7 +7478,7 @@ window.mqphGoToWizard = function() {
     const saveBtn = document.getElementById('mqcc-cat-save');
     if (saveBtn) saveBtn.textContent = editing ? 'Save changes' : 'Create step';
     if (!meas) mqccRowsRender();
-    { const oh = document.getElementById('mqcc-cat-opts-hint'); if (oh) oh.textContent = editing ? 'Renaming or re-pricing keeps each option\'s photos and extras. Use “Photos & more →” for photos, variants, install and the rest.' : 'Photos, descriptions and extras for each option are on the step after you save.'; }
+    { const oh = document.getElementById('mqcc-cat-opts-hint'); if (oh) oh.textContent = editing ? 'Renaming or re-pricing keeps each option\'s photos and extras. Use “Photos & more →” for photos, variants, install and the rest.' : '✱ This is a quick start — after creating the step, you can edit each option further: photos, descriptions, variants, install prices and more.'; }
     const kw = document.getElementById('mqcc-cat-kindwarn');
     if (kw) {
       const was = window._mqccKindWas, n = editing && was === 'choices' ? mqccItems(mqccEditCat).length : 0;
@@ -7827,8 +7827,21 @@ window.mqphGoToWizard = function() {
       const sibNames = mqccCats().filter(x => x.id !== c.id && (inQt ? (x.qt || '') === (c.qt || '') : true)).map(x => x.name);
       const ccOpt = howSel.querySelector('option[value="pct_cc"]');
       if (ccOpt) ccOpt.textContent = fit(MQCC_HOW.pct_cc.label, sibNames);
+      // Nov 18 (Jordan): one choice per measurement ("Per sq ft of Door
+      // area"), so there's no separate "Which measurement?" box. All of them
+      // keep value "meas"; data-meas says which one.
+      [...howSel.querySelectorAll('option[data-meas-extra]')].forEach(o => o.remove());
       const mOpt = howSel.querySelector('option[value="meas"]');
-      if (mOpt) mOpt.textContent = measList.length ? fit('One of this quote’s measurements', measList.map(m => m.label)) : MQCC_HOW.meas.label;
+      if (mOpt) {
+        delete mOpt.dataset.meas;
+        if (measList.length) {
+          const lab = m => `Per ${mqccMeasUnit(m).replace(/s$/, '')} of ${m.label}`;
+          mOpt.textContent = lab(measList[0]); mOpt.dataset.meas = measList[0].id;
+          let prev = mOpt;
+          measList.slice(1).forEach(m => { const o = document.createElement('option'); o.value = 'meas'; o.textContent = lab(m); o.dataset.meas = m.id; o.dataset.measExtra = '1'; prev.after(o); prev = o; });
+          if (howSel.value === 'meas') { const want = [...howSel.options].find(o => o.dataset.meas === (cfg.meas || '')); if (want) howSel.selectedIndex = want.index; }
+        } else mOpt.textContent = MQCC_HOW.meas.label;
+      }
     }
     if (inQt && CAB_HOWS.includes(howSel.value)) howSel.value = 'flat';
     const tieWrap = document.getElementById('mqcc-item-tiecat') && document.getElementById('mqcc-item-tiecat').closest('.mqph-field');
@@ -7878,13 +7891,15 @@ window.mqphGoToWizard = function() {
   }
   window.mqccItemHowChanged = function() {
     const how = document.getElementById('mqcc-item-how').value;
+    { const hs = document.getElementById('mqcc-item-how'), o = hs.options[hs.selectedIndex], ms = document.getElementById('mqcc-item-meas');
+      if (o && o.dataset.meas && ms && ms.value !== o.dataset.meas) ms.value = o.dataset.meas; }
     const isPct = MQCC_PCT.includes(how);
     const later = how === 'later';
     { const ln = document.getElementById('mqcc-item-later-note'); if (ln) ln.style.display = later ? 'block' : 'none'; }
     mqccShow('mqcc-item-rate-wrap', !later);
     mqccShow('mqcc-item-unit-wrap', how === 'each');
     mqccShow('mqcc-item-src-wrap', how === 'opt');
-    mqccShow('mqcc-item-meas-wrap', how === 'meas');
+    mqccShow('mqcc-item-meas-wrap', how === 'meas' && !(document.getElementById('mqcc-item-meas').value)); // only when there's nothing to pick yet
     mqccShow('mqcc-item-pctcc-wrap', how === 'pct_cc');
     mqccShow('mqcc-item-min-wrap', how !== 'flat' && !later);
     const catNow = mqccEditItem ? mqccCats().find(x => x.id === mqccEditItem.cid) : null;
@@ -8168,6 +8183,8 @@ window.mqphGoToWizard = function() {
   window.mqccDuplicateItem = async function(id) {
     const r = lineItems.find(x => x.id === id);
     if (!r) return;
+    // Sits right next to Edit -- ask, so a slip doesn't leave a stray copy (Nov 18).
+    if (!confirm(`Make a copy of “${(r.fields['Name'] || 'this option').trim()}”?\n\nThe copy gets the same price, photos and settings. To rename an option, use Edit instead.`)) return;
     const cid = r.fields['Category'];
     const names = new Set(mqccItems(cid).map(x => (x.fields['Name'] || '').trim().toLowerCase()));
     const base = (r.fields['Name'] || 'Option').trim();
@@ -8864,7 +8881,7 @@ window.mqphGoToWizard = function() {
     if (document.getElementById('mqcc-cat-kind').value === 'meas') {
       const t = document.getElementById('mqcc-cat-mtype').value;
       box.innerHTML = mqccMeasStepPvHtml(document.getElementById('mqcc-cat-name').value.trim(), document.getElementById('mqcc-cat-desc').value.trim(), document.getElementById('mqcc-cat-mlabel').value.trim(), t, document.getElementById('mqcc-cat-munit').value, (document.getElementById('mqcc-cat-mpmode').value === 'later' ? 0 : (parseFloat(document.getElementById('mqcc-cat-mrate').value) || 0)))
-        + `<div style="font-size:11px;color:#6b7280;line-height:1.5;margin-top:10px">📍 Step goes: <strong>${mqccEsc(mqccPlaceLabel(document.getElementById('mqcc-cat-after').value))}</strong></div>`;
+        + `<div style="font-size:11px;color:#6b7280;line-height:1.5;margin-top:10px">📍 Step goes: <strong>${mqccEsc(mqccPlaceLabel(document.getElementById('mqcc-cat-after').value, (document.getElementById('mqcc-cat-qt') || {}).value || ''))}</strong></div>`;
       return;
     }
     const answer = document.getElementById('mqcc-cat-answer').value === 'one' ? 'one' : 'any';
@@ -8883,7 +8900,7 @@ window.mqphGoToWizard = function() {
     });
     const sample = !items.length;
     if (sample) items = ['Option 1', 'Option 2', 'Option 3'].map((n, i) => ({ id: '__s' + i, name: n, desc: '', rate: 0, how: i === 1 ? 'each' : 'flat', unit: i === 1 ? 'units' : '', min: 0, showIf: '', proOnly: false, src: '', pctCc: '', tie: null, groupName: '', groupOrder: 0 }));
-    const place = mqccPlaceLabel(document.getElementById('mqcc-cat-after').value);
+    const place = mqccPlaceLabel(document.getElementById('mqcc-cat-after').value, (document.getElementById('mqcc-cat-qt') || {}).value || '');
     const rule = document.getElementById('mqcc-cat-showif');
     const rp = mqccCatRoomsRead();
     box.innerHTML = `${mqccPvViewHtml(c, items)}
