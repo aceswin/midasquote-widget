@@ -6534,6 +6534,83 @@ window.mqphGoToWizard = function() {
   // [{id:'m_…', label, type:'sqft'|'lft'|'count', unit}] on the quote type.
   // Nov 18 (Jordan): one short line per quote saying which measurements it
   // can price with, or that it has none yet (with an example + a link).
+  // Nov 18 (Jordan): "How many square feet?" isn't a step — it's a
+  // measurement. Shown in the step dialog for a quote type, with the quote's
+  // measurements and a quick way to add one right here.
+  const MQCC_NUMQ = /how (many|much)|square f|sq\.? ?f|linear|lin\.? ?f|measure|dimension|length|width|\barea\b|footage/i;
+  function mqccCatMeasHook() {
+    const nmEl = document.getElementById('mqcc-cat-name');
+    if (!nmEl || nmEl._mqMeasHook) return;
+    nmEl._mqMeasHook = 1;
+    nmEl.addEventListener('input', () => {
+      const h = MQCC_NUMQ.test(nmEl.value);
+      if (h === nmEl._mqMeasHot) return;
+      nmEl._mqMeasHot = h;
+      const keep = (document.getElementById('mqcc-cat-measname') || {}).value;
+      mqccCatMeasBox();
+      const mn = document.getElementById('mqcc-cat-measname'); if (mn && keep) mn.value = keep;
+    });
+  }
+  function mqccCatMeasBox() {
+    const box = document.getElementById('mqcc-cat-measbox'); if (!box) return;
+    const qt = (document.getElementById('mqcc-cat-qt') || {}).value || '';
+    if (!qt) { box.style.display = 'none'; return; }
+    const ms = mqccMeasOf(qt);
+    const nmEl = document.getElementById('mqcc-cat-name');
+    const hot = MQCC_NUMQ.test((nmEl || {}).value || '');
+    if (nmEl) nmEl._mqMeasHot = hot;
+    box.style.display = 'block';
+    box.style.background = hot ? '#fffbeb' : '#f0fdfa';
+    box.style.borderColor = hot ? '#fcd34d' : '#99f6e4';
+    box.style.color = hot ? '#78350f' : '#134e4a';
+    if (!hot && !box._open) {
+      box.style.background = '#f9fafb'; box.style.borderColor = '#e5e7eb'; box.style.color = '#374151';
+      box.innerHTML = `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span>📏 Need the customer to type a number, like square feet?</span><a href="#" onclick="event.preventDefault();document.getElementById('mqcc-cat-measbox')._open=1;mqccCatMeasBox()" style="font-weight:600;color:#2563eb;text-decoration:none">That's a measurement →</a></div>`;
+      return;
+    }
+    const esc = mqccEsc;
+    const chips = ms.length ? ms.map(m => `<span style="display:inline-flex;gap:4px;background:#fff;border:1px solid #e5e7eb;border-radius:6px;padding:2px 8px;font-weight:600;color:#111827">${esc(m.label)} <span style="font-weight:400;color:#6b7280">${esc(mqccMeasUnit(m))}</span></span>`).join(' ') : '<span style="color:#6b7280">none yet</span>';
+    box.innerHTML = `<div style="font-weight:700;margin-bottom:4px">${hot ? 'Asking for a number? Make it a measurement instead.' : 'Need the customer to type a number, like square feet?'}</div>
+      <div>That's a <strong>measurement</strong>, not a step. A step is always a set of choices (e.g. <em>Door finish: Paint / Stain</em>). Price each choice <em>per sq ft</em> of a measurement, and its box shows on your widget right after the step.</div>
+      <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;align-items:center"><span>This quote's measurements:</span> ${chips}</div>
+      <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center">
+        <input type="text" id="mqcc-cat-measname" maxlength="40" placeholder="e.g. Door area" style="flex:1 1 150px;min-width:0;padding:7px 9px;border:1px solid #d1d5db;border-radius:8px;font:inherit;font-size:13px;background:#fff"/>
+        <select id="mqcc-cat-meastype" onchange="document.getElementById('mqcc-cat-measunit').style.display=this.value==='count'?'':'none'" style="width:auto;padding:7px 8px;border:1px solid #d1d5db;border-radius:8px;font:inherit;font-size:13px;background:#fff"><option value="sqft">Square feet</option><option value="lft">Linear feet</option><option value="count">A count…</option></select>
+        <input type="text" id="mqcc-cat-measunit" maxlength="24" placeholder="what's counted, e.g. doors" style="display:none;flex:0 1 160px;padding:7px 9px;border:1px solid #d1d5db;border-radius:8px;font:inherit;font-size:13px;background:#fff"/>
+        <button type="button" class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="mqccCatMeasAdd(this)">+ Add measurement</button>
+      </div>
+      <div id="mqcc-cat-measmsg" style="font-size:12px;margin-top:6px"></div>`;
+  }
+  window.mqccCatMeasAdd = async function(btn) {
+    const qt = (document.getElementById('mqcc-cat-qt') || {}).value || '';
+    const label = String((document.getElementById('mqcc-cat-measname') || {}).value || '').trim();
+    const type = (document.getElementById('mqcc-cat-meastype') || {}).value || 'sqft';
+    const unit = type === 'count' ? String((document.getElementById('mqcc-cat-measunit') || {}).value || '').trim() : '';
+    const msg = t => { const m = document.getElementById('mqcc-cat-measmsg'); if (m) m.innerHTML = t; };
+    if (!qt) return;
+    if (!label) { msg('<span style="color:#b91c1c">Give it a name first, e.g. Door area.</span>'); return; }
+    if (type === 'count' && !unit) { msg('<span style="color:#b91c1c">Say what\'s counted, e.g. doors.</span>'); return; }
+    const f = mqccShopFields();
+    let cfgAll = {}; try { cfgAll = JSON.parse(f['Hidden widget tabs'] || '{}') || {}; } catch (e) { cfgAll = {}; }
+    const q = (cfgAll.quoteTypes || []).find(x => x && x.id === qt);
+    if (!q) return;
+    q.measures = Array.isArray(q.measures) ? q.measures : [];
+    if (q.measures.some(x => x && String(x.label || '').trim().toLowerCase() === label.toLowerCase())) { msg('<span style="color:#b91c1c">This quote already has a measurement with that name.</span>'); return; }
+    q.measures.push({ id: 'm_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), label, type, unit });
+    if (btn) { btn.disabled = true; btn.textContent = 'Adding…'; }
+    try {
+      const json = JSON.stringify(cfgAll);
+      await atUpdate(SHOPS_TABLE, shopRecord.id, { 'Hidden widget tabs': json });
+      shopRecord.fields['Hidden widget tabs'] = json;
+      if (window._mqShopRecord && window._mqShopRecord.fields) window._mqShopRecord.fields['Hidden widget tabs'] = json;
+      { const mb = document.getElementById('mqcc-cat-measbox'); if (mb) mb._open = 1; }
+      mqccCatMeasBox();
+      msg(`<span style="color:#15803d;font-weight:600">✓ ${mqccEsc(label)} added.</span> Now make this step a choice (e.g. Door finish), save it, then on each option pick <strong>Price by → One of this quote's measurements</strong>.`);
+    } catch (e) {
+      if (btn) { btn.disabled = false; btn.textContent = '+ Add measurement'; }
+      msg('<span style="color:#b91c1c">Couldn\'t save. Please try again.</span>');
+    }
+  };
   function mqccMeasNote(qtId) {
     const ms = mqccMeasOf(qtId);
     const ruler = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l14-14 4 4L7 21z"/><path d="M7 13l2 2M10 10l2 2M13 7l2 2"/></svg>';
@@ -6945,6 +7022,7 @@ window.mqphGoToWizard = function() {
               <div id="mqcc-cat-qt-fixed" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:14px;font-weight:600;color:#111827"><span id="mqcc-cat-qt-name"></span><a href="#" id="mqcc-cat-qt-move" onclick="event.preventDefault();document.getElementById('mqcc-cat-qt-fixed').style.display='none';document.getElementById('mqcc-cat-qt-pick').style.display='block'" style="font-size:12px;font-weight:600;color:#2563eb;text-decoration:none">Move to another quote</a></div>
               <div id="mqcc-cat-qt-pick" style="display:none"><select id="mqcc-cat-qt" onchange="mqccCatQtChanged();var n=document.getElementById('mqcc-cat-qt-name');if(n)n.textContent=this.options[this.selectedIndex].text"></select></div>
             </div>
+            <div id="mqcc-cat-measbox" style="display:none;background:#f0fdfa;border:1px solid #99f6e4;border-radius:10px;padding:12px 14px;margin:0 0 16px;font-size:13px;color:#134e4a;line-height:1.5"></div>
             <div class="mqph-field" id="mqcc-cat-rooms-wrap" style="display:none !important"><label>Show this step for these project types</label>
               <style>
                 #mqcc-cat-rooms{display:grid !important;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px;padding:2px 0}
@@ -7103,6 +7181,7 @@ window.mqphGoToWizard = function() {
   // ── Category settings ──
   window.mqccOpenCat = function(cid) {
     mqccEditCat = cid;
+    { const mb = document.getElementById('mqcc-cat-measbox'); if (mb) mb._open = 0; }
     const c = cid ? mqccCats().find(x => x.id === cid) : null;
     document.getElementById('mqcc-cat-title').textContent = c ? `Edit step: ${c.name}` : 'New category';
     const saveBtnTxt = document.getElementById('mqcc-cat-save');
@@ -7142,6 +7221,8 @@ window.mqphGoToWizard = function() {
     if (qm) qm.style.display = qtSel.options.length > 1 ? '' : 'none';
     mqccCatQtFill(c);
     mqccCatRoomsFill();
+    mqccCatMeasBox();
+    mqccCatMeasHook();
     document.getElementById('mqcc-cat-delete').style.display = c ? '' : 'none';
     mqccCatAnswerChanged();
     const catOv = document.getElementById('mqcc-cat-overlay');
@@ -7277,6 +7358,8 @@ window.mqphGoToWizard = function() {
     const c = mqccEditCat ? mqccCats().find(x => x.id === mqccEditCat) : null;
     mqccCatQtFill(c);
     mqccCatRoomsFill();
+    mqccCatMeasBox();
+    mqccCatMeasHook();
     mqccDraftCatPreview();
   };
   window.mqccCatAnswerChanged = function() {
