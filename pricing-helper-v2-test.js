@@ -6909,7 +6909,7 @@ window.mqphGoToWizard = function() {
           cfg.min > 0 ? `min ${mqccMoney(cfg.min)}` : '',
           cfg.showIf ? 'only if ' + mqccEsc(mqccOptionLabel(cfg.showIf) || 'option removed') : '',
           mqccEsc(mqccTieText(cfg.tie)),
-          cfg.install && cfg.install.price > 0 ? `install ${mqccMoney(cfg.install.price)}${cfg.install.how === 'flat' ? ' flat' : ' each'}` : '',
+          cfg.install && cfg.install.price > 0 ? `install ${mqccMoney(cfg.install.price)}${cfg.install.how === 'flat' ? ' flat' : cfg.install.how === 'count' ? ' per ' + mqccEsc(String(cfg.install.unit || 'unit').replace(/s$/, '')) : cfg.install.how === 'sqft' ? ' per sq ft' : cfg.install.how === 'lft' ? ' per lin ft' : cfg.install.how === 'meas' ? ' per unit of ' + mqccEsc((mqccMeasFind(cfg.install.meas) || {}).label || 'a measurement') : ' each'}` : '',
           cfg.adj ? 'uses project type %' : '',
         ].filter(Boolean).join(' · ');
         return `<div class="mqph-row">
@@ -7160,12 +7160,17 @@ window.mqphGoToWizard = function() {
             </div>
             <div id="mqcc-item-inst-wrap" class="mqcc-subbox">
               <label class="mqcc-check"><input type="checkbox" id="mqcc-item-inst-on" onchange="mqccInstToggle()"/> Offer installation for this option</label>
-              <div class="mqcc-subbox-note">Customers get a Supply only / Supply + install choice on this option. It starts on whatever they picked in your Supply + install step, and they can change it.</div>
+              <div class="mqcc-subbox-note" id="mqcc-item-inst-note">Customers get a Supply only / Supply + install choice on this option. It starts on whatever they picked in your Supply + install step, and they can change it.</div>
               <div id="mqcc-item-inst-fields" style="display:none;margin-top:8px">
                 <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:13px;color:#374151">
                   Install price <span style="color:#6b7280">${CUR()}</span><input type="number" id="mqcc-item-inst-price" step="0.01" min="0" style="width:96px" oninput="mqccCheck()"/>
-                  <select id="mqcc-item-inst-how" onchange="mqccCheck()" style="width:auto"><option value="same">for each unit (same count as the item)</option><option value="flat">flat, once</option></select>
+                  <select id="mqcc-item-inst-how" onchange="mqccInstHowChanged()" style="width:auto;max-width:100%"><option value="flat">flat, once</option></select>
                 </div>
+                <div id="mqcc-item-inst-countf" style="display:none;margin-top:8px;font-size:13px;color:#374151">
+                  <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">What's counted <input type="text" id="mqcc-item-inst-unit" maxlength="24" placeholder="e.g. doors" style="width:140px" oninput="mqccInstHowChanged(true)"/></div>
+                  <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:6px">Question customers see <input type="text" id="mqcc-item-inst-q" maxlength="80" placeholder="e.g. How many doors need installing?" style="flex:1;min-width:200px"/></div>
+                </div>
+                <div id="mqcc-item-inst-explain" style="font-size:12px;color:#4b5563;margin-top:6px;line-height:1.45"></div>
                 <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:13px;color:#374151;margin-top:8px">
                   Install minimum (optional) <span style="color:#6b7280">${CUR()}</span><input type="number" id="mqcc-item-inst-min" step="0.01" min="0" style="width:96px" oninput="mqccCheck()"/>
                 </div>
@@ -7856,7 +7861,9 @@ window.mqphGoToWizard = function() {
     const inst = cfg.install && typeof cfg.install === 'object' ? cfg.install : null;
     document.getElementById('mqcc-item-inst-on').checked = !!(inst && inst.price > 0);
     document.getElementById('mqcc-item-inst-price').value = inst && inst.price > 0 ? inst.price : '';
-    document.getElementById('mqcc-item-inst-how').value = inst && inst.how === 'flat' ? 'flat' : 'same';
+    window._mqccInstWant = inst ? (inst.how === 'meas' ? 'meas:' + (inst.meas || '') : (['flat', 'same', 'count', 'sqft', 'lft'].includes(inst.how) ? inst.how : 'same')) : 'flat';
+    document.getElementById('mqcc-item-inst-unit').value = inst && inst.unit ? inst.unit : '';
+    document.getElementById('mqcc-item-inst-q').value = inst && inst.label ? inst.label : '';
     document.getElementById('mqcc-item-inst-min').value = inst && inst.min > 0 ? inst.min : '';
     mqccInstToggle();
     document.getElementById('mqcc-item-adj').checked = !!cfg.adj;
@@ -7921,8 +7928,58 @@ window.mqphGoToWizard = function() {
     document.getElementById('mqcc-calc-a-pre').textContent = words[0] + (isPct ? ' ' + CUR() : '');
     document.getElementById('mqcc-calc-a-post').textContent = words[1];
     document.getElementById('mqcc-calc-b-pre').textContent = words[2];
+    mqccInstWording(how);
     mqccCalc();
     mqccCheck();
+  };
+  // Nov 18 (Jordan): install wording that fits this option -- your own
+  // quotes have no Supply + install step, and "same count as the item"
+  // didn't say what count.
+  function mqccInstWording(how) {
+    const c = mqccEditItem ? mqccCats().find(x => x.id === mqccEditItem.cid) : null;
+    const inQt = !!(c && c.qt);
+    const note = document.getElementById('mqcc-item-inst-note');
+    if (note) note.textContent = inQt
+      ? 'Customers choose Supply only or Supply + install on this option. Turning this on also adds a “Supply + install?” question to this quote (near the start); this option starts on that answer, and customers can change it on the option.'
+      : 'Customers get a Supply only / Supply + install choice on this option. It starts on whatever they picked in your Supply + install step, and they can change it.';
+    const sel = document.getElementById('mqcc-item-inst-how');
+    if (!sel) return;
+    let same;
+    if (how === 'meas') { const ms = document.getElementById('mqcc-item-meas'); const o = ms && ms.options[ms.selectedIndex]; const m = o ? mqccMeasFind(o.value) : null; same = m ? `per ${mqccMeasUnit(m).replace(/s$/, '')} — the same ${m.label} they enter` : ''; }
+    else if (how === 'sqft') same = 'per sq ft — the same square feet they enter';
+    else if (how === 'lft') same = 'per lin ft — the same linear feet they enter';
+    else if (how === 'each') { const u = (document.getElementById('mqcc-item-unit').value || 'item').trim(); same = `per ${u.replace(/s$/, '')} — the same number of ${u.replace(/s?$/, 's')} they pick`; }
+    else if (how === 'opt') same = 'per unit — the same number as the linked option';
+    else if (MQCC_HOW[how] && MQCC_HOW[how].per) same = `per ${MQCC_HOW[how].per.replace(/s$/, '')} — the same ${MQCC_HOW[how].word || MQCC_HOW[how].per} as the price`;
+    else same = '';
+    const cu = (document.getElementById('mqcc-item-inst-unit').value || '').trim();
+    const opts = [['flat', 'flat, once']];
+    if (same) opts.push(['same', same]);
+    opts.push(['count', cu ? `per ${cu.replace(/s$/, '')} — customers say how many` : 'per item they count (e.g. per door)']);
+    opts.push(['sqft', 'per sq ft — customers enter the square feet']);
+    opts.push(['lft', 'per lin ft — customers enter the linear feet']);
+    if (inQt) mqccMeasOf(c.qt).forEach(m => opts.push(['meas:' + m.id, `per ${mqccMeasUnit(m).replace(/s$/, '')} of ${m.label}`]));
+    const keep = window._mqccInstWant || sel.value || 'flat';
+    window._mqccInstWant = null;
+    sel.innerHTML = opts.map(([v, l]) => `<option value="${v}">${mqccEsc(l)}</option>`).join('');
+    sel.value = opts.some(o => o[0] === keep) ? keep : 'flat';
+    mqccInstHowChanged(true);
+  }
+  window.mqccInstHowChanged = function(quiet) {
+    const sel = document.getElementById('mqcc-item-inst-how'); if (!sel) return;
+    const v = sel.value;
+    const cf = document.getElementById('mqcc-item-inst-countf'); if (cf) cf.style.display = v === 'count' ? 'block' : 'none';
+    const cu = (document.getElementById('mqcc-item-inst-unit').value || '').trim() || 'doors';
+    const cOpt = sel.querySelector('option[value="count"]'); if (cOpt && (document.getElementById('mqcc-item-inst-unit').value || '').trim()) cOpt.textContent = `per ${cu.replace(/s$/, '')} — customers say how many`;
+    const ex = document.getElementById('mqcc-item-inst-explain');
+    if (ex) ex.textContent = v === 'flat' ? 'One install charge whenever they choose Supply + install.'
+      : v === 'same' ? 'Install is multiplied by the same number this option is priced on.'
+      : v === 'count' ? `When they choose Supply + install, customers are asked how many ${cu} — e.g. $17 × 12 ${cu}.`
+      : v === 'sqft' ? 'When they choose Supply + install, customers enter the square feet to install (with the calculator).'
+      : v === 'lft' ? 'When they choose Supply + install, customers enter the linear feet to install (with the calculator).'
+      : /^meas:/.test(v) ? 'Install is multiplied by what customers enter for that measurement.' : '';
+    if (!quiet) mqccCheck();
+    if (typeof mqccDraftItemPreview === 'function') { try { mqccDraftItemPreview(); } catch (e) {} }
   };
   window.mqccCalc = function() {
     const how = document.getElementById('mqcc-item-how').value;
@@ -8033,7 +8090,10 @@ window.mqphGoToWizard = function() {
     if (how === 'pct_cc') cfg.pctCc = document.getElementById('mqcc-item-pctcc').value;
     if (instOn) {
       const imin = parseFloat(document.getElementById('mqcc-item-inst-min').value);
-      cfg.install = { price: Math.round(instPrice * 100) / 100, how: document.getElementById('mqcc-item-inst-how').value === 'flat' ? 'flat' : 'same', min: imin > 0 ? Math.round(imin * 100) / 100 : 0 };
+      const ih = document.getElementById('mqcc-item-inst-how').value || 'flat';
+      cfg.install = { price: Math.round(instPrice * 100) / 100, how: /^meas:/.test(ih) ? 'meas' : ih, min: imin > 0 ? Math.round(imin * 100) / 100 : 0 };
+      if (/^meas:/.test(ih)) cfg.install.meas = ih.slice(5);
+      if (ih === 'count') { cfg.install.unit = (document.getElementById('mqcc-item-inst-unit').value || '').trim() || 'units'; const q = (document.getElementById('mqcc-item-inst-q').value || '').trim(); if (q) cfg.install.label = q; }
     }
     if (!MQCC_PCT.includes(how) && document.getElementById('mqcc-item-adj').checked) cfg.adj = true;
     if (vars.length) cfg.variants = vars.map(v => { const o = { id: v.id, label: String(v.label).trim(), price: Math.round((parseFloat(v.price) || 0) * 100) / 100, min: Math.round((parseFloat(v.min) || 0) * 100) / 100 }; if (v.sized) Object.assign(o, { sized: true, dimA: v.dimA, dimB: v.dimB, unit: v.unit === 'mm' ? 'mm' : 'in', swap: !!v.swap, rateMode: v.rateMode || 'flat', rate: parseFloat(v.rate) || 0 }); return o; });
@@ -8495,7 +8555,8 @@ window.mqphGoToWizard = function() {
   // Turns a saved (or being-edited) option into the shape the preview uses —
   // same rules as widget.js mqCcBuild.
   function mqccPvNorm(cid, answer, base, cfg) {
-    const inst = cfg.install && (parseFloat(cfg.install.price) || 0) > 0 ? { price: parseFloat(cfg.install.price) || 0, how: cfg.install.how === 'flat' ? 'flat' : 'same', min: parseFloat(cfg.install.min) || 0 } : null;
+    const ih = cfg.install && ['flat', 'same', 'count', 'sqft', 'lft', 'meas'].includes(cfg.install.how) ? cfg.install.how : 'same';
+    const inst = cfg.install && (parseFloat(cfg.install.price) || 0) > 0 ? { price: parseFloat(cfg.install.price) || 0, how: ih, meas: cfg.install.meas || '', unit: cfg.install.unit || '', min: parseFloat(cfg.install.min) || 0 } : null;
     const variants = (answer === 'any' && ['each', 'sqft', 'lft'].includes(cfg.how) && Array.isArray(cfg.variants))
       ? cfg.variants.filter(v => v && v.id && String(v.label || '').trim()).map(v => ({ id: v.id, label: String(v.label).trim(), price: parseFloat(v.price) || 0, min: parseFloat(v.min) || 0 })) : [];
     return Object.assign(base, { inst, adj: !!cfg.adj, variants });
@@ -8620,9 +8681,14 @@ window.mqphGoToWizard = function() {
         out.push(f.cost ? { label: lab + sfx, cost: f.cost, minUsed: f.minUsed, pro: it.proOnly } : { label: lab + ' — included', cost: 0, included: true, pro: it.proOnly });
       }
       if (doInst) {
-        const per = it.inst.how === 'same' && it.how !== 'flat';
-        const f = mn(it.inst.min, it.inst.price * (per ? q : 1));
-        if (f.cost) out.push({ label: per ? `${it.name} (${mqccPvQtyLabel(it, q)}) — Install` : `${it.name} — Install`, cost: f.cost, minUsed: f.minUsed, pro: it.proOnly });
+        const ih = it.inst.how;
+        const per = ih === 'same' && it.how !== 'flat';
+        // Own count (doors, sq ft…): the preview prices 1 of them.
+        const own = ih === 'count' || ih === 'sqft' || ih === 'lft';
+        const iq = per ? q : ih === 'meas' ? (mqccPv.meas[it.inst.meas] || 0) : 1;
+        const f = mn(it.inst.min, it.inst.price * iq);
+        const ownWord = ih === 'count' ? String(it.inst.unit || 'unit').replace(/s$/, '') : ih === 'sqft' ? 'sq ft' : 'lin ft';
+        if (f.cost) out.push({ label: per ? `${it.name} (${mqccPvQtyLabel(it, q)}) — Install` : own ? `${it.name} — Install (per ${ownWord}; customers enter how many)` : ih === 'meas' ? `${it.name} (${iq}) — Install` : `${it.name} — Install`, cost: f.cost, minUsed: f.minUsed, pro: it.proOnly });
       }
       if (!out.length) return;
       const sum = out.reduce((a, l) => a + l.cost, 0);
@@ -8928,7 +8994,7 @@ window.mqphGoToWizard = function() {
       const varOn = getComputedStyle(document.getElementById('mqcc-item-var-wrap')).display !== 'none';
       mqccPvNorm(c.id, c.answer, draft, {
         how, adj: document.getElementById('mqcc-item-adj').checked,
-        install: instOn ? { price: document.getElementById('mqcc-item-inst-price').value, how: document.getElementById('mqcc-item-inst-how').value, min: document.getElementById('mqcc-item-inst-min').value } : null,
+        install: instOn ? (() => { const ih = document.getElementById('mqcc-item-inst-how').value || 'flat'; return { price: document.getElementById('mqcc-item-inst-price').value, how: /^meas:/.test(ih) ? 'meas' : ih, meas: /^meas:/.test(ih) ? ih.slice(5) : '', unit: document.getElementById('mqcc-item-inst-unit').value, label: document.getElementById('mqcc-item-inst-q').value, min: document.getElementById('mqcc-item-inst-min').value }; })() : null,
         variants: varOn ? mqccVarDraft : [],
       });
       mqccPvDraftItem = draft;
