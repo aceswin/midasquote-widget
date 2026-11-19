@@ -8549,14 +8549,14 @@ window.mqphGoToWizard = function() {
   // minimums, % of the cabinet estimate). Turned-off options are left out,
   // same as the widget; project types aren't applied (the preview shows every
   // option). Pro-only options/categories show with a ⚡ tag.
-  const mqccPv = { base: 14, upper: 12, est: 9840, island: 6, crown: 12, valance: 8, drawers: 8, tall: 1, install: false, qty: {}, on: {}, one: {}, oneQty: {}, vq: {}, vcur: {}, si: {}, meas: {} };
+  const mqccPv = { base: 14, upper: 12, est: 9840, island: 6, crown: 12, valance: 8, drawers: 8, tall: 1, install: false, qty: {}, on: {}, one: {}, oneQty: {}, vq: {}, vcur: {}, si: {}, meas: {}, instq: {} };
   const MQCC_PV_SAMPLE = { island_lf: 'island', crown_lf: 'crown', valance_lf: 'valance', drawers: 'drawers', tallcabs: 'tall' };
 
   // Turns a saved (or being-edited) option into the shape the preview uses —
   // same rules as widget.js mqCcBuild.
   function mqccPvNorm(cid, answer, base, cfg) {
     const ih = cfg.install && ['flat', 'same', 'count', 'sqft', 'lft', 'meas'].includes(cfg.install.how) ? cfg.install.how : 'same';
-    const inst = cfg.install && (parseFloat(cfg.install.price) || 0) > 0 ? { price: parseFloat(cfg.install.price) || 0, how: ih, meas: cfg.install.meas || '', unit: cfg.install.unit || '', min: parseFloat(cfg.install.min) || 0 } : null;
+    const inst = cfg.install && (parseFloat(cfg.install.price) || 0) > 0 ? { price: parseFloat(cfg.install.price) || 0, how: ih, meas: cfg.install.meas || '', unit: cfg.install.unit || '', label: cfg.install.label || '', min: parseFloat(cfg.install.min) || 0 } : null;
     const variants = (answer === 'any' && ['each', 'sqft', 'lft'].includes(cfg.how) && Array.isArray(cfg.variants))
       ? cfg.variants.filter(v => v && v.id && String(v.label || '').trim()).map(v => ({ id: v.id, label: String(v.label).trim(), price: parseFloat(v.price) || 0, min: parseFloat(v.min) || 0 })) : [];
     return Object.assign(base, { inst, adj: !!cfg.adj, variants });
@@ -8683,12 +8683,12 @@ window.mqphGoToWizard = function() {
       if (doInst) {
         const ih = it.inst.how;
         const per = ih === 'same' && it.how !== 'flat';
-        // Own count (doors, sq ft…): the preview prices 1 of them.
+        // Own count (doors, sq ft…): what's typed in the preview's count box.
         const own = ih === 'count' || ih === 'sqft' || ih === 'lft';
-        const iq = per ? q : ih === 'meas' ? (mqccPv.meas[it.inst.meas] || 0) : 1;
-        const f = mn(it.inst.min, it.inst.price * iq);
-        const ownWord = ih === 'count' ? String(it.inst.unit || 'unit').replace(/s$/, '') : ih === 'sqft' ? 'sq ft' : 'lin ft';
-        if (f.cost) out.push({ label: per ? `${it.name} (${mqccPvQtyLabel(it, q)}) — Install` : own ? `${it.name} — Install (per ${ownWord}; customers enter how many)` : ih === 'meas' ? `${it.name} (${iq}) — Install` : `${it.name} — Install`, cost: f.cost, minUsed: f.minUsed, pro: it.proOnly });
+        const iq = per ? q : own ? (mqccPv.instq[c.answer === 'one' ? c.id : it.id] || 0) : ih === 'meas' ? (mqccPv.meas[it.inst.meas] || 0) : 1;
+        const f = (own || ih === 'meas') && !(iq > 0) ? { cost: 0 } : mn(it.inst.min, it.inst.price * iq);
+        const ownWord = ih === 'count' ? (it.inst.unit || 'units') : ih === 'sqft' ? 'sq ft' : 'lin ft';
+        if (f.cost) out.push({ label: per ? `${it.name} (${mqccPvQtyLabel(it, q)}) — Install` : own ? `${it.name} (${iq} ${ownWord}) — Install` : ih === 'meas' ? `${it.name} (${iq}) — Install` : `${it.name} — Install`, cost: f.cost, minUsed: f.minUsed, pro: it.proOnly });
       }
       if (!out.length) return;
       const sum = out.reduce((a, l) => a + l.cost, 0);
@@ -8826,7 +8826,7 @@ window.mqphGoToWizard = function() {
         const q = mqccPv.oneQty[c.id] == null ? 0 : mqccPv.oneQty[c.id];
         body += `<div style="display:flex;align-items:center;gap:10px;margin-top:10px;font-size:13px;font-weight:600;color:#374151">How many? ${mqccPvStepper(`mqccPvOneQty('${c.id}',-1)`, `mqccPvOneQty('${c.id}',1)`, q, cur.unit)}${mqccPvCalcBtn('one:' + c.id, cur.unit, c.name)}</div>`;
       }
-      if (cur && cur.inst) body += `<div style="display:flex;align-items:center;gap:10px;margin-top:10px;font-size:13px;font-weight:600;color:#374151">Installation ${mqccPvSiSelect(c.id, mqccPvWantsInst(c, cur))}</div>`;
+      if (cur && cur.inst) body += `<div style="display:flex;align-items:center;gap:10px;margin-top:10px;font-size:13px;font-weight:600;color:#374151">Installation ${mqccPvSiSelect(c.id, mqccPvWantsInst(c, cur))}</div>${mqccPvInstQtyHtml(c.id, cur, mqccPvWantsInst(c, cur))}`;
     } else {
       const names = [...new Set(items.filter(i => i.groupName).sort((a, b) => (a.groupOrder || 0) - (b.groupOrder || 0)).map(i => i.groupName))];
       const buckets = names.map(n => ({ name: n, items: items.filter(i => i.groupName === n) }));
@@ -8855,7 +8855,7 @@ window.mqphGoToWizard = function() {
               ${it.how === 'opt' ? `<div style="font-size:11px;color:#166534">📐 Uses the number of ${mqccEsc(mqccSrcUnit(it.src))}</div>` : ''}
               ${it.how === 'meas' ? `<div style="font-size:11px;color:#166534">📐 Uses “${mqccEsc((mqccMeasFind(it.meas) || {}).label || 'a removed measurement')}”</div>` : ''}
               ${it.tie ? `<div style="font-size:11px;color:#6b7280">🔗 ${mqccEsc(mqccTieText(it.tie))}</div>` : ''}
-              ${shown ? `<div style="margin-top:3px">${control}</div>${it.inst ? `<div style="margin-top:5px">${mqccPvSiSelect(it.id, mqccPvWantsInst(c, it))}</div>` : ''}` : `<div style="font-size:11px;color:#92400e;margin-top:3px">Hidden until “${mqccEsc(rule ? rule.name : '')}” is picked</div>`}
+              ${shown ? `<div style="margin-top:3px">${control}</div>${it.inst ? `<div style="margin-top:5px">${mqccPvSiSelect(it.id, mqccPvWantsInst(c, it))}</div>${mqccPvInstQtyHtml(it.id, it, mqccPvWantsInst(c, it))}` : ''}` : `<div style="font-size:11px;color:#92400e;margin-top:3px">Hidden until “${mqccEsc(rule ? rule.name : '')}” is picked</div>`}
             </div>
           </div>`;
         }).join('')}</div>`).join('');
@@ -9017,6 +9017,19 @@ window.mqphGoToWizard = function() {
     return `<select onchange="mqccPvSi('${key}',this.value)" style="font:inherit;font-size:11px;font-weight:600;padding:3px 6px;border:1px solid #d1d5db;border-radius:5px;background:#fff;width:auto"><option value="supply" ${isInst ? '' : 'selected'}>Supply only</option><option value="install" ${isInst ? 'selected' : ''}>Supply + install</option></select>`;
   }
   window.mqccPvSi = function(key, v) { mqccPv.si[key] = v; mqccPvRefresh(); };
+  // Nov 19: the install count box customers see (per door / sq ft / lin ft
+  // they enter), same as the widget, once Supply + install is chosen.
+  function mqccPvInstQtyHtml(key, it, wants) {
+    const ih = it && it.inst && it.inst.how;
+    if (!wants || !(ih === 'count' || ih === 'sqft' || ih === 'lft')) return '';
+    const word = ih === 'sqft' ? 'square feet' : ih === 'lft' ? 'linear feet' : (it.inst.unit || 'items');
+    const ask = it.inst.label || (ih === 'sqft' ? 'How many square feet need installing?' : ih === 'lft' ? 'How many linear feet need installing?' : `How many ${it.inst.unit || 'of these'} need installing?`);
+    const v = mqccPv.instq[key] || 0;
+    const b = 'width:24px;height:24px;border:1px solid #d1d5db;background:#fff;border-radius:5px;cursor:pointer;font-size:13px;line-height:1;padding:0';
+    return `<div style="margin-top:8px;padding-top:8px;border-top:1px dashed #e5e7eb;font-size:12px;color:#4b5563" onclick="event.stopPropagation()">${mqccEsc(ask)}
+      <div style="display:flex;align-items:center;gap:6px;margin-top:5px"><button type="button" style="${b}" onclick="mqccPvInstQ('${key}',-1)">−</button><span style="min-width:28px;text-align:center;font-size:14px;font-weight:600;color:#111827">${v}</span><button type="button" style="${b}" onclick="mqccPvInstQ('${key}',1)">+</button><span style="font-weight:600;color:#6b7280">${mqccEsc(word)}</span></div></div>`;
+  }
+  window.mqccPvInstQ = function(key, d) { mqccPv.instq[key] = Math.max(0, (mqccPv.instq[key] || 0) + d); mqccPvRefresh(); };
   function mqccPvFindAny(id) {
     const hit = mqccPvFind(id);
     if (hit) return hit.it;
