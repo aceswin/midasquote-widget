@@ -6532,6 +6532,17 @@ window.mqphGoToWizard = function() {
   }
   // Phase 4: a quote type's own measurements (Project types → Measurements):
   // [{id:'m_…', label, type:'sqft'|'lft'|'count', unit}] on the quote type.
+  // Nov 18 (Jordan): one short line per quote saying which measurements it
+  // can price with, or that it has none yet (with an example + a link).
+  function mqccMeasNote(qtId) {
+    const ms = mqccMeasOf(qtId);
+    const ruler = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l14-14 4 4L7 21z"/><path d="M7 13l2 2M10 10l2 2M13 7l2 2"/></svg>';
+    const go = (txt) => `<button type="button" class="mqph-btn mqph-btn-secondary mqph-btn-sm" style="margin-left:auto;white-space:nowrap" onclick="event.stopPropagation();(window.mqQtOpenMeas||window.mqQtOpenInRooms)('${qtId}')">${txt} →</button>`;
+    const box = (inner, tone) => `<div class="mqcc-meas-note" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#fff;border:1px solid ${tone};border-radius:8px;padding:9px 12px;margin:4px 0 10px;font-size:12.5px;color:#374151;line-height:1.45">${inner}</div>`;
+    if (!ms.length) return box(`<span style="color:#b45309;display:inline-flex">${ruler}</span><span><strong style="color:#111827">No measurements yet.</strong> Add one in Project types to price by size — e.g. <em>Wall area</em> in sq ft, priced at $2.50 per sq ft.</span>${go('Add measurements')}`, '#fde68a');
+    const chip = m => `<span style="display:inline-flex;align-items:center;gap:5px;background:#f3f4f6;border-radius:6px;padding:3px 8px;font-weight:600;color:#111827">${mqccEsc(m.label)} <span style="font-weight:400;color:#6b7280">${mqccEsc(mqccMeasUnit(m))}</span></span>`;
+    return box(`<span style="color:#0d9488;display:inline-flex">${ruler}</span><span style="color:#6b7280">Measurements you can price with:</span><span style="display:inline-flex;flex-wrap:wrap;gap:6px">${ms.map(chip).join('')}</span>${go('Edit')}`, '#e5e7eb');
+  }
   function mqccMeasOf(qtId) { const q = mqccQts().find(x => x.id === qtId); return (q && Array.isArray(q.measures)) ? q.measures.filter(m => m && m.id && m.label) : []; }
   function mqccMeasUnit(m) { return !m ? 'unit' : (m.type === 'sqft' ? 'sq ft' : (m.type === 'lft' ? 'lin ft' : (m.unit || 'units'))); }
   function mqccMeasFind(measId) { for (const q of mqccQts()) { const m = (q.measures || []).find(x => x && x.id === measId); if (m) return m; } return null; }
@@ -6883,7 +6894,7 @@ window.mqphGoToWizard = function() {
               <span style="margin-left:auto;display:inline-flex;gap:10px;align-items:center">${typeof window.mqQtHasPack === 'function' && window.mqQtHasPack(k) ? `<button class="mqph-btn mqph-btn-secondary mqph-btn-sm" title="Wipe this quote and set it up fresh from MidasQuote's starter pack" onclick="event.stopPropagation();window.mqQtResetToPack('${k}')">↺ Reset to starter pack</button>` : ''}${window.mqQtPackRestorable && window.mqQtPackRestorable(k) && window.mqQtPackMissing && window.mqQtPackMissing(k) > 0 ? `<button class="mqph-btn mqph-btn-secondary mqph-btn-sm" title="Puts back any option a step is missing from MidasQuote's starter pack — never changes what's already here" onclick="mqRestoreQtFromPack('${k}', this)">↺ Restore from starter pack</button>` : ''}<button class="mqph-btn mqph-btn-secondary mqph-btn-sm" onclick="window._mqccNewCatQt='${k}';mqccOpenCat(null)">+ New step</button><span class="mqcc-qt-shut-lab" style="font-size:12px;font-weight:600;color:${bd}">${shut ? 'Show ▸' : 'Hide ▾'}</span></span>
             </div>`;
             const body = list.length ? list.map((c, i) => blockOf(c, cats.indexOf(c), i + 1)).join('') : `<div style="font-size:12px;color:#6b7280;margin-top:10px">${listAll.length ? 'No steps match your filter yet — click <strong>+ New step</strong> to add one (it’ll be tagged for it).' : 'No steps yet — this quote won\'t show on your widget until it has at least one.'}</div>`;
-            return `<div data-mqcc-group="${k}" style="border:1.5px solid ${bd}55;border-left:5px solid ${bd};background:${bg};border-radius:8px;padding:12px 14px 10px;margin:14px 0">${bhead}<div class="mqcc-qt-body" style="${shut ? 'display:none;' : ''}margin-top:6px">${body}</div></div>`;
+            return `<div data-mqcc-group="${k}" style="border:1.5px solid ${bd}55;border-left:5px solid ${bd};background:${bg};border-radius:8px;padding:12px 14px 10px;margin:14px 0">${bhead}<div class="mqcc-qt-body" style="${shut ? 'display:none;' : ''}margin-top:6px">${mqccMeasNote(k)}${body}</div></div>`;
           }
           if (!list.length) return '';
           return `<div data-mqcc-group="${k}">` + head + list.map(c => blockOf(c, cats.indexOf(c))).join('') + `</div>`;

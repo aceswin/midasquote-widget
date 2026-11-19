@@ -14532,6 +14532,19 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     setTimeout(open, 300);
   };
   // Jumps to Project types with this quote type's section open.
+  // Opens a quote's ② Measurements box on Project types (Nov 18 — the
+  // Pricing tab's "Add measurements →" link).
+  window.mqQtOpenMeas = function(id) {
+    (window._mqRoomGrpOpen = window._mqRoomGrpOpen || new Set()).add(id + ':meas');
+    window.mqQtOpenInRooms(id);
+    setTimeout(() => {
+      const top = [...document.querySelectorAll('.mq-room-grp-top')].find(t => (t.getAttribute('onclick') || '').includes(`'${id}:meas'`));
+      const box = top && top.parentElement;
+      const body = box && box.querySelector('.mq-room-grp-b');
+      if (body && body.style.display === 'none' && window.mqRoomGrpToggle) { window._mqRoomGrpOpen.delete(id + ':meas'); window.mqRoomGrpToggle(top, id + ':meas'); }
+      if (box) { box.scrollIntoView({ behavior: 'smooth', block: 'center' }); box.style.transition = 'box-shadow .3s'; box.style.boxShadow = '0 0 0 3px #99f6e4'; setTimeout(() => { box.style.boxShadow = ''; }, 1800); }
+    }, 700);
+  };
   window.mqQtOpenInRooms = function(id) {
     window._mqRoomSecOpen = window._mqRoomSecOpen || new Set();
     window._mqRoomSecOpen.add('qt:' + id);
