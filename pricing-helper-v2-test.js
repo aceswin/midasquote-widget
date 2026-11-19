@@ -6941,9 +6941,9 @@ window.mqphGoToWizard = function() {
             <button class="mqph-modal-hdr-close" onclick="mqccClose('mqcc-cat-overlay')">×</button>
           </div>
           <div class="mqph-modal-body">${mqccFNoteHtml('mqcc-cat-fnote')}<div id="mqcc-cat-newtip" style="display:none;align-items:flex-start;gap:10px;background:#fffbeb;border:1px solid #fcd34d;border-left:4px solid #f59e0b;border-radius:10px;padding:11px 14px;margin-bottom:16px;font-size:13px;line-height:1.5;color:#78350f"><span style="font-size:17px;line-height:1.2">💡</span><span><strong>You're making the step itself</strong> — its name, the question customers see, and where it goes. The choices inside it (and their prices) come next: after you save, click <strong>+ Add option</strong> on the step.</span></div><div class="mqcc-modal-grid"><div>
-            <div class="mqph-field" id="mqcc-cat-qt-wrap"><label>Which quote is this step in?</label>
-              <select id="mqcc-cat-qt" onchange="mqccCatQtChanged()"></select>
-              <div style="font-size:11px;color:#6b7280;margin-top:4px;line-height:1.45">Choose which quote type this step appears in.</div>
+            <div class="mqph-field" id="mqcc-cat-qt-wrap"><label>Quote</label>
+              <div id="mqcc-cat-qt-fixed" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:14px;font-weight:600;color:#111827"><span id="mqcc-cat-qt-name"></span><a href="#" id="mqcc-cat-qt-move" onclick="event.preventDefault();document.getElementById('mqcc-cat-qt-fixed').style.display='none';document.getElementById('mqcc-cat-qt-pick').style.display='block'" style="font-size:12px;font-weight:600;color:#2563eb;text-decoration:none">Move to another quote</a></div>
+              <div id="mqcc-cat-qt-pick" style="display:none"><select id="mqcc-cat-qt" onchange="mqccCatQtChanged();var n=document.getElementById('mqcc-cat-qt-name');if(n)n.textContent=this.options[this.selectedIndex].text"></select></div>
             </div>
             <div class="mqph-field" id="mqcc-cat-rooms-wrap" style="display:none !important"><label>Show this step for these project types</label>
               <style>
@@ -7126,11 +7126,20 @@ window.mqphGoToWizard = function() {
     const fk = mqccFKey();
     const curQt = c ? (c.qt || '') : (window._mqccNewCatQt || (fk ? fk : '') || (noCab ? qts[0].id : ''));
     window._mqccNewCatQt = '';
-    qtSel.innerHTML = (noCab && curQt ? '' : `<option value="">Cabinets (the Cabinets only and Cabinets + countertops quotes)</option>`)
-      + qts.map(q => `<option value="${q.id}">${mqccEsc(q.name)}${q.on === false ? ' (turned off)' : ''}${q.proOnly ? ' — Pro only' : ''}</option>`).join('')
+    // Only quotes the shop actually offers (+ the one this step is in);
+    // shown as a plain name with a "Move to another quote" link (Nov 18).
+    const qOff = typeof window.mqQtsNotOffered === 'function' ? window.mqQtsNotOffered(mqccShopFields()) : new Set();
+    const qtsPick = qts.filter(q => q.id === curQt || !qOff.has(q.id));
+    qtSel.innerHTML = (noCab && curQt ? '' : `<option value="">Cabinets (Cabinets only and Cabinets + countertops)</option>`)
+      + qtsPick.map(q => `<option value="${q.id}">${mqccEsc(q.name)}${q.on === false ? ' (turned off)' : ''}${q.proOnly ? ' — Pro only' : ''}</option>`).join('')
       + (curQt && !qts.some(q => q.id === curQt) ? `<option value="${mqccEsc(curQt)}">A deleted quote type (not showing anywhere)</option>` : '');
     qtSel.value = curQt;
     mqccShow('mqcc-cat-qt-wrap', qts.length > 0 || !!curQt);
+    const qn = document.getElementById('mqcc-cat-qt-name'), qf = document.getElementById('mqcc-cat-qt-fixed'), qp = document.getElementById('mqcc-cat-qt-pick'), qm = document.getElementById('mqcc-cat-qt-move');
+    if (qn) qn.textContent = qtSel.selectedIndex >= 0 ? qtSel.options[qtSel.selectedIndex].text : '';
+    if (qf) qf.style.display = 'flex';
+    if (qp) qp.style.display = 'none';
+    if (qm) qm.style.display = qtSel.options.length > 1 ? '' : 'none';
     mqccCatQtFill(c);
     mqccCatRoomsFill();
     document.getElementById('mqcc-cat-delete').style.display = c ? '' : 'none';
@@ -7834,7 +7843,8 @@ window.mqphGoToWizard = function() {
   function mqccStepTargets() {
     const out = [];
     if (!mqphComputeTabScope().countertopsOnly) out.push({ id: '', name: 'Cabinets (Cabinets only + Cabinets & countertops)' });
-    mqccQts().forEach(q => out.push({ id: q.id, name: q.name + (q.on === false ? ' (turned off)' : '') }));
+    const off = typeof window.mqQtsNotOffered === 'function' ? window.mqQtsNotOffered(mqccShopFields()) : new Set();
+    mqccQts().filter(q => !off.has(q.id)).forEach(q => out.push({ id: q.id, name: q.name + (q.on === false ? ' (turned off)' : '') }));
     return out;
   }
   function mqccStepSorted() {
