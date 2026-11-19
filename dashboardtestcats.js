@@ -325,36 +325,36 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
           </div>
         </div>
         <div class="mq-step">
-          <div class="mq-step-head"><span class="mq-step-num">Step 6</span><span class="mq-step-title">Showroom <span style="font-weight:400;color:#9ca3af;font-size:13px">(optional)</span></span></div>
-          <div class="mq-step-body">
-            <p>A shareable gallery you build one category at a time: pull in priced categories straight from Pricing (they keep following your photos and prices), and add your own categories for past projects, before &amp; afters, your team — anything. Rename, reorder or remove anything on the showroom without touching your actual pricing or the widget itself.</p>
-            <p>Your showroom has its own standalone link that works completely on its own, and can also be embedded right on your website as a self-sizing iframe if you'd rather it live on your own page. Not all shops have a decent showroom on their website, so MidasQuote solves that problem for shops at no extra cost to you.</p>
-          </div>
-        </div>
-        <div class="mq-step">
-          <div class="mq-step-head"><span class="mq-step-num">Step 7</span><span class="mq-step-title">Embed code</span></div>
+          <div class="mq-step-head"><span class="mq-step-num">Step 6</span><span class="mq-step-title">Embed code</span></div>
           <div class="mq-step-body">
             <p>Grab your widget's embed code or direct link and add it to your website. Customize the code to suit your site. Access your MidasQuote Pro link as well and follow instructions on how to add MidasQuote or MidasQuote Pro as an app to your phone or computer for fast accessibility.</p>
           </div>
         </div>
         <div class="mq-step">
-          <div class="mq-step-head"><span class="mq-step-num">Step 8</span><span class="mq-step-title">Test it</span></div>
+          <div class="mq-step-head"><span class="mq-step-num">Step 7</span><span class="mq-step-title">Test it</span></div>
           <div class="mq-step-body">
             <p>Run a few test quotes for jobs you've actually quoted before, and compare the ballpark to what you really charged. Make sure that the prices you are generating are always in a healthy range. If not, then you can recheck your pricing, adjust your range to be wider or higher, or adjust individual sections of your range (Base cabinet, uppers, installation) in the Project types tab.</p>
             <p>Generally your quotes are going to come in pretty close to your real pricing, except for things like finished ends and a few crown returns that will be missed. We have tested MidasQuote on multiple jobs varying from a couple thousand dollars to $50,000 and higher, and it always comes in very close.</p>
           </div>
         </div>
         <div class="mq-step">
-          <div class="mq-step-head"><span class="mq-step-num">Step 9</span><span class="mq-step-title">Go live</span></div>
+          <div class="mq-step-head"><span class="mq-step-num">Step 8</span><span class="mq-step-title">Go live</span></div>
           <div class="mq-step-body">
             <p>Share your link or publish the embed, and you're ready for your first real customer. If you have any problems along the way or any confusion, DO NOT hesitate to reach out. Your success is our success. You came here because you saw the value MidasQuote could provide for you, so let us make sure it's providing that value for you fully.</p>
           </div>
         </div>
         <div class="mq-step">
-          <div class="mq-step-head"><span class="mq-step-num">Step 10</span><span class="mq-step-title">MidasQuote Pro <span style="font-weight:400;color:#9ca3af;font-size:13px">(optional)</span></span></div>
+          <div class="mq-step-head"><span class="mq-step-num">Step 9</span><span class="mq-step-title">MidasQuote Pro <span style="font-weight:400;color:#9ca3af;font-size:13px">(optional)</span></span></div>
           <div class="mq-step-body">
             <p>Once your widget is all set up for customers, you can fine-tune your quoting in MidasQuote Pro. Anything the customer-facing widget doesn't account for can be handled here instead — and more.</p>
-            <p>You'll find your MidasQuote Pro link on the Embed code tab (Step 7 above) — add it to your phone or laptop like an app so it's one tap away when you need it.</p>
+            <p>You'll find your MidasQuote Pro link on the Embed code tab (Step 6 above) — add it to your phone or laptop like an app so it's one tap away when you need it.</p>
+          </div>
+        </div>
+        <div class="mq-step">
+          <div class="mq-step-head"><span class="mq-step-num">Step 10</span><span class="mq-step-title">Showroom <span style="font-weight:400;color:#9ca3af;font-size:13px">(optional · in Marketing)</span></span></div>
+          <div class="mq-step-body">
+            <p>A shareable gallery you build one category at a time: pull in priced categories straight from Pricing (they keep following your photos and prices), and add your own categories for past projects, before &amp; afters, your team — anything. Rename, reorder or remove anything on the showroom without touching your actual pricing or the widget itself.</p>
+            <p>Your showroom has its own standalone link that works completely on its own, and can also be embedded right on your website as a self-sizing iframe if you'd rather it live on your own page. Not all shops have a decent showroom on their website, so MidasQuote solves that problem for shops at no extra cost to you.</p>
           </div>
         </div>
         <p style="margin-top:1.4rem">To dive deeper into any part of your dashboard, pick a topic from the list on the left.</p>
@@ -943,7 +943,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   // since MQ_HELP_CONTENT.templates itself is untouched — it's only
   // excluded from this guide's tab order.
   // ============================================================
-  const MQ_HELP_GUIDE_ORDER = ['gettingstarted','overview','leads','shop','rooms','pricing','specialty','products','showroom','embed','midasquotepro','marketing','proposals','billing'];
+  const MQ_HELP_GUIDE_ORDER = ['gettingstarted','overview','leads','shop','rooms','pricing','specialty','products','embed','midasquotepro','marketing','showroom','proposals','billing'];
   const MQ_HELP_GUIDE_ICONS = {
     gettingstarted:'🚀', overview:'📊', leads:'👥', shop:'🏪', rooms:'🚪', pricing:'💰',
     specialty:'⭐', products:'📦', showroom:'🖼️', embed:'🔗', midasquotepro:'📱', marketing:'📣',
@@ -974,10 +974,10 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   // "Need help?" popups get the same clean look.
   const MQH_GROUPS = [
     ['Get started', ['gettingstarted']],
-    ['Set up your estimator', ['shop', 'rooms', 'pricing', 'specialty', 'products', 'showroom', 'embed']],
+    ['Set up your estimator', ['shop', 'rooms', 'pricing', 'specialty', 'products', 'embed']],
     ['Leads & quotes', ['overview', 'leads']],
     ['MidasQuote Pro', ['midasquotepro', 'proposals']],
-    ['Marketing', ['marketing']],
+    ['Marketing', ['marketing', 'showroom']],
     ['Account', ['billing']],
   ];
   const MQH_I = {
@@ -1405,7 +1405,71 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   // never see it again, tracked by storing that version string on the shop
   // record. Brand new shops never see past announcements — they get the
   // current app as-is, so nothing worth announcing to them retroactively.
-  const MQ_LATEST_ANNOUNCEMENT = 'oct2026-island-pricing-videos';
+  const MQ_LATEST_ANNOUNCEMENT = 'nov2026-19-thumbs';
+  // Nov 19 2026: updates live in the "What's new" box on the Dashboard page
+  // instead of a pop-up. Add new entries at the TOP and set
+  // MQ_LATEST_ANNOUNCEMENT to the new entry's id (that also reloads open tabs
+  // on deploy). Entries newer than the shop's 'Announcement seen' get a New tag.
+  const MQ_UPDATES = [
+    { id: 'nov2026-19-thumbs', date: 'Nov 19, 2026', title: 'Photos on the Focused estimate', body: 'In the Focused layout, each line of the customer\'s estimate now shows the photo from the option they picked, and the install cost sits right under its item.' },
+    { id: 'nov2026-19-measimg', date: 'Nov 19, 2026', title: 'Request a custom how-to-measure picture', body: 'In <strong>Project types → How to measure</strong>, tap <strong>Request a custom how-to-measure image</strong> and tell us what it should show — we\'ll make one for you.' },
+    { id: 'nov2026-19-showroom', date: 'Nov 19, 2026', title: 'Showroom moved to Marketing', body: 'Your Showroom now lives under the <strong>Marketing</strong> tab, next to Design Studio. Nothing about it changed.' },
+    { id: 'nov2026-18-install', date: 'Nov 18, 2026', title: 'Install priced your way', body: 'On your own quote types, each option\'s install can be a flat price, per door (the customer says how many), per square foot, per linear foot, or per measurement. Customers pick Supply only or Supply + install right on the option.' },
+    { id: 'nov2026-18-measstep', date: 'Nov 18, 2026', title: 'Measurement steps', body: 'When you add a step on the Pricing tab, choose <strong>A measurement</strong> to ask for square feet, linear feet or a count right in that step. Options can also say <strong>A later step prices it</strong>, so a choice like Refacing can lead to its own door-style step.' },
+    { id: 'nov2026-17-photos', date: 'Nov 2026', title: 'Job photos in proposals', body: 'Add a <strong>Job photos</strong> block to a proposal template, then add photos to any proposal in MidasQuote Pro.' },
+    { id: 'nov2026-studio', date: 'Nov 2026', title: 'A cleaner Design Studio', body: 'Design Studio has a new layout: tools on the left, settings for whatever you select on the right, and zoom.' },
+    { id: 'oct2026-island-pricing-videos', date: 'Oct 2026', title: 'Island pricing and training videos', body: 'Customers can add a single- or double-row island (with an optional dishwasher) to a cabinet quote. Short training videos sit at the top of Project types and Pricing.' },
+  ];
+  window.mqUpdatesBoxHTML = function() {
+    const seen = ((window._mqShopRecord || {}).fields || {})['Announcement seen'] || '';
+    const seenAt = MQ_UPDATES.findIndex(u => u.id === seen);
+    const isNew = i => seen && seenAt !== -1 ? i < seenAt : false;
+    let collapsed = false; try { collapsed = localStorage.getItem('mq-upd-collapsed') === '1'; } catch (e) {}
+    const nNew = MQ_UPDATES.filter((u, i) => isNew(i)).length;
+    if (!document.getElementById('mq-upd-css')) { const st = document.createElement('style'); st.id = 'mq-upd-css'; st.textContent = `
+      #midasquote-dashboard .mq-upd{border:1px solid #f1d78a;background:linear-gradient(180deg,#fffbeb,#fff);border-radius:14px;margin:0 0 1.25rem;overflow:hidden;box-shadow:0 1px 2px rgba(17,24,39,.04)}
+      #midasquote-dashboard .mq-upd-head{all:unset;box-sizing:border-box;width:100%;display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;font-family:inherit}
+      #midasquote-dashboard .mq-upd-head:focus-visible{outline:2px solid #e3b341;outline-offset:-2px;border-radius:14px}
+      #midasquote-dashboard .mq-upd-ic{font-size:16px}
+      #midasquote-dashboard .mq-upd-t{font-size:15px;font-weight:800;color:#111827}
+      #midasquote-dashboard .mq-upd-cnt{font-size:11px;font-weight:700;color:#92400e;background:#fde68a;border-radius:999px;padding:2px 8px}
+      #midasquote-dashboard .mq-upd-chev{margin-left:auto;color:#92400e;font-size:13px;transition:transform .2s}
+      #midasquote-dashboard .mq-upd-closed .mq-upd-chev{transform:rotate(-90deg)}
+      #midasquote-dashboard .mq-upd-list{max-height:230px;overflow-y:auto;border-top:1px solid #f6e7b8;padding:4px 16px 8px}
+      #midasquote-dashboard .mq-upd-closed .mq-upd-list{display:none}
+      #midasquote-dashboard .mq-upd-item{padding:10px 0;border-bottom:1px solid #f5ecd0}
+      #midasquote-dashboard .mq-upd-item:last-child{border-bottom:0}
+      #midasquote-dashboard .mq-upd-row{display:flex;align-items:center;gap:8px}
+      #midasquote-dashboard .mq-upd-it{font-size:13.5px;font-weight:700;color:#111827}
+      #midasquote-dashboard .mq-upd-new{font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#fff;background:#d97706;border-radius:5px;padding:2px 6px}
+      #midasquote-dashboard .mq-upd-d{margin-left:auto;font-size:11.5px;color:#9ca3af;white-space:nowrap}
+      #midasquote-dashboard .mq-upd-b{font-size:13px;color:#4b5563;line-height:1.55;margin-top:3px}
+    `; document.head.appendChild(st); }
+    return `<div class="mq-upd${collapsed ? ' mq-upd-closed' : ''}" id="mq-updates-box">
+      <button type="button" class="mq-upd-head" onclick="mqUpdatesToggle()" aria-expanded="${!collapsed}">
+        <span class="mq-upd-ic">✨</span><span class="mq-upd-t">What's new</span>${nNew ? `<span class="mq-upd-cnt">${nNew} new</span>` : ''}
+        <span class="mq-upd-chev">▾</span>
+      </button>
+      <div class="mq-upd-list">${MQ_UPDATES.map((u, i) => `<div class="mq-upd-item"><div class="mq-upd-row"><span class="mq-upd-it">${u.title}</span>${isNew(i) ? '<span class="mq-upd-new">New</span>' : ''}<span class="mq-upd-d">${u.date}</span></div><div class="mq-upd-b">${u.body}</div></div>`).join('')}</div>
+    </div>`;
+  };
+  window.mqUpdatesToggle = function() {
+    const b = document.getElementById('mq-updates-box'); if (!b) return;
+    const closed = b.classList.toggle('mq-upd-closed');
+    b.querySelector('.mq-upd-head').setAttribute('aria-expanded', String(!closed));
+    try { localStorage.setItem('mq-upd-collapsed', closed ? '1' : '0'); } catch (e) {}
+  };
+  // Fills the box and remembers the shop has now seen the latest update
+  // (the New tags stay up until their next visit).
+  window.mqUpdatesRender = function() {
+    const slot = document.getElementById('mq-updates-slot'); if (!slot) return;
+    if (!slot.dataset.done) { slot.innerHTML = window.mqUpdatesBoxHTML(); slot.dataset.done = '1'; }
+    const rec = window._mqShopRecord;
+    if (rec && rec.fields['Announcement seen'] !== MQ_LATEST_ANNOUNCEMENT) {
+      rec.fields['Announcement seen'] = MQ_LATEST_ANNOUNCEMENT;
+      atUpdate(CONFIG.SHOPS_TABLE, rec.id, { 'Announcement seen': MQ_LATEST_ANNOUNCEMENT }).catch(() => {});
+    }
+  };
   const MQ_ANNOUNCEMENT_CONTENT = {
     title: '🎉 Recently added',
     body: `
@@ -2189,7 +2253,7 @@ window.logoutMember = async function () {
   }
   // Menu: outline icons instead of glyphs/emojis.
   const MQT_GROUP_ICON = { overview: 'home', setup: 'gear', leads: 'users', pro: 'zap', marketing: 'palette', account: 'user' };
-  const MQT_PAGE_ICON = { overview: 'chart', leads: 'users', pro: 'zap', proposals: 'file', marketing: 'palette', billing: 'card', helpguide: 'book', support: 'chat', templates: 'wrench' };
+  const MQT_PAGE_ICON = { showroom: 'image', overview: 'chart', leads: 'users', pro: 'zap', proposals: 'file', marketing: 'palette', billing: 'card', helpguide: 'book', support: 'chat', templates: 'wrench' };
   function mqtStripLead(el) {
     // Drops the leading glyph/emoji (and &nbsp;) from an element's first text.
     for (const n of el.childNodes) {
@@ -2490,12 +2554,12 @@ ${W} .mqs2-fhead{position:static}
             <div class="mq-nav-item" data-mq-group="setup" onclick="mqNav('pricing',this)"><span class="mq-nav-step">3</span> Pricing</div>
             <div class="mq-nav-item" data-mq-group="setup" onclick="mqNav('specialty',this)"><span class="mq-nav-step">4</span> Specialty items</div>
             <div class="mq-nav-item" data-mq-group="setup" id="mq-nav-products" onclick="mqNav('products',this)"><span class="mq-nav-step">5</span> My Products</div>
-            <div class="mq-nav-item" data-mq-group="setup" onclick="mqNav('showroom',this)"><span class="mq-nav-step">6</span> Showroom</div>
-            <div class="mq-nav-item" data-mq-group="setup" onclick="mqNav('embed',this)"><span class="mq-nav-step">7</span> Embed code</div>
+            <div class="mq-nav-item" data-mq-group="setup" onclick="mqNav('embed',this)"><span class="mq-nav-step">6</span> Embed code</div>
             <div class="mq-nav-item" data-mq-group="leads" onclick="mqNav('leads',this)">👥 &nbsp; Leads</div>
             <div class="mq-nav-item" data-mq-group="pro" id="mq-nav-pro" onclick="mqNav('pro',this)">⚡ &nbsp; MidasQuote Pro</div>
             <div class="mq-nav-item" data-mq-group="pro" onclick="mqNav('proposals',this)">📄 &nbsp; Proposals</div>
             <div class="mq-nav-item" data-mq-group="marketing" onclick="mqNav('marketing',this)">🎨 &nbsp; Design Studio</div>
+            <div class="mq-nav-item" data-mq-group="marketing" onclick="mqNav('showroom',this)">🖼️ &nbsp; Showroom</div>
             <div class="mq-nav-item" data-mq-group="account" onclick="mqNav('billing',this)">💳 &nbsp; My account</div>
             <div class="mq-nav-item${showHelpGuideNudge ? ' mq-nav-item-nudge' : ''}" data-mq-group="account" id="mq-nav-helpguide" onclick="mqNav('helpguide',this)">📖 &nbsp; Help guide</div>
             <div class="mq-nav-item" data-mq-group="account" onclick="mqNav('support',this)">💬 &nbsp; Support</div>
@@ -2519,6 +2583,7 @@ ${W} .mqs2-fhead{position:static}
               <div class="mq-stat"><div class="mq-stat-val" id="mq-stat-booked">—</div><div class="mq-stat-lbl">Booked</div></div>
               <div class="mq-stat"><div class="mq-stat-val" id="mq-stat-value">—</div><div class="mq-stat-lbl">Est. pipeline value</div></div>
             </div>
+            <div id="mq-updates-slot"></div>
             <div class="mq-card">
               <div class="mq-card-title">📋 Recent leads</div>
               <div id="mq-recent-leads"><div class="mq-loading">Loading leads...</div></div>
@@ -21772,8 +21837,6 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
         shopRecord.fields['Announcement seen'] = MQ_LATEST_ANNOUNCEMENT;
         atUpdate(CONFIG.SHOPS_TABLE, shopRecord.id, { 'Announcement seen': MQ_LATEST_ANNOUNCEMENT }).catch(()=>{});
       }
-    } else if (shopRecord.fields['Announcement seen'] !== MQ_LATEST_ANNOUNCEMENT) {
-      window.mqShowAnnouncementModal();
     }
 
     // Save Stripe customer ID to Airtable if we have it and it's not stored yet
@@ -21804,6 +21867,7 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
     mqInitStickyNav();
     mqInitStickySpecHeader();
     mqInitHelpGuideNudge();
+    try { window.mqUpdatesRender(); } catch (e) {}
 
     // Tell Memberstack to re-scan the DOM so data-ms-modal attributes work on dynamically injected elements
     if (window.$memberstackDom?.reinitialize) window.$memberstackDom.reinitialize();
@@ -21982,9 +22046,7 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
     // brand-new shops (still on the Welcome popup) the same way page load
     // already does — nothing to announce retroactively to someone who's
     // never used the app before.
-    if (window._mqShopRecord && window._mqShopRecord.fields['Welcome popup seen'] && window._mqShopRecord.fields['Announcement seen'] !== MQ_LATEST_ANNOUNCEMENT) {
-      window.mqShowAnnouncementModal();
-    }
+
     // Dismiss the "Start here" Help guide nudge the first time a shop
     // actually clicks into Help guide — one-time-per-shop, same pattern as
     // 'Welcome popup seen' etc. mqInitHelpGuideNudge()'s cleanup function
