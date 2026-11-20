@@ -9582,20 +9582,41 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // Nov 2026: it stays pinned just below the dashboard's sticky menu bar
   // (whose height changes as it wraps) and fits the screen, so its top is
   // always reachable while editing far down the left column.
+  // Nov 19 (Jordan): CSS sticky silently stops working when the page the
+  // dashboard is embedded in (Webflow) clips overflow, so the preview now
+  // FOLLOWS the scroll in JS (like Design Studio) — it moves down inside its
+  // own column, stopping under whatever bars cover the top of the window.
+  function mqStickTopGap() {
+    const bars = [...document.querySelectorAll('#midasquote-dashboard .mq-topbar, #midasquote-dashboard .mq-top-navigation, #midasquote-dashboard header')]
+      .filter(e => { const p = getComputedStyle(e).position; return p === 'sticky' || p === 'fixed'; })
+      .map(e => e.getBoundingClientRect()).filter(r => r.height > 0 && r.top < 260).sort((x, y) => x.top - y.top);
+    let gap = 0; bars.forEach(r => { if (r.top <= gap + 2 && r.bottom > gap) gap = r.bottom; });
+    return gap;
+  }
   function mqStickTopSync() {
-    const nav = document.querySelector('#midasquote-dashboard .mq-top-navigation');
-    const b = nav ? nav.getBoundingClientRect().bottom : 0;
-    document.documentElement.style.setProperty('--mq-stick-top', Math.max(12, Math.round(b) + 12) + 'px');
+    const top = Math.max(12, Math.round(mqStickTopGap()) + 12);
+    document.documentElement.style.setProperty('--mq-stick-top', top + 'px');
+    document.querySelectorAll('.mq-prop-follow').forEach(col => {
+      const host = col.parentElement; if (!host || !col.offsetParent) return;
+      // Stacked (narrow) layout: don't float the preview over the editor.
+      if (getComputedStyle(host).display === 'grid' && getComputedStyle(host).gridTemplateColumns.trim().split(/\s+/).length < 2) { col.style.transform = ''; col._mqShift = 0; return; }
+      const shift = col._mqShift || 0;
+      const natTop = col.getBoundingClientRect().top - shift;
+      const room = host.getBoundingClientRect().bottom - (natTop + col.offsetHeight);
+      const want = Math.max(0, Math.min(top - natTop, room));
+      if (Math.abs(want - shift) > 0.5) { col._mqShift = want; col.style.transform = want ? `translateY(${Math.round(want)}px)` : ''; }
+    });
   }
   if (!window._mqStickTopBound) {
     window._mqStickTopBound = true;
     window.addEventListener('resize', mqStickTopSync, { passive: true });
-    window.addEventListener('scroll', () => { if (!window._mqStickRaf) window._mqStickRaf = requestAnimationFrame(() => { window._mqStickRaf = 0; mqStickTopSync(); }); }, { passive: true });
+    // capture: also hears an inner page wrapper scrolling, not just the window
+    document.addEventListener('scroll', () => { if (!window._mqStickRaf) window._mqStickRaf = requestAnimationFrame(() => { window._mqStickRaf = 0; mqStickTopSync(); }); }, { passive: true, capture: true });
   }
   function mqPropPreviewColHTML(t) {
     const id = t.id;
     setTimeout(mqStickTopSync, 0);
-    return `      <div style="min-width:0;position:sticky;top:var(--mq-stick-top,220px);align-self:start">
+    return `      <div class="mq-prop-follow" style="min-width:0;position:relative;align-self:start;will-change:transform">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px">
           <span style="font-size:11.5px;font-weight:700;color:#374151">Live preview <span style="font-weight:400;color:#9ca3af">(sample customer &amp; items)</span></span>
           <button class="mq-btn mq-btn-sm" onclick="mqPreviewProposalTemplate('${id}')">👁 Full size</button>
