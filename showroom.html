@@ -644,7 +644,8 @@
       // function re-runs every time the filter changes (mqSetFilter), so a
       // one-time style.display set in init() wouldn't survive that.
       const embedHideFilterBar = MQ_SR_EMBEDDED && SHOWROOM_DATA.catSettings && SHOWROOM_DATA.catSettings.embedDisplay && SHOWROOM_DATA.catSettings.embedDisplay.filterBar === false;
-      if (mode === 'custom' || !roomTypes.length || embedHideFilterBar) { bar.style.display = 'none'; return; }
+      const layoutOff = srHasLayout() && (SHOWROOM_DATA.catSettings.srFilterBar === false || !srLayoutUsesPricing());
+      if ((!srHasLayout() && mode === 'custom') || layoutOff || !roomTypes.length || embedHideFilterBar) { bar.style.display = 'none'; return; }
       bar.style.display = 'flex';
       const chips = [{ id: 'all', name: 'All' }, ...roomTypes];
       bar.innerHTML = chips.map(r => `<button class="sr-filter-chip${CURRENT_FILTER===r.id?' active':''}" onclick="mqSetFilter('${r.id}')">${r.name}</button>`).join('');
@@ -797,7 +798,86 @@
       return sections;
     }
 
+    // ---- Showroom builder (Nov 2026) ----
+    // A shop that saved a layout on the dashboard's Showroom tab gets exactly
+    // that list of categories. Shops that never did keep the old rendering
+    // below, untouched.
+    function srHasLayout() { return !!(SHOWROOM_DATA.catSettings && Array.isArray(SHOWROOM_DATA.catSettings.layout)); }
+    function srProductIndex() {
+      if (SHOWROOM_DATA._idx) return SHOWROOM_DATA._idx;
+      const idx = {};
+      Object.entries(SHOWROOM_DATA.categoryItems || {}).forEach(([cat, items]) => items.forEach(it => { idx[it.photoKey] = it; }));
+      (SHOWROOM_DATA.specs || []).forEach(it => { idx[it.photoKey] = it; });
+      (SHOWROOM_DATA.pricedCustom || []).forEach(c => c.items.forEach(it => { idx[it.photoKey] = it; }));
+      return (SHOWROOM_DATA._idx = idx);
+    }
+    function srLayoutUsesPricing() {
+      return (SHOWROOM_DATA.catSettings.layout || []).some(e => e.k === 'p' || (e.k === 'o' && ((SHOWROOM_DATA.customCategories || []).find(c => c.id === e.id) || { items: [] }).items.some(i => i && i.ref)));
+    }
+    function srSection(id, eyebrow, title, desc, inner, gridClass) {
+      return `<div class="sr-section" id="${id}">
+            <div class="sr-section-header">
+              <div class="sr-section-eyebrow">${eyebrow}</div>
+              <div class="sr-section-title">${escHtml(title)}</div>
+              ${desc ? `<div class="sr-section-desc">${escHtml(desc)}</div>` : ''}
+            </div>
+            <div class="${gridClass || 'sr-grid'}">${inner}</div>
+          </div>`;
+    }
+    function srSpecCard(s, photos) {
+      const photoUrl = photos[s.photoKey];
+      return `<div class="sr-card sr-spec-card">
+              <div class="sr-card-img${photoUrl ? ' sr-ph' : ''}">${photoUrl ? `<img src="${photoUrl}" alt="${escHtml(s.name)}" loading="lazy" onclick="mqLightbox('${photoUrl}','${String(s.name).replace(/'/g, "\\'")}',event)" onload="mqImgIn(this)" onerror="mqImgFail(this)">` : getIcon(s.name)}</div>
+              <div class="sr-card-body"><div class="sr-card-name">${s.name}</div></div>
+            </div>`;
+    }
+    function srLayoutSections() {
+      const { photos, hidden, categoryItems, specs, customCategories, pricedCustom } = SHOWROOM_DATA;
+      const layout = SHOWROOM_DATA.catSettings.layout || [];
+      const okItem = it => !hidden[it.photoKey] && photos[it.photoKey] && itemVisible(it.visibleRooms);
+      const out = [];
+      layout.forEach(e => {
+        if (!e) return;
+        if (e.k === 'p') {
+          const cfg = CAT_CONFIG[e.key];
+          if (cfg) {
+            const items = (categoryItems[e.key] || []).filter(okItem);
+            if (items.length) out.push(srSection(cfg.id, cfg.eyebrow, e.name || cfg.title, e.desc || cfg.desc, items.map(it => itemCard(it.name, it.photoKey, photos)).join('')));
+          } else if (e.key === 'specialty') {
+            const items = (specs || []).filter(okItem);
+            if (items.length) out.push(srSection('specialty', 'Add-ons & upgrades', e.name || 'Specialty Items', e.desc || 'Customize your kitchen with functional upgrades and specialty cabinet features.', items.map(s => srSpecCard(s, photos)).join(''), 'sr-spec-grid'));
+          } else {
+            const c = (pricedCustom || []).find(x => x.id === e.key);
+            if (!c) return;
+            const items = c.items.filter(okItem);
+            if (items.length) out.push(srSection('cc-' + c.id, 'Options', e.name || c.name, e.desc || c.description, items.map(it => itemCard(it.name, it.photoKey, photos)).join('')));
+          }
+        } else if (e.k === 'o') {
+          const c = (customCategories || []).find(x => x.id === e.id);
+          if (!c) return;
+          const idx = srProductIndex();
+          const cards = (c.items || []).map(it => {
+            if (!it) return '';
+            if (it.ref) { const p = idx[it.ref]; return (p && photos[p.photoKey] && itemVisible(p.visibleRooms)) ? itemCard(p.name, p.photoKey, photos) : ''; }
+            return customItemCard(it);
+          }).filter(Boolean);
+          if (cards.length) out.push(srSection('custom-' + c.id, 'Showcase', e.name || c.name || '', e.desc || '', cards.join('')));
+        }
+      });
+      return out;
+    }
+
     function renderShowroom() {
+      if (srHasLayout()) {
+        let html = srLayoutSections().join('<div class="sr-divider"></div>');
+        if (!html) html = CURRENT_FILTER === 'all'
+          ? '<div class="sr-empty" style="padding:4rem;text-align:center">This showroom is being set up — check back soon.</div>'
+          : '<div class="sr-empty" style="padding:4rem;text-align:center">Nothing to show for this project type yet.</div>';
+        document.getElementById('sr-content').innerHTML = html;
+        document.querySelectorAll('.sr-card-img.sr-ph img').forEach(im => { if (im.complete && im.naturalWidth) mqImgIn(im); });
+        updateNav();
+        return;
+      }
       const settings = SHOWROOM_DATA.catSettings || { order: [], names: {}, hidden: {} };
       // In Build My Own, Specialty Items / custom pricing categories were
       // already chosen by byoShow in buildShowroomSections.
@@ -905,6 +985,10 @@
           // mqShowroomToggleHideCat). Default style uses `hidden` instead.
           byoShow: (raw.byoShow && typeof raw.byoShow === 'object') ? raw.byoShow : {},
           mode:   raw.mode === 'custom' ? 'custom' : 'default',
+          layout: Array.isArray(raw.layout) ? raw.layout : undefined,
+          heroKind: raw.heroKind === 'materials' ? 'materials' : (raw.heroKind === 'catalogue' ? 'catalogue' : undefined),
+          heroSub: typeof raw.heroSub === 'string' ? raw.heroSub : '',
+          srFilterBar: typeof raw.srFilterBar === 'boolean' ? raw.srFilterBar : undefined,
           // Build-My-Own-only subheading override, set on the dashboard's
           // Showroom tab. Blank/missing means "use the built-in default
           // line below" — Default mode's subheading is never editable.
@@ -997,6 +1081,15 @@
         }
       }
       syncStickyOffsets(); // header height depends on the real shop name/logo just set above
+      // Builder layout: title style + optional line saved with it.
+      const srKind = Array.isArray(catSettings.layout) ? (catSettings.heroKind || 'catalogue') : (catSettings.mode === 'custom' ? 'catalogue' : 'materials');
+      const srMaterialsSub = 'Browse the materials, door styles, and specialty options we offer. Have questions? Get in touch for a full consultation.';
+      const srCatalogueSub = 'Browse some of our past projects and features. Have questions? Get in touch for a full consultation.';
+      if (Array.isArray(catSettings.layout)) {
+        document.getElementById('sr-hero-title').textContent = srKind === 'materials' ? `${shop['Shop name'] || 'Our'} Materials & Options` : `${shop['Shop name'] || 'Our'} Product Catalogue`;
+        document.getElementById('sr-hero-sub').textContent = catSettings.heroSub || (srKind === 'materials' ? srMaterialsSub : srCatalogueSub);
+        document.title = srKind === 'materials' ? `${shop['Shop name'] || 'Products'} — Materials & Options` : `${shop['Shop name'] || 'Products'} — Product Catalogue`;
+      } else {
       document.getElementById('sr-hero-title').textContent = catSettings.mode === 'custom'
         ? `${shop['Shop name'] || 'Our'} Product Catalogue`
         : `${shop['Shop name'] || 'Our'} Materials & Options`;
@@ -1012,6 +1105,7 @@
       document.title = catSettings.mode === 'custom'
         ? `${shop['Shop name'] || 'Products'} — Product Catalogue`
         : `${shop['Shop name'] || 'Products'} — Materials & Options`;
+      }
 
       const lineItems = (payload.lineItems || []).filter(r => r.fields);
       const byCategory = cat => lineItems.filter(r => r.fields['Category'] === cat).map(r => r.fields);
@@ -1063,6 +1157,14 @@
         trim_valance: buildEntries(rawTrim.filter(t => t['Trim type'] === 'valance'), 'trim_valance', 'Name'),
         tall_cabinet: buildEntries(rawTallCab, 'tall_cabinet', 'Name'),
       };
+      // Built-in cabinet steps a shop switched off (Pricing tab) aren't on its
+      // widget, so their products don't show here either.
+      try {
+        const tcfg = shop['Hidden widget tabs'] ? JSON.parse(shop['Hidden widget tabs']) : null;
+        const boff = (tcfg && Array.isArray(tcfg.builtinOff)) ? tcfg.builtinOff : [];
+        const offMap = { materials: ['material'], doors: ['door'], drawers: ['drawer'], trim: ['trim_crown', 'trim_valance'], tallcabs: ['tall_cabinet'] };
+        boff.forEach(k => (offMap[k] || []).forEach(cat => { categoryItems[cat] = []; }));
+      } catch(e) {}
 
       // A specialty item with variants (e.g. "New Doors/Drawer fronts" —
       // MDF Shaker / MDF Bevel Shaker / Maple Shaker / Oak Shaker) doesn't
@@ -1124,8 +1226,12 @@
       // showroom.
       let pricedCustom = [];
       try { pricedCustom = shop['Custom categories'] ? JSON.parse(shop['Custom categories']) : []; } catch(e) { pricedCustom = []; }
+      // A category of one of the shop's own quote types shows only while that
+      // quote type exists, is on and isn't Pro only.
+      let liveQts = [];
+      try { const t = shop['Hidden widget tabs'] ? JSON.parse(shop['Hidden widget tabs']) : null; liveQts = (t && Array.isArray(t.quoteTypes) ? t.quoteTypes : []).filter(q => q && q.on !== false && !q.proOnly).map(q => q.id); } catch(e) { liveQts = []; }
       pricedCustom = (Array.isArray(pricedCustom) ? pricedCustom : [])
-        .filter(c => c && typeof c.id === 'string' && /^cc_[a-z0-9]+$/i.test(c.id) && !c.proOnly)
+        .filter(c => c && typeof c.id === 'string' && /^cc_[a-z0-9]+$/i.test(c.id) && !c.proOnly && (!c.qt || liveQts.includes(c.qt)))
         .map(c => ({
           id: c.id, name: String(c.name || ''), description: String(c.description || ''),
           items: lineItems.filter(r => r.fields['Category'] === c.id && r.fields['Active'] !== false).flatMap(r => {
@@ -1135,6 +1241,10 @@
             const key = photoKeyFor(c.id, name);
             const visibleRooms = effectiveVisibleRooms(parseVisibleRooms(r.fields), c.id, categoryRooms, allRoomIds);
             const vars = Array.isArray(cfg.variants) ? cfg.variants.filter(v => v && v.id && String(v.label || '').trim()) : [];
+            // Photos kept on the option itself (cfg.ph) count too.
+            const ph = (cfg.ph && typeof cfg.ph === 'object') ? cfg.ph : {};
+            if (!photos[key] && ph['']) photos[key] = ph[''];
+            vars.forEach(v => { if (!photos[key + '_v' + v.id] && ph['v' + v.id]) photos[key + '_v' + v.id] = ph['v' + v.id]; });
             return [{ name, photoKey: key, visibleRooms }].concat(vars.map(v => ({ name: `${name} — ${String(v.label).trim()}`, photoKey: key + '_v' + v.id, visibleRooms })));
           }),
         }));
