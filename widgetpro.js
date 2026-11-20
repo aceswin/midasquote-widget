@@ -11176,10 +11176,10 @@
     // just needs the numbers, not another visual style layered on top.
     function mqBuildProposalItemsPlainHtml(lines, showPrices) {
       const rows = (lines||[]).map(l => showPrices ? `
-        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #e5e7eb">
+        <div class="mq-keep" style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #e5e7eb">
           <strong>${mqEscapeHtml(l.label)}</strong><span>${CUR()}${(parseFloat(l.cost)||0).toFixed(2)}</span>
         </div>` : `
-        <div style="padding:6px 0;border-bottom:1px solid #e5e7eb"><strong>${mqEscapeHtml(l.label)}</strong></div>`).join('');
+        <div class="mq-keep" style="padding:6px 0;border-bottom:1px solid #e5e7eb"><strong>${mqEscapeHtml(l.label)}</strong></div>`).join('');
       return `<div style="margin:12px 0">${rows}</div>`;
     }
 
@@ -11187,10 +11187,10 @@
     // the item name read the same as everything else in the body.
     function mqBuildProposalItemsPlainLightHtml(lines, showPrices) {
       const rows = (lines||[]).map(l => showPrices ? `
-        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #e5e7eb">
+        <div class="mq-keep" style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #e5e7eb">
           <span>${mqEscapeHtml(l.label)}</span><span>${CUR()}${(parseFloat(l.cost)||0).toFixed(2)}</span>
         </div>` : `
-        <div style="padding:6px 0;border-bottom:1px solid #e5e7eb"><span>${mqEscapeHtml(l.label)}</span></div>`).join('');
+        <div class="mq-keep" style="padding:6px 0;border-bottom:1px solid #e5e7eb"><span>${mqEscapeHtml(l.label)}</span></div>`).join('');
       return `<div style="margin:12px 0">${rows}</div>`;
     }
 
@@ -11199,14 +11199,14 @@
     // {items_plain} or {items_plain_light} for shops who want that header
     // without the coloured box/shading the full {items} table has.
     function mqBuildItemsHeaderHtml(showPrices, accent) {
-      return `<div style="display:flex;justify-content:space-between;padding-bottom:8px;border-bottom:2px solid ${accent};margin-bottom:4px">
+      return `<div class="mq-keep" style="display:flex;justify-content:space-between;padding-bottom:8px;border-bottom:2px solid ${accent};margin-bottom:4px">
         <span style="font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em;font-weight:700">Item</span>
         ${showPrices ? `<span style="font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em;font-weight:700">Price</span>` : ''}
       </div>`;
     }
 
     function mqBuildSignatureLineHtml() {
-      return `<div style="margin-top:50px;display:flex;gap:40px">
+      return `<div class="mq-keep" style="margin-top:50px;display:flex;gap:40px">
         <div style="flex:1"><div style="border-top:1px solid #111;padding-top:6px;font-size:12px;color:#6b7280">Customer signature</div></div>
         <div style="width:140px"><div style="border-top:1px solid #111;padding-top:6px;font-size:12px;color:#6b7280">Date</div></div>
       </div>`;
@@ -11227,7 +11227,7 @@
     // template with deposit set to 0 (or waived for one proposal in Pro)
     // just gets a clean subtotal/tax/total, no dangling "$0.00" line.
     function mqBuildTotalsBoxHtml(subtotal, tax, total, deposit, accent) {
-      return `<div style="background:${accent}0d;border:2px solid ${accent};border-radius:14px;padding:20px 24px;margin:24px 0">
+      return `<div class="mq-keep" style="background:${accent}0d;border:2px solid ${accent};border-radius:14px;padding:20px 24px;margin:24px 0">
         <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:14px;color:#374151"><span>Subtotal</span><span>${CUR()}${(subtotal||0).toFixed(2)}</span></div>
         <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:14px;color:#374151"><span>Tax</span><span>${CUR()}${(tax||0).toFixed(2)}</span></div>
         <div style="display:flex;justify-content:space-between;padding:10px 0;font-size:22px;font-weight:800;color:#111;border-top:2px solid ${accent};margin-top:6px"><span>Total</span><span>${CUR()}${(total||0).toFixed(2)}</span></div>
@@ -11239,7 +11239,7 @@
     // matching the same "no extra styling layered on" philosophy as
     // {items_plain}. Same zero-deposit hiding as the box version above.
     function mqBuildTotalsPlainHtml(subtotal, tax, total, deposit) {
-      return `<div style="margin:20px 0">
+      return `<div class="mq-keep" style="margin:20px 0">
         <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:14px"><span>Subtotal</span><span>${CUR()}${(subtotal||0).toFixed(2)}</span></div>
         <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:14px"><span>Tax</span><span>${CUR()}${(tax||0).toFixed(2)}</span></div>
         <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:16px"><strong>Total</strong><strong>${CUR()}${(total||0).toFixed(2)}</strong></div>
@@ -11312,7 +11312,7 @@
       p.slice(1).forEach(kv => { const i = kv.indexOf('='); if (i > 0) o[kv.slice(0, i).trim()] = kv.slice(i + 1).trim(); });
       const w = Math.min(100, Math.max(5, parseInt(o.w, 10) || 50));
       const a = /^(left|center|right)$/.test(o.a) ? o.a : 'center';
-      return `<div style="text-align:${a};margin:0 0 16px"><img src="${url}" crossorigin="anonymous" style="width:${w}%;max-width:100%;height:auto"/></div>`;
+      return `<div class="mq-keep" style="text-align:${a};margin:0 0 16px"><img src="${url}" crossorigin="anonymous" style="width:${w}%;max-width:100%;height:auto"/></div>`;
     }
 
     function mqFormatProposalTextChunk(text) {
@@ -11331,7 +11331,8 @@
       const list = (photos || []).filter(p => p && /^https?:\/\//i.test(p.url || ''));
       if (!list.length) return '';
       const esc = v => String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-      return `<div style="display:grid;grid-template-columns:repeat(${n},minmax(0,1fr));gap:12px;margin:0 0 16px">${list.map(p => `<div><img src="${esc(p.url)}" crossorigin="anonymous" style="display:block;width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:6px"/>${p.cap ? `<div style="font-size:12px;color:#4b5563;margin-top:5px;line-height:1.4">${esc(p.cap)}</div>` : ''}</div>`).join('')}</div>`;
+      const rowsOf = []; for (let i = 0; i < list.length; i += n) rowsOf.push(list.slice(i, i + n));
+      return `<div style="margin:0 0 16px">${rowsOf.map((row, ri) => `<div class="mq-keep" style="display:grid;grid-template-columns:repeat(${n},minmax(0,1fr));gap:12px${ri ? ';margin-top:12px' : ''}">${row.map(p => `<div><img src="${esc(p.url)}" crossorigin="anonymous" style="display:block;width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:6px"/>${p.cap ? `<div style="font-size:12px;color:#4b5563;margin-top:5px;line-height:1.4">${esc(p.cap)}</div>` : ''}</div>`).join('')}</div>`).join('')}</div>`;
     }
     function mqPropTplHasPhotos(state) {
       const t = (window._mqProposalTemplates || []).find(x => x.id === state.templateId);
@@ -11462,6 +11463,9 @@
           return key;
         });
 
+      // (Nov 19 update: small, bounded blocks — totals, signature, photo
+      // rows, item rows, headers, images — ARE now kept whole, with a size
+      // cap so no big gap is possible; see mqKeepGuard. Paragraphs still aren't.)
       // Grouped into paragraphs (blank-line separated). Deliberately NOT
       // marked page-break-inside:avoid anywhere in this document — that was
       // tried, and turned out to be worse than the problem it solved. This
@@ -11747,6 +11751,8 @@
     .mq-no-print { display:none; }
     body { background:#fff; padding:0; }
     #mq-proposal-content { box-shadow:none; border-radius:0; padding:0; }
+    .mq-keep { break-inside:avoid; page-break-inside:avoid; }
+    #mq-proposal-content tr { break-inside:avoid; page-break-inside:avoid; }
   }
 </style>
 </head><body>
@@ -11771,6 +11777,14 @@
   </div>
   </div>
   <script>
+    // Big blocks lose the "keep whole" mark so they can't leave a
+    // half-empty page: the printable page is 7.5in wide x 10in tall, so in
+    // on-screen pixels a page is the content width x 10/7.5.
+    function mqKeepGuard(el) {
+      const pagePx = el.offsetWidth * (10 / 7.5);
+      el.querySelectorAll('.mq-keep').forEach(k => { if (k.offsetHeight > pagePx * 0.35) k.classList.remove('mq-keep'); });
+      return el;
+    }
     function mqDownloadProposalPdf() {
       const el = document.getElementById('mq-proposal-content');
       const btn = document.getElementById('mq-pdf-btn');
@@ -11786,14 +11800,14 @@
         filename: '${pdfFilename}',
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true },
-        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-        // No pagebreak "avoid" config, deliberately — see the long comment
-        // in mqRenderProposalBodyTokens for the full reasoning. Short
-        // version: avoiding a mid-line break can only be done by inserting
-        // a blank spacer that pushes content to the next page, which risks
-        // a much worse half-empty page. Plain natural slicing, with no
-        // avoidance rules at all, makes that kind of gap impossible.
-      }).from(el).save().then(() => {
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
+        // Nov 19 (Jordan): small blocks (totals, signature, photo rows,
+        // item rows, headers, images) are kept whole — pushed to the next
+        // page instead of being sliced. Only blocks under ~1/3 of a page
+        // qualify (mqKeepGuard), so the blank space this can leave is never
+        // more than a small gap; anything bigger still splits naturally.
+        pagebreak: { mode: ['css'], avoid: '.mq-keep' }
+      }).from(mqKeepGuard(el)).save().then(() => {
         btn.textContent = originalText;
         btn.disabled = false;
       }).catch(() => {
