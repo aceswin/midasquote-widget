@@ -2044,6 +2044,7 @@
     const boxBgColor = window._mqBoxBg || '#d6e7fb';
     const boxTextColor = window._mqBoxText || '#1e40af';
     const chips = items.map((it,i)=>{
+      if (it.photoUrl && it.label) (window._mqFxPhotos = window._mqFxPhotos || {})[String(it.label).replace(/\s+/g, ' ').trim().toLowerCase()] = it.photoUrl;
       const safePhoto = (it.photoUrl||'').replace(/'/g,"\\'");
       const safeLabel = (it.label||'').replace(/'/g,"\\'");
       const thumb = it.photoUrl
@@ -2343,6 +2344,7 @@
   // keep in sync. groupKey/itemDomId are only used to wire up the
   // tap-to-enlarge lightbox click handler.
   function mqSpecVisualHTML(s, groupKey, itemDomId) {
+    if (s.photoUrl && s.label) (window._mqFxPhotos = window._mqFxPhotos || {})[String(s.label).replace(/\s+/g, ' ').trim().toLowerCase()] = s.photoUrl;
     const safePhoto = (s.photoUrl||'').replace(/'/g,"\\'");
     const safeLabel = (s.label||'').replace(/'/g,"\\'");
     const thumb = s.photoUrl
@@ -10393,6 +10395,8 @@
   function mqFillCombinedRows(rowsEl, lines, total) {
     const priced = mqShouldShowLinePrices('b');
     const list = priced ? (total ? mqPricedLines(lines, total).sort((a, b) => (a.adj - b.adj) || (b.cost - a.cost)) : []) : [...(lines || [])].filter(l => !l.bold).sort((a, b) => b.cost - a.cost);
+    // Nov 19: Focused thumbnails on the Cabinets + Countertops estimate too.
+    if (window._mqFxOn && list.length) { const ul = document.createElement('ul'); mqFxThumbLines(ul, list, priced); rowsEl.appendChild(ul); return; }
     list.forEach(l => {
       const d = document.createElement('div'); d.className = 'mq-combined-row';
       d.innerHTML = priced
@@ -10698,6 +10702,9 @@
     root.querySelectorAll('.mq-vpicker-chip').forEach(ch => { const l = ch.querySelector('.mq-vpicker-label'); const im = ch.querySelector('img'); if (l && im) add(l.textContent, im.getAttribute('src')); });
     root.querySelectorAll('.mq-spec-item').forEach(card => { const l = card.querySelector('.mq-spec-name'); const im = card.querySelector('.mq-spec-top img'); if (l && im) add(l.textContent, im.getAttribute('src')); });
     (window._mqCustomCats || []).forEach(c => (c.items || []).forEach(it => { if (it.photoUrl) add(it.name, it.photoUrl); }));
+    // Every picker/spec card the widget has built so far (countertop
+    // materials, door styles, trims…), even ones not on screen right now.
+    Object.entries(window._mqFxPhotos || {}).forEach(([k, src]) => add(k, src));
     map.sort((a, b) => b.k.length - a.k.length);
     return map;
   }
