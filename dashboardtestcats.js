@@ -293,7 +293,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
           <div class="mq-step-body">
             <p>Set up the project types your widget offers (Kitchen, Bathroom, or your own custom types), each with its own description, cover photo, and measuring guide. Use our premade ones, edit ours, or create your own from scratch.</p>
             <p>Each of your own quote types has its own section here too, with its own project types (e.g. Painting → Bedroom, Living room) and any <strong>Measurements</strong> customers enter once, like wall area.</p>
-            <p>Project types can also be used to increase or decrease ballpark percentages for specific parts of the quote — like uppers, bases, installation, and the total ballpark. For example, kick coverings aren't included in the pricing wizard, but to make up for that you could add something like 2% to your base cabinet quotes for any project type that includes bases. Learn more in this guide's "Project types" tab.</p>
+            <p class="mq-cab-only">Project types can also be used to increase or decrease ballpark percentages for specific parts of the quote — like uppers, bases, installation, and the total ballpark. For example, kick coverings aren't included in the pricing wizard, but to make up for that you could add something like 2% to your base cabinet quotes for any project type that includes bases. Learn more in this guide's "Project types" tab.</p>
           </div>
         </div>
         <div class="mq-step">
@@ -302,10 +302,10 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
             <p>This is where your quoting math lives — the prices the widget uses to build every ballpark. Everything here can be changed any time.</p>
             <h5 class="mqh-h5" style="font-size:13px;font-weight:800;color:#111;margin:0.9rem 0 0.2rem">Your own quote types (Painting, Flooring, Framing…)</h5>
             <p>Each quote type is priced with <strong>custom steps</strong>: every step is a question on your widget with priced options. If it came from a starter pack, its steps are already filled in — just change the prices to yours and add or remove options. Use the <strong>Show only…</strong> filter at the top of Pricing to work on one quote (or one project type) at a time. See "Custom pricing categories" in this guide\u2019s Pricing tab.</p>
-            <h5 class="mqh-h5" style="font-size:13px;font-weight:800;color:#111;margin:0.9rem 0 0.2rem">If you quote cabinets</h5>
-            <p>Run the pricing wizard to reverse-engineer your cabinet rates from real jobs you'd quote with your own products.</p>
-            <p>Start with the pricing wizard, adding your basic box materials, doors, hinges, drawers, and installation rates. After that, you can add bulk items of the same price, or add any more items you wish. You can also configure your crown/valance pricing, and your countertop and tall cabinet pricing.</p>
-            <p>The widget takes the measurements input by the customer and uses these prices to generate your ballparks. It knows to attach crown to upper cabinet measurements and tall cabinets. It also takes your base cabinet measurements and automatically attaches countertop measurements to them if counters are selected. The widget also incorporates formulas that have been proven to accurately generate quotes for customers wanting only "some drawers" or "mostly drawers." All you need to do is do your drawer quotes in the pricing wizard, and the rest is taken care of for you.</p>
+            <h5 class="mqh-h5 mq-cab-only" style="font-size:13px;font-weight:800;color:#111;margin:0.9rem 0 0.2rem">If you quote cabinets</h5>
+            <p class="mq-cab-only">Run the pricing wizard to reverse-engineer your cabinet rates from real jobs you'd quote with your own products.</p>
+            <p class="mq-cab-only">Start with the pricing wizard, adding your basic box materials, doors, hinges, drawers, and installation rates. After that, you can add bulk items of the same price, or add any more items you wish. You can also configure your crown/valance pricing, and your countertop and tall cabinet pricing.</p>
+            <p class="mq-cab-only">The widget takes the measurements input by the customer and uses these prices to generate your ballparks. It knows to attach crown to upper cabinet measurements and tall cabinets. It also takes your base cabinet measurements and automatically attaches countertop measurements to them if counters are selected. The widget also incorporates formulas that have been proven to accurately generate quotes for customers wanting only "some drawers" or "mostly drawers." All you need to do is do your drawer quotes in the pricing wizard, and the rest is taken care of for you.</p>
           </div>
         </div>
         <div class="mq-step">
@@ -320,7 +320,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
           <div class="mq-step-head"><span class="mq-step-num">Step 5</span><span class="mq-step-title">My Products</span></div>
           <div class="mq-step-body">
             <p>Add real photos (even gifs) for what you've set up, so customers see your actual materials and doors instead of generic icons. My Products section is what brings the widget to life. You also use the My Products section to control what products show for what project types.</p>
-            <p>Want to remove cabinets, doors, and drawers completely from a project type, but keep crown, valance, counters, and some custom specialty items? Simply check/uncheck the project types you want certain items or entire categories showing up in.</p>
+            <p class="mq-cab-only">Want to remove cabinets, doors, and drawers completely from a project type, but keep crown, valance, counters, and some custom specialty items? Simply check/uncheck the project types you want certain items or entire categories showing up in.</p>
             <p>If you don't have all the photos you need to get started, you can choose from our prefilled libraries for each different category. We also suggest using ChatGPT to generate images if you are in dire need. For example, taking a somewhat rough image and asking ChatGPT to clean it up can be very useful. Or even if you have a 3D image of a product from Mosaik or Cabinet Vision, just click and hold "Shift + Windows key + S" to take an instant snapshot of your screen to paste into GPT. Many of our images were made by combining real images with ChatGPT to make higher quality ones. It can really save a lot of time.</p>
           </div>
         </div>
@@ -334,7 +334,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
           <div class="mq-step-head"><span class="mq-step-num">Step 7</span><span class="mq-step-title">Test it</span></div>
           <div class="mq-step-body">
             <p>Run a few test quotes for jobs you've actually quoted before, and compare the ballpark to what you really charged. Make sure that the prices you are generating are always in a healthy range. If not, then you can recheck your pricing, adjust your range to be wider or higher, or adjust individual sections of your range (Base cabinet, uppers, installation) in the Project types tab.</p>
-            <p>Generally your quotes are going to come in pretty close to your real pricing, except for things like finished ends and a few crown returns that will be missed. We have tested MidasQuote on multiple jobs varying from a couple thousand dollars to $50,000 and higher, and it always comes in very close.</p>
+            <p class="mq-cab-only">Generally your quotes are going to come in pretty close to your real pricing, except for things like finished ends and a few crown returns that will be missed. We have tested MidasQuote on multiple jobs varying from a couple thousand dollars to $50,000 and higher, and it always comes in very close.</p>
           </div>
         </div>
         <div class="mq-step">
@@ -497,7 +497,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">How-to-measure editor</div>
           <p style="margin:0">The how-to-measure box has a small toolbar: <strong>Bold</strong>, <strong>💡 Tip</strong> (a highlighted tip box), <strong>• Bullet</strong>, <strong>[calc]</strong> (the little calculator icon customers tap) and a corner diagram. Select text and click a button, and the preview beside it shows exactly what customers will see.</p>
         </div>
-        <p style="margin-top:1.1rem">Accidentally deleted a standard type like Bathroom or Refacing? A "↩ Restore a default type…" dropdown appears automatically next to "+ Add project type" whenever one's missing — it brings back the original description, image, and measuring guide.</p>
+        <p class="mq-cab-only" style="margin-top:1.1rem">Accidentally deleted a standard type like Bathroom or Refacing? A "↩ Restore a default type…" dropdown appears automatically next to "+ Add project type" whenever one's missing — it brings back the original description, image, and measuring guide.</p>
       `
     },
     pricing: {
@@ -505,7 +505,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       body: `
         <p>Everything the widget uses to price a quote lives here: your own quote types\u2019 steps and options, plus (if you quote cabinets and countertops) your box materials, door styles, hinges, drawers, countertops, crown/valance and tall cabinets. Prices you set here are what the widget\u2019s calculator actually uses, so it\u2019s worth double-checking your quotes.</p>
         <p><strong>Your own quote types</strong> are priced with custom steps — see "Custom pricing categories" below.</p>
-        <p><strong>If you quote cabinets:</strong> start by running the pricing wizard with a few of your most commonly sold items. No need to add everything here. Just keep it to a max of 5 items for each category (box materials, drawer styles, door styles, hinges). No need to list items with matching prices either. You can easily add multiple items of the same or different price using the "Mini pricing wizards" afterwards.</p>
+        <p class="mq-cab-only"><strong>If you quote cabinets:</strong> start by running the pricing wizard with a few of your most commonly sold items. No need to add everything here. Just keep it to a max of 5 items for each category (box materials, drawer styles, door styles, hinges). No need to list items with matching prices either. You can easily add multiple items of the same or different price using the "Mini pricing wizards" afterwards.</p>
         <div class="mq-cab-hw-note" style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Don't add handles or knobs here</div>
           <p style="margin:0">If you supply hardware, add it as a Specialty Item instead with its own per-unit price, so customers can choose how many they need. It's your choice to add handles/knobs. If you install handles but don't supply them, then you still need to make sure you include handle installation in your door installation pricing (you'll be reminded in the pricing wizard). If you do supply handles, then it's still best to add in the installation costs when reminded in the pricing wizard — that way, if a customer doesn't include handles in their ballpark, your estimate will still have the installation of them covered.</p>
@@ -745,7 +745,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Already built in</div>
           <p style="margin:0">Crown and valance wall returns, and side splashes, are already accounted for in MidasQuote Pro.</p>
         </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
+        <div class="mq-cab-only" style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Add the extras that would overcomplicate the customer widget</div>
           <p style="margin:0">Things like finished ends can overcomplicate the ballpark for customers, so add them as Specialty Items and set them to be hidden from the customer-facing widget instead — you still have that detail covered, without adding extra steps for the customer.</p>
         </div>
@@ -785,7 +785,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">A whole category at once</div>
           <p style="margin:0">At the top of each category, right below "Add a photo URL...", there's a small control. By default it reads <strong>"Visible for all project types"</strong> — nothing is hidden yet. Click it open and uncheck a project type, and it switches to <strong>"Hidden for: ..."</strong>, listing whatever you've unchecked — every item in that category (and the category itself) is hidden for those types in one click, no need to touch them individually.</p>
         </div>
-        <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
+        <div class="mq-cab-only" style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <p style="margin:0">For example, uncheck <strong>Refacing</strong> under Box Materials, since a refacing job reuses the customer's existing box and doesn't need new box materials priced at all. Box Materials, Door Styles, and Drawer Configurations are always kept in sync with each other here, so unchecking Refacing on any one of the three does the same for all three automatically.</p>
         </div>
 
@@ -922,7 +922,30 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     proposals: 'Proposal templates your team picks from in MidasQuote Pro.',
     billing: 'Your plan, payment method and invoices.',
   };
+  // Nov 19 (Jordan): shops without Cabinetry ticked in "What does your
+  // business do?" don't see the cabinet-only parts of Help. Sections with a
+  // "Cabinet shops" badge (MQH_ONLY) and anything tagged .mq-cab-only are
+  // removed, so they also drop out of "On this page" and search.
+  function mqhCabStrip(box) {
+    let biz = null; try { biz = mqBizOf((window._mqShopRecord || {}).fields || {}); } catch (e) {}
+    if (!box || !biz || biz.cab) return box;
+    const drop = k => k === 'cab' || (k === 'cabct' && !biz.ct);
+    box.querySelectorAll('.mq-cab-only').forEach(e => e.remove());
+    box.querySelectorAll('[data-t]').forEach(el => {
+      if (!box.contains(el)) return;
+      const k = MQH_ONLY[String(el.dataset.t || '').toLowerCase()]; if (!drop(k)) return;
+      if (/^H[23]$/.test(el.tagName)) {
+        const lvl = +el.tagName[1]; let n = el.nextElementSibling;
+        while (n && !(/^H[1-3]$/.test(n.tagName) && +n.tagName[1] <= lvl)) { const nx = n.nextElementSibling; n.remove(); n = nx; }
+        const w = el.parentElement; el.remove(); if (w && w !== box && !w.children.length) w.remove();
+      } else { const c = el.closest('.mqh-call'); (c || el).remove(); }
+    });
+    // A Getting started step left empty → drop its sub-heading too.
+    box.querySelectorAll('.mq-step-body').forEach(b => { if (!b.textContent.trim()) b.closest('.mq-step') && b.closest('.mq-step').remove(); });
+    return box;
+  }
   function mqHelpAddFig(box, id) {
+    mqhCabStrip(box);
     if (!box || !MQ_HELP_FIG_CAP[id] || box.querySelector('.mq-help-fig')) return box;
     const f = document.createElement('figure'); f.className = 'mq-help-fig'; f.dataset.mqhi = id; f.style.display = 'none';
     f.innerHTML = `<img alt="" loading="lazy"/><figcaption></figcaption>`;
@@ -1209,7 +1232,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     if (mqhIndex) return mqhIndex;
     mqhIndex = [];
     mqhOrder().forEach(id => {
-      const c = MQ_HELP_CONTENT[id]; const box = mqhPretty(c.guideBody || c.body);
+      const c = MQ_HELP_CONTENT[id]; const box = mqhCabStrip(mqhPretty(c.guideBody || c.body));
       mqhIndex.push({ id, sec: '', title: c.title, text: (c.title + ' ' + box.textContent).toLowerCase() });
       box.querySelectorAll('h2,h3').forEach(h => {
         let t = h.textContent, n = h.nextElementSibling;
@@ -6476,6 +6499,7 @@ ${W} .mqs2-fhead{position:static}
     const prev = shopRec.fields['Hidden widget tabs'];
     shopRec.fields['Hidden widget tabs'] = payload;
     try { if (window.mqTvRefreshAll) window.mqTvRefreshAll(); } catch (e) {} // cabinet videos follow the Cabinetry tick
+    try { mqCabHwApply(); mqhIndex = null; } catch (e) {} // cabinet-only notes + help follow it too
     const run = (window._mqTabsSaveQ || Promise.resolve()).catch(() => {}).then(() => atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Hidden widget tabs': payload }));
     window._mqTabsSaveQ = run;
     try { await run; }
@@ -6556,7 +6580,8 @@ ${W} .mqs2-fhead{position:static}
         document.head.appendChild(st);
       }
       const f = (window._mqShopRecord || {}).fields;
-      document.documentElement.classList.toggle('mq-no-cab', !!(f && mqComputeTabScope(f).countertopsOnly));
+      let noCab = !!(f && mqComputeTabScope(f).countertopsOnly); try { if (f && !mqBizOf(f).cab) noCab = true; } catch (e2) {}
+      document.documentElement.classList.toggle('mq-no-cab', noCab);
     } catch(e) {}
   }
   window.mqCabHwApply = mqCabHwApply;
