@@ -1405,28 +1405,42 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   // never see it again, tracked by storing that version string on the shop
   // record. Brand new shops never see past announcements — they get the
   // current app as-is, so nothing worth announcing to them retroactively.
-  const MQ_LATEST_ANNOUNCEMENT = 'nov2026-19-thumbs';
+  const MQ_LATEST_ANNOUNCEMENT = 'v2-financing';
   // Nov 19 2026: updates live in the "What's new" box on the Dashboard page
   // instead of a pop-up. Add new entries at the TOP and set
   // MQ_LATEST_ANNOUNCEMENT to the new entry's id (that also reloads open tabs
   // on deploy). Entries newer than the shop's 'Announcement seen' get a New tag.
   const MQ_UPDATES = [
-    { id: 'nov2026-19-thumbs', date: 'Nov 19, 2026', title: 'Photos on the Focused estimate', body: 'In the Focused layout, each line of the customer\'s estimate now shows the photo from the option they picked, and the install cost sits right under its item.' },
-    { id: 'nov2026-19-measimg', date: 'Nov 19, 2026', title: 'Request a custom how-to-measure picture', body: 'In <strong>Project types → How to measure</strong>, tap <strong>Request a custom how-to-measure image</strong> and tell us what it should show — we\'ll make one for you.' },
-    { id: 'nov2026-19-showroom', date: 'Nov 19, 2026', title: 'Showroom moved to Marketing', body: 'Your Showroom now lives under the <strong>Marketing</strong> tab, next to Design Studio. Nothing about it changed.' },
-    { id: 'nov2026-18-install', date: 'Nov 18, 2026', title: 'Install priced your way', body: 'On your own quote types, each option\'s install can be a flat price, per door (the customer says how many), per square foot, per linear foot, or per measurement. Customers pick Supply only or Supply + install right on the option.' },
-    { id: 'nov2026-18-measstep', date: 'Nov 18, 2026', title: 'Measurement steps', body: 'When you add a step on the Pricing tab, choose <strong>A measurement</strong> to ask for square feet, linear feet or a count right in that step. Options can also say <strong>A later step prices it</strong>, so a choice like Refacing can lead to its own door-style step.' },
-    { id: 'nov2026-17-photos', date: 'Nov 2026', title: 'Job photos in proposals', body: 'Add a <strong>Job photos</strong> block to a proposal template, then add photos to any proposal in MidasQuote Pro.' },
-    { id: 'nov2026-studio', date: 'Nov 2026', title: 'A cleaner Design Studio', body: 'Design Studio has a new layout: tools on the left, settings for whatever you select on the right, and zoom.' },
+    { id: 'v2-financing', date: 'Nov 19, 2026', title: 'Financing shown on the estimate', body: 'If you offer financing, customers now see <strong>💳 Financing available</strong> right under their price on the Focused estimate, next to your Get pre-approved button.' },
+    { id: 'v2-thumbs', date: 'Nov 19, 2026', title: 'Photos on the Focused estimate', body: 'In the Focused layout, each line of the customer\'s estimate shows the photo of what they picked — cabinets, door styles, countertops and your own options — with the install cost tucked under its item.' },
+    { id: 'v2-measimg', date: 'Nov 19, 2026', title: 'Request a custom how-to-measure picture', body: 'In <strong>Project types → How to measure</strong>, tap <strong>Request a custom how-to-measure image</strong> and tell us what it should show — we\'ll make one for you.' },
+    { id: 'v2-updates', date: 'Nov 19, 2026', title: 'Updates live here now', body: 'New features show up in this box instead of a pop-up. Collapse it any time with the arrow.' },
+    { id: 'v2-showroom', date: 'Nov 19, 2026', title: 'Showroom moved to Marketing', body: 'Your Showroom now lives under the <strong>Marketing</strong> tab, next to Design Studio. Nothing about it changed.' },
+    { id: 'v2-install', date: 'Nov 18, 2026', title: 'Install priced your way', body: 'On your own quote types, each option\'s install can be a flat price, per door (the customer says how many), per square foot, per linear foot, or per measurement. Customers pick Supply only or Supply + install right on the option, and the preview shows exactly what they\'ll see.' },
+    { id: 'v2-measstep', date: 'Nov 18, 2026', title: 'Measurement steps', body: 'When you add a step on the Pricing tab, choose <strong>A measurement</strong> to ask for square feet, linear feet or a count right in that step. Options can also say <strong>A later step prices it</strong>, so a choice like Refacing can lead to its own door-style step.' },
+    { id: 'v2-stepedit', date: 'Nov 18, 2026', title: 'Easier steps and options', body: 'Add a step\'s options right in the new-step box, and edit a step in the same box you made it in. Each option can be priced on any of your quote\'s measurements, and Pricing shows which measurements a quote has, with a link to set them up in Project types.' },
+    { id: 'v2-photos', date: 'Nov 2026', title: 'Job photos in proposals', body: 'Add a <strong>Job photos</strong> block to a proposal template, then add photos to any proposal in MidasQuote Pro.' },
+    { id: 'v2-business', date: 'Nov 2026', title: 'A clearer "What does your business do?"', body: 'Shop Info now walks through your trades in numbered sections, with each group of services laid out in an even grid and the quotes they turn on listed underneath.' },
+    { id: 'v2-studio', date: 'Nov 2026', title: 'A cleaner Design Studio', body: 'Design Studio has a new layout: tools on the left, settings for whatever you select on the right, and zoom.' },
     { id: 'oct2026-island-pricing-videos', date: 'Oct 2026', title: 'Island pricing and training videos', body: 'Customers can add a single- or double-row island (with an optional dishwasher) to a cabinet quote. Short training videos sit at the top of Project types and Pricing.' },
   ];
   window.mqUpdatesBoxHTML = function() {
     const seen = ((window._mqShopRecord || {}).fields || {})['Announcement seen'] || '';
     const seenAt = MQ_UPDATES.findIndex(u => u.id === seen);
-    const isNew = i => seen && seenAt !== -1 ? i < seenAt : false;
+    // A shop last caught up on an older update id (not in this list) gets
+    // everything except the oldest entry marked New.
+    const isNew = i => !seen ? false : seenAt !== -1 ? i < seenAt : i < MQ_UPDATES.length - 1;
     let collapsed = false; try { collapsed = localStorage.getItem('mq-upd-collapsed') === '1'; } catch (e) {}
     const nNew = MQ_UPDATES.filter((u, i) => isNew(i)).length;
+    // Nov 19 (Jordan): "Mark as read" clears the box until there's a new update.
+    if (!nNew && !window._mqUpdShowPast) return `<div class="mq-upd-past"><button type="button" onclick="mqUpdatesShowPast()">✨ See past updates</button></div>`;
     if (!document.getElementById('mq-upd-css')) { const st = document.createElement('style'); st.id = 'mq-upd-css'; st.textContent = `
+      #midasquote-dashboard .mq-upd{position:relative}
+      #midasquote-dashboard .mq-upd-read{position:absolute;top:9px;right:44px;font:600 12px inherit;font-family:inherit;color:#92400e;background:#fff;border:1px solid #f1d78a;border-radius:8px;padding:5px 10px;cursor:pointer}
+      #midasquote-dashboard .mq-upd-read:hover{background:#fef3c7}
+      #midasquote-dashboard .mq-upd-past{margin:0 0 1rem}
+      #midasquote-dashboard .mq-upd-past button{all:unset;cursor:pointer;font-size:12.5px;font-weight:600;color:#92400e}
+      #midasquote-dashboard .mq-upd-past button:hover{text-decoration:underline}
       #midasquote-dashboard .mq-upd{border:1px solid #f1d78a;background:linear-gradient(180deg,#fffbeb,#fff);border-radius:14px;margin:0 0 1.25rem;overflow:hidden;box-shadow:0 1px 2px rgba(17,24,39,.04)}
       #midasquote-dashboard .mq-upd-head{all:unset;box-sizing:border-box;width:100%;display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;font-family:inherit}
       #midasquote-dashboard .mq-upd-head:focus-visible{outline:2px solid #e3b341;outline-offset:-2px;border-radius:14px}
@@ -1447,9 +1461,10 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     `; document.head.appendChild(st); }
     return `<div class="mq-upd${collapsed ? ' mq-upd-closed' : ''}" id="mq-updates-box">
       <button type="button" class="mq-upd-head" onclick="mqUpdatesToggle()" aria-expanded="${!collapsed}">
-        <span class="mq-upd-ic">✨</span><span class="mq-upd-t">What's new</span>${nNew ? `<span class="mq-upd-cnt">${nNew} new</span>` : ''}
+        <span class="mq-upd-ic">✨</span><span class="mq-upd-t">Version 2.0 update</span>${nNew ? `<span class="mq-upd-cnt">${nNew} new</span>` : ''}
         <span class="mq-upd-chev">▾</span>
       </button>
+      ${nNew ? `<button type="button" class="mq-upd-read" onclick="mqUpdatesMarkRead()">✓ Mark as read</button>` : `<button type="button" class="mq-upd-read" onclick="mqUpdatesHidePast()">Hide</button>`}
       <div class="mq-upd-list">${MQ_UPDATES.map((u, i) => `<div class="mq-upd-item"><div class="mq-upd-row"><span class="mq-upd-it">${u.title}</span>${isNew(i) ? '<span class="mq-upd-new">New</span>' : ''}<span class="mq-upd-d">${u.date}</span></div><div class="mq-upd-b">${u.body}</div></div>`).join('')}</div>
     </div>`;
   };
@@ -1463,13 +1478,19 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   // (the New tags stay up until their next visit).
   window.mqUpdatesRender = function() {
     const slot = document.getElementById('mq-updates-slot'); if (!slot) return;
-    if (!slot.dataset.done) { slot.innerHTML = window.mqUpdatesBoxHTML(); slot.dataset.done = '1'; }
+    slot.innerHTML = window.mqUpdatesBoxHTML();
+  };
+  window.mqUpdatesMarkRead = function() {
     const rec = window._mqShopRecord;
-    if (rec && rec.fields['Announcement seen'] !== MQ_LATEST_ANNOUNCEMENT) {
+    if (rec) {
       rec.fields['Announcement seen'] = MQ_LATEST_ANNOUNCEMENT;
       atUpdate(CONFIG.SHOPS_TABLE, rec.id, { 'Announcement seen': MQ_LATEST_ANNOUNCEMENT }).catch(() => {});
     }
+    window._mqUpdShowPast = false;
+    window.mqUpdatesRender();
   };
+  window.mqUpdatesShowPast = function() { window._mqUpdShowPast = true; window.mqUpdatesRender(); };
+  window.mqUpdatesHidePast = function() { window._mqUpdShowPast = false; window.mqUpdatesRender(); };
   const MQ_ANNOUNCEMENT_CONTENT = {
     title: '🎉 Recently added',
     body: `
@@ -1974,36 +1995,131 @@ window.logoutMember = async function () {
     products: { youtubeId: 'xbYtl12XChc' },
     shop: { youtubeId: '_vcQFocImJk' },
   };
-  function mqTrainingVideoBlockHTML(key) {
-    const video = MQ_TRAINING_VIDEOS[key];
-    if (!video) return '';
-    const hidden = !!(window._mqTrainingVideosHidden || {})[key];
-    // Jordan, after seeing the first version: drop the white card
-    // background entirely (no more background/border wrapper — this now
-    // just flows as plain page content), and move "Hide video" out of the
-    // flex row next to the player and down onto its own line, in the exact
-    // same spot "↻ Reshow training video" occupies once hidden — hiding
-    // and reshowing now swap in and out of that one slot instead of the
-    // button jumping to a different position on the page.
-    //
-    // Second pass (Jordan, per his screenshot of the live page): "Watch
-    // the video →" no longer sits beside the player in a flex row that
-    // only stacks when it runs out of horizontal room — it's now always
-    // its own line directly above the video, left-aligned with it. This
-    // is the explicit permanent layout, not a wrap-width accident.
+  // ── Nov 19 (Jordan): per-page training videos ──────────────────────
+  // The videos above are cabinet walkthroughs, so they only show for shops
+  // with Cabinetry ticked in "What does your business do?". Jordan can set
+  // a link for ANY page in Templates (admin) → 🎬 Training videos: one for
+  // cabinet shops, one for everyone else. Links are stored on the
+  // MASTER_TEMPLATE shop's Photos under '__trainingVideos' (every shop can
+  // read it, no new field). Cached in the browser so they show instantly.
+  const MQ_TV_PAGES = [
+    ['overview', 'Dashboard'], ['leads', 'Leads'], ['shop', 'Business info'], ['rooms', 'Project types'], ['pricing', 'Pricing'],
+    ['islandPanel', 'Pricing → Island panels'], ['specialty', 'Specialty items'], ['products', 'My products'], ['embed', 'Embed code'],
+    ['marketing', 'Design Studio'], ['showroom', 'Showroom'], ['pro', 'MidasQuote Pro'], ['proposals', 'Proposals'], ['billing', 'Billing'], ['support', 'Support'],
+  ];
+  // Pages whose markup already places the video (others get it right under the page header).
+  const MQ_TV_INLINE = ['shop', 'rooms', 'specialty', 'products', 'pricing', 'islandPanel'];
+  function mqTvBuiltIn(key) { const v = MQ_TRAINING_VIDEOS[key]; return v ? 'https://youtu.be/' + v.youtubeId : ''; }
+  try { window._mqTvCfg = JSON.parse(localStorage.getItem('mq-tv-cfg') || 'null') || null; } catch (e) { window._mqTvCfg = null; }
+  function mqTvIsCab() { try { return !!mqBizOf((window._mqShopRecord || {}).fields || {}).cab; } catch (e) { return true; } }
+  function mqTvUrl(key) {
+    const c = (window._mqTvCfg || {})[key] || {};
+    const cab = 'cab' in c ? String(c.cab || '').trim() : mqTvBuiltIn(key);
+    if (cab && mqTvIsCab()) return cab;
+    return String(c.all || '').trim();
+  }
+  // YouTube / Vimeo / Loom / a direct video file → what to embed.
+  function mqTvEmbed(url) {
+    const u = String(url || '').trim(); let m;
+    if ((m = u.match(/(?:youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([A-Za-z0-9_-]{6,})/))) return { kind: 'yt', id: m[1], src: 'https://www.youtube-nocookie.com/embed/' + m[1], open: 'https://www.youtube.com/watch?v=' + m[1] };
+    if ((m = u.match(/vimeo\.com\/(?:video\/)?(\d+)/))) return { kind: 'if', src: 'https://player.vimeo.com/video/' + m[1], open: u };
+    if ((m = u.match(/loom\.com\/(?:share|embed)\/([a-f0-9]+)/i))) return { kind: 'if', src: 'https://www.loom.com/embed/' + m[1], open: u };
+    if (/^https?:\/\/.+\.(mp4|webm|mov|m4v)(\?.*)?$/i.test(u)) return { kind: 'file', src: u, open: u };
+    return null;
+  }
+  // Hidden per page. Older hides were saved as `true` (they hid the built-in
+  // video); new hides save the link, so a NEW video for that page shows again.
+  function mqTvHidden(key) {
+    const h = (window._mqTrainingVideosHidden || {})[key]; if (!h) return false;
+    const url = mqTvUrl(key);
+    return h === true ? url === mqTvBuiltIn(key) : h === url;
+  }
+  function mqTvInner(key) {
+    const url = mqTvUrl(key); const e = mqTvEmbed(url);
+    if (!e) return '';
+    const hidden = mqTvHidden(key);
+    const esc = s => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+    const player = e.kind === 'file'
+      ? `<video src="${esc(e.src)}" controls preload="metadata" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;background:#000"></video>`
+      : `<iframe src="${esc(e.src)}" title="Training video" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;border:0"></iframe>`;
+    const tip = e.kind === 'yt' ? `<div style="max-width:640px;margin-top:6px;font-size:12px;color:#6b7280;line-height:1.5">Video looks blurry? Click the ⚙ gear on the video → Quality → 1080p, or <a href="${esc(e.open)}" target="_blank" rel="noopener" style="color:#2563eb">watch it on YouTube</a>.</div>` : '';
     return `
       <div id="mq-training-video-${key}" style="display:${hidden ? 'none' : 'block'};margin-bottom:1rem">
         <div style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px;color:#1a1a1a;margin-bottom:8px">Watch the video <span style="font-size:17px">→</span></div>
-        <div style="position:relative;width:100%;max-width:640px;aspect-ratio:16/9;border-radius:8px;overflow:hidden;background:#000">
-          <iframe src="https://www.youtube-nocookie.com/embed/${video.youtubeId}" title="Training video" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;border:0"></iframe>
-        </div>
-        <div style="max-width:640px;margin-top:6px;font-size:12px;color:#6b7280;line-height:1.5">Video looks blurry? Click the ⚙ gear on the video → Quality → 1080p, or <a href="https://www.youtube.com/watch?v=${video.youtubeId}" target="_blank" rel="noopener" style="color:#2563eb;text-decoration:underline">open it on YouTube ↗</a></div>
+        <div style="position:relative;width:100%;max-width:640px;aspect-ratio:16/9;border-radius:8px;overflow:hidden;background:#000">${player}</div>
+        ${tip}
         <button type="button" class="mq-btn mq-btn-sm" style="margin-top:10px" onclick="mqHideTrainingVideo('${key}')">Hide video</button>
       </div>
       <div id="mq-training-video-reshow-${key}" style="display:${hidden ? 'block' : 'none'};margin-bottom:1rem">
         <button type="button" class="mq-btn mq-btn-sm" onclick="mqReshowTrainingVideo('${key}')">↻ Reshow training video</button>
       </div>`;
   }
+  function mqTrainingVideoBlockHTML(key) {
+    return `<div class="mq-tv-slot" data-tv="${key}">${mqTvInner(key)}</div>`;
+  }
+  // Redraw every video spot + the header "Watch video" buttons (after the
+  // links load, or the shop's trades change).
+  window.mqTvRefreshAll = function() {
+    document.querySelectorAll('.mq-tv-slot[data-tv]').forEach(sl => { const html = mqTvInner(sl.dataset.tv); if (sl.dataset.html !== html) { sl.innerHTML = html; sl.dataset.html = html; } });
+    document.querySelectorAll('.mqt-video[data-video]').forEach(b => { try { mqtVideoLabel(b); } catch (e) {} });
+  };
+  async function mqTvLoad() {
+    try {
+      const recs = await atGet(CONFIG.SHOPS_TABLE, `{Shop name} = "${MASTER_TEMPLATE_SHOP_NAME}"`);
+      let photos = {}; try { photos = recs[0] && recs[0].fields['Photos'] ? JSON.parse(recs[0].fields['Photos']) : {}; } catch (e) {}
+      let cfg = {}; try { cfg = photos.__trainingVideos ? JSON.parse(photos.__trainingVideos) : {}; } catch (e) {}
+      window._mqTvCfg = cfg;
+      try { localStorage.setItem('mq-tv-cfg', JSON.stringify(cfg)); } catch (e) {}
+      window.mqTvRefreshAll();
+    } catch (e) { console.warn('Training videos: could not load links', e); }
+  }
+  window.mqTvLoad = mqTvLoad;
+  // Templates (admin) → 🎬 Training videos.
+  window.mqTvAdminRender = async function() {
+    const box = document.getElementById('mq-tv-admin'); if (!box) return;
+    let master; try { master = await ensureMasterTemplateShop(); } catch (e) { box.innerHTML = '<div style="color:#b91c1c;font-size:13px">Could not load the template shop.</div>'; return; }
+    let photos = {}; try { photos = master.fields['Photos'] ? JSON.parse(master.fields['Photos']) : {}; } catch (e) {}
+    let cfg = {}; try { cfg = photos.__trainingVideos ? JSON.parse(photos.__trainingVideos) : {}; } catch (e) {}
+    const esc = s => String(s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+    const inp = 'width:100%;box-sizing:border-box;font-size:12.5px;padding:7px 9px;border:1px solid #d1d5db;border-radius:6px';
+    box.innerHTML = `
+      <div style="display:grid;grid-template-columns:170px 1fr 1fr;gap:8px 10px;align-items:center;font-size:13px">
+        <div></div><div style="font-size:11.5px;font-weight:700;color:#374151">Cabinet shops</div><div style="font-size:11.5px;font-weight:700;color:#374151">Everyone else</div>
+        ${MQ_TV_PAGES.map(([k, l]) => { const c = cfg[k] || {}; const cab = 'cab' in c ? c.cab : mqTvBuiltIn(k);
+          return `<div style="font-weight:600;color:#111">${esc(l)}</div>
+            <input type="url" data-tvk="${k}" data-tvw="cab" value="${esc(cab)}" placeholder="YouTube, Vimeo or Loom link" style="${inp}"/>
+            <input type="url" data-tvk="${k}" data-tvw="all" value="${esc(c.all)}" placeholder="YouTube, Vimeo or Loom link" style="${inp}"/>`; }).join('')}
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:14px">
+        <button type="button" class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqTvAdminSave()">Save video links</button>
+        <span id="mq-tv-admin-status" style="font-size:12px"></span>
+      </div>`;
+  };
+  window.mqTvAdminSave = async function() {
+    const st = document.getElementById('mq-tv-admin-status');
+    const say = (t, c) => { if (st) { st.textContent = t; st.style.color = c || '#6b7280'; } };
+    const cfg = {}; let bad = '';
+    document.querySelectorAll('#mq-tv-admin input[data-tvk]').forEach(i => {
+      const v = i.value.trim(); const k = i.dataset.tvk;
+      if (v && !mqTvEmbed(v)) bad = bad || (MQ_TV_PAGES.find(x => x[0] === k) || [k, k])[1];
+      (cfg[k] = cfg[k] || {})[i.dataset.tvw] = v;
+    });
+    if (bad) { say(`The ${bad} link isn't a YouTube, Vimeo or Loom link.`, '#dc2626'); return; }
+    // Only keep what differs from the defaults.
+    Object.keys(cfg).forEach(k => { const c = cfg[k]; if (c.cab === mqTvBuiltIn(k)) delete c.cab; if (!c.all) delete c.all; if (!Object.keys(c).length) delete cfg[k]; });
+    say('Saving…');
+    try {
+      const master = await ensureMasterTemplateShop();
+      let photos = {}; try { photos = master.fields['Photos'] ? JSON.parse(master.fields['Photos']) : {}; } catch (e) {}
+      photos.__trainingVideos = JSON.stringify(cfg);
+      const json = JSON.stringify(photos);
+      await atUpdate(CONFIG.SHOPS_TABLE, master.id, { 'Photos': json });
+      master.fields['Photos'] = json;
+      window._mqTvCfg = cfg; try { localStorage.setItem('mq-tv-cfg', JSON.stringify(cfg)); } catch (e) {}
+      window.mqTvRefreshAll();
+      say('✓ Saved — every shop sees these now.', '#16a34a');
+    } catch (e) { say('Could not save — try again.', '#dc2626'); }
+  };
   // Exposed on window (unlike most of this file's helpers) because the
   // Pricing tab's own content isn't rendered from this file's buildHTML —
   // it's built by pricing-helper-v2.js, a separate script this file lazily
@@ -2033,7 +2149,7 @@ window.logoutMember = async function () {
     const reshow = document.getElementById('mq-training-video-reshow-' + key);
     if (reshow) reshow.style.display = 'block';
     const hidden = window._mqTrainingVideosHidden || {};
-    hidden[key] = true;
+    hidden[key] = mqTvUrl(key) || true;
     window._mqTrainingVideosHidden = hidden;
     try {
       await atUpdate(CONFIG.SHOPS_TABLE, window._mqShopRecord.id, { 'Training videos hidden': JSON.stringify(hidden) });
@@ -2293,9 +2409,8 @@ window.logoutMember = async function () {
     });
   }
   // Header row on every page: title + description left, buttons right.
-  const MQT_PAGE_VIDEO = { shop: 'shop', rooms: 'rooms', pricing: 'pricing', specialty: 'specialty', products: 'products' };
-  function mqtVideoHidden(key) { return !!(window._mqTrainingVideosHidden || {})[key]; }
-  function mqtVideoLabel(btn) { const k = btn.dataset.video; btn.innerHTML = mqtVideoHidden(k) ? mqtSvg('play', 14) + 'Watch video' : mqtSvg('x', 14) + 'Hide video'; }
+  function mqtVideoHidden(key) { return mqTvHidden(key); }
+  function mqtVideoLabel(btn) { const k = btn.dataset.video; btn.style.display = mqTvUrl(k) && mqTvEmbed(mqTvUrl(k)) ? '' : 'none'; btn.innerHTML = mqtVideoHidden(k) ? mqtSvg('play', 14) + 'Watch video' : mqtSvg('x', 14) + 'Hide video'; }
   window.mqtToggleVideo = async function (key) {
     if (mqtVideoHidden(key)) {
       const p = window.mqReshowTrainingVideo(key);
@@ -2434,8 +2549,9 @@ ${W} .mqs2-fhead{position:static}
         if (anchor !== title && !anchor.textContent.trim() && !anchor.querySelector('img,input,select,button')) anchor.style.display = 'none'; // kept: Pricing's filter bar anchors after it
         mqtStripLead(title);
         const right = ph.lastElementChild;
-        const key = MQT_PAGE_VIDEO[id];
-        if (key && MQ_TRAINING_VIDEOS[key]) { const b = document.createElement('button'); b.type = 'button'; b.className = 'mqt-btn mqt-video'; b.dataset.video = key; b.onclick = () => window.mqtToggleVideo(key); right.appendChild(b); }
+        const key = MQ_TV_PAGES.some(x => x[0] === id) ? id : null;
+        if (key && !MQ_TV_INLINE.includes(key) && !pg.querySelector(`.mq-tv-slot[data-tv="${key}"]`)) { const sl = document.createElement('div'); sl.className = 'mq-tv-slot'; sl.dataset.tv = key; sl.innerHTML = mqTvInner(key); ph.insertAdjacentElement('afterend', sl); }
+        if (key) { const b = document.createElement('button'); b.type = 'button'; b.className = 'mqt-btn mqt-video'; b.dataset.video = key; b.onclick = () => window.mqtToggleVideo(key); right.appendChild(b); }
         const help = pg.querySelector(':scope > .mq-help-btn') || pg.querySelector('.mq-help-btn');
         if (help) { help.innerHTML = mqtSvg('help', 15) + 'Need help?'; right.appendChild(help); }
       }
@@ -3530,6 +3646,11 @@ ${W} .mqs2-fhead{position:static}
               <div class="mq-card-title">🖼️ Image library</div>
               <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Photos every shop can pick from on its Project types page ("🖼️ Choose from library" for cover photos, "🖼️ Add from library" for measuring guides). MidasQuote's built-in photos and the images on the default project types above are always included — add more here (e.g. for new trades or quote types).</p>
               <div id="mq-imglib-admin"><div class="mq-loading">Loading...</div></div>
+            </div>
+            <div class="mq-card" style="margin-bottom:1.5rem">
+              <div class="mq-card-title">🎬 Training videos</div>
+              <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Paste a YouTube, Vimeo or Loom link for any dashboard page and it shows at the top of that page for every shop. <strong>Cabinet shops</strong> (Cabinetry ticked in What does your business do?) get the first link; if it's empty, they get the second. <strong>Everyone else</strong> gets the second. Leave both empty for no video. Shops can hide a video, and it stays hidden until you put up a new one.</p>
+              <div id="mq-tv-admin"><div class="mq-loading">Loading...</div></div>
             </div>
             <div class="mq-card" style="margin-bottom:1.5rem">
               <div class="mq-card-title">🧭 Business types &amp; starter packs</div>
@@ -6305,6 +6426,7 @@ ${W} .mqs2-fhead{position:static}
     // old copy (which used to undo the first edit).
     const prev = shopRec.fields['Hidden widget tabs'];
     shopRec.fields['Hidden widget tabs'] = payload;
+    try { if (window.mqTvRefreshAll) window.mqTvRefreshAll(); } catch (e) {} // cabinet videos follow the Cabinetry tick
     const run = (window._mqTabsSaveQ || Promise.resolve()).catch(() => {}).then(() => atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, { 'Hidden widget tabs': payload }));
     window._mqTabsSaveQ = run;
     try { await run; }
@@ -7523,7 +7645,7 @@ ${W} .mqs2-fhead{position:static}
               </div>
             `).join('')}
             <button type="button" class="mq-btn mq-btn-sm" style="font-size:11px;margin-top:8px" onclick="mqAddRoomMeasureImage(${idx})">+ Add another image <span style="font-weight:400;color:#9ca3af">(optional — turns into a swipeable carousel once you have more than one)</span></button>`}
-            <div style="margin-top:10px;padding:10px 12px;border:1px solid #e5ebf3;border-radius:10px;background:#f8fafc;display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="font-size:12px;color:#4b5563;flex:1;min-width:200px">Need a how-to-measure picture made for this project type? We'll design one for you.</span><button type="button" class="mq-btn mq-btn-sm" style="font-size:11.5px" onclick="mqRequestMeasureImage('${String(r.name||'').replace(/\\/g,'').replace(/'/g,"\\'").replace(/"/g,'&quot;')}')">✉️ Request a custom how-to-measure image</button></div>
+            <div style="margin-top:10px;padding:10px 12px;border:1px solid #e5ebf3;border-radius:10px;background:#f8fafc;display:flex;flex-direction:column;align-items:flex-start;gap:8px"><span style="font-size:12px;color:#4b5563">Need a how-to-measure picture made for this project type? We'll design one for you.</span><button type="button" class="mq-btn mq-btn-sm" style="font-size:11.5px" onclick="mqRequestMeasureImage('${String(r.name||'').replace(/\\/g,'').replace(/'/g,"\\'").replace(/"/g,'&quot;')}')">✉️ Request a custom how-to-measure image</button></div>
           
                     </div>
           </div>
@@ -21903,6 +22025,7 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
     mqInitStickySpecHeader();
     mqInitHelpGuideNudge();
     try { window.mqUpdatesRender(); } catch (e) {}
+    try { window.mqTvRefreshAll(); mqTvLoad(); } catch (e) {}
 
     // Tell Memberstack to re-scan the DOM so data-ms-modal attributes work on dynamically injected elements
     if (window.$memberstackDom?.reinitialize) window.$memberstackDom.reinitialize();
@@ -22300,6 +22423,7 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
         renderMasterRoomDefs();
       }
       if (window.mqImgLibAdminRender) window.mqImgLibAdminRender();
+      if (window.mqTvAdminRender) window.mqTvAdminRender();
       if (window.mqTradeAdminRender) window.mqTradeAdminRender();
       if (window.mqStepLibAdminRender) window.mqStepLibAdminRender();
     }
