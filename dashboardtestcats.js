@@ -6874,15 +6874,50 @@ ${W} .mqs2-fhead{position:static}
       </div>
       <div style="border-top:1px dashed #e5e7eb;padding-top:12px;display:grid;gap:8px;max-width:560px">
         <input type="text" id="mq-imglib-label" maxlength="60" placeholder="Name (e.g. Closet measuring guide)" style="font-size:13px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px"/>
-        <select id="mq-imglib-kind" style="font-size:13px;padding:7px 8px;border:1px solid #d1d5db;border-radius:6px"><option value="cover">Cover photo</option><option value="measure">Measuring guide</option></select>
-        <input type="text" id="mq-imglib-url" placeholder="https://… image link — or upload" style="font-size:13px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px"/>
+        <select id="mq-imglib-kind" onchange="window._mqImgLibKind=this.value" style="font-size:13px;padding:7px 8px;border:1px solid #d1d5db;border-radius:6px"><option value="cover">Cover photo</option><option value="measure"${window._mqImgLibKind === 'measure' ? ' selected' : ''}>Measuring guide</option></select>
+        <input type="text" id="mq-imglib-url" placeholder="https://… image link — or upload one or more photos" style="font-size:13px;padding:7px 10px;border:1px solid #d1d5db;border-radius:6px"/>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <label class="mq-btn mq-btn-sm" style="font-size:12px;cursor:pointer">📤 Upload<input type="file" id="mq-imglib-file" accept="image/*" style="display:none"/></label>
+          <label class="mq-btn mq-btn-sm" style="font-size:12px;cursor:pointer">📤 Upload photos<input type="file" id="mq-imglib-file" accept="image/*" multiple style="display:none"/></label>
           <span id="mq-imglib-status" style="font-size:11px"></span>
           <button type="button" class="mq-btn mq-btn-primary mq-btn-sm" onclick="mqImgLibAdminAdd()">Add to library</button>
         </div>
       </div>`;
-    mqWireUploadButton(null, 'mq-imglib-file', 'mq-imglib-status', 'mq-imglib-url', window._mqShopRecord?.fields?.['Shop token'] || 'library', 'products', () => {});
+    // Nov 19: pick several photos at once. Each one is resized and turned
+    // into a JPG (mqUploadImage, same as every other upload) and added to
+    // the library straight away, named from the Name box (numbered) or the
+    // file name.
+    const fi = document.getElementById('mq-imglib-file');
+    if (fi) fi.onchange = async () => {
+      const files = [...(fi.files || [])];
+      if (!files.length) return;
+      const status = document.getElementById('mq-imglib-status');
+      const say = (t, c) => { if (status) { status.textContent = t; status.style.color = c || '#6b7280'; } };
+      const base = (el('mq-imglib-label')?.value || '').trim();
+      const kind = el('mq-imglib-kind')?.value === 'measure' ? 'measure' : 'cover';
+      const tok = window._mqShopRecord?.fields?.['Shop token'] || 'library';
+      fi.disabled = true;
+      const added = []; let failed = 0;
+      for (let i = 0; i < files.length; i++) {
+        say(files.length > 1 ? `Uploading ${i + 1} of ${files.length}…` : 'Uploading…');
+        try {
+          const url = await mqUploadImage(files[i], tok, 'products');
+          const fromFile = files[i].name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ').trim().slice(0, 60).replace(/^./, c => c.toUpperCase());
+          added.push({ url, label: base ? (files.length > 1 ? `${base} (${i + 1})` : base) : (fromFile || 'Photo'), kind });
+        } catch (e) { failed++; }
+      }
+      fi.value = ''; fi.disabled = false;
+      if (added.length) {
+        try {
+          const master = await ensureMasterTemplateShop();
+          const list = mqImgLibAdded(master);
+          added.forEach(x => { if (!list.some(y => y.url === x.url)) list.push(x); });
+          await mqImgLibAdminSave(list);
+        } catch (e) { say('Could not save — try again', '#dc2626'); return; }
+      }
+      const msg = `✓ ${added.length} photo${added.length === 1 ? '' : 's'} added to the image library${failed ? ` · ${failed} didn't upload — try ${failed === 1 ? 'it' : 'them'} again` : ''}.`;
+      if (added.length) { mqImgLibAdminRender(); showMsg('mq-templates-msg', msg, failed ? 'error' : undefined); }
+      else say('Upload failed — try again', '#dc2626');
+    };
   };
   async function mqImgLibAdminSave(list) {
     const master = await ensureMasterTemplateShop();
