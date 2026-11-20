@@ -948,6 +948,7 @@
       #midasquote-widget .mq-vpicker-row.mq-needs-choice{animation:mqShakeChoice 0.4s ease;box-shadow:0 0 0 3px rgba(220,38,38,0.25);border-radius:8px}
       #midasquote-widget .mq-vpicker-thumb{width:116px;height:116px;border-radius:6px;object-fit:contain;background:#f3f4f6}
       #midasquote-widget .mq-vpicker-thumb-placeholder{width:116px;height:116px;border-radius:6px;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:20px;color:#6b7280}
+      #midasquote-widget .mq-fx-fin{display:inline-flex;align-items:center;gap:5px;margin-top:6px;padding:4px 10px;border-radius:999px;background:#f0fdf4;border:1px solid #bbf7d0;color:#166534;font-size:12.5px;font-weight:700;white-space:nowrap}
       #midasquote-widget ul.mq-fxl{list-style:none;padding:0;margin:0}
       #midasquote-widget ul.mq-fxl li.mq-fxl-row{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid #f1f2f4;list-style:none}
       #midasquote-widget ul.mq-fxl li.mq-fxl-row:last-child{border-bottom:0}
@@ -10766,7 +10767,18 @@
   // total (mq-${prefix}-financing-box) — used by both the "Calculate" flows
   // and the silent live-refresh path, so it always tracks whatever's
   // currently displayed as that panel's total.
+  // Nov 19 (Jordan): Focused shows "Financing available" right under the
+  // price at the top of the estimate, too — not only in the left panel.
+  function mqFxFinPill(prefix, total) {
+    const rng = document.getElementById(`mq-${prefix}-res-range`); if (!rng) return;
+    let pill = document.getElementById(`mq-${prefix}-fx-fin`);
+    const want = !!(window._mqFxOn && window._mqFinancingOn && total > 0);
+    if (!want) { if (pill) pill.style.display = 'none'; return; }
+    if (!pill) { pill = document.createElement('div'); pill.id = `mq-${prefix}-fx-fin`; pill.className = 'mq-fx-fin'; pill.textContent = '💳 Financing available'; rng.insertAdjacentElement('afterend', pill); }
+    pill.style.display = '';
+  }
   function mqUpdateFinancingBox(prefix, low, high, total) {
+    try { mqFxFinPill(prefix, total || high || low || 0); } catch (e) {}
     const box = document.getElementById(`mq-${prefix}-financing-box`);
     if (!box) return;
     if (!window._mqFinancingOn) { box.style.display = 'none'; return; }
