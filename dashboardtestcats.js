@@ -901,6 +901,55 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     },
   };
 
+  // ── Help screenshots (Nov 19, Jordan) ────────────────────────────────
+  // Every help topic gets a picture of its page, under its opening
+  // paragraph. The pictures live in a separate file (help-images.js, next to
+  // dashboard.js) that only loads the first time Help is opened, so the
+  // dashboard itself stays light. No file / no picture → nothing shows.
+  const MQ_HELP_FIG_CAP = {
+    gettingstarted: 'The setup tabs, in order. A tick appears as each one is done.',
+    overview: 'Your Overview: quote stats up top, your newest leads underneath.',
+    leads: 'Every quote request in one list — change a lead’s status as you follow up.',
+    shop: 'Business info is split into sections — tap one to open it.',
+    rooms: 'Your project types, grouped by the quote they belong to.',
+    pricing: 'Each part of your pricing has its own card — tap + Add to add an item.',
+    specialty: 'Your specialty items, with their price and how each one is priced.',
+    products: 'My Products: photos, badges and visibility for everything you sell.',
+    embed: 'Pick the kind of code you need, then copy it into your website.',
+    midasquotepro: 'MidasQuote Pro — the same quote tool, built for you and your team.',
+    marketing: 'Design Studio: ready-made templates for ads, posts, signs and more.',
+    showroom: 'Set up your showroom page and choose where customers can find it.',
+    proposals: 'Proposal templates your team picks from in MidasQuote Pro.',
+    billing: 'Your plan, payment method and invoices.',
+  };
+  function mqHelpAddFig(box, id) {
+    if (!box || !MQ_HELP_FIG_CAP[id] || box.querySelector('.mq-help-fig')) return box;
+    const f = document.createElement('figure'); f.className = 'mq-help-fig'; f.dataset.mqhi = id; f.style.display = 'none';
+    f.innerHTML = `<img alt="" loading="lazy"/><figcaption></figcaption>`;
+    f.querySelector('figcaption').textContent = MQ_HELP_FIG_CAP[id];
+    const lead = [...box.children].find(e => e.tagName === 'P');
+    if (lead) lead.insertAdjacentElement('afterend', f); else box.prepend(f);
+    if (!document.getElementById('mq-help-fig-css')) { const st = document.createElement('style'); st.id = 'mq-help-fig-css'; st.textContent = '.mq-help-fig{margin:12px 0 18px}.mq-help-fig img{display:block;width:100%;height:auto;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 2px 10px rgba(17,24,39,.07);cursor:zoom-in}.mq-help-fig figcaption{font-size:12.5px;color:#6b7280;margin-top:6px;text-align:center;line-height:1.45}'; document.head.appendChild(st); }
+    setTimeout(() => window.mqHelpImgReady(), 0); // after the box is on the page
+    return box;
+  }
+  window.mqHelpImgReady = function() {
+    if (!window.MQ_HELP_IMG) {
+      if (!window._mqHelpImgLoading) {
+        window._mqHelpImgLoading = true;
+        const sc = document.createElement('script');
+        sc.src = (MQ_DASHBOARD_SCRIPT_URL ? MQ_DASHBOARD_SCRIPT_URL.replace(/[^\/?#]*([?#].*)?$/, '') : 'https://widget.midasquote.com/') + 'help-images.js';
+        sc.onerror = () => { window._mqHelpImgLoading = false; };
+        document.head.appendChild(sc);
+      }
+      return;
+    }
+    document.querySelectorAll('figure.mq-help-fig[data-mqhi]').forEach(f => {
+      const src = window.MQ_HELP_IMG[f.dataset.mqhi]; if (!src) return;
+      const im = f.querySelector('img'); if (im.getAttribute('src') !== src) { im.src = src; im.onclick = () => { try { mqZoomOpen([src], 0); const z = document.getElementById('mq-zoom-ov'); if (z) z.style.zIndex = '100030'; } catch (e) {} }; }
+      f.style.display = '';
+    });
+  };
   window.mqShowHelp = function(pageId) {
     if (window.mqCabHwApply) window.mqCabHwApply();
     const content = MQ_HELP_CONTENT[pageId];
@@ -921,7 +970,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         </div>
         <div id="mq-help-modal-body"></div>
       </div>`;
-    try { mqhInjectCss(); modal.querySelector('#mq-help-modal-body').appendChild(mqhPretty(content.body)); }
+    try { mqhInjectCss(); modal.querySelector('#mq-help-modal-body').appendChild(mqHelpAddFig(mqhPretty(content.body), pageId)); }
     catch (e) { modal.querySelector('#mq-help-modal-body').innerHTML = `<div style="font-size:14px;color:#374151;line-height:1.7">${content.body}</div>`; }
     modal.style.display = 'flex';
   };
@@ -1237,7 +1286,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     if (changed) {
       const order = mqhOrder(), i = order.indexOf(id), prev = order[i - 1], next = order[i + 1];
       panel.innerHTML = `<div class="mqh-crumb">Help › <b>${mqhGroupOf(id) || 'Help'}</b></div><h1 class="mqh-h1">${content.title}</h1>`;
-      panel.appendChild(mqhPretty(content.guideBody || content.body));
+      panel.appendChild(mqHelpAddFig(mqhPretty(content.guideBody || content.body), id));
       const foot = document.createElement('div');
       foot.innerHTML = `<div class="mqh-pn">${prev ? `<button type="button" onclick="mqSelectHelpTopic('${prev}')"><small>${mqhIcon('left', 14)} Previous</small><b>${MQ_HELP_CONTENT[prev].title}</b></button>` : ''}${next ? `<button type="button" class="nx" onclick="mqSelectHelpTopic('${next}')"><small>Next ${mqhIcon('right', 14)}</small><b>${MQ_HELP_CONTENT[next].title}</b></button>` : ''}</div>
         <div class="mqh-sup">${mqhIcon('chat', 20)}<div><b>Still stuck?</b><br>Send us a message and we’ll help you sort it out.</div><button type="button" onclick="mqProGoTo('support')">Message support</button></div>`;
