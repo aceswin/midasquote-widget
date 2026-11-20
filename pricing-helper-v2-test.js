@@ -6424,6 +6424,96 @@ window.mqphGoToWizard = function() {
   // `pctCc`). Options and categories can also be tied to other picks
   // (`tie` = {cat, names}) and categories placed after any built-in step
   // (`after`).
+
+  // ── "How to use steps" guide (Nov 19, Jordan) ──────────────────────────
+  // A short, friendly walkthrough popup. Opens from the Pricing tab and from
+  // the step / option boxes (jumping to the matching part).
+  (function () { if (document.getElementById('mqcc-guide-css')) return; const st = document.createElement('style'); st.id = 'mqcc-guide-css'; st.textContent = '.mqcc-guide-link{font-size:13px;font-weight:600;color:#2563eb!important;text-decoration:none!important;white-space:nowrap}.mqcc-guide-link:hover{text-decoration:underline!important}'; (document.head || document.documentElement).appendChild(st); })();
+  window.mqccStepsGuide = function(jump) {
+    let ov = document.getElementById('mqcc-guide-ov');
+    if (ov) ov.remove();
+    ov = document.createElement('div');
+    ov.id = 'mqcc-guide-ov';
+    ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
+    const sec = (n, id, title, body) => `<section class="mqg-sec" id="mqg-${id}"><div class="mqg-num">${n}</div><div class="mqg-main"><h4>${title}</h4>${body}</div></section>`;
+    const li = a => `<ul>${a.map(x => `<li>${x}</li>`).join('')}</ul>`;
+    // Nov 19 (Jordan): cabinet shops get the door-refresh example; everyone
+    // else gets painting, which nearly everyone can picture.
+    let cab = true; try { cab = !!window.mqBizOf((window._mqShopRecord || {}).fields || {}).cab; } catch (e) {}
+    const X = cab ? {
+      exTitle: 'Example — a door refresh quote',
+      ex: `<b>Step 1 · Choose your project</b> → Refacing, Repainting, Refreshing<br/>
+            <b>Step 2 · How many square feet of doors?</b> → the customer types 76<br/>
+            <b>Step 3 · Door style</b> (only if they picked Refacing) → Shaker $28/sq ft, Slab $24/sq ft`,
+      one: 'a door style', any: 'add-ons', showIf: 'Door style only if Refacing was picked', count: 'doors',
+      later: 'Shaker at $28 per sq ft of that area', onMeas: 'per sq ft of door area', inst: 'per door (customers say how many)',
+    } : {
+      exTitle: 'Example — a painting quote',
+      ex: `<b>Step 1 · What are we painting?</b> → Walls, Ceilings, Trim &amp; doors<br/>
+            <b>Step 2 · How many square feet of wall?</b> → the customer types 850<br/>
+            <b>Step 3 · Paint quality</b> → Standard $2.10/sq ft, Premium $2.75/sq ft<br/>
+            <b>Step 4 · Ceiling finish</b> (only if they picked Ceilings) → Flat white, Popcorn removal`,
+      one: 'a paint quality', any: 'trim and ceiling add-ons', showIf: 'Ceiling finish only if Ceilings was picked', count: 'rooms or windows',
+      later: 'Premium paint at $2.75 per sq ft of that area', onMeas: 'per sq ft of wall area', inst: 'per item (customers say how many)',
+    };
+    ov.innerHTML = `
+      <style>
+        #mqcc-guide-ov{position:fixed;inset:0;z-index:100020;background:rgba(17,24,39,.55);display:flex;align-items:center;justify-content:center;padding:20px;font-family:inherit}
+        #mqcc-guide-ov .mqg-box{font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:#fff;border-radius:16px;width:min(720px,100%);max-height:88vh;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(0,0,0,.3)}
+        #mqcc-guide-ov .mqg-hd{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:20px 22px 14px;border-bottom:1px solid #eef0f3}
+        #mqcc-guide-ov .mqg-hd h3{font-family:inherit;margin:0;font-size:19px;font-weight:800;color:#111827}
+        #mqcc-guide-ov .mqg-hd p{margin:4px 0 0;font-size:13px;color:#6b7280}
+        #mqcc-guide-ov .mqg-x{background:none;border:0;font-size:26px;line-height:1;cursor:pointer;color:#6b7280}
+        #mqcc-guide-ov .mqg-body{overflow-y:auto;padding:6px 22px 18px}
+        #mqcc-guide-ov .mqg-sec{display:flex;gap:14px;padding:16px 0;border-bottom:1px solid #f1f2f4}
+        #mqcc-guide-ov .mqg-sec:last-child{border-bottom:0}
+        #mqcc-guide-ov .mqg-num{flex:none;width:28px;height:28px;border-radius:50%;background:#111827;color:#fff;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;margin-top:1px}
+        #mqcc-guide-ov .mqg-main{min-width:0;font-size:13.5px;color:#374151;line-height:1.6}
+        #mqcc-guide-ov h4{font-family:inherit;margin:0 0 4px;font-size:15px;font-weight:800;color:#111827}
+        #mqcc-guide-ov ul{margin:6px 0 0;padding-left:18px}
+        #mqcc-guide-ov li{margin:3px 0}
+        #mqcc-guide-ov b{color:#111827}
+        #mqcc-guide-ov .mqg-ex{margin-top:10px;background:#f8fafc;border:1px solid #e5ebf3;border-radius:10px;padding:10px 12px;font-size:13px}
+        #mqcc-guide-ov .mqg-ex-t{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#6b7280;margin-bottom:4px}
+        #mqcc-guide-ov .mqg-tip{margin-top:10px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:9px 12px;color:#1e3a8a;font-size:13px}
+        #mqcc-guide-ov .mqg-ft{display:flex;justify-content:flex-end;padding:12px 22px;border-top:1px solid #eef0f3}
+      </style>
+      <div class="mqg-box" role="dialog" aria-label="How to use steps">
+        <div class="mqg-hd"><div><h3>📘 How to use steps</h3><p>Steps are the questions your customer answers in your quote, one after another.</p></div><button type="button" class="mqg-x" aria-label="Close" onclick="document.getElementById('mqcc-guide-ov').remove()">×</button></div>
+        <div class="mqg-body">
+          ${sec(1, 'what', 'The idea', `<div>A <b>step</b> is one question, like “Choose your project” or “How many square feet?”. The <b>options</b> are the answers your customer can pick, each with its own price. Your quote adds it all up for them.</div>
+            <div class="mqg-ex"><div class="mqg-ex-t">${X.exTitle}</div>
+            ${X.ex}</div>`)}
+          ${sec(2, 'step', 'Make a step', `<div>Tap <b>+ New step</b> and answer a few things:</div>${li([
+            `<b>What kind of step?</b> <b>Choices</b> — customers pick from options. <b>A measurement</b> — customers type a number (square feet, linear feet, or a count like ${X.count}).`,
+            '<b>Heading</b> — the question customers see. Add a short <b>description</b> if it helps.',
+            `<b>Customers can pick</b> — <b>One</b> (like ${X.one}) or <b>Any</b> (like ${X.any}). Tick <b>must choose</b> if they can’t skip it.`,
+            `<b>Where it goes</b> and <b>Only show this step if…</b> — put it in the right spot, or show it only after an earlier choice (e.g. ${X.showIf}).`,
+          ])}<div class="mqg-tip">👁 The <b>live preview</b> on the right shows exactly what customers will see as you type.</div>`)}
+          ${sec(3, 'meas', 'Measurement steps', `${li([
+            `Pick <b>Square feet</b>, <b>Linear feet</b> or <b>A count</b> (and say what’s counted, like ${X.count}).`,
+            `<b>Price it here</b> — one price per unit, e.g. ${cab ? '$9' : '$2.10'} per sq ft.`,
+            `<b>A later step prices it</b> — the customer just enters the number, and options in a later step use it (e.g. ${X.later}).`,
+          ])}`)}
+          ${sec(4, 'opts', 'Add options', `<div>While making a Choices step, type your options right in the box — a name and a price is all you need to start. Later, tap <b>+ Add option</b> on the step, or <b>Edit</b> on any option for the full settings.</div>`)}
+          ${sec(5, 'option', 'What an option can do', `${li([
+            `<b>What it’s priced on</b> — a <b>flat price</b>; <b>per sq ft</b>, <b>per linear ft</b> or <b>per item</b> (the customer enters how many); <b>one of this quote’s measurements</b> (e.g. ${X.onMeas}); a <b>percentage</b> of the estimate or of another step; or <b>a later step prices it</b> (just a choice, no price).`,
+            '<b>Minimum charge</b> — so small jobs never come in too low.',
+            `<b>Offer installation</b> — customers choose Supply only or Supply + install. Install can be flat, ${X.inst}, per sq ft, per linear ft, or per measurement.`,
+            '<b>Show this option</b> — only after a certain earlier choice.',
+            '<b>Photo</b> — add one in <b>My Products</b>; it shows on the option card and the estimate.',
+          ])}`)}
+          ${sec(6, 'tidy', 'Keep it tidy', `${li([
+            '<b>↑ ↓</b> move steps and options. Customers see options cheapest first until you reorder them.',
+            'The <b>switch</b> on an option turns it off without deleting it.',
+            '<b>Duplicate</b> copies an option with all its settings — handy for similar options.',
+          ])}<div class="mqg-tip">✨ Start simple: one step, two or three options, a price each. Check the preview, then add more.</div>`)}
+        </div>
+        <div class="mqg-ft"><button type="button" class="mqph-btn mqph-btn-primary mqph-btn-sm" onclick="document.getElementById('mqcc-guide-ov').remove()">Got it</button></div>
+      </div>`;
+    document.body.appendChild(ov);
+    if (jump) { const t = ov.querySelector('#mqg-' + jump); if (t) setTimeout(() => t.scrollIntoView({ block: 'start' }), 30); }
+  };
   const MQCC_HOW = {
     flat:       { label: 'Flat price', short: 'flat', group: 'Simple' },
     later:      { label: 'No price here — a later step prices it', short: '', group: 'Simple' },
@@ -7025,7 +7115,7 @@ window.mqphGoToWizard = function() {
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:${cats.length ? '14px' : '0'}">
           <div style="min-width:0;max-width:620px">
             <div class="mqph-cat-title">✨ Custom pricing categories</div>
-            <div style="font-size:12px;color:#6b7280;margin-top:6px;line-height:1.55">${mqphComputeTabScope().countertopsOnly ? 'Make your own priced steps — prep work, site access, delivery, hourly work. Each category is its own step in one of your quote types' : `Make your own priced steps for anything not covered above — finished ends, site access, delivery, hourly work. Each category is its own step on your widget (Cabinets and Both tabs)${mqccQts().length ? ', or in one of your own quote types' : ''}`}. Photos, groups and which project types each option shows for are set in <strong>My Products</strong>, same as everything else.</div>
+            <div style="font-size:12px;color:#6b7280;margin-top:6px;line-height:1.55">${mqphComputeTabScope().countertopsOnly ? 'Make your own priced steps — prep work, site access, delivery, hourly work. Each category is its own step in one of your quote types' : `Make your own priced steps for anything not covered above — finished ends, site access, delivery, hourly work. Each category is its own step on your widget (Cabinets and Both tabs)${mqccQts().length ? ', or in one of your own quote types' : ''}`}. Photos, groups and which project types each option shows for are set in <strong>My Products</strong>, same as everything else.<div style="margin-top:8px"><a href="#" class="mqcc-guide-link" onclick="event.preventDefault();mqccStepsGuide()">📘 How to use steps</a></div></div>
           </div>
           <span style="display:inline-flex;gap:8px;flex-wrap:wrap"><span id="mqcc-steplib-btn">${mqccStepLibBtn()}</span><button class="mqph-btn mqph-btn-primary mqph-btn-sm" onclick="mqccOpenCat(null)">+ New category</button></span>
         </div>
@@ -7036,7 +7126,7 @@ window.mqphGoToWizard = function() {
       <div class="mqph-overlay" id="mqcc-cat-overlay">
         <div class="mqph-modal mqcc-wide">
           <div class="mqph-modal-hdr">
-            <div><h3 id="mqcc-cat-title">New category</h3><p>This becomes its own step on your widget.</p></div>
+            <div><h3 id="mqcc-cat-title">New category</h3><p>This becomes its own step on your widget. <a href="#" class="mqcc-guide-link" onclick="event.preventDefault();mqccStepsGuide('step')">How do steps work?</a></p></div>
             <button class="mqph-modal-hdr-close" onclick="mqccClose('mqcc-cat-overlay')">×</button>
           </div>
           <div class="mqph-modal-body">${mqccFNoteHtml('mqcc-cat-fnote')}<div id="mqcc-cat-newtip" style="display:none;align-items:flex-start;gap:10px;background:#fffbeb;border:1px solid #fcd34d;border-left:4px solid #f59e0b;border-radius:10px;padding:11px 14px;margin-bottom:16px;font-size:13px;line-height:1.5;color:#78350f"><span style="font-size:17px;line-height:1.2">💡</span><span><strong>You're making the step itself</strong> — its name, the question customers see, and where it goes. The choices inside it (and their prices) come next: after you save, click <strong>+ Add option</strong> on the step.</span></div><div class="mqcc-modal-grid"><div>
@@ -7118,7 +7208,7 @@ window.mqphGoToWizard = function() {
       <div class="mqph-overlay" id="mqcc-item-overlay">
         <div class="mqph-modal mqcc-wide">
           <div class="mqph-modal-hdr">
-            <div><h3 id="mqcc-item-title">New option</h3><p id="mqcc-item-sub"></p></div>
+            <div><h3 id="mqcc-item-title">New option</h3><p><span id="mqcc-item-sub"></span> <a href="#" class="mqcc-guide-link" onclick="event.preventDefault();mqccStepsGuide('option')">How do options work?</a></p></div>
             <button class="mqph-modal-hdr-close" onclick="mqccClose('mqcc-item-overlay')">×</button>
           </div>
           <div class="mqph-modal-body"><div class="mqcc-modal-grid"><div>
@@ -7958,8 +8048,12 @@ window.mqphGoToWizard = function() {
     opts.push(['count', cu ? `per ${cu.replace(/s$/, '')} — customers say how many` : 'per item they count (e.g. per door)']);
     opts.push(['sqft', 'per sq ft — customers enter the square feet']);
     opts.push(['lft', 'per lin ft — customers enter the linear feet']);
-    if (inQt) mqccMeasOf(c.qt).forEach(m => opts.push(['meas:' + m.id, `per ${mqccMeasUnit(m).replace(/s$/, '')} of ${m.label}`]));
-    const keep = window._mqccInstWant || sel.value || 'flat';
+    // Nov 19: skip the measurement the option is already priced on — "the
+    // same … they enter" at the top already covers it.
+    const sameMeas = how === 'meas' && same ? ((document.getElementById('mqcc-item-meas') || {}).value || '') : '';
+    if (inQt) mqccMeasOf(c.qt).forEach(m => { if (sameMeas && m.id === sameMeas) return; opts.push(['meas:' + m.id, `per ${mqccMeasUnit(m).replace(/s$/, '')} of ${m.label}`]); });
+    let keep = window._mqccInstWant || sel.value || 'flat';
+    if (sameMeas && keep === 'meas:' + sameMeas) keep = 'same';
     window._mqccInstWant = null;
     sel.innerHTML = opts.map(([v, l]) => `<option value="${v}">${mqccEsc(l)}</option>`).join('');
     sel.value = opts.some(o => o[0] === keep) ? keep : 'flat';
