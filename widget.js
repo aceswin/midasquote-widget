@@ -1212,6 +1212,7 @@
       #midasquote-widget .mq-financing-box-label{font-size:14px;font-weight:700;color:#166534}
       #midasquote-widget .mq-financing-box-body{padding:0.9rem 1.25rem}
       #midasquote-widget .mq-financing-box-val{font-size:18px;font-weight:700;color:#166534}
+      #midasquote-widget .mq-financing-box-cap{font-size:12.5px;font-weight:600;color:#166534;margin-top:3px;line-height:1.4}
       #midasquote-widget .mq-financing-box-sub{font-size:11px;color:#6b7280;margin-top:6px;font-style:italic}
       .mq-lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:1000020;align-items:center;justify-content:center;padding:1.5rem;cursor:zoom-out;flex-direction:column;gap:0.75rem;overscroll-behavior:contain}
       .mq-hover-preview{display:none;position:fixed;z-index:100001;background:#fff;border-radius:10px;padding:8px;box-shadow:0 12px 32px rgba(0,0,0,0.28);pointer-events:none}
@@ -4591,6 +4592,11 @@
     // low as $9/mo" next to it. Unset/blank means no floor, same as today.
     const financingMinRaw = parseFloat(shop['Financing minimum amount']);
     window._mqFinancingMinAmount = !isNaN(financingMinRaw) && financingMinRaw > 0 ? financingMinRaw : 0;
+    // Nov 19 (Jordan): optional MAX the lender will finance (e.g. $100k).
+    // Saved in the 'Hidden widget tabs' JSON (financingMax) — no new field.
+    // Estimates above it show the payment for the max, with a note.
+    let financingMaxRaw = NaN; try { financingMaxRaw = parseFloat((JSON.parse(shop['Hidden widget tabs'] || '{}') || {}).financingMax); } catch (e) {}
+    window._mqFinancingMaxAmount = !isNaN(financingMaxRaw) && financingMaxRaw > 0 ? financingMaxRaw : 0;
 
     // Showroom button destination — where the "🖼️ See our showroom" link
     // right below sends customers. Added 2026-09-10, alongside the new
@@ -10744,6 +10750,22 @@
   // matches whatever basis (range or one clean total) the price above it is
   // using. Returns null when financing has no rate/term set, or the basis is
   // $0 (nothing calculated yet).
+  // Monthly payment text for a low/high basis, after the shop's min and max:
+  // below the min → null (plain badge); above the max → the payment is for
+  // the max. Returns { text, capped } or null.
+  function mqFinPay(basisLow, basisHigh) {
+    if (window._mqFinancingAPR == null || window._mqFinancingTermMonths == null) return null;
+    if (!(basisLow > 0) && !(basisHigh > 0)) return null;
+    if (basisLow < (window._mqFinancingMinAmount || 0)) return null;
+    const max = window._mqFinancingMaxAmount || 0;
+    const capped = max > 0 && basisHigh > max;
+    const lo = max > 0 ? Math.min(basisLow, max) : basisLow, hi = max > 0 ? Math.min(basisHigh, max) : basisHigh;
+    const payLow = Math.round(mqCalcMonthlyPayment(lo, window._mqFinancingAPR, window._mqFinancingTermMonths));
+    const payHigh = Math.round(mqCalcMonthlyPayment(hi, window._mqFinancingAPR, window._mqFinancingTermMonths));
+    const text = payLow === payHigh ? `${CUR()}${payHigh.toLocaleString()}/mo` : `${CUR()}${payLow.toLocaleString()}/mo – ${CUR()}${payHigh.toLocaleString()}/mo`;
+    return { text, capped, max };
+  }
+  function mqFinMaxNote(max) { return `Financing is available up to ${CUR()}${Math.round(max).toLocaleString()} — this payment is for that amount.`; }
   function mqFinancingPaymentText(prefix, low, high, total) {
     if (window._mqFinancingAPR == null || window._mqFinancingTermMonths == null) return null;
     const showRange = mqShouldShowRange(prefix);
@@ -10756,12 +10778,10 @@
     // that's below the shop's own floor (checking the high end alone let a
     // small low-end figure sneak through inside an otherwise-qualifying
     // range, which defeated the point of having a floor at all).
-    if (basisLow < (window._mqFinancingMinAmount || 0)) return null;
-    const payLow = Math.round(mqCalcMonthlyPayment(basisLow, window._mqFinancingAPR, window._mqFinancingTermMonths));
-    const payHigh = Math.round(mqCalcMonthlyPayment(basisHigh, window._mqFinancingAPR, window._mqFinancingTermMonths));
-    return payLow === payHigh
-      ? `${CUR()}${payHigh.toLocaleString()}/mo`
-      : `${CUR()}${payLow.toLocaleString()}/mo – ${CUR()}${payHigh.toLocaleString()}/mo`;
+    const r = mqFinPay(basisLow, basisHigh);
+    window._mqFinCapped = window._mqFinCapped || {};
+    window._mqFinCapped[prefix] = r && r.capped ? r.max : 0;
+    return r ? r.text : null;
   }
   // Shows/hides and fills in the big financing box under a results panel's
   // total (mq-${prefix}-financing-box) — used by both the "Calculate" flows
@@ -10786,6 +10806,11 @@
     if (!payText) { box.style.display = 'none'; return; }
     const valEl = document.getElementById(`mq-${prefix}-financing-val`);
     if (valEl) valEl.textContent = `as low as ${payText}*`;
+    // Over the shop's max → say so, right under the payment.
+    let capEl = document.getElementById(`mq-${prefix}-financing-cap`);
+    const capMax = (window._mqFinCapped || {})[prefix] || 0;
+    if (capMax && !capEl && valEl) { capEl = document.createElement('div'); capEl.id = `mq-${prefix}-financing-cap`; capEl.className = 'mq-financing-box-cap'; valEl.insertAdjacentElement('afterend', capEl); }
+    if (capEl) { capEl.textContent = capMax ? mqFinMaxNote(capMax) : ''; capEl.style.display = capMax ? '' : 'none'; }
     // Block, not flex — the box is a simple top-strip + body stack (a
     // little "card" look: the label sits in its own colored strip up top,
     // the price + fine print sit in the body below it).
@@ -10845,15 +10870,12 @@
         // Same shop-set floor as the results-panel financing box, judged
         // off the low end — below it, falls through to the plain badge
         // with no number (the same branch as rate/term being unset).
-        if ((payBasisLow > 0 || payBasisHigh > 0) && payBasisLow >= (window._mqFinancingMinAmount || 0)) {
-          const payLow = Math.round(mqCalcMonthlyPayment(payBasisLow, window._mqFinancingAPR, window._mqFinancingTermMonths));
-          const payHigh = Math.round(mqCalcMonthlyPayment(payBasisHigh, window._mqFinancingAPR, window._mqFinancingTermMonths));
-          const payText = payLow === payHigh
-            ? `${CUR()}${payHigh.toLocaleString()}/mo`
-            : `${CUR()}${payLow.toLocaleString()}/mo – ${CUR()}${payHigh.toLocaleString()}/mo`;
-          financingPayEl.textContent = ` · as low as ${payText}*`;
-          financingPayEl.setAttribute('data-mq-amt', `as low as ${payText}*`);
-          financingPayEl.title = 'Estimated payment only — subject to approval and final terms.';
+        const fp = mqFinPay(payBasisLow, payBasisHigh);
+        if (fp) {
+          const payText = fp.text + '*' + (fp.capped ? ` (max ${CUR()}${Math.round(fp.max).toLocaleString()} financed)` : '');
+          financingPayEl.textContent = ` · as low as ${payText}`;
+          financingPayEl.setAttribute('data-mq-amt', `as low as ${payText}`);
+          financingPayEl.title = (fp.capped ? mqFinMaxNote(fp.max) + ' ' : '') + 'Estimated payment only — subject to approval and final terms.';
           if (financingDisclaimerEl) financingDisclaimerEl.style.display = 'block';
         } else {
           financingPayEl.textContent = '';

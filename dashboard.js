@@ -3047,6 +3047,11 @@ ${W} .mqs2-fhead{position:static}
                   <input type="number" id="mq-financing-min" step="1" min="0" placeholder="e.g. 3000"/>
                   <span class="mq-hint">Only show the monthly payment when the LOW end of the quote is at least this much — so a range never shows a small-looking number on its low side. Smaller quotes still show the plain "Financing available" badge with no number attached. Leave blank to always show the payment whenever rate and term are set.</span>
                 </div>
+                <div class="mq-field" style="margin-top:12px;margin-bottom:0">
+                  <label class="mq-label">Maximum amount to finance <span style="font-weight:400;color:#9ca3af">(optional)</span></label>
+                  <input type="number" id="mq-financing-max" step="1" min="0" placeholder="e.g. 100000"/>
+                  <span class="mq-hint">The most your financing company will lend. When a quote goes over it, customers see the monthly payment for this amount, with a note that financing is available up to it. Leave blank for no limit.</span>
+                </div>
               </div>
               <div class="mq-toggle-row" style="margin-bottom:0">
                 <div>
@@ -6204,6 +6209,7 @@ ${W} .mqs2-fhead{position:static}
     set('mq-financing-apr', f['Financing APR'] != null ? f['Financing APR'] : '');
     set('mq-financing-term', f['Financing term months'] != null ? f['Financing term months'] : '');
     set('mq-financing-min', f['Financing minimum amount'] != null ? f['Financing minimum amount'] : '');
+    try { const fmx = (JSON.parse(f['Hidden widget tabs'] || '{}') || {}).financingMax; set('mq-financing-max', fmx != null ? fmx : ''); } catch (e) { set('mq-financing-max', ''); }
     // Estimator tabs — 'Hidden widget tabs' is {"hidden":[...],"applyToPro":bool}.
     // A tab's toggle is "on" (visible) unless its id is in the hidden list —
     // default state, for shops that have never touched this, is all three on.
@@ -6247,7 +6253,7 @@ ${W} .mqs2-fhead{position:static}
       'mq-shop-name','mq-shop-phone','mq-shop-city','mq-shop-website',
       'mq-shop-email','mq-shop-color','mq-shop-range-low','mq-shop-range-high',
       'mq-shop-logo','mq-shop-disclaimer','mq-shop-projecttype-title','mq-shop-projecttype-hint','mq-shop-consult-link',
-      'mq-shop-consult-email','mq-financing-link','mq-financing-apr','mq-financing-term','mq-financing-min',
+      'mq-shop-consult-email','mq-financing-link','mq-financing-apr','mq-financing-term','mq-financing-min','mq-financing-max',
       'mq-shop-focalcolor','mq-shop-boxbordercolor','mq-shop-boxbgcolor','mq-shop-boxtextcolor'
     ];
     shopFieldIds.forEach(id => {
@@ -11102,6 +11108,14 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         'Financing term months': gv('mq-financing-term') === '' ? null : parseInt(gv('mq-financing-term'), 10),
         'Financing minimum amount': gv('mq-financing-min') === '' ? null : parseFloat(gv('mq-financing-min')),
       };
+      // Nov 19: financing max lives in the 'Hidden widget tabs' JSON (no new
+      // Airtable field). Only written when it actually changed.
+      try {
+        const tc = JSON.parse(shopRec.fields['Hidden widget tabs'] || '{}') || {};
+        const mxRaw = gv('mq-financing-max'); const mx = mxRaw === '' ? null : parseFloat(mxRaw);
+        const cur = tc.financingMax != null ? tc.financingMax : null;
+        if ((mx > 0 ? mx : null) !== cur) { if (mx > 0) tc.financingMax = mx; else delete tc.financingMax; updatedFields['Hidden widget tabs'] = JSON.stringify(tc); }
+      } catch (e) {}
       const currencyChanged = updatedFields['Currency symbol'] !== (shopRec.fields['Currency symbol'] || '$');
       await atUpdate(CONFIG.SHOPS_TABLE, shopRec.id, updatedFields);
       // Keep the in-memory record in sync so other tabs (like Marketing Kit) reflect changes immediately
