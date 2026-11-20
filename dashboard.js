@@ -13431,6 +13431,11 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       r('.mqb-cat', 'display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;text-align:left;padding:10px 12px;border-radius:7px;border:0;background:none;font-weight:500;font-size:13px;line-height:1.3;font-family:inherit;color:#374151;cursor:pointer'),
       r('.mqb-cat:hover', 'background:#f1f2f4'),
       r('.mqb-cat.on', 'background:#fff;box-shadow:0 0 0 1px #e5e7eb;color:#111827;font-weight:600'),
+      // Nov 19 (Jordan): a small › on every category so it's clear each one opens; the open one's is gold, pointing at its options.
+      r('.mqb-cat > span:first-child', 'flex:1;min-width:0'),
+      r('.mqb-cat::after', 'content:"";flex:none;width:7px;height:7px;margin-right:2px;border-right:2px solid #c4c9d2;border-top:2px solid #c4c9d2;transform:rotate(45deg);transition:border-color .15s,transform .15s'),
+      r('.mqb-cat:hover::after', 'border-color:#6b7280;transform:translateX(2px) rotate(45deg)'),
+      r('.mqb-cat.on::after', 'border-color:#c9a227'),
       r('.mqb-cnt', 'font-size:11px;font-weight:600;background:#fbf3df;color:#8a6510;border-radius:10px;padding:2px 8px;flex:none'),
       r('.mqb-grid', 'padding:12px;min-width:0'),
       r('.mqb-items', 'display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px'),
