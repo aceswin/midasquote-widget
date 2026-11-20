@@ -3644,7 +3644,7 @@ ${W} .mqs2-fhead{position:static}
             </div>
             <div class="mq-card" style="margin-bottom:1.5rem">
               <div class="mq-card-title">🖼️ Image library</div>
-              <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Photos every shop can pick from on its Project types page ("🖼️ Choose from library" for cover photos, "🖼️ Add from library" for measuring guides). MidasQuote's built-in photos and the images on the default project types above are always included — add more here (e.g. for new trades or quote types).</p>
+              <p style="font-size:13px;color:#6b7280;margin-bottom:1rem">Photos every shop can pick from on its Project types page ("🖼️ Choose from library" on cover photos and measuring guide pictures). MidasQuote's built-in photos and the images on the default project types above are always included — add more here (e.g. for new trades or quote types).</p>
               <div id="mq-imglib-admin"><div class="mq-loading">Loading...</div></div>
             </div>
             <div class="mq-card" style="margin-bottom:1.5rem">
@@ -7622,7 +7622,7 @@ ${W} .mqs2-fhead{position:static}
                   📤 Upload photo
                   <input type="file" id="mq-room-measure-img-file-${idx}" accept="image/*" style="display:none"/>
                 </label>
-                <button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqImgLibOpen('${r.id}','measure')">🖼️ Add from library</button>
+                <button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqImgLibOpen('${r.id}','measure')">🖼️ Choose from library</button>
                 <span style="font-size:11px;color:#9ca3af;margin-left:2px">or paste a YouTube/Vimeo/Loom/video link above instead</span><br/>
                 ${isQt && !mqDefaultMeasureImageUrlFor(r.id, r.name, false) ? '' : `<button type="button" class="mq-btn mq-btn-sm" style="font-size:11px;margin-top:4px" onclick="mqFillDefaultMeasureImage('mq-room-measure-img-${idx}','mq-room-measure-img-preview-${idx}','${r.id}',${idx})">↺ Use default image</button>`}
                 ${mqDefaultMeasureImageUrlsFor(r.id, r.name, r.forCountertops).length > 1 ? `<button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqUseAllDefaultMeasureImages('${r.id}',${idx})">↺ Use all ${mqDefaultMeasureImageUrlsFor(r.id, r.name).length} default images</button>` : ''}
