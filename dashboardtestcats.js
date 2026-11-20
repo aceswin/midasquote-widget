@@ -6904,7 +6904,7 @@ ${W} .mqs2-fhead{position:static}
     } catch(e) { console.warn('Image library: could not load the template shop', e); }
     return out;
   }
-  window.mqImgLibOpen = async function(roomId, mode) {
+  window.mqImgLibOpen = async function(roomId, mode, slot) {
     const r = (window._mqRooms || []).find(x => x.id === roomId);
     const idx = (window._mqRooms || []).indexOf(r);
     if (idx >= 0 && !(el(`mq-room-name-${idx}`)?.value || '').trim()) { showMsg('mq-rooms-msg', 'Give this project type a name first.', 'error'); el(`mq-room-name-${idx}`)?.focus(); return; }
@@ -6918,7 +6918,8 @@ ${W} .mqs2-fhead{position:static}
     }
     ov.innerHTML = '<div style="background:#fff;border-radius:16px;padding:24px;font:14px system-ui,sans-serif;color:#6b7280">Loading library…</div>';
     const all = await mqImgLibAll();
-    window._mqImgLib = { roomId, mode, tab: mode, picked: new Set(), all };
+    // 'slot' (Nov 19): fill one particular additional measuring-guide picture.
+    window._mqImgLib = { roomId, mode, slot, tab: mode === 'slot' ? 'measure' : mode, picked: new Set(), all };
     mqImgLibRender();
   };
   function mqImgLibRender() {
@@ -6930,7 +6931,7 @@ ${W} .mqs2-fhead{position:static}
     const multi = st.mode === 'measure';
     ov.innerHTML = `<div style="background:#fff;border-radius:16px;width:min(920px,100%);max-height:88vh;display:flex;flex-direction:column;font-family:system-ui,sans-serif;box-shadow:0 24px 60px rgba(0,0,0,.3)">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:18px 20px 12px;border-bottom:1px solid #eef0f3">
-        <div><div style="font-size:17px;font-weight:700;color:#111">${multi ? 'Add measuring guide pictures' : 'Choose a cover photo'}</div>
+        <div><div style="font-size:17px;font-weight:700;color:#111">${multi ? 'Add measuring guide pictures' : st.mode === 'slot' ? 'Choose a measuring guide picture' : 'Choose a cover photo'}</div>
           <div style="font-size:12.5px;color:#6b7280;margin-top:3px">${multi ? 'Pick one or more — they\'re added after any pictures this project type already has.' : 'Click a photo to use it.'} Any photo can be used for either.</div></div>
         <button type="button" onclick="document.getElementById('mq-imglib-overlay').remove()" aria-label="Close" style="background:none;border:0;font-size:24px;line-height:1;cursor:pointer;color:#6b7280">×</button>
       </div>
@@ -6952,7 +6953,7 @@ ${W} .mqs2-fhead{position:static}
   window.mqImgLibPick = function(i) {
     const st = window._mqImgLib;
     if (!st) return;
-    if (st.mode === 'cover') { st.picked = new Set([i]); mqImgLibApply(); return; }
+    if (st.mode === 'cover' || st.mode === 'slot') { st.picked = new Set([i]); mqImgLibApply(); return; }
     if (st.picked.has(i)) st.picked.delete(i); else st.picked.add(i);
     mqImgLibRender();
   };
@@ -6966,6 +6967,7 @@ ${W} .mqs2-fhead{position:static}
     const r = (window._mqRooms || []).find(x => x.id === st.roomId);
     if (!r) return;
     if (st.mode === 'cover') r.coverImage = urls[0];
+    else if (st.mode === 'slot') { const ex = (r.measureImages || []).slice(); ex[st.slot] = urls[0]; r.measureImages = ex; }
     else {
       const cur = [r.measureImage, ...(r.measureImages || [])].map(u => (u || '').trim()).filter(Boolean);
       const all = [...cur, ...urls.filter(u => !cur.includes(u))];
@@ -6975,7 +6977,7 @@ ${W} .mqs2-fhead{position:static}
     _mqExpandedRoomIds.add(r.id);
     renderRoomsList();
     await mqSaveRooms();
-    showMsg('mq-rooms-msg', st.mode === 'cover' ? '✓ Cover photo set.' : `✓ ${urls.length} picture${urls.length === 1 ? '' : 's'} added to the measuring guide.`);
+    showMsg('mq-rooms-msg', st.mode === 'cover' ? '✓ Cover photo set.' : st.mode === 'slot' ? '✓ Picture added to the measuring guide.' : `✓ ${urls.length} picture${urls.length === 1 ? '' : 's'} added to the measuring guide.`);
   };
 
   // Templates (Admin): the shop-wide library additions.
@@ -7639,6 +7641,7 @@ ${W} .mqs2-fhead{position:static}
                     📤 Upload photo
                     <input type="file" id="mq-room-measure-img-extra-file-${idx}-${exIdx}" accept="image/*" style="display:none"/>
                   </label>
+                  <button type="button" class="mq-btn mq-btn-sm" style="font-size:11px" onclick="mqImgLibOpen('${r.id}','slot',${exIdx})">🖼️ Choose from library</button>
                   <button type="button" class="mq-btn mq-btn-danger mq-btn-sm" style="font-size:11px" onclick="mqRemoveRoomMeasureImage(${idx},${exIdx})">✕ Remove</button>
                   <span id="mq-room-measure-img-extra-status-${idx}-${exIdx}" style="font-size:11px;margin-left:6px"></span>
                 </div>
