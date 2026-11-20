@@ -7200,10 +7200,21 @@ window.mqphGoToWizard = function() {
                 <option value="one">One — they choose a single option (like door styles)</option>
               </select>
             </div>
-            <div class="mqph-field" id="mqcc-cat-opts-wrap" style="display:none"><label>Options</label>
+            <div class="mqph-field" id="mqcc-cat-opts-wrap" style="display:none"><div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:6px"><label style="margin:0">Options</label><span id="mqcc-madd-bar" style="display:none;align-items:center;gap:10px"><a href="#" onclick="event.preventDefault();mqccMaddHelp()" style="font-size:12.5px;font-weight:600;color:#2563eb;text-decoration:none">What's this?</a><button type="button" class="mqph-btn mqph-btn-sm" onclick="mqccMaddOpen()">📏 New measurement</button></span></div>
+              <div id="mqcc-madd-help" style="display:none;margin:0 0 10px;font-size:13px;line-height:1.55;color:#1e3a8a;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:9px 12px">Some options are all priced on the same number — like crown moulding by the linear foot. Add one <strong>measurement</strong> (e.g. <em>Crown length</em>, in linear feet) and the customer enters it <strong>once</strong>. Then any option can use it: pick <strong>per lin ft of Crown length</strong> in its price menu.<br/>It's the same as <strong>Project types → Measurements</strong> — anything you add here shows there too, and you can rename or remove it there any time.</div>
+              <div id="mqcc-madd" style="display:none;margin:0 0 12px;padding:12px;border:1px solid #e5e7eb;border-radius:10px;background:#f9fafb">
+                <div style="font-size:13px;font-weight:700;color:#111827;margin-bottom:8px">New measurement for this quote</div>
+                <div style="display:grid;grid-template-columns:1fr 170px;gap:8px">
+                  <input type="text" id="mqcc-madd-name" maxlength="40" placeholder="Name, e.g. Crown length"/>
+                  <select id="mqcc-madd-type" onchange="document.getElementById('mqcc-madd-unit').style.display=this.value==='count'?'':'none'"><option value="lft">Linear feet</option><option value="sqft">Square feet</option><option value="count">A count</option></select>
+                </div>
+                <input type="text" id="mqcc-madd-unit" maxlength="20" placeholder="What's counted, e.g. windows" style="display:none;margin-top:8px;width:100%"/>
+                <div style="display:flex;gap:8px;align-items:center;margin-top:10px"><button type="button" class="mqph-btn mqph-btn-primary mqph-btn-sm" id="mqcc-madd-save" onclick="mqccMaddSave()">Add measurement</button><button type="button" class="mqph-btn mqph-btn-sm" onclick="mqccMaddClose()">Cancel</button></div>
+              </div>
+              <div id="mqcc-madd-ok" style="display:none;margin:0 0 10px;font-size:13px;color:#166534;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:8px 12px"></div>
+              <div class="mqcc-hint" id="mqcc-cat-opts-hint" style="margin:2px 0 10px;color:#1e3a8a;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:7px 10px">✱ This is a quick start — after creating the step, you can edit each option further: photos, descriptions, variants, install prices and more.</div>
               <div id="mqcc-cat-opts"></div>
               <a href="#" onclick="event.preventDefault();mqccRowAdd()" style="display:inline-block;font-size:13px;font-weight:600;color:#2563eb;text-decoration:none;margin-top:2px">+ Add option</a>
-              <div class="mqcc-hint" id="mqcc-cat-opts-hint" style="margin-top:6px;color:#1e3a8a;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:7px 10px">✱ This is a quick start — after creating the step, you can edit each option further: photos, descriptions, variants, install prices and more.</div>
             </div>
             <label id="mqcc-cat-required-wrap" style="display:flex;align-items:center;gap:8px;font-size:13px;margin:0 0 14px;cursor:pointer">
               <input type="checkbox" id="mqcc-cat-required" style="width:16px;height:16px"/> <span id="mqcc-cat-required-txt">Customers must choose one (no “None” option)</span>
@@ -7629,7 +7640,45 @@ window.mqphGoToWizard = function() {
     if (qt) mqccMeasOf(qt).forEach(m => out.push(['meas:' + m.id, `per ${mqccMeasUnit(m).replace(/s$/, '')} of ${m.label}`]));
     return out;
   }
+
+  // ── Nov 20 (Jordan): add a quote measurement right from the step box ──
+  // Same list as Project types → Measurements (saved on the quote type), so
+  // it shows there too; the option rows' price menus pick it up instantly.
+  function mqccMaddSync() {
+    const qt = (document.getElementById('mqcc-cat-qt') || {}).value || '';
+    const bar = document.getElementById('mqcc-madd-bar'); if (bar) bar.style.display = qt ? 'inline-flex' : 'none';
+    if (!qt) { ['mqcc-madd', 'mqcc-madd-help', 'mqcc-madd-ok'].forEach(id => { const e = document.getElementById(id); if (e) e.style.display = 'none'; }); }
+  }
+  window.mqccMaddHelp = function() { const h = document.getElementById('mqcc-madd-help'); if (h) h.style.display = h.style.display === 'none' ? 'block' : 'none'; };
+  window.mqccMaddOpen = function() {
+    const b = document.getElementById('mqcc-madd'); if (!b) return;
+    b.style.display = 'block'; const ok = document.getElementById('mqcc-madd-ok'); if (ok) ok.style.display = 'none';
+    const n = document.getElementById('mqcc-madd-name'); n.value = ''; document.getElementById('mqcc-madd-unit').value = '';
+    setTimeout(() => n.focus(), 30);
+  };
+  window.mqccMaddClose = function() { const b = document.getElementById('mqcc-madd'); if (b) b.style.display = 'none'; };
+  window.mqccMaddSave = async function() {
+    const qt = (document.getElementById('mqcc-cat-qt') || {}).value || ''; if (!qt) return;
+    const label = document.getElementById('mqcc-madd-name').value.trim();
+    const type = document.getElementById('mqcc-madd-type').value;
+    const unit = document.getElementById('mqcc-madd-unit').value.trim();
+    if (!label) { alert('Give the measurement a name, e.g. Crown length.'); return; }
+    if (type === 'count' && !unit) { alert('Say what\'s counted, e.g. windows.'); return; }
+    if (mqccMeasOf(qt).some(m => String(m.label).trim().toLowerCase() === label.toLowerCase())) { alert('This quote already has a measurement called “' + label + '”. Pick it in the option\'s price menu, or use another name.'); return; }
+    const btn = document.getElementById('mqcc-madd-save'); const t0 = btn.textContent; btn.disabled = true; btn.textContent = 'Saving, one second…';
+    try {
+      await mqccSaveStepMeas(qt, null, label, type, unit);
+      mqccMaddClose();
+      mqccRowsRender();
+      const word = type === 'count' ? (unit.replace(/s$/, '') || 'unit') : (type === 'sqft' ? 'sq ft' : 'lin ft');
+      const ok = document.getElementById('mqcc-madd-ok');
+      if (ok) { ok.innerHTML = `✓ Added <strong>${mqccEsc(label)}</strong>. Now pick <strong>per ${mqccEsc(word)} of ${mqccEsc(label)}</strong> in any option's price menu below.`; ok.style.display = 'block'; }
+      try { if (typeof mqccRenderMeasBar === 'function') mqccRenderMeasBar(); } catch (e) {}
+    } catch (e) { alert('Couldn\'t add the measurement — please try again.'); }
+    finally { btn.disabled = false; btn.textContent = t0; }
+  };
   function mqccRowsRender() {
+    mqccMaddSync();
     const box = document.getElementById('mqcc-cat-opts'); if (!box) return;
     const rows = window._mqccRows || (window._mqccRows = []);
     if (!rows.length) rows.push({ name: '', rate: '', how: 'flat' });
@@ -7717,7 +7766,18 @@ window.mqphGoToWizard = function() {
       : 'Customers must add at least one before continuing';
   };
 
-  window.mqccSaveCat = async function() {
+  // Nov 20 (Jordan): "Saving, one second…" on the Save buttons while the
+  // save runs (it can take a few seconds).
+  async function mqccSavingWrap(btnId, run) {
+    const b = document.getElementById(btnId);
+    if (b && b.dataset.saving === '1') return;
+    const t0 = b ? b.textContent : '';
+    if (b) { b.dataset.saving = '1'; b.disabled = true; b.textContent = 'Saving, one second…'; }
+    try { return await run(); }
+    finally { if (b) { b.dataset.saving = ''; b.disabled = false; if (b.textContent === 'Saving, one second…') b.textContent = t0; } }
+  }
+  window.mqccSaveCat = async function() { return mqccSavingWrap('mqcc-cat-save', mqccSaveCatRun); };
+  async function mqccSaveCatRun() {
     const name = document.getElementById('mqcc-cat-name').value.trim();
     if (!name) { alert('Give this step a heading.'); return; }
     const kind = document.getElementById('mqcc-cat-kind').value === 'meas' && ((document.getElementById('mqcc-cat-qt') || {}).value || '') ? 'meas' : 'choices';
@@ -8163,7 +8223,8 @@ window.mqphGoToWizard = function() {
     }
     mqccOpenItem(cid, targetId || null);
   }
-  window.mqccSaveItem = async function() {
+  window.mqccSaveItem = async function() { return mqccSavingWrap('mqcc-item-save', mqccSaveItemRun); };
+  async function mqccSaveItemRun() {
     const ed = mqccEditItem;
     if (!ed) return;
     const name = document.getElementById('mqcc-item-name').value.trim();
