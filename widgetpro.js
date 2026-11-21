@@ -3779,7 +3779,7 @@
       const base = it.how === 'pct' ? (ctx.base || 0) : (it.how === 'pct_all' ? (ctx.base || 0) + extras : (catSum[it.pctCc] || 0));
       const cost = finish(it.min, base * it.rate / 100);
       if (!cost) return;
-      res.set(it.id, [{ label: `${it.name} (${mqCcQtyText(it.rate)}%)`, cost }]);
+      res.set(it.id, [{ label: it.name, cost }]); // Nov 21 (Jordan): no "(15%)" on the customer's lines
     });
     picked.forEach(({ it }) => {
       (res.get(it.id) || []).forEach(r => {
