@@ -11250,9 +11250,40 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
 
   const _photoCache = {};
 
+  // Nov 21: the whole repo's file list in ONE request (GitHub allows ~60
+  // unauthenticated requests per hour per visitor, so asking folder by folder
+  // could run out). Remembered in the browser for an hour. New folders and
+  // pictures you add on GitHub show up automatically.
+  let _ghTreeP = null;
+  function mqGhTree() {
+    if (_ghTreeP) return _ghTreeP;
+    _ghTreeP = (async () => {
+      try { const c = JSON.parse(localStorage.getItem('mq-gh-tree') || 'null'); if (c && Date.now() - c.t < 36e5 && Array.isArray(c.p)) return c.p; } catch (e) {}
+      try {
+        const r = await fetch(`https://api.github.com/repos/${GH_REPO}/git/trees/main?recursive=1`);
+        if (!r.ok) throw new Error('tree ' + r.status);
+        const j = await r.json();
+        const paths = (j.tree || []).filter(x => x.type === 'blob' && /\.(jpg|jpeg|png|webp)$/i.test(x.path)).map(x => x.path);
+        try { localStorage.setItem('mq-gh-tree', JSON.stringify({ t: Date.now(), p: paths })); } catch (e) {}
+        return paths;
+      } catch (e) { _ghTreeP = null; return null; }
+    })();
+    return _ghTreeP;
+  }
+  const mqGhLabel = name => (name || '').replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ').trim().replace(/\b\w/g, c => c.toUpperCase());
+  // Pictures directly inside a folder (not its sub-folders), from the tree.
+  async function mqGhFolderPhotos(folder) {
+    const paths = await mqGhTree(); if (!paths) return null;
+    const pre = folder.replace(/\/+$/, '') + '/';
+    return paths.filter(p => p.startsWith(pre) && !p.slice(pre.length).includes('/'))
+      .sort((a, b) => a.localeCompare(b))
+      .map(p => ({ url: `${GH_BASE}/${p.split('/').map(encodeURIComponent).join('/')}`, label: mqGhLabel(p.split('/').pop()) }));
+  }
   async function fetchPhotoFolder(cat) {
     const folder = CAT_TO_FOLDER[cat] || cat;
     if (_photoCache[folder]) return _photoCache[folder];
+    const viaTree = await mqGhFolderPhotos(folder);
+    if (viaTree && viaTree.length) { _photoCache[folder] = viaTree; return viaTree; }
     try {
       const res = await fetch(`${GH_API}/${folder}`);
       if (!res.ok) { _photoCache[folder] = []; return []; }
@@ -11303,6 +11334,63 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
   // caller omits this and keeps working exactly as before.
   let _pickerOnSelect = null;
 
+  // ── Nov 21 (Jordan): folders for your own quote types ─────────────────
+  // Options in custom steps pick from GitHub  quote-types/<folder>/ . The
+  // picker opens the folder whose name matches the step's quote type
+  // ("Eavestroughs" → quote-types/eavestroughs), and "← All folders" lists
+  // every folder (its first picture as the cover). Add a folder on GitHub
+  // and it appears here automatically.
+  const MQ_QT_LIB_ROOT = 'quote-types';
+  const mqSlug = s => String(s || '').toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  async function mqQtLibFolders() {
+    const paths = await mqGhTree(); if (!paths) return null;
+    const map = {};
+    paths.forEach(p => { const m = p.match(new RegExp('^' + MQ_QT_LIB_ROOT + '/([^/]+)/([^/]+)$')); if (m) (map[m[1]] = map[m[1]] || []).push(p); });
+    return Object.keys(map).sort((a, b) => a.localeCompare(b)).map(f => { const files = map[f].sort((a, b) => a.localeCompare(b)); return { folder: f, label: mqGhLabel(f), count: files.length, cover: `${GH_BASE}/${files[0].split('/').map(encodeURIComponent).join('/')}` }; });
+  }
+  function mqPickerCustomQt(cat) {
+    try {
+      const rec = window._mqShopRecord; if (!rec || !cat) return null;
+      const c = mqCustomCatsOf(rec).find(x => x.id === cat); if (!c) return null;
+      const q = c.qt ? mqQuoteTypesOf(rec.fields).find(x => x.id === c.qt) : null;
+      return { qtName: q ? q.name : '', stepName: c.name || '' };
+    } catch (e) { return null; }
+  }
+  function mqPickerNote(html) { return `<div style="flex:0 0 100%;align-self:center;text-align:center;padding:2rem;color:#9ca3af;font-size:13px;line-height:1.6">${html}</div>`; }
+  function mqPickerCrumb(html) {
+    let c = document.getElementById('mq-picker-crumb');
+    const grid = document.getElementById('mq-picker-grid');
+    if (!c && grid) { c = document.createElement('div'); c.id = 'mq-picker-crumb'; c.style.cssText = 'padding:.75rem 1.25rem 0;font-size:13px;color:#374151;display:flex;align-items:center;gap:10px;flex-wrap:wrap'; const row = grid.parentNode; row.parentNode.insertBefore(c, row); }
+    if (c) { c.innerHTML = html || ''; c.style.display = html ? 'flex' : 'none'; }
+  }
+  async function mqPickerShowFolders(ctx) {
+    const grid = document.getElementById('mq-picker-grid');
+    mqPickerCrumb(`<strong style="color:#111">📁 Picture folders</strong><span style="color:#9ca3af">Click a folder to open it</span>`);
+    grid.innerHTML = mqPickerNote('Loading folders...');
+    const folders = await mqQtLibFolders();
+    if (!folders) { grid.innerHTML = mqPickerNote('Couldn\'t load the picture folders right now.<br>Try again in a minute, or paste your own photo URL instead.'); return; }
+    if (!folders.length) { grid.innerHTML = mqPickerNote('No picture folders yet.<br>No worries — just paste your own photo URL instead.'); return; }
+    const esc = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+    grid.innerHTML = folders.map((f, i) => `
+      <div data-folder-idx="${i}" title="${esc(f.label)}" style="cursor:pointer;border:2px solid #e5e7eb;border-radius:10px;overflow:hidden;display:flex;flex-direction:column;width:170px;flex:0 0 170px;background:#fff;transition:border-color .15s">
+        <div style="position:relative;height:100px;background:#f3f4f6"><img src="${f.cover}" loading="lazy" style="width:100%;height:100px;object-fit:cover;display:block" onerror="this.style.display='none'"/><span style="position:absolute;left:6px;top:6px;background:rgba(17,24,39,.75);color:#fff;font-size:11px;font-weight:700;border-radius:6px;padding:2px 7px">📁 ${f.count}</span></div>
+        <div style="padding:7px 8px;font-size:12px;font-weight:700;color:#111827;text-align:center;line-height:1.3">${esc(f.label)}</div>
+      </div>`).join('');
+    grid.querySelectorAll('[data-folder-idx]').forEach(card => {
+      const f = folders[+card.dataset.folderIdx];
+      card.onclick = () => mqPickerOpenFolder(f, ctx);
+      card.onmouseover = () => { card.style.borderColor = '#1a1a1a'; };
+      card.onmouseout = () => { card.style.borderColor = '#e5e7eb'; };
+    });
+  }
+  async function mqPickerOpenFolder(f, ctx) {
+    const grid = document.getElementById('mq-picker-grid');
+    mqPickerCrumb(`<a href="#" id="mq-picker-back" style="color:#2563eb;font-weight:700;text-decoration:none">← All folders</a><span style="color:#9ca3af">/</span><strong style="color:#111">📁 ${String(f.label).replace(/</g, '&lt;')}</strong>`);
+    const back = document.getElementById('mq-picker-back'); if (back) back.onclick = e => { e.preventDefault(); mqPickerShowFolders(ctx); };
+    grid.innerHTML = mqPickerNote('Loading photos...');
+    const photos = await mqGhFolderPhotos(MQ_QT_LIB_ROOT + '/' + f.folder) || [];
+    mqPickerRenderPhotos(photos);
+  }
   window.mqOpenPhotoPicker = async function(key, cat, onSelect) {
     injectPhotoPicker();
     _pickerTargetKey = key;
@@ -11310,8 +11398,23 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const grid = document.getElementById('mq-picker-grid');
     grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:2rem;color:#9ca3af;font-size:13px">Loading photos...</div>';
     document.getElementById('mq-photo-picker').style.display = 'flex';
+    mqPickerCrumb('');
+
+    const ctx = mqPickerCustomQt(cat);
+    if (ctx) {
+      // Option in one of your own steps → picture folders.
+      const folders = await mqQtLibFolders();
+      const want = [mqSlug(ctx.qtName), mqSlug(ctx.stepName)].filter(Boolean);
+      const hit = (folders || []).find(f => want.includes(mqSlug(f.folder)));
+      if (hit) return mqPickerOpenFolder(hit, ctx);
+      return mqPickerShowFolders(ctx);
+    }
 
     const photos = await fetchPhotoFolder(cat);
+    mqPickerRenderPhotos(photos);
+  };
+  function mqPickerRenderPhotos(photos) {
+    const grid = document.getElementById('mq-picker-grid');
 
     if (!photos.length) {
       grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:2rem;color:#9ca3af;font-size:13px">
