@@ -284,7 +284,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
           <div class="mq-step-body">
             <p>Your logo, shop name, city, phone number, brand colour, and quote range. This is the foundation everything else is built on top of.</p>
             <p>Look further in Business info for on/off toggles to customize your widget even more, such as "display showroom link", "financing available badge", "password protected widget", and more.</p>
-            <p>Start with <strong>What does your business do?</strong> and tick everything you quote. Cabinetry and Countertops use MidasQuote\u2019s built-in cabinet and countertop quotes. Every other trade you tick (Painting, Flooring, Framing…) gets its own <strong>quote type</strong> — its own tab on your widget — set up from a ready-made starter pack with project types, priced steps and photos you can change. Countertops only? Just untick Cabinetry.</p>
+            <p>Start with <strong>What does your business do?</strong> and tick everything you quote. Cabinetry and Countertops turn on MidasQuote\u2019s ready-made cabinet and countertop quotes. Every other trade you tick (Painting, Flooring, Framing…) gets its own <strong>quote type</strong> — its own tab on your widget — set up from a ready-made starter pack with project types, priced steps and photos you can change. Countertops only? Just untick Cabinetry.</p>
             <p>You can also add a quote type of your own from scratch under <strong>Quote types</strong>.</p>
           </div>
         </div>
@@ -397,12 +397,12 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         <p>The basics that show up at the top of your widget — your logo, shop name, city, and phone number.</p>
         <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">🧭 What does your business do?</div>
-          <p style="margin:0">Tick every trade you quote. Cabinetry and Countertops switch MidasQuote\u2019s built-in quotes on or off. Any other trade gets its own quote type, filled in from a starter pack (project types, priced steps, sample specialty items and photos) — change anything you like afterwards. Unticking a trade hides its quote from your widget without deleting it; tick it again to bring it back.</p>
+          <p style="margin:0">Tick every trade you quote. Cabinetry and Countertops turn on MidasQuote\u2019s ready-made cabinet and countertop quotes. Any other trade gets its own quote type, filled in from a starter pack (project types, priced steps, sample specialty items and photos) — change anything you like afterwards. Unticking a trade hides its quote from your widget without deleting it; tick it again to bring it back.</p>
         </div>
         <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">🗂️ Quote types</div>
           <p style="margin:0 0 0.5rem">Each quote type is its own tab (or card, in Focused layout) on your widget.</p>
-          <ul style="margin:0;padding-left:1.25rem;line-height:1.75"><li><strong>Built-in tabs:</strong> show or hide "Full project quote" (cabinets + countertops together), "Cabinets only" and "Countertops only". At least one tab has to stay on. Tick <em>Apply to MidasQuote Pro too</em> to hide the same ones in Pro.</li><li><strong>Your own quote types:</strong> click <strong>+ Add a quote type</strong>, name it, then set it up — its project types and measurements on Project types, its priced steps on Pricing. It only shows on your widget once it has at least one priced step.</li><li><strong>Rename, Pro only, Delete:</strong> Pro only keeps a quote type off your public widget but available in MidasQuote Pro.</li><li>With 4 or more tabs, customers get arrows to slide through them.</li></ul>
+          <ul style="margin:0;padding-left:1.25rem;line-height:1.75"><li><strong>Cabinet &amp; countertop tabs:</strong> show or hide "Full project quote" (cabinets + countertops together), "Cabinets only" and "Countertops only". At least one tab has to stay on. Tick <em>Apply to MidasQuote Pro too</em> to hide the same ones in Pro.</li><li><strong>Your own quote types:</strong> click <strong>+ Add a quote type</strong>, name it, then set it up — its project types and measurements on Project types, its priced steps on Pricing. It only shows on your widget once it has at least one priced step.</li><li><strong>Rename, Pro only, Delete:</strong> Pro only keeps a quote type off your public widget but available in MidasQuote Pro.</li><li>With 4 or more tabs, customers get arrows to slide through them.</li></ul>
         </div>
         <div style="border-left:3px solid #c9a45c;padding:0.15rem 0 0.15rem 16px;margin:1.1rem 0 0">
           <div style="font-size:15px;font-weight:800;color:#111;margin-bottom:0.4rem">Brand colour</div>
@@ -5725,6 +5725,7 @@ ${W} .mqs2-fhead{position:static}
   // specialty items. Never shown to real customers — just an anchor for
   // linked-record storage, same shape as any other shop.
   const MASTER_TEMPLATE_SHOP_NAME = 'MASTER_TEMPLATE';
+  window.mqIsAdminName = n => /^\s*maple\s*&\s*stone\b/i.test(String(n || ''));
 
   async function ensureMasterTemplateShop() {
     if (window._mqMasterTemplateShop) return window._mqMasterTemplateShop;
@@ -5766,7 +5767,7 @@ ${W} .mqs2-fhead{position:static}
     // Only the admin (Maple & Stone) may write master template items — the
     // secure /dash route refuses it for everyone else (Oct 2026), so a normal
     // shop just uses whatever master items already exist.
-    if ((window._mqShopRecord?.fields?.['Shop name'] || '') !== 'Maple & Stone Cabinetry') return masterItems;
+    if (!window.mqIsAdminName(window._mqShopRecord?.fields?.['Shop name'])) return masterItems;
 
     const bootstrapItems = missingEntries.flatMap(([roomId, items]) =>
       items.map(item => ({ ...item, roomId }))
@@ -13625,7 +13626,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const chip = t => {
       const pend = window._mqBizBusy && window._mqBizBusy[t.id];
       const on = pend ? pend.on : isOn(t);
-      const tag = t.builtIn ? '<span class="mqb-bi">Built-in</span>' : (t.id === 'other' ? '<span class="mqb-bi mqb-bi-muted">Your own quote</span>' : '');
+      const tag = (t.id === 'other' ? '<span class="mqb-bi mqb-bi-muted">Your own quote</span>' : '');
       return `<button type="button" class="mq-biz-chip${on ? ' on' : ''}${pend ? ' busy' : ''}" data-mq-biz="${t.id}" aria-pressed="${on}" onclick="mqBizToggle('${t.id}')"><span class="mqb-cb">${pend ? '' : on ? '✓' : ''}</span><span class="mqb-lbl">${mqEscHtml(t.label)}</span>${pend ? `<span class="mq-biz-chip-wait">${pend.on ? 'Setting up…' : 'Saving…'}</span>` : tag}</button>`;
     };
     // Industry first, then its trades: groups listed on the left, the
@@ -13653,7 +13654,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
         <div class="mqb-seg">${MQ_INDUSTRIES.map(x => { const on = x.id === ind.id; return `<button type="button" class="${on ? 'on' : ''}" onclick="mqBizIndustry('${x.id}')" aria-pressed="${on}">${mqEscHtml(x.label)}</button>`; }).join('')}<span>More coming soon</span></div>
       </div>
       <div class="mqb-sec">
-        <div class="mqb-lab"><span class="mqb-num">2</span>What you quote<small>Tick everything you do. Cabinetry and Countertops turn the built-in quotes on or off.</small></div>
+        <div class="mqb-lab"><span class="mqb-num">2</span>What you quote<small>Tick everything you do.</small></div>
         <div style="min-width:0">
           <div class="mqb-sum">You quote:${onList.length ? onList.map(l => `<span class="mqb-tag">${mqEscHtml(l)}</span>`).join('') : '<span class="mqb-none">nothing yet</span>'}</div>
           <div class="mqb-pick"><div class="mqb-cats">${catHtml}</div><div class="mqb-grid">${itemsHtml}</div></div>
@@ -13669,8 +13670,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     const rowHtml = (icon, label, status, action) => `<div class="mqb-row"><div class="mqb-trade"><span class="mqb-ic">${icon}</span>${label}</div><div class="mqb-status">${status}</div><div class="mqb-act">${action}</div></div>`;
     const goBtn = (txt, js) => `<button type="button" class="mqb-go" onclick="${js}">${txt} →</button>`;
     const rows = [];
-    if (biz.cab) rows.push(rowHtml(mqQtIconSvg('cabinet', 15), 'Cabinetry', '<span class="mqb-ok">✓ Built-in cabinet quote</span>', goBtn('Pricing', "mqGoTo('pricing')")));
-    if (biz.ct) rows.push(rowHtml(mqQtIconSvg('counter', 15), 'Countertops', ctNoPricing ? '<span class="mqb-warn">No countertop pricing yet</span>' : '<span class="mqb-ok">✓ Built-in countertop quote</span>', goBtn(ctNoPricing ? 'Set up pricing' : 'Pricing', "mqGoTo('pricing')")));
+    if (biz.cab) rows.push(rowHtml(mqQtIconSvg('cabinet', 15), 'Cabinetry', '<span class="mqb-ok">✓ Cabinet quote ready</span>', goBtn('Pricing', "mqGoTo('pricing')")));
+    if (biz.ct) rows.push(rowHtml(mqQtIconSvg('counter', 15), 'Countertops', ctNoPricing ? '<span class="mqb-warn">No countertop pricing yet</span>' : '<span class="mqb-ok">✓ Countertop quote ready</span>', goBtn(ctNoPricing ? 'Set up pricing' : 'Pricing', "mqGoTo('pricing')")));
     mqBizTradeList(biz.trades).filter(t => !t.builtIn && isOn(t)).forEach(t => {
       const matches = mqQtsOfTrade(t, qts);
       const match = matches[0] || null;
@@ -13700,7 +13701,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       }
     }
     tradesEl.innerHTML = (rows.length ? `<div class="mqb-sec"><div class="mqb-lab"><span class="mqb-num">3</span>Your quotes<small>The quote each trade shows on your widget.</small></div><div class="mqb-table"><div class="mqb-row mqb-head"><div>Trade</div><div>Quote on your widget</div><div></div></div>${rows.join('')}</div></div>` : '') + (nothing ? `<div style="font-size:12.5px;color:#b45309;margin-top:4px">Your widget has no quotes to show yet. Add a quote type for your trade.</div>` : '')
-      + ((!biz.cab || !biz.ct) && biz.set && !inWelcome ? `<div style="font-size:12px;color:#6b7280;margin-top:6px;line-height:1.5">${!biz.cab && !biz.ct ? 'Built-in cabinet and countertop pricing is hidden' : (!biz.cab ? 'Built-in cabinet pricing is hidden' : 'Built-in countertop pricing is hidden')} on the Pricing, My products and Project types tabs, and the matching built-in quote is hidden in MidasQuote Pro too. Nothing is deleted. Tick it again any time to bring it back.</div>` : '');
+      + ((!biz.cab || !biz.ct) && biz.set && !inWelcome ? `<div style="font-size:12px;color:#6b7280;margin-top:6px;line-height:1.5">${!biz.cab && !biz.ct ? 'Cabinet and countertop pricing is hidden' : (!biz.cab ? 'Cabinet pricing is hidden' : 'Countertop pricing is hidden')} on the Pricing, My products and Project types tabs, and the matching quote is hidden in MidasQuote Pro too. Nothing is deleted. Tick it again any time to bring it back.</div>` : '');
     if (window.mqWelcomeSync) window.mqWelcomeSync();
   };
   window.mqBizGrpToggle = function(id) { const b = document.getElementById('mq-shopsec-biz-body'); if (b && b.style.display === 'none' && window.mqToggleShopSection) mqToggleShopSection('biz'); window.mqBizCat(id); };
@@ -13823,7 +13824,7 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const on = id === 'cabinetry' ? cab : ct;
       showMsg('mq-shop-msg', on
         ? `✓ ${label} is back on your widget.` + (seeded ? ' Default countertop project types added.' : '')
-        : `✓ ${label} turned off. Its built-in quote is hidden from your widget.` + (removedCt ? ' The Countertops step was taken out of your quote types too.' : ''));
+        : `✓ ${label} turned off. Its quote is hidden from your widget.` + (removedCt ? ' The Countertops step was taken out of your quote types too.' : ''));
       if (window._mqRooms) renderRoomsList();
       mqRenderQuoteTypes();
       mqApplyEstimatorTabScopeToRoomsPage();
@@ -22260,7 +22261,10 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
     // Admin Templates tab only ever shows up for the Maple & Stone demo shop.
     // NOTE: adjust this exact name if your demo shop's actual 'Shop name'
     // field is spelled/punctuated differently in Airtable.
-    if (shopRecord.fields['Shop name'] === 'Maple & Stone Cabinetry') {
+    // Nov 22: any name starting with "Maple & Stone" (Jordan renamed the demo
+    // shop to "Maple & Stone Contracting" and lost the tab). The real
+    // protection is the Worker's ADMIN_SHOP_TOKENS check, not this name.
+    if (window.mqIsAdminName(shopRecord.fields['Shop name'])) {
       const navTemplates = el('mq-nav-templates');
       if (navTemplates) navTemplates.style.display = 'flex';
       window._mqIsAdminShop = true;
