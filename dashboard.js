@@ -20613,38 +20613,60 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
       field('copy-caption').addEventListener('click',()=>{const caption=[field('headline').value,field('subline').value,field('cta').value+': '+quoteLink()].join('\n\n');if(navigator.clipboard?.writeText)navigator.clipboard.writeText(caption).then(()=>mqShowToast('Caption copied')).catch(()=>mqShowToast('Could not copy caption','error'));else mqShowToast('Clipboard not available','error')});
       const canvas=field('canvas');
       let inlineEditor=null;
+      // Nov 22 (Jordan): double-click text to edit it RIGHT THERE — the box now
+      // sits on top of the words on the design (same size/font), instead of
+      // beside the canvas. Works for added text/buttons and the template's own
+      // headline / supporting text / button / website / shop name.
       function closeInlineEditor(commit=true){
         if(!inlineEditor)return;
-        const editor=inlineEditor,layer=mqStudioCustomLayers.find(l=>l.id===editor.dataset.layerId);
-        if(layer){layer.text=commit?editor.value:editor.dataset.originalText;mqStudioSelectedLayerId=layer.id;syncLayerControls();update();}
-        inlineEditor=null;if(editor.isConnected)editor.remove();
+        const editor=inlineEditor;inlineEditor=null;
+        try{editor._mqDone&&editor._mqDone(commit);}catch(e){}
+        if(editor.isConnected)editor.remove();
+      }
+      function openInlineBox(rect,o){
+        closeInlineEditor(true);
+        const r=canvas.getBoundingClientRect();
+        const sx=r.width/canvas.width,sy=r.height/canvas.height;
+        const vw=document.documentElement.clientWidth,vh=document.documentElement.clientHeight;
+        const fs=Math.max(14,Math.min(72,(o.size||40)*(canvas._mqUnit||1)*sy));
+        let w=Math.max(180,rect[2]*sx+16),h=Math.max(fs*1.45+14,rect[3]*sy+12);
+        let left=r.left+rect[0]*sx-8,top=r.top+rect[1]*sy-6;
+        left=Math.max(8,Math.min(vw-w-8,left));top=Math.max(8,Math.min(vh-h-8,top));
+        const ed=document.createElement('textarea');ed.className='mq-studio-inline-editor mq-studio-inline-onpage';ed.spellcheck=true;
+        ed.value=o.text||'';
+        ed.style.cssText=`position:fixed;z-index:2147483600;left:${left}px;top:${top}px;width:${w}px;height:${h}px;box-sizing:border-box;resize:none;overflow:hidden;margin:0;padding:4px 7px;border:2px solid #c9a45c;border-radius:6px;background:rgba(255,255,255,.96);color:#111827;box-shadow:0 8px 28px rgba(15,23,42,.25),0 0 0 4px rgba(201,164,92,.18);outline:none;font-family:${o.font||'inherit'};font-size:${fs}px;line-height:1.2;font-weight:${o.bold?700:400};text-align:${o.align||'left'}`;
+        const grow=()=>{ed.style.height='auto';ed.style.height=Math.min(vh-top-8,Math.max(h,ed.scrollHeight+4))+'px';};
+        ed._mqDone=commit=>{o.done&&o.done(commit,ed.value);};
+        document.body.appendChild(ed);inlineEditor=ed;grow();ed.focus();ed.select();
+        ed.addEventListener('input',()=>{grow();o.input&&o.input(ed.value);});
+        ed.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();closeInlineEditor(false);}else if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();closeInlineEditor(true);}});
+        ed.addEventListener('blur',()=>{if(inlineEditor===ed)closeInlineEditor(true);});
+        const reposition=()=>{if(inlineEditor===ed)closeInlineEditor(true);};
+        window.addEventListener('resize',reposition,{once:true});
+        return ed;
       }
       function editLayerInline(layer){
         if(!layer||!(layer.type==='text'||layer.type==='button')||layer.locked)return;
-        closeInlineEditor(true);
         const region=(canvas._mqCustomLayerRegions||[]).find(r=>r.id===layer.id)?.rect;
         if(!region)return;
         mqStudioSelectedLayerId=layer.id;
-        const r=canvas.getBoundingClientRect(),wr=preview.getBoundingClientRect();
-        const sx=r.width/canvas.width,sy=r.height/canvas.height;
-        const editor=document.createElement('textarea');editor.className='mq-studio-inline-editor';editor.dataset.layerId=layer.id;editor.dataset.originalText=layer.text||'';
-        editor.value=layer.text||'';
-        // Keep editing beside the actual canvas, never beside the controls at
-        // the top of the fullscreen studio. Use viewport-fixed positioning.
-        const vw=document.documentElement.clientWidth,vh=document.documentElement.clientHeight;
-        const editorW=Math.min(330,Math.max(210,vw*.28));
-        const editorH=92;
-        editor.style.position='fixed';
-        editor.style.left=Math.max(8,Math.min(vw-editorW-12,r.right+14))+'px';
-        if(r.right+editorW+20>vw){editor.style.left=Math.max(8,r.left-editorW-14)+'px';}
-        editor.style.top=Math.max(10,Math.min(vh-editorH-12,r.top+Math.min(region[1]*sy,Math.max(0,r.height-100))))+'px';
-        editor.style.width=editorW+'px';editor.style.height=editorH+'px';
-        editor.style.fontFamily=fontFace(layer.font||'arial');editor.style.fontSize='20px';
-        document.body.appendChild(editor);inlineEditor=editor;editor.focus();editor.select();
-        // Redraw on every keystroke, not only after Enter.
-        editor.addEventListener('input',()=>{const selected=mqStudioCustomLayers.find(l=>l.id===editor.dataset.layerId);if(selected){selected.text=editor.value;update();}});
-        editor.addEventListener('keydown',e=>{if(e.key==='Escape'){e.stopPropagation();closeInlineEditor(false);}else if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();closeInlineEditor(true);}});
-        editor.addEventListener('blur',()=>{if(inlineEditor===editor)closeInlineEditor(true)});
+        const original=layer.text||'';
+        openInlineBox(region,{text:original,size:layer.type==='button'?(layer.size||28):(layer.size||56),font:fontFace(layer.font||'arial'),align:layer.type==='button'?'center':(layer.align||'left'),bold:layer.type==='button',
+          input:v=>{const l=mqStudioCustomLayers.find(x=>x.id===layer.id);if(l){l.text=v;update();}},
+          done:(commit,v)=>{const l=mqStudioCustomLayers.find(x=>x.id===layer.id);if(l){l.text=commit?v:original;mqStudioSelectedLayerId=l.id;syncLayerControls();update();}}});
+      }
+      // Template text (before anything is detached): headline, sub, button, website, shop name.
+      const MQ_INLINE_TPL={headline:['headline',55,'headline-font','left'],sub:['subline',27,'sub-font','left'],cta:['cta',24,'cta-font','center'],url:['url-text',18,'sub-font','left'],brand:['shop-name',22,'shop-font','left']};
+      function editTemplateInline(key){
+        const m=MQ_INLINE_TPL[key],rect=(canvas._mqRegions||{})[key],f=m&&field(m[0]);
+        if(!m||!rect||!f)return;
+        const original=f.value;
+        const fire=()=>{f.dispatchEvent(new Event('input',{bubbles:true}));f.dispatchEvent(new Event('change',{bubbles:true}));};
+        const scaleId={headline:'headline-scale',sub:'sub-scale',url:'url-scale',brand:'shop-scale'}[key];
+        const size=m[1]*(scaleId&&field(scaleId)?Number(field(scaleId).value)/100:1);
+        openInlineBox(rect,{text:key==='url'&&!original?(quoteLink().replace(/^https?:\/\//,'')):original,size,font:fontFace((field(m[2])&&field(m[2]).value)||'montserrat'),align:m[3],bold:key==='headline'||key==='cta',
+          input:v=>{f.value=v;fire();},
+          done:(commit,v)=>{f.value=commit?v:original;fire();update();}});
       }
       const showPropertyMode=()=>{workspace.classList.remove('mq-studio-canvas-first');workspace.classList.add('mq-studio-property-mode');previewShift=0;preview.style.transform='';requestAnimationFrame(queuePreviewFollow);};
       field('quick-text').addEventListener('click',()=>{const layer=defaultTextLayer();const cv=field('canvas'),unit=cv._mqUnit||1;layer.x=Math.round(Math.max(20,(cv.width/unit-layer.w)/2));layer.y=Math.round(Math.max(20,(cv.height/unit-layer.h)/2));addLayer(layer);editLayerInline(layer);});
@@ -20667,6 +20689,7 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
       field('settings-toggle').addEventListener('click',()=>{workspace.classList.toggle('mq-studio-canvas-first');workspace.classList.remove('mq-studio-property-mode');previewShift=0;preview.style.transform='';requestAnimationFrame(queuePreviewFollow);});
       canvas.addEventListener('dblclick',e=>{
         const hit=regionAt(canvasPoint(e));
+        if(hit&&MQ_INLINE_TPL[hit]){e.preventDefault();requestAnimationFrame(()=>editTemplateInline(hit));return;}
         if(!hit?.startsWith('layer:'))return;
         const layer=mqStudioCustomLayers.find(l=>l.id===hit.slice(6));
         if(!layer||layer.hidden||layer.locked)return;
