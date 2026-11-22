@@ -1373,7 +1373,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     if (!modal) {
       modal = document.createElement('div');
       modal.id = 'mq-welcome-modal';
-      modal.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:100001;display:flex;align-items:center;justify-content:center;padding:1.5rem;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif";
+      modal.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:100001;display:flex;align-items:center;justify-content:center;padding:1.5rem;font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif";
       document.body.appendChild(modal);
     }
     return modal;
@@ -1436,7 +1436,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     if (!modal) {
       modal = document.createElement('div');
       modal.id = 'mq-welcome-modal';
-      modal.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:100001;display:flex;align-items:center;justify-content:center;padding:1.5rem;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif";
+      modal.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:100001;display:flex;align-items:center;justify-content:center;padding:1.5rem;font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif";
       document.body.appendChild(modal);
     }
     modal.innerHTML = `
@@ -1446,9 +1446,9 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         <div style="font-size:15px;color:#4b5563;line-height:1.7;margin-bottom:1.5rem;text-align:left">
           This dashboard is best viewed on a desktop or laptop — some tabs and tools aren't set up for a phone or small tablet screen yet, so managing your shop from a computer will be a smoother experience.
           <br><br>
-          Every tab has a <strong style="color:#2563eb">❓ Need help?</strong> button in the top-right corner — click it any time you're not sure what something does. It walks through everything on that specific page, so you're never stuck guessing.
+          Every tab has a ${window.mqUiChip('help')} button in the top-right corner — click it any time you're not sure what something does. It walks through everything on that specific page, so you're never stuck guessing.
           <br><br>
-          Want the bigger picture instead? <strong style="color:#2563eb">📖 Help guide</strong> in the sidebar covers every part of the dashboard in one place, organized by topic — good for a first read-through before you dive in.
+          Want the bigger picture instead? ${window.mqUiChip('guide')} under ${window.mqUiChip('account')} covers every part of the dashboard in one place, organized by topic — good for a first read-through before you dive in.
           <br><br>
           Start doing something new? Tick it any time in Business info → <strong>🧭 What does your business do?</strong> and its ready-made quote is added. <strong>🗂️ Quote types</strong> right below lets you switch any quote off without deleting it.
           <br><br>
@@ -1670,7 +1670,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     if (!modal) {
       modal = document.createElement('div');
       modal.id = 'mq-specialty-tips-modal';
-      modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:100001;display:flex;align-items:center;justify-content:center;padding:1.5rem';
+      modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:100001;display:flex;align-items:center;justify-content:center;padding:1.5rem;font-family:Inter,-apple-system,BlinkMacSystemFont,\'Segoe UI\',sans-serif';
       document.body.appendChild(modal);
     }
     modal.innerHTML = `
@@ -1686,7 +1686,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
           <br><br>
           Thinking in metric? Once an item is priced per lin ft or per sq ft, a <strong>"Use metric?"</strong> calculator appears right beside the price — type your rate per linear or square metre and it converts automatically.
           <br><br>
-          If you ever get stuck, the <strong style="color:#2563eb">❓ Need help?</strong> link above always has more info.
+          If you ever get stuck, the ${window.mqUiChip('help')} button in the top-right corner always has more info.
         </div>
         <button onclick="mqCloseSpecialtyTipsModal()" style="width:100%;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;font-family:inherit">Got it, thanks!</button>
       </div>`;
@@ -1714,7 +1714,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     if (!modal) {
       modal = document.createElement('div');
       modal.id = 'mq-products-tips-modal';
-      modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:100001;display:flex;align-items:center;justify-content:center;padding:1.5rem';
+      modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:100001;display:flex;align-items:center;justify-content:center;padding:1.5rem;font-family:Inter,-apple-system,BlinkMacSystemFont,\'Segoe UI\',sans-serif';
       document.body.appendChild(modal);
     }
     modal.innerHTML = `
@@ -1730,7 +1730,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
           <br><br>
           One thing to know: <strong>Box Materials, Door Styles, and Drawer Configurations are connected.</strong> Remove one of these from a project type, and all three come out together — they always work as a set for cabinet pricing, so there's no way to keep just one.
           <br><br>
-          Be sure to check out the <strong style="color:#2563eb">❓ Need help?</strong> link above for more info on this tab.
+          Be sure to check out the ${window.mqUiChip('help')} button in the top-right corner for more info on this tab.
         </div>
         <button onclick="mqCloseProductsTipsModal()" style="width:100%;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;font-family:inherit">Got it, thanks!</button>
       </div>`;
@@ -1761,7 +1761,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     if (!modal) {
       modal = document.createElement('div');
       modal.id = 'mq-pricing-tips-modal';
-      modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:100001;display:flex;align-items:center;justify-content:center;padding:1.5rem';
+      modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:100001;display:flex;align-items:center;justify-content:center;padding:1.5rem;font-family:Inter,-apple-system,BlinkMacSystemFont,\'Segoe UI\',sans-serif';
       document.body.appendChild(modal);
     }
     modal.innerHTML = `
@@ -1775,7 +1775,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
           <br><br>
           You can always add more items later using the <strong>"+ Add"</strong> buttons for each category. Once you've also set up <strong>Crown Moulding</strong>, <strong>Valance</strong> (if you offer them), <strong>Tall Cabinets</strong>, and <strong>countertops</strong>, your widget will really start to take shape.
           <br><br>
-          If you get stuck, the <strong style="color:#2563eb">❓ Need help?</strong> link above always has more info — or email us any time at <a href="mailto:support@midasquote.com" style="color:#2563eb">support@midasquote.com</a>, we're happy to help.
+          If you get stuck, the ${window.mqUiChip('help')} button in the top-right corner always has more info — or email us any time at <a href="mailto:support@midasquote.com" style="color:#111;font-weight:600;text-decoration:underline;text-decoration-color:#c9a45c;text-underline-offset:3px">support@midasquote.com</a>, we're happy to help.
         </div>
         <button onclick="mqClosePricingTipsModal()" style="width:100%;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;font-family:inherit">Got it, thanks!</button>
       </div>`;
@@ -2309,6 +2309,15 @@ window.logoutMember = async function () {
     dot: '<rect width="16" height="16" x="4" y="4" rx="3"/>',
   };
   const mqtSvg = (k, sz, sw) => `<svg width="${sz || 16}" height="${sz || 16}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw || 1.8}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${MQT_I[k] || MQT_I.dot}</svg>`;
+  // Nov 22: popups show the real-looking buttons (Need help? / Help guide /
+  // Account & help) instead of blue text, matching the v3 dashboard look.
+  window.mqUiChip = function (kind) {
+    const base = 'display:inline-flex;align-items:center;gap:6px;padding:1px 10px;border-radius:8px;color:#111;white-space:nowrap;font-size:14px;line-height:1.75;vertical-align:baseline;font-family:inherit';
+    if (kind === 'help') return `<span class="mq-ui-chip" style="${base};background:#fff;border:1px solid #e3e5e9;font-weight:700;box-shadow:0 1px 2px rgba(15,23,42,.05)"><span style="color:#4b5563;display:inline-flex">${mqtSvg('help', 15)}</span>Need help?</span>`;
+    if (kind === 'guide') return `<span class="mq-ui-chip" style="${base};background:#f3f4f6;border:1px solid #eceef1;font-weight:500"><span style="color:#4b5563;display:inline-flex">${mqtSvg('book', 15)}</span>Help guide</span>`;
+    if (kind === 'account') return `<span class="mq-ui-chip" style="${base};background:#fff;border:1px solid #e3e5e9;font-weight:600"><span style="color:#a67c2e;display:inline-flex">${mqtSvg('user', 15)}</span>Account &amp; help</span>`;
+    return '';
+  };
   const MQT_EMOJI = {
     '📋': 'clipboard', '🔗': 'link', '🧭': 'compass', '🏢': 'store', '🎨': 'palette', '📝': 'pen', '📩': 'mail', '📨': 'mail', '💳': 'card', '🔒': 'lock',
     '🎛': 'layout', '🗂': 'layers', '🌐': 'globe', '🧩': 'code', '💡': 'bulb', '📱': 'phone', '⚡': 'zap', '🏷': 'tag', '🖼': 'image', '🧾': 'receipt',
