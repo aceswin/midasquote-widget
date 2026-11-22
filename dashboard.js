@@ -4914,7 +4914,7 @@ ${W} .mqs2-fhead{position:static}
                       <p class="mq-studio-tip">Your shop name and marketing link are automatically added. Upload a background image of your own work for the most effective result.</p>
                     </div>
                   </div>
-                  <div class="mq-studio-preview-wrap"><div class="mq-studio-format-bar" role="group" aria-label="Design canvas size"><label for="mq-studio-quick-size">Canvas format</label><select id="mq-studio-quick-size"><option value="square">Square post · 1080 × 1080</option><option value="portrait">Portrait feed · 1080 × 1350</option><option value="story">Story / Reel · 1080 × 1920</option><option value="poster">Poster · 1080 × 1620</option><option value="landscape">Yard sign · 1620 × 1080</option></select><span id="mq-studio-format-dimensions">1080 × 1080 px</span><button type="button" id="mq-studio-quick-download" class="mq-btn mq-btn-primary" style="padding:12px 20px!important;min-height:44px!important;background:#211d23!important;color:#fff!important;border-radius:10px!important;font-weight:700!important;white-space:nowrap">↓ Download PNG</button></div><div class="mq-studio-quick-colors" aria-label="Design colours"><span>DESIGN COLOURS</span><label>Background <input type="color" id="mq-studio-quick-brand" value="#56314b" title="Main design colour"></label><label>Photo frame <input type="color" id="mq-studio-quick-surface" value="#e9d9c8" title="Secondary panels and photo framing"></label><label>Accent <input type="color" id="mq-studio-quick-accent" value="#d9be97" title="Accent detail"></label><button type="button" id="mq-studio-reset-colors" class="mq-studio-muted-btn" title="Restore the shop's starting colours">Reset colours</button></div><div class="mq-studio-preview-toolbar"><button type="button" id="mq-studio-photo-quick" class="mq-studio-muted-btn">🖼 Change background image</button><button type="button" id="mq-studio-photo-remove-quick" class="mq-studio-muted-btn" title="Remove the background image">✕ Remove background image</button><button type="button" id="mq-studio-direct-image-btn" class="mq-studio-muted-btn">＋ Add movable image</button><button type="button" id="mq-studio-delete-selected" class="mq-studio-muted-btn" title="Delete selected text, button, shape, or image">✕ Delete selected</button><input id="mq-studio-direct-image-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none"><input id="mq-studio-auto-photo-target" type="file" accept="image/png,image/jpeg,image/webp,image/gif" style="display:none"></div><div class="mq-studio-preview-tip" data-mq-gen="Photos come from your own project types. Use &lt;strong&gt;Change background image&lt;/strong&gt; to show your own work. Drag items or use corner handles to resize.">Starter photos are examples from MidasQuote project types. Click an image and choose Replace to use your own work. Drag items or use corner handles to resize.</div><div id="mq-studio-hoverbar" class="mq-studio-hoverbar"><button type="button" data-action="edit">✎ Edit</button><button type="button" data-action="duplicate">⧉ Duplicate</button><button type="button" data-action="replace">▧ Replace</button><button type="button" data-action="delete">✕ Delete</button></div><canvas id="mq-studio-canvas" width="1080" height="1080" aria-label="Live marketing graphic preview"></canvas><div class="mq-history-toolbar" role="group" aria-label="Design history and saved draft"><button type="button" id="mq-studio-undo" disabled title="Undo (Ctrl+Z)">↶ Undo</button><button type="button" id="mq-studio-redo" disabled title="Redo (Ctrl+Y / Ctrl+Shift+Z)">↷ Redo</button><button type="button" id="mq-studio-quick-save" title="Save this design in this browser">Save draft</button><button type="button" id="mq-studio-quick-load" title="Load the saved design for this template">Load draft</button><span class="mq-history-status" id="mq-studio-history-status" aria-live="polite">Ready</span></div><p>Live preview · The downloaded image exports at full resolution</p></div>
+                  <div class="mq-studio-preview-wrap"><div class="mq-studio-format-bar" role="group" aria-label="Design canvas size"><label for="mq-studio-quick-size">Canvas format</label><select id="mq-studio-quick-size"><option value="square">Square post · 1080 × 1080</option><option value="portrait">Portrait feed · 1080 × 1350</option><option value="story">Story / Reel · 1080 × 1920</option><option value="poster">Poster · 1080 × 1620</option><option value="landscape">Yard sign · 1620 × 1080</option></select><span id="mq-studio-format-dimensions">1080 × 1080 px</span><button type="button" id="mq-studio-quick-download" class="mq-btn mq-btn-primary" style="padding:12px 20px!important;min-height:44px!important;background:#211d23!important;color:#fff!important;border-radius:10px!important;font-weight:700!important;white-space:nowrap">↓ Download PNG</button></div><div class="mq-studio-quick-colors" aria-label="Design colours"><span>DESIGN COLOURS</span><label>Background <input type="color" id="mq-studio-quick-brand" value="#56314b" title="Main design colour"></label><label>Photo frame <input type="color" id="mq-studio-quick-surface" value="#e9d9c8" title="Secondary panels and photo framing"></label><label>Accent <input type="color" id="mq-studio-quick-accent" value="#d9be97" title="Accent detail"></label><button type="button" id="mq-studio-reset-colors" class="mq-studio-muted-btn" title="Restore the shop's starting colours">Reset colours</button></div><div class="mq-studio-preview-toolbar"><button type="button" id="mq-studio-photo-quick" class="mq-studio-muted-btn">🖼 Change background image</button><button type="button" id="mq-studio-photo-remove-quick" class="mq-studio-muted-btn" title="Remove the background image">✕ Remove background image</button><button type="button" id="mq-studio-direct-image-btn" class="mq-studio-muted-btn">＋ Add movable image</button><button type="button" id="mq-studio-delete-selected" class="mq-studio-muted-btn" title="Delete selected text, button, shape, or image">✕ Delete selected</button><input id="mq-studio-direct-image-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none"><input id="mq-studio-auto-photo-target" type="file" accept="image/png,image/jpeg,image/webp,image/gif" style="display:none"></div><div class="mq-studio-preview-tip" data-mq-gen="Photos come from your own project types. Use &lt;strong&gt;Change background image&lt;/strong&gt; to show your own work. Drag items or use corner handles to resize.">Starter photos are examples from MidasQuote project types. Click an image and choose Replace to use your own work. Drag items or use corner handles to resize.</div><div id="mq-studio-hoverbar" class="mq-studio-hoverbar"><button type="button" data-action="edit">✎ Edit</button><button type="button" data-action="duplicate">⧉ Duplicate</button><button type="button" data-action="replace">▧ Replace</button><button type="button" data-action="crop">✂ Crop</button><button type="button" data-action="delete">✕ Delete</button></div><canvas id="mq-studio-canvas" width="1080" height="1080" aria-label="Live marketing graphic preview"></canvas><div class="mq-history-toolbar" role="group" aria-label="Design history and saved draft"><button type="button" id="mq-studio-undo" disabled title="Undo (Ctrl+Z)">↶ Undo</button><button type="button" id="mq-studio-redo" disabled title="Redo (Ctrl+Y / Ctrl+Shift+Z)">↷ Redo</button><button type="button" id="mq-studio-quick-save" title="Save this design in this browser">Save draft</button><button type="button" id="mq-studio-quick-load" title="Load the saved design for this template">Load draft</button><span class="mq-history-status" id="mq-studio-history-status" aria-live="polite">Ready</span></div><p>Live preview · The downloaded image exports at full resolution</p></div>
                 </div>
               </div>
             </section>
@@ -20704,8 +20704,8 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
           requestAnimationFrame(()=>editLayerInline(layer));
         }else if(layer.type==='shape'){
           requestAnimationFrame(()=>field('layer-shape')?.focus({preventScroll:true}));
-        }else if(layer.type==='image'){
-          requestAnimationFrame(()=>field('layer-fit')?.focus({preventScroll:true}));
+        }else if(layer.type==='image'&&!layer.qrCode&&layer.image){
+          requestAnimationFrame(()=>mqStudioCropOpen(layer));
         }
       });
       const clampField=(id,val)=>{const el=field(id);if(!el)return;const min=Number(el.min||-9999),max=Number(el.max||9999);el.value=String(Math.round(clamp(val,min,max)));};
@@ -20745,6 +20745,8 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
         });
         const replace=hoverbar.querySelector('[data-action=replace]');
         if(replace)replace.style.display=layer?.type==='image'?'inline-flex':'none';
+        const cropB=hoverbar.querySelector('[data-action=crop]');
+        if(cropB)cropB.style.display=(layer?.type==='image'&&!layer.qrCode)?'inline-flex':'none';
       }
       root._mqSyncActions=syncFixedActions;
       // ── Nov 17 (Jordan): clean studio layout ─────────────────────────────
@@ -20791,7 +20793,7 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
         if(sw)sw.replaceWith(right);else if(top)top.appendChild(right);
         // Tool strip
         const tool=(id,key,label)=>{const b=field(id);if(!b)return;b.innerHTML=ic(I[key])+'<span>'+label+'</span>';b.classList.add('mqs2-tool');if(rail)rail.appendChild(b);};
-        tool('quick-text','text','Text');tool('quick-shape','shape','Shapes');tool('quick-arrow','arrow','Arrows');tool('quick-doodle','doodle','Doodle');tool('quick-bubble','bubble','Bubble');tool('quick-sticker','sticker','Sticker');tool('direct-image-btn','image','Image');
+        tool('quick-text','text','Text');tool('quick-shape','shape','Shapes');tool('quick-arrow','arrow','Arrows');tool('quick-doodle','doodle','Doodle');tool('quick-bubble','bubble','Bubble');tool('quick-sticker','sticker','Sticker');tool('direct-image-btn','image','Image');{const pb=document.createElement('button');pb.type='button';pb.id='mq-studio-paste-btn';pb.title='Paste a screenshot or a copied picture (or press Ctrl+V)';pb.innerHTML=ic('<rect x="8" y="3" width="8" height="4" rx="1"/><path d="M16 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/><path d="M9 13l2 2 4-4"/>')+'<span>Paste</span>';pb.classList.add('mqs2-tool');pb.addEventListener('click',()=>window.mqStudioPaste&&window.mqStudioPaste());if(rail)rail.appendChild(pb);}
         const pt=field('properties-toggle');if(pt)pt.style.display='none';
         // Design panel (shown when nothing is selected)
         const panel=document.createElement('div');panel.className='mqs2-panel';
@@ -20825,7 +20827,7 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
           head.querySelector('.mqs2-done').addEventListener('click',()=>{mqStudioSelectedLayerId=null;workspace.classList.remove('mq-studio-property-mode','mq-studio-show-layers');workspace.classList.add('mq-studio-canvas-first');syncLayerControls();update();});
         }
         // Stage: hint + zoom
-        const tip=preview.querySelector('.mq-studio-preview-tip');if(tip){tip.classList.add('mqs2-tip');const tx='Click anything on the design to edit it. Drag to move, use the corners to resize. Paste (Ctrl+V) or drag in a picture to add it.';tip.textContent=tx;tip.setAttribute('data-mq-gen',tx);tip.dataset.mqCabhtml=tx;}
+        const tip=preview.querySelector('.mq-studio-preview-tip');if(tip){tip.classList.add('mqs2-tip');const tx='Drag to move, corners to resize. Double-click text to type or a picture to crop it. Right-click for more.';tip.textContent=tx;tip.setAttribute('data-mq-gen',tx);tip.dataset.mqCabhtml=tx;}
         const zoom=document.createElement('div');zoom.className='mqs2-zoom';
         zoom.innerHTML='<button type="button" data-z="-" title="Zoom out">−</button><button type="button" data-z="fit" title="Fit to screen" class="mqs2-zl">Fit</button><button type="button" data-z="+" title="Zoom in">+</button>';
         workspace.appendChild(zoom);if(tip)workspace.appendChild(tip);
@@ -20867,6 +20869,7 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
         if(action==='delete'){deleteStudioLayer(id);}
         else if(action==='duplicate'){duplicateLayer(id);}
         else if(action==='replace'&&layer.type==='image'){field('layer-image-file').click();}
+        else if(action==='crop'&&layer.type==='image'){mqStudioCropOpen(layer);}
         else if(action==='edit'){
           showPropertyMode();syncLayerControls();
           if(layer.type==='text'||layer.type==='button')editLayerInline(layer);
@@ -20875,6 +20878,119 @@ field('layer-forward').addEventListener('click',()=>moveStudioLayer(mqStudioSele
         }
         syncFixedActions();update();
       });
+      // ── Nov 22 (Jordan): crop, a Paste button, and a right-click menu ──────
+      function mqStudioCropOpen(layer){
+        const src=layer._cropOrig||layer.image;
+        if(!src||!(src.naturalWidth||src.width)){mqShowToast('Add a picture first, then crop it.','error');return;}
+        closeInlineEditor(true);
+        const IW=src.naturalWidth||src.width,IH=src.naturalHeight||src.height;
+        const prev=layer._cropRect||{x:0,y:0,w:1,h:1};
+        const ov=document.createElement('div');ov.id='mq-studio-crop';
+        ov.style.cssText='position:fixed;inset:0;z-index:2147483640;background:rgba(17,24,39,.72);display:flex;align-items:center;justify-content:center;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';
+        const maxW=Math.min(window.innerWidth*.86,1100),maxH=window.innerHeight*.66;
+        const sc=Math.min(maxW/IW,maxH/IH,1.5),DW=Math.round(IW*sc),DH=Math.round(IH*sc);
+        const btn='padding:9px 16px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;border:1px solid #e3e5e9;background:#fff;color:#111827';
+        ov.innerHTML=`<div style="background:#fff;border-radius:12px;padding:18px 20px 16px;box-shadow:0 30px 80px rgba(0,0,0,.4);max-width:96vw">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap"><div style="font-size:16px;font-weight:700;color:#111827;margin-right:auto">✂ Crop image</div>
+            <div id="mq-crop-ratios" style="display:flex;gap:6px;flex-wrap:wrap">${[['free','Free'],['1','Square'],['1.3333','4:3'],['0.75','3:4'],['1.7778','16:9'],['frame','Fit the frame']].map(([v,l])=>`<button type="button" data-r="${v}" style="${btn};padding:6px 11px;font-size:13px">${l}</button>`).join('')}</div></div>
+          <div id="mq-crop-stage" style="position:relative;width:${DW}px;height:${DH}px;margin:0 auto;user-select:none;touch-action:none;overflow:hidden;border-radius:4px;background:#f3f4f6">
+            <img src="${src.src||''}" draggable="false" style="width:${DW}px;height:${DH}px;display:block;pointer-events:none">
+            <div id="mq-crop-box" style="position:absolute;box-sizing:border-box;border:2px solid #fff;outline:1px solid rgba(0,0,0,.35);box-shadow:0 0 0 9999px rgba(17,24,39,.55);cursor:move">
+              ${['nw','ne','sw','se','n','s','e','w'].map(h=>`<span data-h="${h}" style="position:absolute;width:14px;height:14px;background:#fff;border:2px solid #c9a45c;border-radius:3px;box-sizing:border-box;cursor:${h}-resize;${h.includes('n')?'top:-8px;':h.includes('s')?'bottom:-8px;':'top:calc(50% - 7px);'}${h.includes('w')?'left:-8px;':h.includes('e')?'right:-8px;':'left:calc(50% - 7px);'}"></span>`).join('')}
+              <div style="position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(rgba(255,255,255,.35),rgba(255,255,255,.35)),linear-gradient(rgba(255,255,255,.35),rgba(255,255,255,.35)),linear-gradient(90deg,rgba(255,255,255,.35),rgba(255,255,255,.35)),linear-gradient(90deg,rgba(255,255,255,.35),rgba(255,255,255,.35));background-size:100% 1px,100% 1px,1px 100%,1px 100%;background-position:0 33.33%,0 66.66%,33.33% 0,66.66% 0;background-repeat:no-repeat"></div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:14px"><span style="font-size:12.5px;color:#6b7280;margin-right:auto">Drag the box to move it, drag the corners to resize.</span>
+            <button type="button" id="mq-crop-reset" style="${btn}">Reset</button><button type="button" id="mq-crop-cancel" style="${btn}">Cancel</button><button type="button" id="mq-crop-apply" style="${btn};background:#111827;color:#fff;border-color:#111827">Apply crop</button></div></div>`;
+        document.body.appendChild(ov);
+        const box=ov.querySelector('#mq-crop-box');
+        let R={x:prev.x*DW,y:prev.y*DH,w:prev.w*DW,h:prev.h*DH},ratio=null;
+        const draw=()=>{box.style.left=R.x+'px';box.style.top=R.y+'px';box.style.width=R.w+'px';box.style.height=R.h+'px';};
+        const fitRatio=r=>{ratio=r;if(!r)return;let w=R.w,h=w/r;if(h>DH){h=DH;w=h*r;}if(w>DW){w=DW;h=w/r;}const cx=R.x+R.w/2,cy=R.y+R.h/2;R={w,h,x:Math.max(0,Math.min(DW-w,cx-w/2)),y:Math.max(0,Math.min(DH-h,cy-h/2))};draw();};
+        const mark=v=>ov.querySelectorAll('#mq-crop-ratios button').forEach(b=>{const on=b.dataset.r===v;b.style.background=on?'#111827':'#fff';b.style.color=on?'#fff':'#111827';});
+        ov.querySelectorAll('#mq-crop-ratios button').forEach(b=>b.addEventListener('click',()=>{const v=b.dataset.r;mark(v);if(v==='free'){ratio=null;return;}fitRatio(v==='frame'?((Number(layer.w)||1)/(Number(layer.h)||1)):Number(v));}));
+        mark('free');draw();
+        let d=null;const MIN=24;
+        box.addEventListener('pointerdown',e=>{e.preventDefault();d={h:e.target.dataset.h||'move',sx:e.clientX,sy:e.clientY,R:{...R}};box.setPointerCapture(e.pointerId);});
+        box.addEventListener('pointermove',e=>{if(!d)return;const dx=e.clientX-d.sx,dy=e.clientY-d.sy,o=d.R;let {x,y,w,h}=o;
+          if(d.h==='move'){x=Math.max(0,Math.min(DW-w,o.x+dx));y=Math.max(0,Math.min(DH-h,o.y+dy));}
+          else{if(d.h.includes('e'))w=Math.max(MIN,Math.min(DW-o.x,o.w+dx));if(d.h.includes('s'))h=Math.max(MIN,Math.min(DH-o.y,o.h+dy));
+            if(d.h.includes('w')){const nx=Math.max(0,Math.min(o.x+o.w-MIN,o.x+dx));w=o.w+(o.x-nx);x=nx;}
+            if(d.h.includes('n')){const ny=Math.max(0,Math.min(o.y+o.h-MIN,o.y+dy));h=o.h+(o.y-ny);y=ny;}
+            if(ratio){if(d.h==='n'||d.h==='s')w=h*ratio;else h=w/ratio;if(x+w>DW){w=DW-x;h=w/ratio;}if(y+h>DH){h=DH-y;w=h*ratio;}if(d.h.includes('w'))x=o.x+o.w-w;if(d.h.includes('n'))y=o.y+o.h-h;}}
+          R={x,y,w,h};draw();});
+        box.addEventListener('pointerup',()=>{d=null;});
+        const close=()=>{ov.remove();document.removeEventListener('keydown',onKey,true);};
+        const onKey=e=>{if(e.key==='Escape'){e.stopPropagation();close();}else if(e.key==='Enter'){e.preventDefault();ov.querySelector('#mq-crop-apply').click();}};
+        document.addEventListener('keydown',onKey,true);
+        ov.addEventListener('pointerdown',e=>{if(e.target===ov)close();});
+        ov.querySelector('#mq-crop-cancel').onclick=close;
+        ov.querySelector('#mq-crop-reset').onclick=()=>{R={x:0,y:0,w:DW,h:DH};ratio=null;mark('free');draw();};
+        ov.querySelector('#mq-crop-apply').onclick=()=>{
+          const fx=R.x/DW,fy=R.y/DH,fw=R.w/DW,fh=R.h/DH;
+          const full=fx<0.002&&fy<0.002&&fw>0.996&&fh>0.996;
+          const sx=Math.round(fx*IW),sy=Math.round(fy*IH),sw=Math.max(1,Math.round(fw*IW)),sh=Math.max(1,Math.round(fh*IH));
+          const k=Math.min(1,2400/Math.max(sw,sh));
+          let url;
+          try{
+            if(full&&layer._cropOrig){url=layer._cropOrigUrl||src.src;}
+            else{const c=document.createElement('canvas');c.width=Math.round(sw*k);c.height=Math.round(sh*k);c.getContext('2d').drawImage(src,sx,sy,sw,sh,0,0,c.width,c.height);
+              const png=/^data:image\/png/.test(layer._cropOrigUrl||layer.dataUrl||'')||/\.png(\?|$)/i.test(src.src||'');
+              url=c.toDataURL(png?'image/png':'image/jpeg',0.92);}
+          }catch(err){close();mqShowToast('This picture can’t be cropped here. Save it to your computer, then add it with Image and crop that.','error');return;}
+          const img=new Image();img.onload=()=>{
+            if(!layer._cropOrig){Object.defineProperty(layer,'_cropOrig',{value:src,writable:true,configurable:true,enumerable:false});Object.defineProperty(layer,'_cropOrigUrl',{value:layer.dataUrl||src.src,writable:true,configurable:true,enumerable:false});}
+            Object.defineProperty(layer,'_cropRect',{value:full?null:{x:fx,y:fy,w:fw,h:fh},writable:true,configurable:true,enumerable:false});
+            if(full){layer._cropOrig=null;layer._cropOrigUrl=null;}
+            layer.image=img;layer.dataUrl=url;
+            if(!layer.fullBleed&&!layer.projectPhoto&&!layer.sharedProjectPhoto&&(layer.fit||'cover')==='contain'){
+              // Keep the picture at the same size on the design: the kept part stays where it was, the rest is trimmed away.
+              const p0=prev,ow=Number(layer.w)||300,oh=Number(layer.h)||Math.round(ow*IH*p0.h/(IW*p0.w));
+              const nfw=full?1:fw,nfh=full?1:fh,nfx=full?0:fx,nfy=full?0:fy;
+              const nw=Math.max(20,Math.round(ow*nfw/p0.w)),nh=Math.max(20,Math.round(oh*nfh/p0.h));
+              layer.x=Math.round((Number(layer.x)||0)+ow*(nfx-p0.x)/p0.w);layer.y=Math.round((Number(layer.y)||0)+oh*(nfy-p0.y)/p0.h);layer.w=nw;layer.h=nh;
+            }
+            mqStudioSelectedLayerId=layer.id;syncLayerControls();update();syncFixedActions();
+            mqShowToast(full?'Crop removed':'Image cropped');
+          };img.src=url;close();
+        };
+      }
+      window.mqStudioCropOpen=l=>mqStudioCropOpen(l||mqStudioCustomLayers.find(x=>x.id===mqStudioSelectedLayerId));
+      async function mqStudioPasteFromClipboard(){
+        if(!(navigator.clipboard&&navigator.clipboard.read)){mqShowToast('Your browser can’t paste from a button. Press Ctrl+V (Cmd+V on a Mac) instead.','error');return;}
+        try{
+          const items=await navigator.clipboard.read();
+          for(const it of items){const t=(it.types||[]).find(x=>/^image\//.test(x));if(t){const blob=await it.getType(t);window._mqStudioAddImgFile(new File([blob],'pasted.'+(t.split('/')[1]||'png'),{type:t}));return;}}
+          mqShowToast('No picture copied yet. Take a screenshot, or right-click a picture and choose “Copy image”, then try again.','error');
+        }catch(err){mqShowToast('Your browser blocked the paste. Allow clipboard access, or press Ctrl+V (Cmd+V on a Mac).','error');}
+      }
+      window.mqStudioPaste=mqStudioPasteFromClipboard;
+      let mqCtx=null;
+      const mqCtxClose=()=>{if(mqCtx){mqCtx.remove();mqCtx=null;}};
+      canvas.addEventListener('contextmenu',e=>{
+        e.preventDefault();mqCtxClose();closeInlineEditor(true);
+        const hit=regionAt(canvasPoint(e));
+        let layer=null;
+        if(hit&&/^(layer|resize|rotate):/.test(hit)){const id=hit.split(':')[1];layer=mqStudioCustomLayers.find(l=>l.id===id)||null;if(layer){mqStudioSelectedLayerId=layer.id;syncLayerControls();update();syncFixedActions();}}
+        const items=[];
+        if(layer&&(layer.type==='text'||layer.type==='button'))items.push(['✎','Edit text',()=>editLayerInline(layer)]);
+        if(!layer&&hit&&MQ_INLINE_TPL[hit])items.push(['✎','Edit text',()=>editTemplateInline(hit)]);
+        if(layer&&layer.type==='image'&&!layer.qrCode&&layer.image)items.push(['✂','Crop image',()=>mqStudioCropOpen(layer)]);
+        if(layer&&layer.type==='image'&&!layer.qrCode)items.push(['▧','Replace image',()=>field('layer-image-file').click()]);
+        items.push(['📋','Paste image',()=>mqStudioPasteFromClipboard()]);
+        if(layer){items.push(['⧉','Duplicate',()=>duplicateLayer(layer.id)]);items.push(['✕','Delete',()=>{deleteStudioLayer(layer.id);syncFixedActions();update();},'#b91c1c']);}
+        const m=document.createElement('div');m.id='mq-studio-ctx';
+        m.style.cssText='position:fixed;z-index:2147483620;min-width:190px;background:#fff;border:1px solid #e3e5e9;border-radius:10px;box-shadow:0 14px 40px rgba(15,23,42,.22);padding:5px;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';
+        m.innerHTML=items.map((it,i)=>`<button type="button" data-i="${i}" style="display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:8px 10px;border:0;background:none;border-radius:7px;font-size:14px;color:${it[3]||'#111827'};cursor:pointer"><span style="width:18px;text-align:center">${it[0]}</span>${it[1]}</button>`).join('');
+        m.querySelectorAll('button').forEach(b=>{b.onmouseenter=()=>b.style.background='#f3f4f6';b.onmouseleave=()=>b.style.background='none';b.onclick=()=>{const it=items[+b.dataset.i];mqCtxClose();it[2]();};});
+        document.body.appendChild(m);
+        const mw=m.offsetWidth,mh=m.offsetHeight;
+        m.style.left=Math.min(e.clientX,window.innerWidth-mw-8)+'px';m.style.top=Math.min(e.clientY,window.innerHeight-mh-8)+'px';
+        mqCtx=m;
+      });
+      document.addEventListener('pointerdown',e=>{if(mqCtx&&!mqCtx.contains(e.target))mqCtxClose();},true);
+      document.addEventListener('keydown',e=>{if(e.key==='Escape')mqCtxClose();});
+      window.addEventListener('scroll',mqCtxClose,true);
       let drag=null;
       canvas.style.cursor='grab';
       canvas.addEventListener('pointerdown',e=>{
