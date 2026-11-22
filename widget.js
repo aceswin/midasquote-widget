@@ -8833,8 +8833,8 @@
       const ul=document.getElementById(listEl);ul.innerHTML='';
       const priced = mqShouldShowLinePrices(prefix);
       const sorted = priced ? mqPricedLines(result.lines, result.total).sort((a, b) => (a.adj - b.adj) || (b.cost - a.cost)) : [...result.lines].filter(l=>!l.bold).sort((a,b)=>b.cost-a.cost);
-      // Nov 19 (Jordan): Focused gets photo thumbnails on each line.
-      if (window._mqFxOn) { mqFxThumbLines(ul, sorted, priced); mqRenderDiscountBox(prefix, result.discount, result.low, result.high, result.total); return; }
+      // Nov 19 (Jordan): photo thumbnails on each line — Focused first, Classic too since Nov 22.
+      if (true) { mqFxThumbLines(ul, sorted, priced); mqRenderDiscountBox(prefix, result.discount, result.low, result.high, result.total); return; }
       sorted.forEach(l=>{
         const li=document.createElement('li');
         li.innerHTML = priced
@@ -10403,7 +10403,7 @@
     const priced = mqShouldShowLinePrices('b');
     const list = priced ? (total ? mqPricedLines(lines, total).sort((a, b) => (a.adj - b.adj) || (b.cost - a.cost)) : []) : [...(lines || [])].filter(l => !l.bold).sort((a, b) => b.cost - a.cost);
     // Nov 19: Focused thumbnails on the Cabinets + Countertops estimate too.
-    if (window._mqFxOn && list.length) { const ul = document.createElement('ul'); mqFxThumbLines(ul, list, priced); rowsEl.appendChild(ul); return; }
+    if (list.length) { const ul = document.createElement('ul'); mqFxThumbLines(ul, list, priced); rowsEl.appendChild(ul); return; }
     list.forEach(l => {
       const d = document.createElement('div'); d.className = 'mq-combined-row';
       d.innerHTML = priced
