@@ -8792,6 +8792,18 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     total: { l: 'Total', lab: 'Total:', note: 'Calculated automatically from the items and tax.' },
     deposit: { l: 'Deposit', lab: 'Deposit:', note: 'Calculated automatically from your deposit setting.' },
   };
+  function mqPbAccentPick(id, small) {
+    const tpl = (window._mqProposalTemplatesCache || []).find(x => x.id === id);
+    const acc = (tpl && tpl.fields['Accent colour']) || '#1a3a6b';
+    return `<label style="${small || 'font-size:12.5px;color:#4b5563'};display:inline-flex;align-items:center;gap:6px;cursor:pointer" title="Colour of the item list header and the totals box (same as Accent colour in Settings)">Colour <input type="color" value="${acc}" data-mq-accent="${id}" onclick="event.stopPropagation()" oninput="mqPbAccentLive('${id}',this.value)" onchange="mqPbAccentSave('${id}',this.value)" style="width:38px;height:28px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/></label>`;
+  }
+  window.mqPbAccentLive = function (id, v) {
+    const tpl = (window._mqProposalTemplatesCache || []).find(x => x.id === id);
+    if (tpl) tpl.fields['Accent colour'] = v;
+    document.querySelectorAll(`input[data-mq-accent="${id}"], #mq-prop-accent-${id}`).forEach(el => { if (el !== document.activeElement) el.value = v; });
+    if (window.mqRefreshProposalPreview) window.mqRefreshProposalPreview(id);
+  };
+  window.mqPbAccentSave = function (id, v) { window.mqPbAccentLive(id, v); mqSaveProposalField(id, 'Accent colour', v); };
   const MQ_PB_ITEMS = { items: 'Coloured list', items_plain: 'Plain list', items_plain_light: 'Light list (names not bold)' };
   const MQ_PB_TOTALS = { totals_box: 'Coloured box with deposit', totals_plain: 'Plain lines' };
   const MQ_PB_SIMPLE = { items_header: ['📑', 'Item / Price header row', 'Place above a plain or light item list.'], hr: ['➖', 'Divider line', ''], break: ['↕', 'Extra space', ''], signature_line: ['✍️', 'Signature + date line', ''] };
@@ -9164,9 +9176,12 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       const tpl = (window._mqProposalTemplatesCache || []).find(x => x.id === id);
       const rad = tpl ? mqLhParse(tpl.fields['Letterhead settings']).itemsRadius : 10;
       const corners = b.tok === 'items' ? `<span style="${small};display:inline-flex;align-items:center;gap:6px">Corners <select onchange="mqLhSet('${id}','itemsRadius',+this.value,true)" style="width:auto;font-size:12.5px">${[[0,'Square'],[4,'Slightly round'],[10,'Round (default)'],[16,'Rounder'],[24,'Very round']].map(([v,l]) => `<option value="${v}" ${(+rad) === v ? 'selected' : ''}>${l}</option>`).join('')}${[0,4,10,16,24].includes(+rad) ? '' : `<option value="${+rad}" selected>${+rad}px</option>`}</select></span>` : '';
-      panel = `<div style="display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap"><span style="font-size:12.5px;color:#4b5563">Style:</span>${sel(MQ_PB_ITEMS, b.tok)}${corners}${tightBox}</div>`;
+      // Nov 22 (Jordan couldn't find it): the colour of the list header / totals
+      // box is the template's Accent colour (also in ⚙️ Settings) — shown here too.
+      const accentPick = mqPbAccentPick(id, small);
+      panel = `<div style="display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap"><span style="font-size:12.5px;color:#4b5563">Style:</span>${sel(MQ_PB_ITEMS, b.tok)}${b.tok === 'items' ? accentPick : ''}${corners}${tightBox}</div>`;
     } else if (b.type === 'totals') {
-      panel = `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:12.5px;color:#4b5563">Style:</span>${sel(MQ_PB_TOTALS, b.tok)}${tightBox}</div>`;
+      panel = `<div style="display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap"><span style="font-size:12.5px;color:#4b5563">Style:</span>${sel(MQ_PB_TOTALS, b.tok)}${b.tok === 'totals_box' ? mqPbAccentPick(id, small) : ''}${tightBox}</div>`;
     } else if (tightBox) {
       panel = `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">${tightBox}</div>`;
     }
@@ -9849,9 +9864,12 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     if (sum) sum.textContent = mqLhSummary(lh);
     if (window.mqRefreshProposalPreview) window.mqRefreshProposalPreview(id);
     clearTimeout(_mqLhTimers[id]);
+    // Nov 22 fix: mark pending BEFORE flushing. It used to be set after, so every
+    // "immediate" change (all letterhead dropdowns/checkboxes, item list corners)
+    // was skipped by mqLhFlush and never saved — lost on refresh.
+    _mqLhTimers[id + ':pending'] = true;
     if (immediate) window.mqLhFlush(id);
     else _mqLhTimers[id] = setTimeout(() => window.mqLhFlush(id), 700);
-    _mqLhTimers[id + ':pending'] = true;
   };
   window.mqLhFlush = function(id) {
     clearTimeout(_mqLhTimers[id]);
@@ -9908,8 +9926,8 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
             <input type="text" value="${(f['Template name']||'').replace(/"/g,'&quot;')}" onblur="mqSaveProposalField('${t.id}','Template name',this.value); const h=document.getElementById('mq-prop-header-name-${t.id}'); if(h) h.textContent=this.value||'Untitled';"/>
           </div>
           <div>
-            <label class="mq-label">Accent colour</label>
-            <input type="color" value="${accent}" onchange="mqSaveProposalField('${t.id}','Accent colour',this.value)" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
+            <label class="mq-label">Accent colour <span style="font-weight:400;color:#9ca3af">(item list header + totals box)</span></label>
+            <input type="color" id="mq-prop-accent-${t.id}" value="${accent}" oninput="mqPbAccentLive('${t.id}',this.value)" onchange="mqPbAccentSave('${t.id}',this.value)" style="width:42px;height:32px;padding:2px;border:1px solid #d1d5db;border-radius:6px;cursor:pointer"/>
           </div>
         </div>
 
@@ -10012,6 +10030,49 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
     showMsg('mq-prop-msg', `✓ "${name}" reset to defaults.`);
   };
 
+  function mqPropHasPending() {
+    const lh = Object.keys(_mqLhTimers).some(k => k.endsWith(':pending') && _mqLhTimers[k]);
+    const pb = Object.keys(_mqPbPending).some(k => _mqPbPending[k] !== undefined);
+    return lh || pb || (window._mqPropSaving || 0) > 0;
+  }
+  function mqPropFlushAll() {
+    // A box still being typed in saves on blur — trigger it first.
+    const ae = document.activeElement;
+    if (ae && ae.closest && ae.closest('#mq-page-proposals') && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)) ae.blur();
+    Object.keys(_mqLhTimers).filter(k => k.endsWith(':pending') && _mqLhTimers[k]).forEach(k => window.mqLhFlush(k.slice(0, -8)));
+    Object.keys(_mqPbPending).filter(k => _mqPbPending[k] !== undefined).forEach(k => window.mqPbFlush(k));
+  }
+  window.mqPropFlushAll = mqPropFlushAll;
+  function mqPropSaveState() {
+    const page = document.getElementById('mq-page-proposals');
+    let box = document.getElementById('mq-prop-savebox');
+    const onPage = !!(page && page.offsetParent && document.getElementById('mq-prop-list') && document.querySelector('[id^="mq-prop-card-"]'));
+    if (!onPage) { if (box) box.style.display = 'none'; return; }
+    if (!box) {
+      box = document.createElement('div'); box.id = 'mq-prop-savebox';
+      box.style.cssText = 'position:fixed;right:22px;bottom:22px;z-index:9998;display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #e6e8eb;border-radius:10px;padding:6px 6px 6px 8px;box-shadow:0 10px 30px rgba(15,23,42,.14);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';
+      box.innerHTML = '<span id="mq-prop-savestate" style="font-size:13px;font-weight:600;padding:5px 10px;border-radius:7px;border:1px solid transparent"></span><button type="button" id="mq-prop-savenow" style="background:#111318;color:#fff;border:1px solid #111318;border-radius:8px;padding:7px 13px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Save now</button>';
+      document.body.appendChild(box);
+      box.querySelector('#mq-prop-savenow').onclick = () => { mqPropFlushAll(); mqPropSaveState(); };
+    }
+    box.style.display = 'flex';
+    const el = document.getElementById('mq-prop-savestate');
+    if (!el) return;
+    const busy = (window._mqPropSaving || 0) > 0 || Object.keys(_mqLhTimers).some(k => k.endsWith(':pending') && _mqLhTimers[k]) || Object.keys(_mqPbPending).some(k => _mqPbPending[k] !== undefined);
+    if (busy) { el.textContent = 'Saving…'; el.style.color = '#92400e'; el.style.background = '#fffbeb'; el.style.borderColor = '#fde68a'; }
+    else if (window._mqPropSaveErr) { el.textContent = '⚠ Last change didn\u2019t save — check your connection and try again'; el.style.color = '#991b1b'; el.style.background = '#fef2f2'; el.style.borderColor = '#fecaca'; }
+    else { el.textContent = '✓ All changes saved'; el.style.color = '#166534'; el.style.background = '#f0fdf4'; el.style.borderColor = '#bbf7d0'; }
+  }
+  window.mqPropSaveState = mqPropSaveState;
+  if (!window._mqPropUnloadOn) {
+    window._mqPropUnloadOn = true;
+    window.addEventListener('beforeunload', e => {
+      if (!mqPropHasPending()) return;
+      mqPropFlushAll();
+      e.preventDefault(); e.returnValue = '';
+    });
+    setInterval(mqPropSaveState, 800);
+  }
   window.mqSaveProposalField = async function(id, field, value) {
     // Update the cache immediately, synchronously — Preview reads from
     // this, not a fresh fetch. Doing this AFTER the network save (the old
@@ -10025,13 +10086,23 @@ This agreement is contingent upon strikes, accidents, or delays beyond our contr
       if (sumEl) sumEl.textContent = mqPropSettingsSummary(cached.fields);
       if (field !== 'Body' && window.mqRefreshProposalPreview) window.mqRefreshProposalPreview(id);
     }
+    // Nov 22: saves are counted (status pill + leave-page guard) and retried.
+    window._mqPropSaving = (window._mqPropSaving || 0) + 1; mqPropSaveState();
+    let ok = false, lastErr = null;
     try {
-      await atUpdate(CONFIG.PROPOSAL_TEMPLATES_TABLE, id, { [field]: value });
+      for (let attempt = 0; attempt < 3 && !ok; attempt++) {
+        try { await atUpdate(CONFIG.PROPOSAL_TEMPLATES_TABLE, id, { [field]: value }); ok = true; }
+        catch (err) { lastErr = err; if (attempt < 2) await new Promise(r => setTimeout(r, 700 * (attempt + 1))); }
+      }
+      if (!ok) throw lastErr;
+      window._mqPropSaveErr = false;
     }
     catch(e) {
+      window._mqPropSaveErr = true;
       console.error('Failed to save proposal template field', e);
       if (field === 'Letterhead settings' && value) showMsg('mq-prop-msg', '⚠ Couldn\'t save the letterhead — add a Long text field named exactly "Letterhead settings" to your Proposal templates table in Airtable.', 'error');
     }
+    finally { window._mqPropSaving = Math.max(0, (window._mqPropSaving || 1) - 1); mqPropSaveState(); }
   };
 
   window.mqAddProposalTemplate = async function() {
