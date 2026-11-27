@@ -608,7 +608,7 @@
               <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Email</td><td style="padding:6px 8px;border-bottom:1px solid #eee">${lead.email || 'Not provided'}</td></tr>
               <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Phone</td><td style="padding:6px 8px;border-bottom:1px solid #eee">${lead.phone || 'Not provided'}</td></tr>
               <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Quote type</td><td style="padding:6px 8px;border-bottom:1px solid #eee">${quoteType || 'Not provided'}${roomType ? ' — ' + roomType : ''}</td></tr>
-              <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Estimate</td><td style="padding:6px 8px;border-bottom:1px solid #eee">${(low||0) === (high||0) ? `${CUR()}${(low||0).toLocaleString()}` : `${CUR()}${(low||0).toLocaleString()} – ${CUR()}${(high||0).toLocaleString()}`}</td></tr>
+              <tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">Estimate</td><td style="padding:6px 8px;border-bottom:1px solid #eee">${(low||0) === (high||0) ? `${CUR()}${(low||0).toLocaleString('en-US')}` : `${CUR()}${(low||0).toLocaleString('en-US')} – ${CUR()}${(high||0).toLocaleString('en-US')}`}</td></tr>
               <tr><td style="padding:6px 8px;color:#666">Reason</td><td style="padding:6px 8px;color:#b91c1c;font-size:12px">${safeReason}</td></tr>
             </table>
           </div>`
@@ -620,7 +620,7 @@
       .filter(l=>l&&l.label&&(l.header||l.cost!==undefined))
       .map(l=>l.header
         ? `<tr><td colspan="2" style="padding:12px 8px 4px;font-weight:700;color:#111;font-size:14px;text-transform:uppercase;letter-spacing:0.04em">${l.label}</td></tr>`
-        : `<tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">${l.label}</td><td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:right;${l.bold?'font-weight:700;color:#111':''}">${l.cost<0?'−':''}${CUR()}${Math.abs(Math.round(l.cost)).toLocaleString()}</td></tr>`
+        : `<tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">${l.label}</td><td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:right;${l.bold?'font-weight:700;color:#111':''}">${l.cost<0?'−':''}${CUR()}${Math.abs(Math.round(l.cost)).toLocaleString('en-US')}</td></tr>`
       ).join('');
     // Same gating as the widget's own financing box/badge (rate+term set,
     // and — if the shop set a floor — the high end clears it), so an email
@@ -644,7 +644,7 @@
         </table>
         <div style="background:#f0fdf4;border-radius:8px;padding:16px;text-align:center">
           <div style="font-size:14px;color:#666;margin-bottom:4px">${low === high ? 'Estimate' : 'Estimated range'}</div>
-          <div style="font-size:28px;font-weight:700;color:#16a34a">${low === high ? `${CUR()}${low.toLocaleString()}` : `${CUR()}${low.toLocaleString()} – ${CUR()}${high.toLocaleString()}`}</div>
+          <div style="font-size:28px;font-weight:700;color:#16a34a">${low === high ? `${CUR()}${low.toLocaleString('en-US')}` : `${CUR()}${low.toLocaleString('en-US')} – ${CUR()}${high.toLocaleString('en-US')}`}</div>
           ${financingLine ? `<div style="font-size:13px;color:#166534;margin-top:6px;font-weight:600">💳 Est. payment: ${financingLine}</div>` : ''}
         </div>
       </div>`);
@@ -5265,7 +5265,7 @@
       });
     }
 
-    function fmt(n){return CUR() +Math.round(n).toLocaleString();}
+    function fmt(n){return CUR() +Math.round(n).toLocaleString('en-US');}
     function gv(id){const e=document.getElementById(id);return e?e.value:'';}
     function gn(id,d=0){const v=parseFloat(gv(id));return isNaN(v)?d:v;}
 
@@ -7348,7 +7348,7 @@
       const allEntries = preview ? [...cart, preview] : cart;
 
       const buildRows = (textColor, mutedColor) => allEntries.map(entry => {
-        const priceText = entry.showRange ? fmtRange(entry.low, entry.high) : (CUR() + Math.round(entry.total).toLocaleString());
+        const priceText = entry.showRange ? fmtRange(entry.low, entry.high) : (CUR() + Math.round(entry.total).toLocaleString('en-US'));
         const isPreview = !entry.id; // committed entries always have an id; the live preview never does
         const removeBtn = isPreview ? '' : `<button type="button" onclick="mqRemoveFromQuoteCart('${entry.id}')" title="Remove" style="background:none;border:none;color:${mutedColor};cursor:pointer;font-size:13px;padding:0 2px;line-height:1">✕</button>`;
         return `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0;font-size:13.5px;color:${textColor}${isPreview ? ';font-style:italic;opacity:0.85' : ''}">
@@ -7369,7 +7369,7 @@
       // ranged entries would be misleading either way, so a combined range
       // is the safer default once more than one project type is involved.
       const allNoRange = allEntries.length > 0 && allEntries.every(e => !e.showRange);
-      const totalText = allNoRange ? (CUR() + Math.round(totalExact).toLocaleString()) : fmtRange(totalLow, totalHigh);
+      const totalText = allNoRange ? (CUR() + Math.round(totalExact).toLocaleString('en-US')) : fmtRange(totalLow, totalHigh);
 
       // Focused layout: hand the per-project rows + combined total to its
       // side panel / phone price strip (no-op in Classic).
@@ -7377,7 +7377,7 @@
         window.mqFxRenderBreakdown(allEntries.map(e => ({
           id: e.id || '',
           label: e.label,
-          price: e.showRange ? fmtRange(e.low, e.high) : (CUR() + Math.round(e.total).toLocaleString()),
+          price: e.showRange ? fmtRange(e.low, e.high) : (CUR() + Math.round(e.total).toLocaleString('en-US')),
           empty: !((e.high || 0) > 0 || (e.total || 0) > 0),
         })), totalText);
       }
@@ -10413,7 +10413,7 @@
     });
   }
   window.mqFillCombinedRows = mqFillCombinedRows;
-  const mqLineAmt = c => (c < 0 ? '−' : '') + CUR() + Math.round(Math.abs(c)).toLocaleString();
+  const mqLineAmt = c => (c < 0 ? '−' : '') + CUR() + Math.round(Math.abs(c)).toLocaleString('en-US');
   function mqShouldShowRange(prefix) {
     // Inlined rather than calling gv() — gv is scoped inside a different,
     // inner function and isn't reachable from every place this needs to
@@ -10444,7 +10444,7 @@
     return true;
   }
   function fmtRange(low, high) {
-    const f = n => CUR() + Math.round(n).toLocaleString();
+    const f = n => CUR() + Math.round(n).toLocaleString('en-US');
     return `${f(low)} – ${f(high)}`;
   }
   // ===================== Add another quote (Nov 2026) =====================
@@ -10461,7 +10461,7 @@
   };
   function mqAddqTabIdOf(p) { return p === 'b' ? 'both' : (p === 'ct' ? 'countertops' : (p === 'c' ? 'cabinets' : p)); }
   function mqAddqTabBtn(tabId) { return document.querySelector(`#midasquote-widget .mq-tab[onclick^="mqSwitchTab('${tabId}'"]`); }
-  function mqAddqPrice(e) { return e.showRange === false ? (CUR() + Math.round(e.total || 0).toLocaleString()) : fmtRange(e.low || 0, e.high || 0); }
+  function mqAddqPrice(e) { return e.showRange === false ? (CUR() + Math.round(e.total || 0).toLocaleString('en-US')) : fmtRange(e.low || 0, e.high || 0); }
   // Every quote type the customer can see (its tab button is on the page —
   // hidden / switched-off / trade-unticked ones never get one) with its
   // project types.
@@ -10555,7 +10555,7 @@
       html += `<div class="mq-addq-h">Your whole estimate</div>`
         + cart.map(e => `<div class="mq-addq-row"><span>${mqCcEsc(e.label)}</span><b>${mqAddqPrice(e)}</b></div>`).join('')
         + `<div class="mq-addq-row mq-addq-cur"><span>${mqCcEsc(cur.label)}</span><b>${mqAddqPrice(cur)}</b></div>`
-        + `<div class="mq-addq-tot"><span>Total</span><span>${allNoRange ? CUR() + Math.round(tt).toLocaleString() : fmtRange(tl, th)}</span></div>`;
+        + `<div class="mq-addq-tot"><span>Total</span><span>${allNoRange ? CUR() + Math.round(tt).toLocaleString('en-US') : fmtRange(tl, th)}</span></div>`;
       mqUpdateFinancingBox(prefix, allNoRange ? tt : tl, allNoRange ? tt : th, tt);
     }
     if (canAdd) {
@@ -10743,7 +10743,7 @@
     }).join('');
   }
   function mqFmtPrice(prefix, low, high, total) {
-    return mqShouldShowRange(prefix) ? fmtRange(low, high) : (CUR() + Math.round(total).toLocaleString());
+    return mqShouldShowRange(prefix) ? fmtRange(low, high) : (CUR() + Math.round(total).toLocaleString('en-US'));
   }
   // Formats the financing monthly-payment text for a results panel, mirroring
   // mqFmtPrice's own range-vs-single-number logic so the payment box always
@@ -10762,10 +10762,10 @@
     const lo = max > 0 ? Math.min(basisLow, max) : basisLow, hi = max > 0 ? Math.min(basisHigh, max) : basisHigh;
     const payLow = Math.round(mqCalcMonthlyPayment(lo, window._mqFinancingAPR, window._mqFinancingTermMonths));
     const payHigh = Math.round(mqCalcMonthlyPayment(hi, window._mqFinancingAPR, window._mqFinancingTermMonths));
-    const text = payLow === payHigh ? `${CUR()}${payHigh.toLocaleString()}/mo` : `${CUR()}${payLow.toLocaleString()}/mo – ${CUR()}${payHigh.toLocaleString()}/mo`;
+    const text = payLow === payHigh ? `${CUR()}${payHigh.toLocaleString('en-US')}/mo` : `${CUR()}${payLow.toLocaleString('en-US')}/mo – ${CUR()}${payHigh.toLocaleString('en-US')}/mo`;
     return { text, capped, max };
   }
-  function mqFinMaxNote(max) { return `Financing is available up to ${CUR()}${Math.round(max).toLocaleString()} — this payment is for that amount.`; }
+  function mqFinMaxNote(max) { return `Financing is available up to ${CUR()}${Math.round(max).toLocaleString('en-US')} — this payment is for that amount.`; }
   function mqFinancingPaymentText(prefix, low, high, total) {
     if (window._mqFinancingAPR == null || window._mqFinancingTermMonths == null) return null;
     const showRange = mqShouldShowRange(prefix);
@@ -10857,7 +10857,7 @@
     // cart entry plus whatever's live now — is actually set to no-range.
     const allNoRange = cart.every(e => !e.showRange) && !mqShouldShowRange(prefix);
     const prev = window._mqStickyLast;
-    el.textContent = allNoRange ? (CUR() + Math.round(combinedTotal).toLocaleString()) : fmtRange(combinedLow, combinedHigh);
+    el.textContent = allNoRange ? (CUR() + Math.round(combinedTotal).toLocaleString('en-US')) : fmtRange(combinedLow, combinedHigh);
     // Financing monthly-payment estimate, recomputed off the same combined
     // low/high/total used for the price above — stays in sync with it as
     // the customer edits their quote.
@@ -10872,7 +10872,7 @@
         // with no number (the same branch as rate/term being unset).
         const fp = mqFinPay(payBasisLow, payBasisHigh);
         if (fp) {
-          const payText = fp.text + '*' + (fp.capped ? ` (max ${CUR()}${Math.round(fp.max).toLocaleString()} financed)` : '');
+          const payText = fp.text + '*' + (fp.capped ? ` (max ${CUR()}${Math.round(fp.max).toLocaleString('en-US')} financed)` : '');
           financingPayEl.textContent = ` · as low as ${payText}`;
           financingPayEl.setAttribute('data-mq-amt', `as low as ${payText}`);
           financingPayEl.title = (fp.capped ? mqFinMaxNote(fp.max) + ' ' : '') + 'Estimated payment only — subject to approval and final terms.';
@@ -10899,7 +10899,7 @@
           const badge = document.createElement('span');
           badge.className = 'mq-sticky-delta show';
           badge.style.color = delta > 0 ? '#16a34a' : '#dc2626';
-          badge.textContent = (delta > 0 ? '+' : '−') + CUR() + Math.abs(delta).toLocaleString();
+          badge.textContent = (delta > 0 ? '+' : '−') + CUR() + Math.abs(delta).toLocaleString('en-US');
           wrap.appendChild(badge);
           setTimeout(() => badge.remove(), 1300);
         }

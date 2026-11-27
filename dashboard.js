@@ -139,7 +139,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   // picking one).
   function CUR() { return (window._mqShopRecord && window._mqShopRecord.fields['Currency symbol']) || '$'; }
 
-  function fmt(n) { return CUR() + Math.round(n || 0).toLocaleString(); }
+  function fmt(n) { return CUR() + Math.round(n || 0).toLocaleString('en-US'); }
   function gv(id) { const e = document.getElementById(id); return e ? e.value : ''; }
   function gn(id, d = 0) { const v = parseFloat(gv(id)); return isNaN(v) ? d : v; }
   function el(id) { return document.getElementById(id); }

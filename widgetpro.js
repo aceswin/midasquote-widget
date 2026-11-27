@@ -451,7 +451,7 @@
       .filter(l=>l&&l.label&&(l.header||l.cost!==undefined))
       .map(l=>l.header
         ? `<tr><td colspan="2" style="padding:12px 8px 4px;font-weight:700;color:#111;font-size:14px;text-transform:uppercase;letter-spacing:0.04em">${l.label}</td></tr>`
-        : `<tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">${l.label}</td><td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:right;${l.bold?'font-weight:700;color:#111':''}">${CUR()}${Math.round(l.cost).toLocaleString()}</td></tr>`
+        : `<tr><td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666">${l.label}</td><td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:right;${l.bold?'font-weight:700;color:#111':''}">${CUR()}${Math.round(l.cost).toLocaleString('en-US')}</td></tr>`
       ).join('');
     // Same gating as the widget's own financing box/badge (rate+term set,
     // and — if the shop set a floor — the high end clears it), so this
@@ -463,7 +463,7 @@
         <h2 style="color:#0f2a52">${quoteType} quote</h2>
         <div style="background:#0f2a52;border-radius:8px;padding:16px;text-align:center;margin-bottom:12px">
           <div style="font-size:14px;color:#fbbf24;margin-bottom:4px">Your real total</div>
-          <div style="font-size:28px;font-weight:700;color:#fff">${CUR()}${Math.round(realTotal||0).toLocaleString()}</div>
+          <div style="font-size:28px;font-weight:700;color:#fff">${CUR()}${Math.round(realTotal||0).toLocaleString('en-US')}</div>
         </div>
         <div style="background:#f9fafb;border-radius:8px;padding:12px;text-align:center;margin-bottom:16px;color:#666;font-size:14px">
           Customer sees${mqShouldShowRange(prefix) ? ' this range' : ''}: ${mqFmtPrice(prefix, low, high, realTotal)}
@@ -4958,7 +4958,7 @@
       });
     }
 
-    function fmt(n){return CUR() +Math.round(n).toLocaleString();}
+    function fmt(n){return CUR() +Math.round(n).toLocaleString('en-US');}
     function gv(id){const e=document.getElementById(id);return e?e.value:'';}
     function gn(id,d=0){const v=parseFloat(gv(id));return isNaN(v)?d:v;}
 
@@ -6947,10 +6947,10 @@
       // Only skip it when the row's already showing the exact number with
       // no range at all — nothing to add there.
       const realBadge = entry => entry.showRange
-        ? `<span style="font-size:11.5px;font-weight:700;color:#fbbf24;white-space:nowrap">💰 Real: ${CUR()}${Math.round(entry.total).toLocaleString()}</span>`
+        ? `<span style="font-size:11.5px;font-weight:700;color:#fbbf24;white-space:nowrap">💰 Real: ${CUR()}${Math.round(entry.total).toLocaleString('en-US')}</span>`
         : '';
       const buildRows = (textColor, mutedColor) => allEntries.map(entry => {
-        const priceText = entry.showRange ? fmtRange(entry.low, entry.high) : (CUR() + Math.round(entry.total).toLocaleString());
+        const priceText = entry.showRange ? fmtRange(entry.low, entry.high) : (CUR() + Math.round(entry.total).toLocaleString('en-US'));
         const isPreview = !entry.id; // committed entries always have an id; the live preview never does
         const removeBtn = isPreview ? '' : `<button type="button" onclick="mqRemoveFromQuoteCart('${entry.id}')" title="Remove" style="background:none;border:none;color:${mutedColor};cursor:pointer;font-size:13px;padding:0 2px;line-height:1">✕</button>`;
         return `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0;font-size:13.5px;color:${textColor}${isPreview ? ';font-style:italic;opacity:0.85' : ''}">
@@ -6967,7 +6967,7 @@
       const totalHigh = allEntries.reduce((s,e) => s + (e.high||0), 0);
       const totalExact = allEntries.reduce((s,e) => s + (e.total||0), 0);
       const allNoRange = allEntries.length > 0 && allEntries.every(e => !e.showRange);
-      const totalText = allNoRange ? (CUR() + Math.round(totalExact).toLocaleString()) : fmtRange(totalLow, totalHigh);
+      const totalText = allNoRange ? (CUR() + Math.round(totalExact).toLocaleString('en-US')) : fmtRange(totalLow, totalHigh);
 
       const stickyToggle = document.getElementById('mq-sticky-breakdown-toggle');
       const stickyBreakdown = document.getElementById('mq-sticky-breakdown');
@@ -10076,7 +10076,7 @@
     return !room || room.showRange !== false;
   }
   function fmtRange(low, high) {
-    const f = n => CUR() + Math.round(n).toLocaleString();
+    const f = n => CUR() + Math.round(n).toLocaleString('en-US');
     return `${f(low)} – ${f(high)}`;
   }
   // ===================== Add another quote (Nov 2026) =====================
@@ -10093,7 +10093,7 @@
   };
   function mqAddqTabIdOf(p) { return p === 'b' ? 'both' : (p === 'ct' ? 'countertops' : (p === 'c' ? 'cabinets' : p)); }
   function mqAddqTabBtn(tabId) { return document.querySelector(`#midasquote-widget .mq-tab[onclick^="mqSwitchTab('${tabId}'"]`); }
-  function mqAddqPrice(e) { return e.showRange === false ? (CUR() + Math.round(e.total || 0).toLocaleString()) : fmtRange(e.low || 0, e.high || 0); }
+  function mqAddqPrice(e) { return e.showRange === false ? (CUR() + Math.round(e.total || 0).toLocaleString('en-US')) : fmtRange(e.low || 0, e.high || 0); }
   // Every quote type the customer can see (its tab button is on the page —
   // hidden / switched-off / trade-unticked ones never get one) with its
   // project types.
@@ -10187,7 +10187,7 @@
       html += `<div class="mq-addq-h">Your whole estimate</div>`
         + cart.map(e => `<div class="mq-addq-row"><span>${mqCcEsc(e.label)}</span><b>${mqAddqPrice(e)}</b></div>`).join('')
         + `<div class="mq-addq-row mq-addq-cur"><span>${mqCcEsc(cur.label)}</span><b>${mqAddqPrice(cur)}</b></div>`
-        + `<div class="mq-addq-tot"><span>Total</span><span>${allNoRange ? CUR() + Math.round(tt).toLocaleString() : fmtRange(tl, th)}</span></div>`;
+        + `<div class="mq-addq-tot"><span>Total</span><span>${allNoRange ? CUR() + Math.round(tt).toLocaleString('en-US') : fmtRange(tl, th)}</span></div>`;
       mqUpdateFinancingBox(prefix, allNoRange ? tt : tl, allNoRange ? tt : th, tt);
     }
     if (canAdd) {
@@ -10329,7 +10329,7 @@
   // shows the usual ballpark range, or the exact clean total with no spread
   // at all, depending on the selected project type's own preference.
   function mqFmtPrice(prefix, low, high, total) {
-    return mqShouldShowRange(prefix) ? fmtRange(low, high) : (CUR() + Math.round(total).toLocaleString());
+    return mqShouldShowRange(prefix) ? fmtRange(low, high) : (CUR() + Math.round(total).toLocaleString('en-US'));
   }
   // Formats the financing monthly-payment text for a results panel, mirroring
   // mqFmtPrice's own range-vs-single-number logic so the payment box always
@@ -10348,10 +10348,10 @@
     const lo = max > 0 ? Math.min(basisLow, max) : basisLow, hi = max > 0 ? Math.min(basisHigh, max) : basisHigh;
     const payLow = Math.round(mqCalcMonthlyPayment(lo, window._mqFinancingAPR, window._mqFinancingTermMonths));
     const payHigh = Math.round(mqCalcMonthlyPayment(hi, window._mqFinancingAPR, window._mqFinancingTermMonths));
-    const text = payLow === payHigh ? `${CUR()}${payHigh.toLocaleString()}/mo` : `${CUR()}${payLow.toLocaleString()}/mo – ${CUR()}${payHigh.toLocaleString()}/mo`;
+    const text = payLow === payHigh ? `${CUR()}${payHigh.toLocaleString('en-US')}/mo` : `${CUR()}${payLow.toLocaleString('en-US')}/mo – ${CUR()}${payHigh.toLocaleString('en-US')}/mo`;
     return { text, capped, max };
   }
-  function mqFinMaxNote(max) { return `Financing is available up to ${CUR()}${Math.round(max).toLocaleString()} — this payment is for that amount.`; }
+  function mqFinMaxNote(max) { return `Financing is available up to ${CUR()}${Math.round(max).toLocaleString('en-US')} — this payment is for that amount.`; }
   function mqFinancingPaymentText(prefix, low, high, total) {
     if (window._mqFinancingAPR == null || window._mqFinancingTermMonths == null) return null;
     const showRange = mqShouldShowRange(prefix);
@@ -10431,7 +10431,7 @@
     // cart entry plus whatever's live now — is actually set to no-range.
     const allNoRange = cart.every(e => !e.showRange) && !mqShouldShowRange(prefix);
     const prev = window._mqStickyLast;
-    el.textContent = allNoRange ? (CUR() + Math.round(combinedTotal).toLocaleString()) : fmtRange(combinedLow, combinedHigh);
+    el.textContent = allNoRange ? (CUR() + Math.round(combinedTotal).toLocaleString('en-US')) : fmtRange(combinedLow, combinedHigh);
     // Financing monthly-payment estimate, recomputed off the same combined
     // low/high/total used for the price above — stays in sync with it as
     // the customer edits their quote.
@@ -10446,7 +10446,7 @@
         // with no number (the same branch as rate/term being unset).
         const fp = mqFinPay(payBasisLow, payBasisHigh);
         if (fp) {
-          const payText = fp.text + '*' + (fp.capped ? ` (max ${CUR()}${Math.round(fp.max).toLocaleString()} financed)` : '');
+          const payText = fp.text + '*' + (fp.capped ? ` (max ${CUR()}${Math.round(fp.max).toLocaleString('en-US')} financed)` : '');
           financingPayEl.textContent = ` · as low as ${payText}`;
           financingPayEl.setAttribute('data-mq-amt', `as low as ${payText}`);
           financingPayEl.title = (fp.capped ? mqFinMaxNote(fp.max) + ' ' : '') + 'Estimated payment only — subject to approval and final terms.';
@@ -10471,7 +10471,7 @@
         realEl.style.display = 'none';
       } else {
         realEl.style.display = 'inline';
-        if (realValEl) realValEl.textContent = CUR() + Math.round(combinedTotal).toLocaleString();
+        if (realValEl) realValEl.textContent = CUR() + Math.round(combinedTotal).toLocaleString('en-US');
       }
     }
     if (animate && prev) {
@@ -10485,7 +10485,7 @@
           const badge = document.createElement('span');
           badge.className = 'mq-sticky-delta show';
           badge.style.color = delta > 0 ? '#16a34a' : '#dc2626';
-          badge.textContent = (delta > 0 ? '+' : '−') + CUR() + Math.abs(delta).toLocaleString();
+          badge.textContent = (delta > 0 ? '+' : '−') + CUR() + Math.abs(delta).toLocaleString('en-US');
           wrap.appendChild(badge);
           setTimeout(() => badge.remove(), 1300);
         }
