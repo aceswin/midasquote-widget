@@ -514,7 +514,19 @@
   // ============================================================
   // STYLES
   // ============================================================
+  // Brand colour contrast (Nov 27 2026): a near-white or very light brand
+  // (or a bright yellow) can't carry white text, and as text/lines on the
+  // white widget it disappears. mqBrandInk = text colour to put ON the brand
+  // colour (white or near-black, whichever reads better). mqBrandLine = the
+  // brand colour darkened only as much as needed to show up on white.
+  function mqBrandHex(hex) { const h = String(hex || '').trim(); return /^#[0-9a-f]{6}$/i.test(h) ? h : (/^#[0-9a-f]{3}$/i.test(h) ? '#' + h.slice(1).split('').map(c => c + c).join('') : '#1a1a1a'); }
+  function mqBrandLum(hex) { hex = mqBrandHex(hex); const l = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }; return 0.2126 * l(parseInt(hex.slice(1, 3), 16)) + 0.7152 * l(parseInt(hex.slice(3, 5), 16)) + 0.0722 * l(parseInt(hex.slice(5, 7), 16)); }
+  function mqBrandInk(hex) { const L = mqBrandLum(hex); return (1.05 / (L + 0.05)) >= ((L + 0.05) / (0.0137 + 0.05)) ? '#ffffff' : '#111827'; }
+  function mqBrandLine(hex) { hex = mqBrandHex(hex); let c = hex; for (let t = 0; t <= 1.0001 && (1.05 / (mqBrandLum(c) + 0.05)) < 3; t += 0.05) c = '#' + [1, 3, 5].map(i => Math.round(parseInt(hex.slice(i, i + 2), 16) * (1 - t)).toString(16).padStart(2, '0')).join(''); return c; }
+  window.mqBrandInk = mqBrandInk; window.mqBrandLine = mqBrandLine;
+
   function injectStyles(bc) {
+    bc = mqBrandHex(bc); const bcInk = mqBrandInk(bc), bcLine = mqBrandLine(bc);
     const s = document.createElement('style');
     s.textContent = `
       #midasquote-widget *{box-sizing:border-box;margin:0;padding:0}
@@ -540,7 +552,7 @@
       #midasquote-widget .mq-measure-carousel-track::-webkit-scrollbar{display:none}
       #midasquote-widget .mq-header{display:flex;align-items:center;padding:1rem 1.5rem;border-bottom:1px solid #e5e7eb;gap:12px}
       #midasquote-widget .mq-header-actions{display:flex;gap:8px;flex-shrink:0}
-      #midasquote-widget .mq-logo{width:48px;height:48px;border-radius:8px;background:${bc};display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:700;flex-shrink:0;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.28)}
+      #midasquote-widget .mq-logo{width:48px;height:48px;border-radius:8px;background:${bc};display:flex;align-items:center;justify-content:center;color:${bcInk};font-size:14px;font-weight:700;flex-shrink:0;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.28)}
       /* A real uploaded logo isn't forced into that square anymore — shown
          at its natural aspect ratio instead, so a wide or tall logo doesn't
          get cropped to fit a square box. Only the no-logo "first letter"
@@ -553,8 +565,8 @@
       #midasquote-widget .mq-tab{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 12px;font-size:14px;font-weight:500;color:#4b5563;cursor:pointer;border:1px solid #e5e7eb;border-radius:8px;background:#fff;transition:all 0.15s;font-family:inherit;box-shadow:0 2px 8px rgba(0,0,0,0.10)}
       #midasquote-widget .mq-tab.mq-tab-lone{flex:0 0 auto;width:calc(50% - 4px)}
       /* Brand-colour centered line either side of a lone tab (shop only offers one of Cabinets/Countertops) -- flex:1 so each line fills whatever space the half-width tab leaves; align-self:center puts it on the tab's vertical middle. Decorative only. */
-      #midasquote-widget .mq-tab-ghost{flex:1;min-width:0;align-self:center;height:1px;background:${bc};border:0;pointer-events:none}
-      #midasquote-widget .mq-tab.active{background:${bc};color:#fff;border-color:${bc};box-shadow:0 6px 20px rgba(0,0,0,0.30)}
+      #midasquote-widget .mq-tab-ghost{flex:1;min-width:0;align-self:center;height:1px;background:${bcLine};border:0;pointer-events:none}
+      #midasquote-widget .mq-tab.active{background:${bc};color:${bcInk};border-color:${bcLine};box-shadow:0 6px 20px rgba(0,0,0,0.30)}
       #midasquote-widget .mq-tab-icon{font-size:18px;flex-shrink:0}
       #midasquote-widget .mq-tab-label{display:flex;flex-direction:column;align-items:flex-start;gap:1px}
       #midasquote-widget .mq-tab-title{font-size:14px;font-weight:500;line-height:1}
@@ -600,7 +612,7 @@
       #midasquote-widget .mq-qty-ctrl input.mq-qty-wide{width:56px!important}
       #midasquote-widget input[type=number]::-webkit-inner-spin-button,#midasquote-widget input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
       #midasquote-widget input[type=number]{-moz-appearance:textfield}
-      #midasquote-widget input:focus,#midasquote-widget select:focus{outline:none;border-color:${bc};box-shadow:0 6px 20px rgba(0,0,0,0.30)}
+      #midasquote-widget input:focus,#midasquote-widget select:focus{outline:none;border-color:${bcLine};box-shadow:0 6px 20px rgba(0,0,0,0.30)}
       #midasquote-widget select,#midasquote-widget input{font-size:16px;font-family:inherit;width:100%}
       #midasquote-widget input{text-indent:8px}
       #midasquote-widget .mq-qty-ctrl input{text-indent:0}
@@ -631,7 +643,7 @@
       #midasquote-widget .mq-spec-bottom{display:flex;flex-direction:column;align-items:flex-start;gap:3px}
       #midasquote-widget .mq-spec-item.on{background:#0f2a52;border-color:#d97706}
       #midasquote-widget .mq-spec-name{font-size:14px;line-height:1.15;color:#111;flex:1;display:block}
-      #midasquote-widget .mq-spec-category-heading{color:${bc}}
+      #midasquote-widget .mq-spec-category-heading{color:${bcLine}}
       #midasquote-widget .mq-spec-category-group{border:1.5px solid #e0e0e0;border-radius:12px;padding:12px 14px 14px;background:#fafafa;box-shadow:0 8px 20px rgba(0,0,0,0.12),0 2px 6px rgba(0,0,0,0.08)}
       #midasquote-widget .mq-spec-category-heading{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px}
       #midasquote-widget .mq-spec-item.on .mq-spec-name{color:#fbbf24;font-weight:600}
@@ -658,7 +670,7 @@
         #midasquote-widget .mq-spec-scroll-wrap .mq-vpicker-arrow.show{display:flex!important}
       }
       #midasquote-widget .mq-vpicker-chip{flex-shrink:0;width:130px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px;border:2px solid #e5e7eb;border-radius:10px;background:#fff;font-family:inherit;transition:all 0.15s;cursor:pointer}
-      #midasquote-widget .mq-vpicker-chip.selected{border-color:${bc}}
+      #midasquote-widget .mq-vpicker-chip.selected{border-color:${bcLine}}
       #midasquote-widget .mq-spec-mode-select{cursor:pointer}
       #midasquote-widget .mq-spec-mode-select option[value=""]{color:#9ca3af}
       @keyframes mqShakeChoice{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-4px)}40%,80%{transform:translateX(4px)}}
@@ -668,10 +680,10 @@
       #midasquote-widget .mq-vpicker-thumb{width:116px;height:116px;border-radius:6px;object-fit:contain;background:#f3f4f6}
       #midasquote-widget .mq-vpicker-thumb-placeholder{width:116px;height:116px;border-radius:6px;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:20px;color:#6b7280}
       #midasquote-widget .mq-vpicker-label{font-size:10px;color:#374151;text-align:center;line-height:1.2;word-break:break-word;max-width:100%}
-      #midasquote-widget .mq-vpicker-chip.selected .mq-vpicker-label{color:${bc};font-weight:600}
+      #midasquote-widget .mq-vpicker-chip.selected .mq-vpicker-label{color:${bcLine};font-weight:600}
       #midasquote-widget .mq-vpicker-group-note{font-size:9px;color:#16a34a;text-align:center;line-height:1.25;margin-top:2px;max-width:100%}
       #midasquote-widget .mq-vpicker-select-btn{margin-top:5px;font-size:10px;font-weight:600;padding:4px 10px;border-radius:12px;border:1px solid #d1d5db;background:#fff;color:#374151;cursor:pointer;font-family:inherit;white-space:nowrap;transition:all 0.15s}
-      #midasquote-widget .mq-vpicker-chip.selected .mq-vpicker-select-btn{background:${bc};border-color:${bc};color:#fff}
+      #midasquote-widget .mq-vpicker-chip.selected .mq-vpicker-select-btn{background:${bc};border-color:${bcLine};color:${bcInk}}
       #midasquote-widget .mq-vpicker-chip.mq-suggested{box-shadow:0 0 0 2px #bbf7d0}
       #midasquote-widget .mq-vpicker-thumb{cursor:zoom-in}
       #midasquote-widget .mq-vpicker-thumb-placeholder{cursor:default}
@@ -688,7 +700,7 @@
       #midasquote-widget .mq-spec-variant-picker.mq-vpicker-row{gap:6px;padding:4px 2px 4px;flex:1;min-width:0}
       #midasquote-widget .mq-vpicker-variant-chip{flex-shrink:0;display:flex;align-items:center;gap:4px;padding:7px 12px;border:1.5px solid #e5e7eb;border-radius:999px;background:#fff;font-family:inherit;font-size:12px;color:#374151;cursor:pointer;transition:all 0.15s;white-space:nowrap}
       #midasquote-widget .mq-vpicker-variant-chip:hover{border-color:#d1d5db;background:#f9fafb}
-      #midasquote-widget .mq-vpicker-variant-chip.selected{border-color:${bc};background:${bc};color:#fff}
+      #midasquote-widget .mq-vpicker-variant-chip.selected{border-color:${bcLine};background:${bc};color:${bcInk}}
       #midasquote-widget .mq-vpicker-variant-star{font-size:10px}
       #midasquote-widget .mq-vpicker-variant-tier{font-size:10px;opacity:0.7}
       /* The round scroll arrows every other picker uses are absolutely
@@ -726,8 +738,8 @@
       .mq-modal-field{display:flex;flex-direction:column;gap:5px}
       .mq-modal-field label{font-size:15px;color:#374151}
       .mq-modal-field input{font-size:16px;font-family:inherit;width:100%;padding:10px 12px;border:1px solid #d1d5db;border-radius:8px;background:#fff}
-      .mq-modal-field input:focus{outline:none;border-color:${bc};box-shadow:0 6px 20px rgba(0,0,0,0.30)}
-      .mq-modal-btn{width:100%;padding:11px;font-size:14px;font-weight:600;background:${bc};color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:inherit}
+      .mq-modal-field input:focus{outline:none;border-color:${bcLine};box-shadow:0 6px 20px rgba(0,0,0,0.30)}
+      .mq-modal-btn{width:100%;padding:11px;font-size:14px;font-weight:600;background:${bc};color:${bcInk};border:none;border-radius:8px;cursor:pointer;font-family:inherit}
       .mq-modal-skip{width:100%;padding:8px;font-size:14px;color:#4b5563;background:none;border:none;cursor:pointer;margin-top:6px;font-family:inherit}
       .mq-modal-copy-btn{flex-shrink:0;padding:6px 12px;font-size:13px;font-weight:600;border:1px solid #d1d5db;border-radius:6px;background:#fff;color:#111;cursor:pointer;font-family:inherit}
       #mq-sticky-bar{position:fixed;left:0;right:0;bottom:0;z-index:999999;background:linear-gradient(135deg,#0f2a52,#1e3a5f);border-top:2px solid #fbbf24;box-shadow:0 -10px 30px rgba(0,0,0,0.35);padding:10px 14px 12px;display:none;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;animation:mqStickyIn 0.35s cubic-bezier(.2,.8,.2,1)}
@@ -776,14 +788,14 @@
       #midasquote-widget .mq-qty-val{font-size:14px;font-weight:500;min-width:16px;text-align:center}
       #midasquote-widget .mq-tog-row{display:flex;align-items:center;gap:10px;margin:1rem 0 0.75rem;padding:10px 12px;background:#f9fafb;border-radius:8px;cursor:pointer}
       #midasquote-widget .mq-tog{width:36px !important;height:20px !important;background:#d1d5db !important;border-radius:10px !important;position:relative !important;display:inline-block !important;transition:background 0.2s;flex-shrink:0}
-      #midasquote-widget .mq-tog.on{background:${bc} !important}
+      #midasquote-widget .mq-tog.on{background:${bcLine} !important}
       #midasquote-widget .mq-tog::after{content:'' !important;position:absolute !important;width:16px !important;height:16px !important;background:#fff !important;border-radius:50% !important;top:2px !important;left:2px !important;transition:left 0.2s}
       #midasquote-widget .mq-tog.on::after{left:18px !important}
       #midasquote-widget .mq-sub-sec{background:#f9fafb;border-radius:8px;padding:1rem;margin-top:0.75rem;border-left:4px solid #d1d5db}
       #midasquote-widget .mq-sub-sec.mq-sub-upper{border-left-color:#d97706;background:#fffbeb}
       #midasquote-widget .mq-sub-sec.mq-sub-base{border-left-color:#f59e0b;background:#fffbeb}
       #midasquote-widget .mq-sub-title{font-size:15px;font-weight:700;color:#111;margin:0 0 0.85rem;display:flex;align-items:center;gap:6px;padding-bottom:8px;border-bottom:1px solid rgba(0,0,0,0.08)}
-      #midasquote-widget .mq-calc-btn{width:100%;padding:13px;font-size:15px;font-weight:600;background:${bc};color:#fff;border:none;border-radius:8px;cursor:pointer;margin-top:0.5rem;transition:opacity 0.15s;font-family:inherit;box-shadow:0 6px 20px rgba(0,0,0,0.25)}
+      #midasquote-widget .mq-calc-btn{width:100%;padding:13px;font-size:15px;font-weight:600;background:${bc};color:${bcInk};border:none;border-radius:8px;cursor:pointer;margin-top:0.5rem;transition:opacity 0.15s;font-family:inherit;box-shadow:0 6px 20px rgba(0,0,0,0.25)}
       #midasquote-widget .mq-calc-btn:hover{opacity:0.88}
       #midasquote-widget .mq-calc-btn:disabled{opacity:0.4;cursor:not-allowed}
       @keyframes mqCalcPulse{0%,100%{box-shadow:0 6px 20px rgba(0,0,0,0.25)}50%{box-shadow:0 0 0 7px ${bc}66,0 6px 20px rgba(0,0,0,0.25)}}
@@ -794,7 +806,7 @@
       #midasquote-widget .mq-res-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem;padding-bottom:1rem;border-bottom:1px solid #e5e7eb}
       #midasquote-widget .mq-res-title{font-size:15px;font-weight:600;color:#111;margin-bottom:3px}
       #midasquote-widget .mq-res-sub{font-size:14px;color:#4b5563}
-      #midasquote-widget .mq-res-range{font-size:22px;font-weight:700;color:${bc};text-align:right}
+      #midasquote-widget .mq-res-range{font-size:22px;font-weight:700;color:${bcLine};text-align:right}
       #midasquote-widget .mq-res-range-lbl{font-size:13px;color:#4b5563;text-align:right}
       #midasquote-widget .mq-line-items{list-style:none;padding:0;margin:0 0 1rem}
       #midasquote-widget .mq-line-items li{display:flex;justify-content:space-between;font-size:14px;padding:6px 0;border-bottom:1px solid #f3f4f6}
@@ -811,24 +823,24 @@
       #midasquote-widget .mq-financing-note{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:10px;font-size:13px;font-weight:600;color:#166534;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:8px 12px}
       #midasquote-widget .mq-cta-row{display:flex;gap:8px;margin-top:1rem}
       #midasquote-widget .mq-cta-row button{flex:1;padding:10px;font-size:14px;font-weight:500;border-radius:8px;cursor:pointer;border:1px solid #d1d5db;background:#fff;color:#111;font-family:inherit;box-shadow:0 2px 8px rgba(0,0,0,0.08)}
-      #midasquote-widget .mq-pri{background:${bc}!important;color:#fff!important;border-color:${bc}!important}
+      #midasquote-widget .mq-pri{background:${bc}!important;color:${bcInk}!important;border-color:${bcLine}!important}
       #midasquote-widget .mq-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;padding:1rem}
       #midasquote-widget .mq-overlay.show{display:flex}
       #midasquote-widget .mq-modal{background:#f8faff;border-radius:12px;padding:1.5rem;width:90%;max-width:420px;box-shadow:0 8px 40px rgba(0,0,0,0.18);position:relative;margin:auto}
       #midasquote-widget .mq-modal-title{font-size:16px;font-weight:600;color:#111;margin-bottom:4px}
       #midasquote-widget .mq-modal-sub{font-size:14px;color:#4b5563;margin-bottom:1.25rem;line-height:1.5}
       #midasquote-widget .mq-modal-fields{display:flex;flex-direction:column;gap:10px;margin-bottom:1.25rem}
-      #midasquote-widget .mq-modal-btn{width:100%;padding:11px;font-size:14px;font-weight:600;background:${bc};color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:inherit}
+      #midasquote-widget .mq-modal-btn{width:100%;padding:11px;font-size:14px;font-weight:600;background:${bc};color:${bcInk};border:none;border-radius:8px;cursor:pointer;font-family:inherit}
       #midasquote-widget .mq-modal-skip{width:100%;padding:8px;font-size:14px;color:#4b5563;background:none;border:none;cursor:pointer;margin-top:6px;font-family:inherit}
-      #midasquote-widget .mq-surface-card{border:1px solid #e5e7eb;border-left:4px solid ${bc};border-radius:12px;padding:1.25rem;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,0.07),0 1px 2px rgba(0,0,0,0.04)}
+      #midasquote-widget .mq-surface-card{border:1px solid #e5e7eb;border-left:4px solid ${bcLine};border-radius:12px;padding:1.25rem;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,0.07),0 1px 2px rgba(0,0,0,0.04)}
       #midasquote-widget .mq-surface-header{display:flex;align-items:center;gap:8px;margin-bottom:1rem;padding-bottom:0.85rem;border-bottom:1px solid #f3f4f6}
-      #midasquote-widget .mq-surface-num{width:26px;height:26px;border-radius:50%;background:${bc};color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+      #midasquote-widget .mq-surface-num{width:26px;height:26px;border-radius:50%;background:${bc};color:${bcInk};font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
       #midasquote-widget .mq-remove-btn{font-size:13px;color:#4b5563;background:none;border:1px solid #e5e7eb;border-radius:6px;padding:3px 10px;cursor:pointer;font-family:inherit}
       #midasquote-widget .mq-remove-btn:hover{background:#f9fafb;border-color:#d1d5db}
       #midasquote-widget .mq-add-surface-btn{width:100%;padding:12px;font-size:14.5px;font-weight:700;border:none;border-radius:9px;background:#0f2a52;color:#fbbf24;cursor:pointer;margin-top:6px;font-family:inherit;box-shadow:0 2px 6px rgba(0,0,0,0.14);transition:transform .12s ease,box-shadow .12s ease}
       #midasquote-widget .mq-add-surface-btn:hover{box-shadow:0 4px 12px rgba(0,0,0,0.18);transform:translateY(-1px)}
       #midasquote-widget .mq-add-surface-btn:active{transform:translateY(0);box-shadow:0 1px 3px rgba(0,0,0,0.14)}
-      #midasquote-widget .mq-surface-summary{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;border:1px solid #e5e7eb;border-left:4px solid ${bc};border-radius:10px;margin-bottom:10px;background:#f9fafb;box-shadow:0 1px 2px rgba(0,0,0,0.04)}
+      #midasquote-widget .mq-surface-summary{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;border:1px solid #e5e7eb;border-left:4px solid ${bcLine};border-radius:10px;margin-bottom:10px;background:#f9fafb;box-shadow:0 1px 2px rgba(0,0,0,0.04)}
       #midasquote-widget .mq-surface-summary-info{flex:1;min-width:0;font-size:14px;color:#374151;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
       #midasquote-widget .mq-surface-summary-actions{display:flex;gap:8px;flex-shrink:0}
       #midasquote-widget .mq-summary-btn{padding:6px 12px;font-size:13px;border:1px solid #d1d5db;border-radius:6px;background:#fff;color:#374151;cursor:pointer;font-family:inherit;white-space:nowrap}
@@ -852,7 +864,7 @@
       #midasquote-widget .mq-surface-summary-shape-solo svg{width:24px;height:24px}
       #midasquote-widget .mq-shape-btn{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 16px;border:2px solid #e5e7eb;border-radius:8px;background:#fff;color:#4b5563;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;min-width:84px}
       #midasquote-widget .mq-shape-btn svg{display:block}
-      #midasquote-widget .mq-shape-btn.active{border-color:${bc};color:${bc};background:#f8faff}
+      #midasquote-widget .mq-shape-btn.active{border-color:${bcLine};color:${bcLine};background:#f8faff}
       #midasquote-widget .mq-leg-row{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px}
       #midasquote-widget .mq-divider{height:1px;background:#e5e7eb;margin:1rem 0}
       #midasquote-widget .mq-check-row{display:flex;align-items:center;gap:8px;font-size:14px;color:#111;cursor:pointer;padding:5px 0}
@@ -873,7 +885,7 @@
       #midasquote-widget .mq-grand-total{display:flex;justify-content:space-between;align-items:center;padding:1rem 1.25rem;background:#fff;border-radius:8px;margin-top:1rem;border:1px solid #86efac;box-shadow:0 4px 16px rgba(134,239,172,0.35)}
       #midasquote-widget .mq-grand-label{font-size:15px;font-weight:600;color:#111}
       #midasquote-widget .mq-grand-sub{font-size:13px;color:#4b5563;margin-top:2px}
-      #midasquote-widget .mq-grand-val{font-size:26px;font-weight:700;color:${bc};text-align:right}
+      #midasquote-widget .mq-grand-val{font-size:26px;font-weight:700;color:${bcLine};text-align:right}
       #midasquote-widget .mq-financing-box{padding:0;background:#f0fdf4;border-radius:12px;margin-top:0.75rem;border:1.5px solid #4ade80;overflow:hidden;box-shadow:0 4px 16px rgba(134,239,172,0.35)}
       #midasquote-widget .mq-financing-box-topstrip{background:#bbf7d0;padding:0.55rem 1.25rem}
       #midasquote-widget .mq-financing-box-label{font-size:14px;font-weight:700;color:#166534}
@@ -10152,7 +10164,8 @@
   function mqAddqVars() {
     const raw = String(((window._mqShopData || {})['Brand colour']) || '#1a1a1a').trim();
     const c = /^#[0-9a-f]{6}$/i.test(raw) ? raw : '#1a1a1a';
-    return `--aq-c:${c};--aq-tint:${c}0f;--aq-line:${c}33`;
+    const cl = mqBrandLine(c);
+    return `--aq-c:${cl};--aq-tint:${c}0f;--aq-line:${c}33`;
   }
 
   // Under every result: the whole estimate so far (once there is more than
@@ -10728,7 +10741,7 @@
                 <div style="margin-bottom:8px">📋 <strong>Every line item</strong> shows its real price too, not just a checkmark.</div>
                 <div>📲 <strong>Add this to your home screen</strong> so it opens like an app — no browser bar, no bookmarks to dig through.</div>
               </div>
-              <button onclick="mqOpenHomeScreenModal();mqDismissTipsPopup()" style="display:block;width:100%;background:${bc};color:#fff;border:none;text-decoration:none;font-size:14px;font-weight:600;padding:12px 20px;border-radius:10px;cursor:pointer;font-family:inherit;transition:opacity 0.15s;margin-bottom:8px" onmouseover="this.style.opacity='0.88'" onmouseout="this.style.opacity='1'">📲 Add to home screen</button>
+              <button onclick="mqOpenHomeScreenModal();mqDismissTipsPopup()" style="display:block;width:100%;background:${bc};color:${mqBrandInk(bc)};border:none;text-decoration:none;font-size:14px;font-weight:600;padding:12px 20px;border-radius:10px;cursor:pointer;font-family:inherit;transition:opacity 0.15s;margin-bottom:8px" onmouseover="this.style.opacity='0.88'" onmouseout="this.style.opacity='1'">📲 Add to home screen</button>
               <button onclick="mqDismissTipsPopup()" style="background:none;border:none;font-size:14px;color:#6b7280;cursor:pointer;font-family:inherit;padding:4px">Maybe later</button>
             </div>
             <style>
