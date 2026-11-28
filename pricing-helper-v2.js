@@ -7075,8 +7075,8 @@ window.mqphGoToWizard = function() {
             ${chips}
           </span>
           <span style="display:flex;gap:6px;flex-shrink:0" onclick="event.stopPropagation()">
-            <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" title="Move up" ${!cats.slice(0, ci).some(x => (x.qt || '') === (c.qt || '')) ? 'disabled' : ''} onclick="mqccMoveCat('${c.id}',-1)">↑</button>
-            <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" title="Move down" ${!cats.slice(ci + 1).some(x => (x.qt || '') === (c.qt || '')) ? 'disabled' : ''} onclick="mqccMoveCat('${c.id}',1)">↓</button>
+            <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" title="Move up" ${mqccMoveEdge(cats, c, -1) ? 'disabled' : ''} onclick="mqccMoveCat('${c.id}',-1)">↑</button>
+            <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" title="Move down" ${mqccMoveEdge(cats, c, 1) ? 'disabled' : ''} onclick="mqccMoveCat('${c.id}',1)">↓</button>
             <button class="mqph-btn mqph-btn-secondary mqph-btn-sm" title="Rename this step or change its settings" onclick="mqccOpenCat('${c.id}')">✏️ Edit / rename</button>
             ${mStep ? '' : `<button class="mqph-btn mqph-btn-secondary mqph-btn-sm" title="Copy this category with all its options and photos" onclick="mqccDuplicateCat('${c.id}')">⧉ Duplicate</button>
             <button class="mqph-btn mqph-btn-primary mqph-btn-sm" onclick="mqccOpenItem('${c.id}',null)">+ Add option</button>`}
@@ -7096,7 +7096,7 @@ window.mqphGoToWizard = function() {
           const fk = mqccFKey();
           if (fk !== null && k !== fk) return '';
           if (k && k !== '__gone' && mqccF().pro === 'widget' && mqccQtIsPro(k)) return '';
-          const listAll = cats.filter(c => groupOf(c) === k);
+          const listAll = (k && k !== '__cab' && /^qt_/i.test(k)) ? mqccWidgetSort(cats.filter(c => groupOf(c) === k)) : cats.filter(c => groupOf(c) === k);
           const list = listAll.filter(mqccFStepOk);
           if (mqccFActive() && !list.length && !(fk !== null && k === fk)) return '';
           const head = `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin:16px 0 6px"><div style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#6b7280">${groupLabel(k)}</div>${k !== '__gone' ? `<button class="mqph-btn mqph-btn-primary mqph-btn-sm mqcc-ns-top" data-g="${k}" onclick="window._mqccNewCatQt='${k}';mqccOpenCat(null)">+ New step</button>` : ''}</div>`;
@@ -8003,16 +8003,64 @@ window.mqphGoToWizard = function() {
       mqccMsg('✓ Category deleted.');
     } catch(e) { alert('Could not delete: ' + e.message); }
   };
+  // A quote's steps in the order the WIDGET shows them: "At the start"
+  // chain first, then "After Details & Selections", each followed by the
+  // steps placed after it (same walk as the widget's mqCcPlace).
+  function mqccMoveEdge(cats, c, dir) {
+    const sib = c.qt ? mqccWidgetSort(cats.filter(x => (x.qt || '') === c.qt)) : cats.filter(x => !x.qt);
+    const i = sib.findIndex(x => x.id === c.id);
+    return dir < 0 ? i <= 0 : i >= sib.length - 1;
+  }
+  function mqccWidgetSort(list) {
+    if (!list.length) return list;
+    const qt = list[0].qt || '';
+    const roots = qt ? ['si', 'specialty'] : MQCC_PLACES.map(p => p[0]);
+    const placed = new Set();
+    const chain = key => list.filter(c => mqccAfterKey(c) === key && !placed.has(c.id)).flatMap(c => { placed.add(c.id); return [c, ...chain('cc:' + c.id)]; });
+    const out = [];
+    roots.forEach(r => out.push(...chain(r)));
+    list.forEach(c => { if (!placed.has(c.id)) out.push(c); }); // loops / broken links go last
+    return out;
+  }
   window.mqccMoveCat = async function(cid, dir) {
     const cats = mqccCats();
-    const i = cats.findIndex(c => c.id === cid);
-    if (i < 0) return;
-    // Swap with the nearest step in the same quote.
-    let j = i + dir;
-    while (j >= 0 && j < cats.length && (cats[j].qt || '') !== (cats[i].qt || '')) j += dir;
-    if (j < 0 || j >= cats.length) return;
-    [cats[i], cats[j]] = [cats[j], cats[i]];
-    try { await mqccSaveCats(cats); mqccRerender(null); } catch(e) { alert('Could not save: ' + e.message); }
+    const me = cats.find(c => c.id === cid);
+    if (!me) return;
+    // ↑ ↓ must change where the step shows on the WIDGET, which follows each
+    // step's "Where it goes" (after X) — not just its spot in this list.
+    // So: take this quote's steps in their Pricing order, move the step, then
+    // rewrite every step's "after" so the widget order matches the list.
+    // Each step belongs to a group (its root place: e.g. "At the start" or
+    // "After Details & Selections"); moving past the edge of a group moves
+    // the step into the neighbouring group.
+    const qt = me.qt || '';
+    const order = qt ? ['si', 'specialty'] : MQCC_PLACES.map(p => p[0]);
+    const mine = qt ? mqccWidgetSort(cats.filter(c => (c.qt || '') === qt)) : cats.filter(c => (c.qt || '') === qt);
+    const byId = {}; mine.forEach(c => { byId[c.id] = c; });
+    const rootOf = c => {
+      let a = mqccAfterKey(c), x = c, guard = 0;
+      while (/^cc:/.test(a) && guard++ < 50) { x = byId[a.slice(3)]; if (!x || x.id === c.id) return qt ? 'specialty' : 'specialty'; a = mqccAfterKey(x); }
+      return order.includes(a) ? a : 'specialty';
+    };
+    const seg = {}; mine.forEach(c => { seg[c.id] = rootOf(c); });
+    const list = mine.slice();
+    const k = list.findIndex(c => c.id === cid), m = k + dir;
+    if (m < 0 || m >= list.length) return;
+    if (seg[list[m].id] !== seg[cid]) seg[cid] = seg[list[m].id];   // step crosses into the next group
+    else { [list[k], list[m]] = [list[m], list[k]]; }
+    // Groups in widget order (stable within a group), then re-chain each group.
+    const sorted = list.map((c, i) => ({ c, i })).sort((a, b) => (order.indexOf(seg[a.c.id]) - order.indexOf(seg[b.c.id])) || (a.i - b.i)).map(o => o.c);
+    let prevSeg = null, prev = null;
+    const fixed = sorted.map(c => {
+      const g = seg[c.id];
+      const after = (g === prevSeg && prev) ? 'cc:' + prev.id : g;
+      prevSeg = g; prev = c;
+      return after === c.after ? c : { ...c, after };
+    });
+    // Put this quote's steps back into the same slots of the full list.
+    let n = 0;
+    const out = cats.map(c => ((c.qt || '') === qt ? fixed[n++] : c));
+    try { await mqccSaveCats(out); mqccRerender(null); } catch(e) { alert('Could not save: ' + e.message); }
   };
 
   // ── Options ──
